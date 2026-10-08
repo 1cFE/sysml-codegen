@@ -1,0 +1,64 @@
+# Audit: PR-readiness cleanup
+
+**Verdict:** Certify
+**Audited:** 2026-10-08
+**Branch:** `pr-readiness-cleanup`
+**Commit:** `1175f2cf00684d07ca227a884b738466f67a4150`; full-default tested ancestor `0046fa1535ec0f3581b08ab8436fd47825965b51`; production/runtime ancestor `80273b65f4832e398502e956099752a18870bd4e`
+
+## The Point
+
+[NEED] Get the shipped elaborator into a good working state for a PR without remnant code, misleading documentation, or overstated evidence. Real functional tests must catch regressions caused by the fixes. Determine current customer compatibility before the PR by diagnosing failures and repairing their causes. The owner's unit-removal and historical fixture-convergence rulings apply; parser-native written-value units, exact source propagation, authored gate reporting, verified packages, and completed handwritten implementations retain their documented force and bounds.
+
+## Summary
+
+The implementation makes narrow repairs in the existing generation path, deletes guessed metadata and retired evidence, and checks complete packages against an independently frozen oracle. Fresh product-lens and focused integrity reviews found no product contradiction or production defect. Final gates exposed three stale ledger references and a first correction that violated the kept named-proof invariant; their bounded repairs now preserve that invariant and the historical authority, with passing replacement evidence.
+
+## Product Judgment
+
+This is the right piece of work for the recorded goal. The fresh source-first product-lens verdict is CLEAR (`product-lens.md`, audit block, 2026-10-08); no structural tripwire fired. Earlier `spec-revision-F1` is resolved by the owner's later customer-compatibility clarification and by reproduced consumer-test causes with isolated repair/reruns; no failure-count waiver replaces diagnosis. Current source-identity partial evidence remains visibly partial, and no owner-descoped joined-study, lineage, or July report proof is claimed.
+
+## Findings
+
+### Plan completion
+
+Phases 1–4 are verified within the corrected contract. The original baseline was committed before production changes; source and fixtures at the final candidate equal the immutable runtime ancestor. Phase 5 independent audit and material-finding disposition are complete; final coordinator status/state-preservation recording remains the next action. Item 8 and the epic are not closed by this bounded certification.
+
+Resolved gate findings: L-133/L-160 now name the surviving declaring-file group test with the same exact `design_params`/`library_params` assertions. L-304 records retirement of spent patch-application scope under inherited L-299/L-300/REPO-CLEANUP authority and names only its surviving ledger-record proof (`.project/ledger/ledger-4a.json:7138`); the first null-proof edit was rejected by the retained no-silent-deletion test and corrected without weakening that test. Historical reason/executed commit remain. The original failure receipts are retained; the repaired full policy returns zero problems. The only later test-source edit removes an extra EOF blank line, with unchanged conftest AST.
+
+### Spec conformance
+
+- SC1 / C1: Verified committed companion `dfd9169e266292b9320d2ad3102233b792ca251a`, narrow warning repair, and retained executable-example detection. Independent licensed guidance tests passed.
+- SC2a / C2: Verified strict compact/pretty contract encoders at `src/sysml_codegen/contracts/serialize.py:26` and `:33`; finite encoding/fingerprint cases include extreme, subnormal, exponent, and signed-zero values. The input writer also uses strict JSON at `src/sysml_codegen/generation/entry_point.py:131`.
+- SC2b / C2: Verified real live overflow ±Inf and coherently resealed NaN/±Inf snapshot tests refuse before creating/clearing output and preserve existing bytes (`tests/conformance/test_finite_generation_boundary.py:31`). Live NaN syntax remains an explicit parser-representation bound.
+- SC3a / C3: Verified all three guessers and callers are removed. Consumed comment/prose fixtures generate on both public routes without manufactured labels/conflicts; native `40 [W]` survives both routes (`tests/conformance/test_unit_lane_port_metadata.py:404`, `:443`). Declaration-identity attachment and sealed metadata-conflict refusal remain tested.
+- SC3b / C3: Verified licensed MFE/D5 recapture receipts, unchanged normalized graph except units, unchanged semantic contracts, and exact per-file allowances. Removed generated labels are 29 occurrences per fixture; arithmetic/wiring changes are not allowed.
+- SC4a / C4: Verified historical source identity at customer `9e1ff87bb44679ce9c518d355fbab594acc12acf`, driver-only source deletion, exact −1 occurrence/−12 attributes/−1 calculation, graph counts `9/27/1/7` → `8/23/1/5`, and matching batch/breadth records (`c3-c4-recapture.json`).
+- SC4b / C4: Independently reran archived stock-TEAx historical execution and source mutations: 41 passed, no skips. Nine exits retain seven baseline numeric channels plus evaluation/report, LCOE `270.1211779380445`, and all/only dependent mutation effects. Enum-positive and located enum-refusal checks remain distinct.
+- SC5 / C5: Verified existing types, explicit missing-metadata refusal before output mutation (`src/sysml_codegen/cli/__init__.py:263`, `:1265`), real calc/constraint/report package preservation, and unchanged verifier source/hash. Final mypy reports zero errors in 71 source files.
+- SC6 / C6: Verified dead registry body/exclusive data, unused conftest fixtures, and codegen v5 annotations are absent. Surviving wrappers, UUID sidecars, v6 identity obligations, and unconditional required-load failures remain. Nine missing parity goldens have individual coverage limits, including eight calculation-bearing cases (`tests/conformance/test_calc_compat_parity.py:41`).
+- SC7a / C7: Verified original all-22 baseline remains immutable, complete file/refusal outcomes and full versions are checked, and only exact reviewed old/new hashes alter expectations. C4 allowance is exactly six files; quote recapture changes no generated bytes; solar ordering allowance is exactly pipeline plus physical seal with its explicit floating-order bound.
+- SC7b / C7: Independently reran all public oracle tests and six template/rendering mutations; each mutation fails fixed expectations (`tests/conformance/test_public_package_oracle.py:16`, `:50`, `:74`). No expected package is generated in the comparison run. Initial stubs, preservation/smart regeneration, and non-float execution have separate stated bounds/evidence.
+- SC8 / C8: Inspected finite current-document changes, parser-unit clarification, README companion paths/public routes, and actual snapshot help default. Independent register tests passed; retargeted provenance guard requires shipment plus exact production/evidence identities rather than a deleted folder (`tests/conformance/test_register_contract.py:223`).
+- SC9 / C9: Verified 313 rows: 123 PASS, 28 PARTIAL, 161 RETIRED, 1 UNTESTED; 35 families/77 active cited test files. Rerunnable checker validates counts, citation nodes, and all 25 original LC-SI grades. The durable reconciliation inventories 29 cells/35 coordinates without claiming complete coordinate certification (`.project/reference/source-identity-reconciliation.md:15`, `:47`, `:83`).
+- SC10 / C10: Verified all 21 downstream dispositions, one retained Item 8 completion authority, current backlog tags, preserved predecessor owner close and historical Needs Work verdict, and separate diagnostic/deep-override/array bounds. Scope removal is not completion evidence; Item 8/epic remain open at this audit boundary.
+- SC11a: Verified final archived `0046fa1` default suite: 2207 passed, nine individually named parity gaps, 96 execution deselections, and zero license skips (`/tmp/pr-readiness-evidence/final-archived-default.log`). Licensed final freshness is 22 tracked/zero stale, with D5 regenerated.
+- SC11b: Verified immutable runtime provenance names actual archived candidate/dependency roots; archive/wheel SHA-256s independently checked. Archived full real-TEAx lane has 96 passed/no skips; the independent 41-test rerun uses those same roots. Later candidate source/fixtures are byte-identical.
+- SC11c: Verified mypy/Ruff/matrix, ledger paths/surface/replacements, faithful register/index regeneration, document distinctness, gated manifest, build, actual CLI default help, and whitespace. Final replacement policy covers 302 codegen rows with exit 0; exact unchanged-source/test guards permit reuse of prior real passing probes while changed ledger/record dependencies and all prior failures are checked fresh (`/tmp/pr-readiness-evidence/repaired-ledger-receipt.json`). Wheel/source equivalence and unchanged trusted verifier are verified.
+- SC12: All located material gate/disposition findings are resolved with passing evidence; no unresolved regression or owner/HARD contradiction remains in this cleanup scope.
+- SC13: Verified named customer `0e045fb30d9ba1b2f62b3a14b3c3fbfcb3985bc9`, all 18 complete generation comparisons, both IFE packages' 35 exact baseline outputs, and MFE 1352 numeric outputs/68 responses/full report/148 preserved handwritten files. Only two generated Python descriptions plus physical seal change for principal MFE (68 distinct labels/204 occurrences); semantic fingerprint is unchanged. CAS28 mutation moves 13 cost outputs with unrelated plasma/blanket outputs unchanged. All 18 receipt SHA-256s independently checked. Six failures reproduce two consumer-test defects; isolated test-only repair `455c1ede893816e6ffabddff69f90d14aed8ee19` passes ten affected checks, alongside 41 family/mutation checks (`customer-compatibility.json`, `evidence.md:35`).
+
+The owner [NEED] requirements are met within the corrected cleanup scope; inherited architecture and product promises retain their original grades. Agent-grade recapture choices, oracle mechanism, and evidence reconciliation are not promoted to owner authority. Descoped assurance is recorded with its ruling, not PASS.
+
+### Design conformance
+
+Implementation follows the existing exact context → projection → preflight → rendering → sealing path. The oracle is a small stdlib digest helper/test, not a new production layer. Original expectations, complete versions, snapshot diagnostic classification, native value-unit facts, committed companion identity, and candidate-bound runtime evidence follow D1–D8. The two starting-revision freshness drifts were surfaced and bounded explicitly in the spec/design/evidence rather than silently refreshed.
+
+### Code integrity
+
+Fresh independent explorer inspection confirmed metadata preflight coverage, guessed-unit deletion/native-unit retention, and absence of a new silent fallback. No material abstraction, failure-honesty, or product-drift smell was found in the changed production code and tests. Missing renderer metadata raises a named error before output mutation; no cast/ignore or broad fallback hides the typing repairs. Duplicate resolution authority, fixture-wide oracle exceptions, and tests that select a favorable duplicate route were not introduced. Historical and current customer identities are kept distinct.
+
+## Certification
+
+Independent inspection covered source changes, affected tests, immutable baseline/allowances, recapture/runtime/customer receipts, authority mapping, downstream dispositions, and documented evidence bounds. Independent reruns passed 69 oracle/refusal/preservation/matrix/register checks, 45 licensed finite/unit/guidance checks, and 41 archived historical runtime/mutation checks; these are separate runs with overlap, not an inflated unique-test total. Archive/wheel and all 18 customer receipt hashes were independently verified, including the repaired `1175f2c` archive. The original index digest and all 17 protected draft hashes were independently rechecked unchanged. The final archived default suite is 2207 passed/nine explicit historical parity gaps/96 execution deselections; the real-TEAx lane is 96 passed/no skips. Final ledger/record corrections have 74 fresh affected checks passing and original-checker policy evidence; they are not mislabeled as a new full runtime run.
+
+**Not checked:** Complete fresh semantic review of all 313 matrix obligations; full public-runtime certification of all 35 source-identity coordinates; owner-descoped joined/reopened-study, copied-store, lineage, external-attestation, and July impact proof; broad customer physics or its complete unrelated suite; secondary customer collections beyond generation/byte comparison. Live NaN syntax is not established. Existing diagnostic/deep-override/array bounds and nine missing historical parity goldens remain visible. This audit certifies the bounded cleanup only, not the whole epic, and does not authorize close, merge, or PR publication.
