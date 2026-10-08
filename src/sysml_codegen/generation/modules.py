@@ -17,15 +17,16 @@ from typing import TYPE_CHECKING
 
 import jinja2
 
+from sysml_codegen.core.errors import CodeGenerationError
 from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
 from sysml_codegen.core.qualified_names import sanitize_qualified_name
 
 if TYPE_CHECKING:
     from sysml_codegen.generation.coverage import CoverageAccountData
-    from sysml_codegen.resolution.models import ConstraintCatalog, PipelineModule
+    from sysml_codegen.resolution.models import ConstraintCatalog, ModuleOutput, PipelineModule
 
 
-def _output_attr_name(out) -> str:
+def _output_attr_name(out: ModuleOutput) -> str:
     """Get original output attribute name from ModuleOutput.
 
     For multi-output modules, field_name IS the attribute name.
@@ -37,7 +38,7 @@ def _output_attr_name(out) -> str:
     return out.channel_name.split("__")[-1]
 
 
-def _get_module_sysml_qn(module) -> str:
+def _get_module_sysml_qn(module: PipelineModule) -> str:
     """Get the full SysML qualified name for path/import derivation.
 
     Module types store calc_def_qualified_name differently:
@@ -53,12 +54,17 @@ def _get_module_sysml_qn(module) -> str:
     elif module.module_kind == ModuleKind.AGGREGATION:
         return module.name.replace("__", "::")
     elif module.module_kind == ModuleKind.CALCULATION:
+        if module.calc_def_qualified_name is None:
+            raise CodeGenerationError(
+                f"GENERATION_METADATA_MISSING: module {module.name!r} "
+                "lacks calc_def_qualified_name"
+            )
         return module.calc_def_qualified_name
     else:
         raise unrenderable_module_kind_error(module, "module-wrapper")
 
 
-def _build_module_docstring_from_graph(module) -> str:
+def _build_module_docstring_from_graph(module: PipelineModule) -> str:
     """Build module docstring from PipelineModule fields."""
     lines = []
 
@@ -395,7 +401,7 @@ def _generation_error(message: str) -> Exception:
 
 
 def generate_teax_module(
-    module,
+    module: PipelineModule,
     template_env: jinja2.Environment,
     output_path: Path,
     package_name: str = "generated_code",
@@ -439,6 +445,11 @@ def generate_teax_module(
             "aggregator bakes a coverage account derived once per run from the sealed "
             "catalog, and this function has no access to it. Render it through "
             "build_constraint_generation_plan, which is what the CLI does."
+        )
+
+    if module.calc_def_name is None:
+        raise CodeGenerationError(
+            f"GENERATION_METADATA_MISSING: module {module.name!r} lacks calc_def_name"
         )
 
     multi_output = len(module.outputs) > 1

@@ -13,6 +13,7 @@ from typing import Any
 import jinja2
 
 from sysml_codegen.core.qualified_names import params_field_name
+from sysml_codegen.resolution.models import ParameterGroup
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ def _refuse_colliding_field_names(group_label: str, fields: list[dict[str, Any]]
 
 
 def generate_all_derived_schemas(
-    entry_point_groups: list,  # list[models.ParameterGroup]
+    entry_point_groups: list[ParameterGroup],
     template_env: jinja2.Environment,
     output_dir: Path,
 ) -> list[Path]:
@@ -101,7 +102,7 @@ def generate_all_derived_schemas(
 
 
 def generate_all_derived_jsons(
-    entry_point_groups: list,  # list[models.ParameterGroup]
+    entry_point_groups: list[ParameterGroup],
     output_dir: Path,
 ) -> list[Path]:
     """Generate JSON input files from ComputationGraph entry_point_groups.
@@ -127,7 +128,7 @@ def generate_all_derived_jsons(
         data = {ep.qualified_name: ep.default_value for ep in group.parameters}
 
         # Render JSON with sorted keys for deterministic output
-        json_content = json.dumps(data, indent=2, sort_keys=True)
+        json_content = json.dumps(data, indent=2, sort_keys=True, allow_nan=False)
 
         # Ensure final newline
         if not json_content.endswith("\n"):

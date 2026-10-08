@@ -13,8 +13,10 @@ from pathlib import Path
 
 import jinja2
 
+from sysml_codegen.resolution.models import ModuleOutput, PipelineModule
 
-def _build_field_description(output) -> str:
+
+def _build_field_description(output: ModuleOutput) -> str:
     """Build field description from ModuleOutput fields."""
     desc = output.description.strip() if output.description else ""
 
@@ -29,7 +31,7 @@ def _build_field_description(output) -> str:
     return desc
 
 
-def _build_schema_docstring(module) -> str:
+def _build_schema_docstring(module: PipelineModule) -> str:
     """Build schema docstring from PipelineModule fields."""
     lines = []
 
@@ -46,7 +48,7 @@ def _build_schema_docstring(module) -> str:
 
 
 def generate_multioutput_model(
-    module,
+    module: PipelineModule,
     template_env: jinja2.Environment,
     output_path: Path,
     package_name: str = "generated_code",

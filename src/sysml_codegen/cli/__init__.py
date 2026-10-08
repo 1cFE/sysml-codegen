@@ -260,6 +260,30 @@ def _check_duplicate_output_paths(modules: list[PipelineModule]) -> None:
         schema_sources[schema_file] = raw
 
 
+def _preflight_generation_metadata(graph: ComputationGraph) -> None:
+    """Validate renderer-required optional metadata before mutating output."""
+    from sysml_codegen.core.errors import CodeGenerationError
+    from sysml_codegen.generation.pipeline import _input_to_context
+    from sysml_codegen.resolution.models import ModuleKind
+
+    for module in graph.modules:
+        if module.module_kind in (
+            ModuleKind.CALCULATION, ModuleKind.FORMULA, ModuleKind.AGGREGATION
+        ):
+            if module.calc_def_name is None:
+                raise CodeGenerationError(
+                    f"GENERATION_METADATA_MISSING: module {module.name!r} lacks calc_def_name"
+                )
+        if module.module_kind in (ModuleKind.CALCULATION, ModuleKind.FORMULA):
+            if module.calc_def_qualified_name is None:
+                raise CodeGenerationError(
+                    f"GENERATION_METADATA_MISSING: module {module.name!r} "
+                    "lacks calc_def_qualified_name"
+                )
+        for module_input in module.inputs:
+            _input_to_context(module_input, {})
+
+
 def _preflight_registry_class_names(graph: ComputationGraph) -> None:
     """Refuse a graph whose registry class names collide beyond aliasing (REQ-REG-08).
 
@@ -1042,7 +1066,7 @@ def main() -> None:
     gen_input.add_argument(
         "--from-snapshot",
         type=Path,
-        help="Path to a captured extraction snapshot (license-free generation)",
+        help="Path to a sealed v6 instance-graph snapshot (license-free generation)",
     )
     gen_parser.add_argument(
         "--output", "-o", type=Path, required=True, help="Output directory for generated code"
@@ -1079,7 +1103,7 @@ def main() -> None:
 
     # Snapshot subcommand — capture a versioned snapshot from live models (D5)
     snap_parser = subparsers.add_parser(
-        "snapshot", help="Capture a versioned extraction snapshot from live models"
+        "snapshot", help="Capture a sealed v6 instance-graph snapshot from live models"
     )
     snap_parser.add_argument(
         "--models", "-m", type=Path, required=True, help="Path to SysML model directory or file"
@@ -1089,7 +1113,7 @@ def main() -> None:
         "-o",
         type=Path,
         default=None,
-        help="Snapshot output path (default: <models>/extraction_snapshot.json)",
+        help="Snapshot output path (default: <models>/instance_graph_snapshot.json)",
     )
     snap_parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
     snap_parser.set_defaults(func=cmd_snapshot)
@@ -1238,6 +1262,7 @@ def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConf
         # Unsupported root-output wrappers are a public model refusal, before
         # link inspection, plan rendering, output clearing, directory creation,
         # or any write. Registry collection shares the same total validator.
+        _preflight_generation_metadata(graph)
         _preflight_exit_point_types(graph)
 
         # Validate both generated constraint scopes before overwrite clearing or output creation.

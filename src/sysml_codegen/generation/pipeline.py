@@ -174,6 +174,12 @@ def _input_to_context(
     if inp.source.source_type == "module_output":
         # Upstream module output - channel name with optional field extraction
         channel = inp.source.producer_channel
+        if channel is None:
+            from sysml_codegen.core.errors import CodeGenerationError
+
+            raise CodeGenerationError(
+                f"GENERATION_METADATA_MISSING: input {inp.param_name!r} lacks producer_channel"
+            )
         # Look up field name from the producing module's output
         producer_field = channel_field_map.get(channel, "")
         # For single-output modules, extract .root from RootModel[float]
@@ -187,7 +193,14 @@ def _input_to_context(
         # be the *field* name, which differs from the params key exactly when a
         # modelled multiplicity indexed it. The JSON key itself is unchanged and
         # stays the field's alias.
-        field = params_field_name(inp.source.qualified_name)
+        qualified_name = inp.source.qualified_name
+        if qualified_name is None:
+            from sysml_codegen.core.errors import CodeGenerationError
+
+            raise CodeGenerationError(
+                f"GENERATION_METADATA_MISSING: input {inp.param_name!r} lacks qualified_name"
+            )
+        field = params_field_name(qualified_name)
         if inp.source.param_group:
             source = f"{inp.source.param_group}.{field}"
         else:

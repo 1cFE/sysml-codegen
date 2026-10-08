@@ -14,13 +14,15 @@ from pathlib import Path
 
 import jinja2
 
+from sysml_codegen.core.errors import CodeGenerationError
 from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
+from sysml_codegen.resolution.models import ComputationGraph
 
 logger = logging.getLogger(__name__)
 
 
 def generate_test_implementations(
-    graph,
+    graph: ComputationGraph,
     package_name: str,
     template_env: jinja2.Environment,
     output_path: Path,
@@ -55,6 +57,11 @@ def generate_test_implementations(
         ):
             continue
 
+        if module.calc_def_name is None:
+            raise CodeGenerationError(
+                f"GENERATION_METADATA_MISSING: module {module.name!r} lacks calc_def_name"
+            )
+
         calc_count += 1
 
         # source_file is already the portable root-N/ referent (Item 5 D1); render
@@ -65,6 +72,11 @@ def generate_test_implementations(
         output_count = len(module.outputs)
 
         # ADR-003: Derive namespaced import paths
+        if module.calc_def_qualified_name is None:
+            raise CodeGenerationError(
+                f"GENERATION_METADATA_MISSING: module {module.name!r} "
+                "lacks calc_def_qualified_name"
+            )
         sqn = SysMLQualifiedName(module.calc_def_qualified_name)
         python_path = PythonModulePath.from_sysml(sqn)
         module_import_path = python_path.import_path
