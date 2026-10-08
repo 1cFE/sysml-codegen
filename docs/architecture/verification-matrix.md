@@ -667,7 +667,7 @@ Filed 2026-08-14 by CONSTRAINT-SEMANTICS Item 7 (`[MATRIX-EPIC-SURFACE-ROWS]`, B
 
 ### SI
 
-**Source Identity** — authority: LC-SI catalog and Item-3 Appendix C, with bounded evidence in `.project/active/pr-readiness-cleanup/source-identity-reconciliation.md`. Grades are copied from the lifecycle requirements; test state is separate from acceptance certification.
+**Source Identity** — authority: LC-SI catalog and Item-3 Appendix C, with bounded evidence in `.project/reference/source-identity-reconciliation.md`. Grades are copied from the lifecycle requirements; test state is separate from acceptance certification.
 
 | REQ ID | Requirement | Test File | Status |
 |---|---|---|---|
@@ -706,7 +706,7 @@ REQ-BASE-06 remains UNTESTED: deterministic replay does not vary model-discovery
 - [Architecture Overview](overview.md)
 - [Modeling Assumptions](modeling-assumptions.md)
 - Current reference documents: [reference/](reference/)
-- [Source-identity reconciliation](../../.project/active/pr-readiness-cleanup/source-identity-reconciliation.md)
+- [Source-identity reconciliation](../../.project/reference/source-identity-reconciliation.md)
 - [Cleanup evidence](../../.project/active/pr-readiness-cleanup/evidence.md)
 
 <!-- matrix-counts: total=313, families=35, tests=77, PASS=123, PARTIAL=28, RETIRED=161, UNTESTED=1, DEFERRED=0, DESCOPED=0 -->

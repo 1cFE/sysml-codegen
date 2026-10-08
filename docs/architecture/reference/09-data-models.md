@@ -49,7 +49,9 @@ All models in this section are Pydantic models in `resolution/models.py`.
 Keyword construction is required for Pydantic models. This two-module graph demonstrates both source kinds:
 
 ```python
+from pathlib import Path
 from sysml_codegen.resolution.models import (
+    EntryPoint, EntryPointType, ParameterGroup,
     ComputationGraph, InputSource, ModuleInput, ModuleKind, ModuleOutput, PipelineModule,
 )
 
@@ -70,7 +72,11 @@ graph = ComputationGraph(
             outputs=[ModuleOutput(field_name="root", python_type="float", channel_name="total__root")],
             execution_order=1,
         ),
-    ], entry_point_groups=[], execution_order=["cost", "total"],
+    ], entry_point_groups=[ParameterGroup(
+        name="params", class_name="Params", source_file=Path("design.sysml"),
+        parameters=[EntryPoint(qualified_name="Design__x", simple_name="x",
+            entry_type=EntryPointType.DESIGN_ATTRIBUTE, default_value=100.0, param_group="params")],
+    )], execution_order=["cost", "total"],
 )
 ```
 
