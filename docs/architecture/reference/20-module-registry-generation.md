@@ -199,8 +199,8 @@ alias (e.g., `SolarArray_Capital_CostModule`), not the original class name.
 | `ModuleType` | `core/identifier_types.py` | Namespaced PascalCase type |
 | `PythonModulePath` | `core/identifier_types.py` | File path for imports |
 | `CalculationDefinitionData` | `extraction/data_models.py` | CalcDef with QN |
-| `ScopedAggregationData` | `extraction/data_models.py` | Has both `owning_part_qn` and `module_eqn` |
-| `ComputedAttributeData` | `extraction/data_models.py` | Computed attr with owning_part_name |
+| `PipelineModule` | `resolution/models.py` | Exact projected calculation, formula, aggregation, constraint, or report module |
+| `ModuleOutput` | `resolution/models.py` | Declared output channel and Python type |
 
 ---
 

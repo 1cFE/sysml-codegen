@@ -32,7 +32,4 @@ Edit `BACKLOG.md` to reorder epics. Use priority levels:
 
 ### Completing an Epic
 
-When ALL items are done:
-1. Move `epic_*.md` to `../completed/` using `git mv` to preserve history
-2. Update `BACKLOG.md` (mark complete)
-3. Update `../completed/CHANGELOG.md`
+Follow the record-then-delete procedure in [the project README](../README.md). Keep durable rulings/evidence in their owning registers and completion commit; remove closed working-state artifacts rather than copying them into a permanent completed-folder archive.

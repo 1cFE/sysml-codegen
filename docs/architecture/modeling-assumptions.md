@@ -98,10 +98,7 @@ calc cryo_load : MagnetCryogenicLoad {
 
 ### Unit Handling
 
-Units (e.g., `= 20 [K]`) are **metadata only**:
-- The numeric value (20) is extracted as the parameter value
-- The unit ([K]) is stored as metadata for documentation
-- Automatic unit conversion is not supported
+Parser-native units written on values (for example, `= 20 [K]`) remain expression/default facts. Numeric generation uses the value; codegen adds no automatic unit conversion. Predicate validation retains its own parser-derived unit and dimension checks. Declaration comments, doc-text parentheses, and type names do not supply unit labels. `// [units] - Description` is a convention for human readers.
 
 ### Parameter Grouping
 
@@ -527,35 +524,7 @@ Two spellings work, and a third does not:
   `ScalarValues::{Boolean,Integer,Real,String}` and refuses anything else with `SI_EDGE_DANGLING:
   … has unsupported exact type`.
 
-**A unit on a constraint *binding* is carried into port metadata, and collides loudly when two
-consumers disagree.** (Rewritten 2026-08-14; the previous text — "carried, not checked" — described
-pre-Item-8 behavior and was false as written once Item 8 landed,
-the unit-lane-port-metadata close record, 2026-08-13; git history.)
-
-`in tol = 0.05 [m];` is admitted and contributes the number `0.05`. The authored unit text also
-reaches the port: since Item 8, a **constraint-formal** binding and an input to a **computed
-design attribute** both populate `PortMetadata.unit` from the authored declaration, the same way a
-calculation-usage binding always did.
-
-That matters because one modeled design attribute can supply more than one consumer, and projection
-treats those consumers as one public `DESIGN_ATTRIBUTE` entry point **only when their projected
-metadata agrees**. Before Item 8 the two shapes above contributed a manufactured `None` while a
-calculation formal contributed a real unit string, so valid models refused with
-`SI_RENDERING_COLLISION` on metadata the modeler never wrote. Now the comparison runs on what was
-actually authored:
-
-- **Both consumers annotate the same unit** — one entry point, as intended.
-- **They disagree** — projection **fails closed** with `SI_RENDERING_COLLISION`, naming the
-  conflicting public key. This is deliberate: two different units on one shared value is a modeling
-  defect, and generating a package that silently picks one would ship a lie.
-
-The unit text is carried exactly as authored. **No conversion happens anywhere** — codegen does not
-turn `[mm]` into `[m]`. A collision is resolved by making the model agree, not by trusting a
-converter that does not exist.
-
-**A bound formal's operand category still comes from the constraint definition's declared type**, so
-the annotation is not a dimension check on the predicate. If a gate must *check* units, put the
-comparison and both annotations in the predicate body.
+Parser-native annotations in a constraint binding retain their numeric value and expression facts. They do not turn declaration comments into unit metadata. A gate that checks dimensions must put the native annotations on both operands in the predicate body, as above; codegen supplies no converter.
 
 **Every authored usage has a carrier — and it is true by construction, not by check.**
 The domain is one `ConstraintUsageRecord` per authored `ConstraintUsage`, minted *before* owner-to-
