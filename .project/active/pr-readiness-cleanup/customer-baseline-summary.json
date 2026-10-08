@@ -1,0 +1,121 @@
+{
+  "agentic_commit": "8f43a0970c26d40c1bca9812340b69e34237e42b",
+  "capture_script": "/tmp/pr-readiness-customer-baseline/capture.py",
+  "cases": {
+    "aries_constituent_inventory": {
+      "file_count": 30,
+      "package_name": "aries_constituent_inventory",
+      "receipt": "/tmp/pr-readiness-customer-baseline/cases/aries_constituent_inventory/receipt.json",
+      "runtime_outputs": 0
+    },
+    "aries_density_profile": {
+      "file_count": 27,
+      "package_name": "aries_density_profile",
+      "receipt": "/tmp/pr-readiness-customer-baseline/cases/aries_density_profile/receipt.json",
+      "runtime_outputs": 0
+    },
+    "aries_dual_blanket_heat": {
+      "file_count": 41,
+      "package_name": "aries_dual_blanket_heat",
+      "receipt": "/tmp/pr-readiness-customer-baseline/cases/aries_dual_blanket_heat/receipt.json",
+      "runtime_outputs": 0
+    },
+    "aries_fuel_reuse": {
+      "file_count": 35,
+      "package_name": "aries_fuel_reuse",
+      "receipt": "/tmp/pr-readiness-customer-baseline/cases/aries_fuel_reuse/receipt.json",
+      "runtime_outputs": 0
+    },
+    "aries_integrated": {
+      "file_count": 174,
+      "package_name": "aries_integrated",
+      "receipt": "/tmp/pr-readiness-customer-baseline/cases/aries_integrated/receipt.json",
+      "runtime_outputs": 0
+    },
+    "aries_nominal_brayton": {
+      "file_count": 49,
+      "package_name": "aries_nominal_brayton",
+      "receipt": "/tmp/pr-readiness-customer-baseline/cases/aries_nominal_brayton/receipt.json",
+      "runtime_outputs": 0
+    },
+    "aries_plasma_fuel": {
+      "file_count": 58,
+      "package_name": "aries_plasma_fuel",
+      "receipt": "/tmp/pr-readiness-customer-baseline/cases/aries_plasma_fuel/receipt.json",
+      "runtime_outputs": 0
+    },
+    "aries_plasma_integration": {
+      "file_count": 38,
+      "package_name": "aries_plasma_integration",
+      "receipt": "/tmp/pr-readiness-customer-baseline/cases/aries_plasma_integration/receipt.json",
+      "runtime_outputs": 0
+    },
+    "aries_source_budget": {
+      "file_count": 29,
+      "package_name": "aries_source_budget",
+      "receipt": "/tmp/pr-readiness-customer-baseline/cases/aries_source_budget/receipt.json",
+      "runtime_outputs": 0
+    },
+    "combinations": {
+      "file_count": 158,
+      "package_name": "combinations",
+      "receipt": "/tmp/pr-readiness-customer-baseline/cases/combinations/receipt.json",
+      "runtime_outputs": 0
+    },
+    "component_alternatives": {
+      "file_count": 195,
+      "package_name": "component_alternatives",
+      "receipt": "/tmp/pr-readiness-customer-baseline/cases/component_alternatives/receipt.json",
+      "runtime_outputs": 0
+    },
+    "costed_loop_brayton": {
+      "file_count": 138,
+      "package_name": "costed_loop_brayton",
+      "receipt": "/tmp/pr-readiness-customer-baseline/cases/costed_loop_brayton/receipt.json",
+      "runtime_outputs": 0
+    },
+    "ife_exploration": {
+      "file_count": 55,
+      "package_name": "fusion_tea_final",
+      "receipt": "/tmp/pr-readiness-customer-baseline/cases/ife_exploration/receipt.json",
+      "runtime_outputs": 35
+    },
+    "ife_primary": {
+      "file_count": 55,
+      "package_name": "fusion_tea_final",
+      "receipt": "/tmp/pr-readiness-customer-baseline/cases/ife_primary/receipt.json",
+      "runtime_outputs": 35
+    },
+    "magnet_materials": {
+      "file_count": 93,
+      "package_name": "magnet_materials",
+      "receipt": "/tmp/pr-readiness-customer-baseline/cases/magnet_materials/receipt.json",
+      "runtime_outputs": 0
+    },
+    "mfe": {
+      "file_count": 443,
+      "package_name": "stellarator_tea",
+      "receipt": "/tmp/pr-readiness-customer-baseline/cases/mfe/receipt.json",
+      "runtime_outputs": 0
+    },
+    "stellarator_materials": {
+      "file_count": 443,
+      "package_name": "stellarator_materials",
+      "receipt": "/tmp/pr-readiness-customer-baseline/cases/stellarator_materials/receipt.json",
+      "runtime_outputs": 0
+    },
+    "whole_plant_conversion": {
+      "file_count": 275,
+      "package_name": "whole_plant_conversion",
+      "receipt": "/tmp/pr-readiness-customer-baseline/cases/whole_plant_conversion/receipt.json",
+      "runtime_outputs": 0
+    }
+  },
+  "codegen_archive_sha256": "9db19cf228a90ae74c9756610717731c6f05b3d18224d05e6a6e1ba5712a6897",
+  "codegen_commit": "6872977541eae935d4be2789f48f723ffea7101b",
+  "coverage": "IFE canonical/twin, MFE canonical, and all current SOURCE_COLLECTIONS declared by customer tests/model_families.py; fresh stock TEAx execution for both IFE cases only, other units generation-only at baseline",
+  "environment_python": "/home/reid/1cfe/fusion-tea/.venv/bin/python",
+  "fusion_commit": "0e045fb30d9ba1b2f62b3a14b3c3fbfcb3985bc9",
+  "source_archive_sha256": "1b15c5212dae15f6fe3c5466c050d007e2468ae3344b35222a4dd0c848daa220",
+  "teax_root": "/home/reid/1cfe/teax"
+}

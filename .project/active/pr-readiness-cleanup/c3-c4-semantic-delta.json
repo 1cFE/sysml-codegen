@@ -1,0 +1,31 @@
+{
+  "catf_mfe_d5": {
+    "model_contract_same": true,
+    "model_contract_sha256_after": "50951ca9135ec724bd5cbb48f05bf88ba4ef5c9f41e3936bef4708a60261ae0c",
+    "model_contract_sha256_before": "50951ca9135ec724bd5cbb48f05bf88ba4ef5c9f41e3936bef4708a60261ae0c",
+    "same_graph_except_units": true,
+    "unit_labels_after": 0,
+    "unit_labels_before": 159
+  },
+  "catf_mfe_gated": {
+    "model_contract_same": true,
+    "model_contract_sha256_after": "893fb784220c06e9ddfcb7a2d477d123be07099176bd827782a5469f633275c2",
+    "model_contract_sha256_before": "893fb784220c06e9ddfcb7a2d477d123be07099176bd827782a5469f633275c2",
+    "same_graph_except_units": true,
+    "unit_labels_after": 0,
+    "unit_labels_before": 177
+  },
+  "fusion_tea": {
+    "model_contract_same": false,
+    "model_contract_sha256_after": "cc79f12b0152c7eb8084b2ce5d8da31ef16e0fe0c897fe74a49dbaca7cb5814c",
+    "model_contract_sha256_before": "2432198c85ecf6753bdd6d4dff812eabde4b9bac42bb1c60c32b66d47d4acbd0",
+    "same_graph_except_units": false,
+    "unit_labels_after": 0,
+    "unit_labels_before": 0
+  },
+  "historical_source_identity": {
+    "all_byte_identical": true,
+    "fusion_tea_commit": "9e1ff87bb44679ce9c518d355fbab594acc12acf",
+    "source_files": 11
+  }
+}

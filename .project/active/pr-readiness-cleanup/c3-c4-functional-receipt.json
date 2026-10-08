@@ -1,0 +1,40 @@
+{
+  "baseline_exits": 11,
+  "candidate_exits": 9,
+  "catf_mfe_d5": {
+    "changed_python_bytes_only_known_unit_suffix_deletion": true,
+    "known_unit_labels": [
+      "Dimensionless",
+      "Fraction",
+      "K",
+      "MW",
+      "Pa",
+      "T",
+      "m",
+      "m\u00b2",
+      "m\u00b3",
+      "m\u00b3/s"
+    ],
+    "removed_generated_label_occurrences": 29
+  },
+  "catf_mfe_gated": {
+    "changed_python_bytes_only_known_unit_suffix_deletion": true,
+    "known_unit_labels": [
+      "Dimensionless",
+      "Fraction",
+      "K",
+      "MW",
+      "Pa",
+      "T",
+      "m",
+      "m\u00b2",
+      "m\u00b3",
+      "m\u00b3/s"
+    ],
+    "removed_generated_label_occurrences": 29
+  },
+  "constraint_evaluation_and_report_byte_equal": true,
+  "lcoe": 270.1211779380445,
+  "runtime_stage": "focused editable-tree check; final archived candidate gate remains separate",
+  "seven_retained_numeric_channels_equal": true
+}
