@@ -43,13 +43,13 @@ def test_an_accepted_model_still_captures(tmp_path) -> None:
 
 
 @requires_license
-def test_unit_collision_exits_one_with_exact_diagnostic_and_preserves_destination(
+def test_named_refusal_preserves_destination_without_a_traceback(
     tmp_path, caplog
 ) -> None:
     output = tmp_path / "instance_graph_snapshot.json"
     sentinel = b"item-8-cli-sentinel\n"
     output.write_bytes(sentinel)
-    fixture = ROOT / "tests" / "fixtures" / "unit_lane_constraint_disagreement"
+    fixture = ROOT / "tests" / "fixtures" / "ife_plant"
 
     with caplog.at_level("ERROR"):
         rc = cmd_snapshot(_args(fixture, output))
@@ -58,9 +58,13 @@ def test_unit_collision_exits_one_with_exact_diagnostic_and_preserves_destinatio
     assert output.read_bytes() == sentinel
     assert not list(tmp_path.glob(".instance_graph_snapshot.json.*.tmp"))
     joined = "\n".join(record.getMessage() for record in caplog.records)
-    assert "SI_RENDERING_COLLISION" in joined
-    assert "UnitLaneConstraintDisagreement__disagreement__shared_length" in joined
-    assert "conflicting projected metadata" in joined
-    assert "reference='UnitLaneConstraintDisagreement__disagreement__shared_length'" in joined
-    assert "[root-0/model.sysml:15]" in joined
+    assert "SI_SELF_BINDING" in joined
     assert "Traceback" not in joined
+
+
+@requires_license
+def test_comment_unit_disagreement_still_captures_via_cli(tmp_path) -> None:
+    output = tmp_path / "instance_graph_snapshot.json"
+    fixture = ROOT / "tests" / "fixtures" / "unit_lane_constraint_disagreement"
+    assert cmd_snapshot(_args(fixture, output)) == 0
+    assert output.is_file()

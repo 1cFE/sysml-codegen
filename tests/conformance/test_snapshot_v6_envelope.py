@@ -609,7 +609,9 @@ def test_resealed_unit_collision_is_not_certifiable(
     document = _document(a9_captured_payload)
     [constraint] = document["instance_graph"]["graph"]["constraints"]
     [count] = [item for item in constraint["inputs"] if item["name"] == "count"]
-    assert count["metadata"]["unit"] == "Dimensionless"
+    # Comments no longer supply labels; a resealed forged label still conflicts
+    # with the calculation port reading the same exact source.
+    assert count["metadata"]["unit"] is None
     count["metadata"]["unit"] = "cm"
     _reseal_graph(document)
 
