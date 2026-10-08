@@ -4,13 +4,13 @@
 
 ## Active Work
 
-### PR-readiness cleanup — implementation and final validation
+### PR-readiness cleanup — audited; ready for close
 
 [OWNER] Authorized `$my-orchestrate` through implementation and independent audit, using best judgment and keeping the work simple. [Spec](active/pr-readiness-cleanup/spec.md), [design](active/pr-readiness-cleanup/design.md), [plan](active/pr-readiness-cleanup/plan.md), and [evidence](active/pr-readiness-cleanup/evidence.md) carry the current contract and progress.
 
 [AGENT] Work is isolated in `/tmp/pr-readiness-cleanup-run` on `pr-readiness-cleanup`; its companion guidance branch is `/tmp/pr-readiness-agentic-mbse`. The original checkout's index and mental-alignment drafts are preserved. The pre-change oracle covers all 22 committed snapshots. Licensed freshness identified two pre-existing metadata/order recaptures in addition to the owner-directed unit/driver changes; exact dispositions live in the evidence record.
 
-[AGENT] Bounded code, typing, unit, fixture, and guidance changes are implemented. Final candidate/default/runtime/customer gates and independent audit govern completion; intermediate passing subsets do not certify the whole item. Customer compatibility diagnoses failure causes and permits coordinated model/consumer repairs. Its current committed source archive includes 18 generation units; the October 7 full-suite failures and ongoing October 8 customer repair reports are context, not a numerical acceptance threshold.
+[AGENT] C1–C10 are implemented. Archived final codegen `0046fa1535ec0f3581b08ab8436fd47825965b51` passes 2,207 default tests with nine named historical parity-golden gaps and 96 separately executed runtime tests. All 18 current customer generation units are compared; principal-family runtime, mutations, and handwritten preservation pass after two reproduced consumer-test defects were repaired in isolated customer commit `455c1ede893816e6ffabddff69f90d14aed8ee19`. The full replacement-evidence checker passes after bounded stale-reference repairs; the independent [audit](active/pr-readiness-cleanup/audit.md) certifies this cleanup with no unresolved material findings. The October customer cleanup reports supply failure context rather than a numerical acceptance threshold.
 
 ### ELABORATE-FIRST Item 8 — retained assurance reconciliation
 

@@ -51,3 +51,17 @@ Resolves:
 Smells: None fired.
 
 Gate: CLEAR
+
+## audit — 2026-10-08 — rev 0046fa1535ec0f3581b08ab8436fd47825965b51
+
+Point (re-derived): Emit the parser's resolved model math into executable TEAx packages without invented semantics, preserve real generated-package behavior, and establish current customer compatibility before the PR. The historical fixture must remove its inert driver workaround. [source: product `0003` and `0004`, first-capture owner quotes; cleanup `spec-review.md`, owner regression direction and Resolutions L2-2/L2-4; owner clarification in spec Known Requirements; downstream `spec-review.md`, Resolution L2-2; grade: owner]
+
+Falsifier: A current customer model generates wrong or unwired math, regeneration loses completed implementations, parser-native written-value units disappear, the historical fixture retains its duplicate workaround, or compatibility is declared despite an unresolved codegen-caused failure.
+
+Findings: None. The source diff removes declaration-unit guessers without adding resolution fallbacks. The licensed unit tests retain parser-written defaults and units through both public routes. Complete independent package digests and refusal/preservation tests guard emitted behavior. The historical fixture loses only the inert driver occurrence; retained arithmetic and source mutations have separate real-runtime evidence. Current customer evidence covers all 18 generation units, with stock runtime, source mutation, and implementation preservation for the principal IFE/MFE families. The three principal customer receipt hashes were independently checked; six consumer-test failures have reproduced causes and a committed isolated repair with passing affected tests, rather than a waiver.
+
+Authority bounds: Product `0002` is agent/ratified; full-assessment reporting follows agent/ratified ADR `0010`, and package sealing follows its ratified lifecycle authority. No contradiction with those obligations was found. The source-identity reconciliation preserves original requirement grades and marks incomplete coordinate certification PARTIAL. Additional composed/reopened-study proof, copied-store refusal, lineage, external-use attestation, and the July impact report follow the owner's explicit descoping in cleanup review Resolution L2-1. This verdict claims neither full 29-cell certification nor runtime coverage for the 15 secondary customer collections. Prior `spec-revision-F1` is already explicitly resolved by the `spec-clarification` block; no unresolved ledger BLOCK was located.
+
+Smells: None fired among the audit tripwires: manual representation synchronization, special-category exemption, downstream representation knowledge, contradictory compatibility baseline, or selecting one duplicate/route/interpretation to pass. Snapshots and reviewed byte deltas have rerunnable comparisons; the duplicate workaround is removed; baseline exceptions remain exact, reviewed, and bounded.
+
+Gate: CLEAR
