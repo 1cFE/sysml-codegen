@@ -38,6 +38,24 @@ GOLDEN_PATH = FIXTURES_DIR / "golden" / "calc_compat_parity_golden.json"
 # two integer-literal outputs gate the literal rule).
 CALC_CORPUS_FIXTURES = corpus_fixture_names()
 
+# Missing historical golden data is a coverage limit, not evidence of an empty model.
+MISSING_GOLDEN_DISPOSITIONS = {
+    "agg_literal_probe": "no calculation definitions; occurrence aggregation is exercised by tests/conformance/test_exact_projection_aggregation.py",
+    "agg_localterm_probe": "one calculation; local-term aggregation is exercised by tests/conformance/test_elaboration_aggregations.py",
+    "constraint_non_numerical": "one calculation; nonnumerical report coverage is exercised by tests/execution/test_constraint_coverage_matrix.py",
+    "crosspart_rollup_twolevel": "two calculations; two-level rollup coverage is exercised by tests/conformance/test_elaboration_aggregations.py",
+    "gate_a": "one calculation; exact projection coverage is exercised by tests/conformance/test_constraint_population_oracle.py",
+    "gate_a_package_owner": "one calculation; package owner coverage is exercised by tests/conformance/test_constraint_population_oracle.py",
+    "modeled_default_fidelity": "one calculation; modeled defaults are exercised by tests/conformance/test_constraint_population_oracle.py",
+    "shadowed_reference": "one calculation; source shadowing is exercised by tests/conformance/test_elaboration_shadowing.py",
+    "shared_producer": "one calculation; shared producer coverage is exercised by tests/conformance/test_constraint_population_oracle.py",
+}
+
+
+def test_missing_golden_cases_have_individual_dispositions():
+    assert set(CALC_CORPUS_FIXTURES) - set(_golden()) - {"plant_value_shapes"} == set(MISSING_GOLDEN_DISPOSITIONS)
+
+
 
 def _golden() -> dict[str, dict[str, dict]]:
     return json.loads(GOLDEN_PATH.read_text())
@@ -49,8 +67,7 @@ def _live_calc_defs(model_name: str):
         loaded = extractor.load_models()
     except ImportError as exc:
         pytest.skip(f"syside unavailable: {exc}")
-    if not loaded:
-        pytest.skip(f"Could not load {model_name}")
+    assert loaded, f"Required model {model_name} failed to load"
     return extractor.extract_calculation_definitions()
 
 
@@ -71,7 +88,7 @@ def test_calc_compat_parity(fixture):
     golden = _golden()
     fixture_golden = golden.get(fixture)
     if fixture_golden is None:
-        pytest.skip(f"{fixture}: no calc output expressions in the golden")
+        pytest.skip(f"{fixture}: historical parity golden absent; {MISSING_GOLDEN_DISPOSITIONS[fixture]}")
 
     calc_defs = {cd.name: cd for cd in _live_calc_defs(fixture)}
     checked = 0

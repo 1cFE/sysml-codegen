@@ -60,10 +60,9 @@ class AttributeInfo(BaseAttributeInfo):
     source_line: int = 0
     is_optional: bool = False
 
-    # Live exact-route sidecar. Snapshot v5 deliberately omits parser UUIDs.
+    # Parser declaration UUID retained by the live exact compiler.
     element_id: UUID | None = field(
         default=None,
-        metadata={"snapshot_exclude": True},
     )
 
 
@@ -100,21 +99,16 @@ class CalculationDefinitionData:
     # Exact declaration identity is the compiler payload. Names remain rendering metadata.
     element_id: UUID | None = field(
         default=None,
-        metadata={"snapshot_exclude": True},
     )
     output_expression_asts_by_id: dict[UUID, Any] = field(
         default_factory=dict,
-        metadata={"snapshot_exclude": True},
     )
     all_member_ids: set[UUID] = field(
         default_factory=set,
-        metadata={"snapshot_exclude": True},
     )
     member_expressions_by_id: dict[UUID, Any] = field(
         default_factory=dict,
-        metadata={"snapshot_exclude": True},
     )
     member_names_by_id: dict[UUID, str] = field(
         default_factory=dict,
-        metadata={"snapshot_exclude": True},
     )

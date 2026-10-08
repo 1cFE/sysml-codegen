@@ -106,28 +106,6 @@ def test_calculation_definition_data_structure():
     assert "member_names_by_id" in params
 
 
-def test_live_identity_sidecars_are_snapshot_excluded():
-    """Live parser UUIDs cannot leak into the frozen snapshot-v5 envelope."""
-    import dataclasses
-
-    from sysml_codegen.extraction.data_models import (
-        AttributeInfo,
-        CalculationDefinitionData,
-    )
-
-    calc_fields = {field.name: field for field in dataclasses.fields(CalculationDefinitionData)}
-    attr_fields = {field.name: field for field in dataclasses.fields(AttributeInfo)}
-    for name in (
-        "element_id",
-        "output_expression_asts_by_id",
-        "all_member_ids",
-        "member_expressions_by_id",
-        "member_names_by_id",
-    ):
-        assert calc_fields[name].metadata["snapshot_exclude"] is True
-    assert attr_fields["element_id"].metadata["snapshot_exclude"] is True
-
-
 def test_shared_extractor_leaves_unstable_live_identity_sidecar_empty():
     """Legacy extraction accepts members outside the exact route's UUID boundary."""
     from sysml_codegen.extraction.extractor import SysMLDataExtractor

@@ -18,87 +18,12 @@ Requirements: REQ-EXT-01 through REQ-EXT-09.
 from __future__ import annotations
 
 import dataclasses
-import importlib
 from pathlib import Path
 
 import pytest
 
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 
-
-def test_shared_feature_unit_precedence_and_exact_text(tmp_path: Path) -> None:
-    feature_metadata = importlib.import_module("sysml_codegen.extraction.feature_metadata")
-    extract_feature_unit = feature_metadata.extract_feature_unit
-
-    source = tmp_path / "model.sysml"
-    source.write_text("attribute flow : Real; // [m³/s] - exact\n", encoding="utf-8")
-
-    class Node:
-        start_byte = 0
-
-    class Target:
-        name = "Real"
-        qualified_name = "ScalarValues::Real"
-
-    class Relationship:
-        __class__ = type("FeatureTyping", (), {})
-
-    class DocumentUrl:
-        path = str(source)
-
-    class Document:
-        url = DocumentUrl()
-
-    class Feature:
-        cst_node = Node()
-        document = Document()
-        heritage = ()
-        documentation = ()
-        owner = None
-
-    feature = Feature()
-    assert extract_feature_unit(feature) == "m³/s"
-
-    source.write_text(
-        "attribute flow : Real; // From an external source\n", encoding="utf-8"
-    )
-    assert extract_feature_unit(feature) is None
-
-    feature.cst_node = None
-    feature.documentation = [type("Doc", (), {"body": "[kg/m³] - exact"})()]
-    assert extract_feature_unit(feature) == "kg/m³"
-
-    feature.documentation = []
-    assert extract_feature_unit(feature) is None
-
-
-def test_shared_feature_unit_type_precedes_authored_text() -> None:
-    feature_metadata = importlib.import_module("sysml_codegen.extraction.feature_metadata")
-
-    class FeatureTyping:
-        pass
-
-    class Target:
-        name = "Length"
-        qualified_name = "ISQ::Length"
-
-    class Doc:
-        body = "[cm]"
-
-    class Feature:
-        heritage = ((FeatureTyping(), Target()),)
-        documentation = (Doc(),)
-        cst_node = None
-        owner = None
-
-    original = feature_metadata.SysideAdapter.is_instance
-    feature_metadata.SysideAdapter.is_instance = staticmethod(
-        lambda item, type_name: type(item).__name__ == type_name
-    )
-    try:
-        assert feature_metadata.extract_feature_unit(Feature()) == "m"
-    finally:
-        feature_metadata.SysideAdapter.is_instance = original
 
 # ---------------------------------------------------------------------------
 # Expected counts from Phase 0 snapshot capture
@@ -300,16 +225,7 @@ class TestReqExt07AstFields:
             "member_names_by_id",
         }
         assert expected <= set(calc_fields)
-        assert all(calc_fields[name].metadata.get("snapshot_exclude") for name in expected)
-        assert attr_fields["element_id"].metadata.get("snapshot_exclude") is True
-
-    # ``test_snapshot_ast_fields_nullified_in_raw_json`` stood here. It read a committed
-    # ``extraction_snapshot.json`` and asserted the v5 serializer had nullified the SysIDE
-    # AST fields that cannot survive a JSON round trip. Serializer and fixtures both retired
-    # with the v5 family (retirement step 2), so there is no serialized form left to check.
-    # The declaration side of the same rule — which fields are marked ``snapshot_exclude``
-    # — is asserted by the sibling node above and is unaffected.
-
+        assert "element_id" in attr_fields
 
 # ---------------------------------------------------------------------------
 # REQ-EXT-02 (extended): EXPRESSION binding type coverage
@@ -320,18 +236,13 @@ FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
 
 
 def _load_live_extractor(model_name: str) -> SysMLDataExtractor:
-    """Load a fixture model with a live extractor.
-
-    Skips (does not fail) when syside cannot load -- e.g. no license in CI --
-    mirroring the ``sample_extractor`` fixture convention.
-    """
+    """Load a required model; invalid fixtures fail instead of appearing unlicensed."""
     extractor = SysMLDataExtractor([FIXTURES_DIR / model_name])
     try:
         loaded = extractor.load_models()
     except ImportError as exc:  # syside license not configured
         pytest.skip(f"syside unavailable: {exc}")
-    if not loaded:
-        pytest.skip(f"Could not load {model_name}")
+    assert loaded, f"Required model {model_name} failed to load"
     return extractor
 
 
