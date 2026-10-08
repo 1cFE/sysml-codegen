@@ -185,11 +185,11 @@
    "status": "refused"
   },
   "fusion_tea": {
-   "aliases": 7,
+   "aliases": 5,
    "constraints": 1,
-   "entry_points": 27,
-   "modules": 9,
-   "sha256": "7d30e7e6499814f9496818e38e12ba46d3d176da627415cd9a50fd239d0b8bed",
+   "entry_points": 23,
+   "modules": 8,
+   "sha256": "6d8e5845244bb7588da630f78aa129911f63767dd34d627ddd584edb93a73475",
    "snapshot": "tests/fixtures/fusion_tea/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -285,7 +285,7 @@
    "constraints": 0,
    "entry_points": 2,
    "modules": 2,
-   "sha256": "c4a7c2d965390aa1e20dfb66e7f35c86a09e8e1dbd3da3aa1471b048104f7a39",
+   "sha256": "3483a81b0a913bc6e7a3bc2558236ccc39e853bdc8909bf2c6dfa115076fec3b",
    "snapshot": "tests/fixtures/quoted_owner_formula/instance_graph_snapshot.json",
    "status": "graph"
   },

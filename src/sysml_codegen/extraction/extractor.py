@@ -22,7 +22,6 @@ from sysml_codegen.extraction.data_models import (
 )
 from sysml_codegen.extraction.errors import ExactExtractionError, ExactTypeError
 from sysml_codegen.extraction.expression_utils import reconstruct_expression
-from sysml_codegen.extraction.feature_metadata import extract_feature_unit
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -339,7 +338,6 @@ class SysMLDataExtractor:
         description = self._extract_attribute_documentation(attr_elem)
         default_value = self._extract_default_value(attr_elem)
         is_optional = default_value is not None
-        unit = self._extract_unit(attr_elem, sysml_type, description)
         element_id = self._stable_declaration_id(attr_elem) if capture_element_id else None
 
         return AttributeInfo(
@@ -350,7 +348,6 @@ class SysMLDataExtractor:
             default_value=default_value,
             is_optional=is_optional,
             source_line=0,
-            unit=unit,
             element_id=element_id,
         )
 
@@ -450,10 +447,6 @@ class SysMLDataExtractor:
                 return str(doc.body).strip()
 
         return ""
-
-    def _extract_unit(self, attr_elem: Any, sysml_type: str, description: str) -> str | None:
-        """Delegate exact unit extraction to the declaration-owned helper."""
-        return extract_feature_unit(attr_elem)
 
     def _extract_documentation(self, elem: Any) -> str:
         """Extract documentation string from element."""

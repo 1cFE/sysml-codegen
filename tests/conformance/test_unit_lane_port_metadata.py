@@ -1,15 +1,16 @@
-"""Declaration-owned unit metadata across calc, constraint, and expression lanes."""
+"""Guessed units are absent; exact formal identity and parser units survive."""
 
 from __future__ import annotations
 
 import importlib
+import json
 import shutil
 from pathlib import Path
 
 import pytest
 
 from sysml_codegen.cli import GenerationConfig, run_codegen
-from sysml_codegen.elaboration import ElaborationCode, InstanceGraph, ProjectionError, project
+from sysml_codegen.elaboration import InstanceGraph, project
 from sysml_codegen.elaboration.identity import (
     DeclarationId,
     ExpressionPortId,
@@ -20,7 +21,6 @@ from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.orchestration.elaborated_pipeline import elaborate_model_paths
 from sysml_codegen.snapshot.capture import capture_instance_graph_snapshot
 from sysml_codegen.snapshot.envelope import (
-    SnapshotCertifiabilityError,
     load_instance_graph_snapshot,
 )
 from tests.conftest import FIXTURES_DIR, requires_license
@@ -83,14 +83,6 @@ def _entry_units(computation_graph) -> dict[str, str | None]:
     }
 
 
-def _assert_collision(error: ProjectionError, key: str) -> None:
-    assert error.diagnostics
-    diagnostic = error.diagnostics[0]
-    assert diagnostic.code is ElaborationCode.SI_RENDERING_COLLISION
-    assert key in diagnostic.detail
-    assert "conflicting projected metadata" in diagnostic.detail
-
-
 def _loaded_model(fixture: Path) -> tuple[SysMLDataExtractor, object, FeatureSlotIndex]:
     extractor = SysMLDataExtractor([fixture])
     assert extractor.load_models()
@@ -107,58 +99,58 @@ def _named_element(extractor: SysMLDataExtractor, model: object, kind: str, name
     return matches[0]
 
 
-def test_a9_constraint_formals_preserve_authored_units() -> None:
+def test_a9_comment_units_are_absent_from_all_formals() -> None:
     graph = elaborate_model_paths([A9])
     projected = project(graph)
 
     assert _input_units(graph, "__pumping_speed_agrees") == {
-        "observed": "m³/s",
-        "count": "Dimensionless",
-        "each_capacity": "m³/s",
-        "rel_tol": "Dimensionless",
+        "observed": None,
+        "count": None,
+        "each_capacity": None,
+        "rel_tol": None,
     }
     assert _input_units(graph, "__pump_load") == {
-        "pumping_speed_total_in": "m³/s",
-        "pump_count": "Dimensionless",
-        "pump_capacity": "m³/s",
+        "pumping_speed_total_in": None,
+        "pump_count": None,
+        "pump_capacity": None,
     }
     entry_units = _entry_units(projected)
-    assert entry_units["CATFMFEVacuum__catf_vacuum_pumping__pumping_speed_total"] == "m³/s"
-    assert entry_units[A9_COLLIDING_KEY] == "Dimensionless"
-    assert entry_units["CATFMFEVacuum__catf_vacuum_pumping__pump_capacity_each"] == "m³/s"
+    assert entry_units["CATFMFEVacuum__catf_vacuum_pumping__pumping_speed_total"] is None
+    assert entry_units[A9_COLLIDING_KEY] is None
+    assert entry_units["CATFMFEVacuum__catf_vacuum_pumping__pump_capacity_each"] is None
     [relative_tolerance] = [
         unit
         for key, unit in entry_units.items()
         if key.endswith("__pumping_speed_agrees__rel_tol")
     ]
-    assert relative_tolerance == "Dimensionless"
+    assert relative_tolerance is None
 
 
-def test_radius_derivation_inputs_preserve_authored_units() -> None:
+def test_radius_comment_units_are_absent_from_derivation_inputs() -> None:
     graph = elaborate_model_paths([RADIUS])
     projected = project(graph)
 
     assert _input_units(graph, "__outer_radius") == {
-        "inner_radius": "m",
-        "thickness": "m",
+        "inner_radius": None,
+        "thickness": None,
     }
     assert _input_units(graph, "__minor_calc") == {
-        "r_inner": "m",
-        "r_outer": "m",
-        "r_major": "m",
+        "r_inner": None,
+        "r_outer": None,
+        "r_major": None,
     }
     entry_units = _entry_units(projected)
-    assert entry_units[RADIUS_COLLIDING_KEY] == "m"
+    assert entry_units[RADIUS_COLLIDING_KEY] is None
     assert entry_units[
         "CATFMFERadialBuild__catf_radial_build__plasma_region__thickness"
-    ] == "m"
-    assert entry_units["CATFMFERadialBuild__catf_radial_build__major_radius"] == "m"
+    ] is None
+    assert entry_units["CATFMFERadialBuild__catf_radial_build__major_radius"] is None
 
 
 def test_constraint_and_calculation_unit_agreement_projects_one_entry() -> None:
     graph = elaborate_model_paths([A9])
-    assert _input_units(graph, "__pumping_speed_agrees")["count"] == "Dimensionless"
-    assert _input_units(graph, "__pump_load")["pump_count"] == "Dimensionless"
+    assert _input_units(graph, "__pumping_speed_agrees")["count"] is None
+    assert _input_units(graph, "__pump_load")["pump_count"] is None
     projected = project(graph)
     matching = [
         parameter
@@ -167,22 +159,20 @@ def test_constraint_and_calculation_unit_agreement_projects_one_entry() -> None:
         if parameter.qualified_name == A9_COLLIDING_KEY
     ]
     assert len(matching) == 1
-    assert matching[0].unit_text == "Dimensionless"
+    assert matching[0].unit_text is None
 
 
-def test_constraint_and_calculation_unit_disagreement_refuses() -> None:
+def test_constraint_and_calculation_comment_disagreement_projects() -> None:
     graph = elaborate_model_paths([CONSTRAINT_DISAGREEMENT])
-    assert _input_units(graph, "__length_calc")["value"] == "m"
-    assert _input_units(graph, "__length_guard")["observed"] == "cm"
-    with pytest.raises(ProjectionError) as excinfo:
-        project(graph)
-    _assert_collision(excinfo.value, CONSTRAINT_DISAGREEMENT_KEY)
+    assert _input_units(graph, "__length_calc")["value"] is None
+    assert _input_units(graph, "__length_guard")["observed"] is None
+    assert _entry_units(project(graph))[CONSTRAINT_DISAGREEMENT_KEY] is None
 
 
 def test_computed_and_calculation_unit_agreement_projects_one_entry() -> None:
     graph = elaborate_model_paths([RADIUS])
-    assert _input_units(graph, "__outer_radius")["inner_radius"] == "m"
-    assert _input_units(graph, "__minor_calc")["r_inner"] == "m"
+    assert _input_units(graph, "__outer_radius")["inner_radius"] is None
+    assert _input_units(graph, "__minor_calc")["r_inner"] is None
     projected = project(graph)
     matching = [
         parameter
@@ -191,16 +181,14 @@ def test_computed_and_calculation_unit_agreement_projects_one_entry() -> None:
         if parameter.qualified_name == RADIUS_COLLIDING_KEY
     ]
     assert len(matching) == 1
-    assert matching[0].unit_text == "m"
+    assert matching[0].unit_text is None
 
 
-def test_computed_and_calculation_unit_disagreement_refuses() -> None:
+def test_computed_and_calculation_comment_disagreement_projects() -> None:
     graph = elaborate_model_paths([COMPUTED_DISAGREEMENT])
-    assert _input_units(graph, "__length_calc")["value"] == "m"
-    assert _input_units(graph, "__doubled")["shared_length"] == "cm"
-    with pytest.raises(ProjectionError) as excinfo:
-        project(graph)
-    _assert_collision(excinfo.value, COMPUTED_DISAGREEMENT_KEY)
+    assert _input_units(graph, "__length_calc")["value"] is None
+    assert _input_units(graph, "__doubled")["shared_length"] is None
+    assert _entry_units(project(graph))[COMPUTED_DISAGREEMENT_KEY] is None
 
 
 def test_band_guard_base_formals_are_selected_from_definition_usages() -> None:
@@ -258,8 +246,8 @@ def test_band_guard_base_formals_are_selected_from_definition_usages() -> None:
 
 def test_calc_redefinition_uses_selected_effective_formal_unit() -> None:
     graph = elaborate_model_paths([SOURCE_IDENTITY])
-    assert _input_units(graph, "__base_calc") == {"value": "cm"}
-    assert _input_units(graph, "__redefined_calc") == {"value": "m"}
+    assert _input_units(graph, "__base_calc") == {"value": None}
+    assert _input_units(graph, "__redefined_calc") == {"value": None}
 
     extractor, model, slots = _loaded_model(SOURCE_IDENTITY)
     elaborate_module = importlib.import_module("sysml_codegen.elaboration.elaborate")
@@ -290,17 +278,17 @@ def test_calc_redefinition_uses_selected_effective_formal_unit() -> None:
     assert [item.element_id for item in calc_payload.input_attributes] == [
         effective_formal.value
     ]
-    assert metadata.unit == "m"
+    assert metadata.unit is None
     assert metadata.formal_provenance is None
     assert _entry_units(project(graph))[
         "UnitLaneSourceIdentity__source_identity__metre_source"
-    ] == "m"
+    ] is None
 
 
 def test_constraint_redefinition_uses_selected_effective_formal_unit() -> None:
     graph = elaborate_model_paths([SOURCE_IDENTITY])
-    assert _input_units(graph, "__base_guard") == {"observed": "cm", "limit": "cm"}
-    assert _input_units(graph, "__redefined_guard") == {"observed": "m", "limit": "m"}
+    assert _input_units(graph, "__base_guard") == {"observed": None, "limit": None}
+    assert _input_units(graph, "__redefined_guard") == {"observed": None, "limit": None}
 
     extractor, model, slots = _loaded_model(SOURCE_IDENTITY)
     elaborate_module = importlib.import_module("sysml_codegen.elaboration.elaborate")
@@ -324,10 +312,10 @@ def test_constraint_redefinition_uses_selected_effective_formal_unit() -> None:
         assert port.formal != binding_slots[name].root_declaration
         assert metadata.formal_provenance is not None
         assert metadata.formal_provenance.declaration_id == port.formal
-        assert metadata.unit == "m"
+        assert metadata.unit is None
     assert _entry_units(project(graph))[
         "UnitLaneSourceIdentity__source_identity__metre_source"
-    ] == "m"
+    ] is None
 
 
 def test_computed_alias_uses_referenced_declaration_unit() -> None:
@@ -340,67 +328,33 @@ def test_computed_alias_uses_referenced_declaration_unit() -> None:
     assert isinstance(port, ExpressionPortId)
     assert port.referenced_declaration == declaration_id_for(alias)
     assert computed.input_names[port] == "a"
-    assert metadata.unit == "m"
+    assert metadata.unit is None
     edge = computed.inputs[port]
     assert graph.attrs[edge.target].declaration_id == declaration_id_for(source)
     assert _entry_units(project(graph))[
         "UnitLaneSourceIdentity__source_identity__alias_source"
-    ] == "m"
+    ] is None
 
 
-def test_capture_unit_collision_does_not_replace_destination(tmp_path: Path) -> None:
-    destination = tmp_path / "existing.json"
-    sentinel = b"item-8-sentinel\n"
-    destination.write_bytes(sentinel)
-
-    with pytest.raises(SnapshotCertifiabilityError) as excinfo:
-        capture_instance_graph_snapshot([CONSTRAINT_DISAGREEMENT], destination)
-
-    assert destination.read_bytes() == sentinel
-    assert not list(tmp_path.glob(".existing.json.*.tmp"))
-    _assert_collision_from_snapshot(excinfo.value, CONSTRAINT_DISAGREEMENT_KEY)
-
-
-def test_capture_unit_collision_does_not_create_destination(tmp_path: Path) -> None:
-    destination = tmp_path / "missing.json"
-
-    with pytest.raises(SnapshotCertifiabilityError) as excinfo:
-        capture_instance_graph_snapshot([CONSTRAINT_DISAGREEMENT], destination)
-
-    assert not destination.exists()
-    assert not list(tmp_path.glob(".missing.json.*.tmp"))
-    _assert_collision_from_snapshot(excinfo.value, CONSTRAINT_DISAGREEMENT_KEY)
-
-
-def test_live_generation_unit_collision_reports_its_authored_site(
-    tmp_path: Path,
-    caplog: pytest.LogCaptureFixture,
+@pytest.mark.parametrize("existing", [False, True])
+def test_comment_disagreement_captures_and_generates_on_both_routes(
+    tmp_path: Path, existing: bool
 ) -> None:
-    destination = tmp_path / "generated"
-
-    with caplog.at_level("ERROR"):
-        result = run_codegen(
-            GenerationConfig(
-                models_path=CONSTRAINT_DISAGREEMENT,
-                output_path=destination,
-                package_name="unit_collision_probe",
-            )
-        )
-
-    assert result is False
-    assert not destination.exists()
-    assert f"reference='{CONSTRAINT_DISAGREEMENT_KEY}'" in caplog.text
-    assert "[root-0/model.sysml:15]" in caplog.text
-
-
-def _assert_collision_from_snapshot(
-    error: SnapshotCertifiabilityError, key: str
-) -> None:
-    assert error.diagnostics
-    diagnostic = error.diagnostics[0]
-    assert diagnostic.code is ElaborationCode.SI_RENDERING_COLLISION
-    assert key in diagnostic.detail
-    assert "conflicting projected metadata" in diagnostic.detail
+    snapshot = tmp_path / "snapshot.json"
+    if existing:
+        snapshot.write_text("previous snapshot")
+    captured = capture_instance_graph_snapshot([CONSTRAINT_DISAGREEMENT], snapshot)
+    assert _entry_units(project(load_instance_graph_snapshot(captured)))[
+        CONSTRAINT_DISAGREEMENT_KEY
+    ] is None
+    for route in ("live", "snapshot"):
+        output = tmp_path / route
+        assert run_codegen(GenerationConfig(
+            models_path=CONSTRAINT_DISAGREEMENT if route == "live" else None,
+            from_snapshot=captured if route == "snapshot" else None,
+            output_path=output, package_name="comment_disagreement",
+        )) is True
+        assert (output / "pipelines/pipeline.yaml").is_file()
 
 
 @pytest.mark.parametrize(
@@ -439,3 +393,76 @@ def test_live_in_place_and_relocated_routes_preserve_unit_metadata(
 
     live_entries = _entry_units(project(live))
     assert live_entries == _entry_units(project(in_place)) == _entry_units(project(relocated))
+
+
+@pytest.mark.parametrize("comment", [
+    "// kg - human note",
+    "// [kg] - human note",
+    "// T atoms (kg)",
+    "doc /* [kg] - density (m) */",
+])
+def test_consumed_comments_do_not_create_units_live_or_from_snapshot(
+    tmp_path: Path, comment: str
+) -> None:
+    models = tmp_path / "models"
+    models.mkdir()
+    (models / "model.sysml").write_text(f"""package CommentUnits {{
+        private import ScalarValues::*;
+        // é λ 🦄 multibyte text before declarations
+        calc def Double {{
+            in attribute value : Real; {comment}
+            out attribute result : Real = value * 2.0;
+        }}
+        part design {{
+            attribute source : Real = 3.0; // [s] deliberately different
+            calc twice : Double {{ in value = source; }}
+        }}
+    }}""", encoding="utf-8")
+    live = elaborate_model_paths([models])
+    assert _input_units(live, "__twice") == {"value": None}
+    assert list(_entry_units(project(live)).values()) == [None]
+    snapshot = capture_instance_graph_snapshot([models], tmp_path / "snapshot.json")
+    assert _input_records(live, "__twice") == _input_records(
+        load_instance_graph_snapshot(snapshot), "__twice"
+    )
+    packages = []
+    for route in ("live", "snapshot"):
+        output = tmp_path / route
+        assert run_codegen(GenerationConfig(
+            models_path=models if route == "live" else None,
+            from_snapshot=snapshot if route == "snapshot" else None,
+            output_path=output, package_name="comment_units",
+        )) is True
+        packages.append({path.relative_to(output): path.read_bytes()
+                         for path in output.rglob("*") if path.is_file()})
+    assert packages[0] == packages[1]
+    assert any(b"* 2.0" in data for path, data in packages[0].items()
+               if str(path).startswith("handwritten/"))
+
+
+def test_parser_native_written_unit_default_survives_both_routes(tmp_path: Path) -> None:
+    fixture = FIXTURES_DIR / "modeled_default_fidelity"
+    live = elaborate_model_paths([fixture])
+    snapshot = capture_instance_graph_snapshot([fixture], tmp_path / "native.json")
+    for graph in (live, load_instance_graph_snapshot(snapshot)):
+        units = _input_units(graph, "__power_check")
+        assert units["rated_power"] == "W"
+        formal = _node(graph, "__power_check")
+        [metadata] = [metadata for port, metadata in formal.input_metadata.items()
+                      if formal.input_names[port] == "rated_power"]
+        assert metadata.default_value == 40.0
+        projected = project(graph)
+        [default] = [parameter for group in projected.entry_point_groups
+                     for parameter in group.parameters
+                     if parameter.qualified_name.endswith("__power_check__rated_power")]
+        assert default.default_value == 40.0
+        assert default.unit_text == "W"
+    for route in ("live", "snapshot"):
+        output = tmp_path / route
+        assert run_codegen(GenerationConfig(
+            models_path=fixture if route == "live" else None,
+            from_snapshot=snapshot if route == "snapshot" else None,
+            output_path=output, package_name="native_units",
+        )) is True
+        inputs = [json.loads(path.read_text()) for path in (output / "inputs").glob("*.json")]
+        assert any(value == 40.0 for data in inputs for value in data.values())

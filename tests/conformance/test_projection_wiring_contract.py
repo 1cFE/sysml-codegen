@@ -7,7 +7,7 @@ Narrow-correction step 4 (rev-2 brief), closing the two surviving PARTIAL rows:
   per-occurrence minting; a misclassified-but-route-consistent type would not
   have failed them. Here the classification itself is the subject: membership
   is asserted over every committed snapshot, and correctness is asserted
-  against an authored oracle for ``fusion_tea``, whose 27 entry points cover
+  against an authored oracle for ``fusion_tea``, whose 23 entry points cover
   all three classes.
 - REQ-GA-03 — a ``module_output`` producer channel resolves to a declared
   output channel. On the public route this holds by construction (the sealed
@@ -38,10 +38,6 @@ FUSION_SNAPSHOT = FIXTURES_DIR / "fusion_tea" / "instance_graph_snapshot.json"
 # two calc-usage literal bindings and the three unbound formals falling back to
 # calc-def defaults are the other two classes.
 FUSION_TEA_CLASSIFICATION = {
-    "hif_driver__hif_driver_instance__beam_energy_mj": EntryPointType.DESIGN_ATTRIBUTE,
-    "hif_driver__hif_driver_instance__efficiency": EntryPointType.DESIGN_ATTRIBUTE,
-    "hif_driver__hif_driver_instance__num_chambers": EntryPointType.DESIGN_ATTRIBUTE,
-    "hif_driver__hif_driver_instance__pulse_rate_ref": EntryPointType.DESIGN_ATTRIBUTE,
     "hif_plant_pkg__hif_plant__driver__efficiency": EntryPointType.DESIGN_ATTRIBUTE,
     "hif_plant_pkg__hif_plant__driver__energy": EntryPointType.DESIGN_ATTRIBUTE,
     "hif_plant_pkg__hif_plant__driver__lifetime_shots": EntryPointType.DESIGN_ATTRIBUTE,
