@@ -58,4 +58,3 @@ def exact_graph_from_fixture(model_name: str):
     from sysml_codegen.snapshot.envelope import load_instance_graph_snapshot
 
     return project(load_instance_graph_snapshot(instance_graph_fixture(model_name)))
-

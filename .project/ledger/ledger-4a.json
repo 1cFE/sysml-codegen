@@ -3096,7 +3096,7 @@
    "unreachability": null,
    "replacement_proof_node": [
     "tests/conformance/test_exact_group_identity.py::test_group_identity_comes_from_the_declaring_file_or_package",
-    "tests/conformance/test_exact_group_identity.py::test_one_package_spanning_two_files_still_gets_one_group_per_file"
+    "tests/conformance/test_exact_group_identity.py::test_two_file_model_gets_one_group_per_declaring_file"
    ],
    "blocked_by": [],
    "reason": "Where an entry-point group's name comes from, and what still disagrees. Imports legacy owners (pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
@@ -3768,7 +3768,7 @@
    "unreachability": null,
    "replacement_proof_node": [
     "tests/conformance/test_exact_group_identity.py::test_group_identity_comes_from_the_declaring_file_or_package",
-    "tests/conformance/test_exact_group_identity.py::test_one_package_spanning_two_files_still_gets_one_group_per_file",
+    "tests/conformance/test_exact_group_identity.py::test_two_file_model_gets_one_group_per_declaring_file",
     "tests/conformance/test_exact_pipeline_context.py::test_the_live_and_v6_contexts_agree_on_the_public_entry_point_surface"
    ],
    "blocked_by": [],
@@ -7135,13 +7135,14 @@
    "group": "4B-G4",
    "authority": "retirement runbook completion (2026-08-11); the file is the runbook's own scaffolding and its subject is a set of patches the retirement consumes",
    "unreachability": null,
-   "replacement_proof_node": "tests/unit/test_retirement_worklist.py",
+   "replacement_proof_node": null,
    "blocked_by": [],
    "responsibility": "Keep the runbook's prepared patches applying to the tree while acceptance is pending.",
    "node_count": 4,
    "reason": "Its whole subject is `runbook-patches/*.patch` applying to a tree that has not retired yet. Once the steps run, the patches are spent and the file asserts that spent patches still apply, which is false by construction \u2014 measured in the step-4 replay. It goes with the last step, and what survives is the derivation the runbook actually rests on: every actionable row named by exactly one step, checked by tests/unit/test_retirement_worklist.py.",
    "state": "executed",
-   "executed_commit": "19072adf41dcfe3bf1385e843a52c414fac02969"
+   "executed_commit": "19072adf41dcfe3bf1385e843a52c414fac02969",
+   "disposition_4c_note": "[INHERITED: L-299/L-300, REPO-CLEANUP Move C C6, 2026-08-25] The spent runbook patches and worklist tooling retired after the four retirement steps executed. No live patch-application responsibility survives; ledger-integrity coverage remains in tests/unit/test_check_ledger_4a.py under L-299/L-300. Historical reason and executed commit above are retained."
   },
   {
    "id": "L-305",
