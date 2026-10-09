@@ -1,6 +1,6 @@
 # Spec: Elaborator Downstream Remediation and Certification
 
-**Status:** Reconciled — bounded PR-readiness cleanup certified and closed; Item 8 remains open at its own audit/close boundary
+**Status:** Certified — retained bounded Item 8 outcomes independently audited; ready for close, with broader lifecycle evidence still partial
 **Owner:** Reid W
 **Created:** 2026-08-16
 **Reconciled:** 2026-10-09
@@ -58,4 +58,4 @@ Original wording and order are recoverable at `6872977:.project/active/elaborato
 - Cleanup specification (Git `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/spec.md`), plan (Git `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/plan.md`), evidence (Git `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/evidence.md`), and [source-identity reconciliation](../../reference/source-identity-reconciliation.md).
 - Product promises `0002`, `0003`, `0005`, `0006`, and the original authoritative lifecycle contract/LC-SI catalog.
 
-**Next boundary:** Independent audit of retained outcomes, then the human-controlled close and post-close branch gate.
+**Next boundary:** Close the certified bounded Item 8 outcomes; preserve broader lifecycle PARTIAL evidence and existing diagnostic bounds. See [audit](audit.md).

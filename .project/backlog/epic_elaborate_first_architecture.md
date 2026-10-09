@@ -256,7 +256,7 @@ Ticked at close 2026-08-14 on the step-10 record: narrow-correction steps 1–10
 
 ---
 
-#### Item 8: Downstream Remediation and Certification (3–5 days)
+#### Item 8: Downstream Remediation and Certification (3–5 days) ✅
 
 **Type**: Integration / Documentation (absorbed SOURCE-IDENTITY Items 6–8 intent)
 
@@ -270,8 +270,10 @@ Ticked at close 2026-08-14 on the step-10 record: narrow-correction steps 1–10
 
 **Success Criteria:**
 
-- [ ] The retained Item 8 fixture, customer-compatibility, guidance, and certification obligations have final evidence with honest bounds and independent audit.
-- [ ] Item-3 obligations are reconciled to authority/evidence coordinates, with any remaining obligation visibly dispositioned; no descoped outcome is labeled PASS.
+- [x] The retained Item 8 fixture, customer-compatibility, guidance, and certification obligations have final evidence with honest bounds and independent audit.
+- [x] Item-3 obligations are reconciled to authority/evidence coordinates, with any remaining obligation visibly dispositioned; no descoped outcome is labeled PASS.
+
+**Independent audit (2026-10-09):** [Certify](../active/elaborator-downstream/audit.md) for retained bounded Item 8 outcomes; ready for close. Complete 35-coordinate lifecycle certification and LC-SI-23 remain PARTIAL; this item certification does not waive that broader inherited requirement.
 
 **Location**: `.project/active/elaborator-downstream/`
 
