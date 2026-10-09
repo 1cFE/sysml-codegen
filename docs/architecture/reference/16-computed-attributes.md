@@ -33,6 +33,3 @@ instance paths and canonical channels rather than classifier labels.
   expressions refuse instead of degrading.
 - `tests/integration/test_computed_attributes_exact_route.py` proves generated arithmetic
   matches the model.
-
-The legacy `ComputedAttributeData` and `ComputedAttributeClassification` values remain importable
-data-model compatibility surfaces. They do not drive the shipped route.

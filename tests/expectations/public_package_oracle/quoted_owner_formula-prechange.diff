@@ -1,0 +1,22 @@
+--- committed
+
++++ live
+
+@@ -1,5 +1,5 @@
+
+ {
+-  "fingerprint": "138c04218a746de3aa5047bbd6a5d6fc374113955e59273d514f17b948f7fcd5",
++  "fingerprint": "da74dd29a6787c9a61f49fad13b6b5a03ca8d85ef050b1608e4bb91842b29650",
+   "graph": {
+     "attrs": [
+       {
+@@ -226,7 +226,7 @@
+
+               },
+               "reference": {
+                 "chain_segments": [],
+-                "source_name": "net margin",
++                "source_name": "'net margin'",
+                 "target": {
+                   "kind": "AttributeUsage",
+                   "name": "net margin",

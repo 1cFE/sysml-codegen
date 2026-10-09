@@ -52,8 +52,6 @@ REL = 1e-12
 #: producing an output, or starts producing an extra one, fails here.
 EXPECTED_CHANNELS = {
     "constraint_report",
-    "hif_driver__hif_driver_instance__meier_cost__cost_billions",
-    "hif_driver__hif_driver_instance__meier_cost__gamma",
     "hif_plant_pkg__hif_plant__driver__meier_cost__cost_billions",
     "hif_plant_pkg__hif_plant__driver__meier_cost__gamma",
     "hif_plant_pkg__hif_plant__lcoe_calc__lcoe",
@@ -177,12 +175,12 @@ def test_the_generated_registry_is_the_public_simkit_builder(live_package) -> No
 
 
 @pytest.mark.parametrize("route", ["live", "relocated"])
-def test_the_package_publishes_exactly_eleven_channels(
+def test_the_package_publishes_exactly_nine_channels(
     route, live_package, relocated_package
 ) -> None:
     result = (live_package if route == "live" else relocated_package)["result"]
     assert set(result.outputs) == EXPECTED_CHANNELS
-    assert len(result.outputs) == 11
+    assert len(result.outputs) == 9
 
 
 @pytest.mark.parametrize("route", ["live", "relocated"])
@@ -209,14 +207,12 @@ def test_real_teax_reproduces_the_hand_computed_arithmetic(
     assert outputs["hif_plant_pkg__hif_plant__recirc_calc__f_recirc"] == pytest.approx(
         hand.recirculating_fraction(), rel=REL
     )
-    for prefix in (
-        "hif_driver__hif_driver_instance__meier_cost",
-        "hif_plant_pkg__hif_plant__driver__meier_cost",
-    ):
-        assert outputs[f"{prefix}__gamma"] == pytest.approx(hand.driver_gamma(), rel=REL)
-        assert outputs[f"{prefix}__cost_billions"] == pytest.approx(
-            hand.driver_cost_billions(), rel=REL
-        )
+    assert outputs["hif_plant_pkg__hif_plant__driver__meier_cost__gamma"] == pytest.approx(
+        hand.driver_gamma(), rel=REL
+    )
+    assert outputs[
+        "hif_plant_pkg__hif_plant__driver__meier_cost__cost_billions"
+    ] == pytest.approx(hand.driver_cost_billions(), rel=REL)
 
 
 @pytest.mark.parametrize("route", ["live", "relocated"])

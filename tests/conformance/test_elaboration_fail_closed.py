@@ -144,20 +144,18 @@ def test_customer_fixture_lenient_diagnostics_are_accounted_for() -> None:
     graph = _elaborate_lenient("fusion_tea")
 
     assert Counter(diagnostic.code for diagnostic in graph.diagnostics) == Counter()
-    assert len(graph.calcs) == 7
+    assert len(graph.calcs) == 6
     assert len(graph.constraints) == 1
-    assert graph.attrs
+    assert len(graph.attrs) == 44
+    assert len(graph.occurrences) == 7
 
-    # The seven attributes that used to be the seven diagnostics, one for one,
+    # The six surviving attributes from the former enumeration diagnostics
     # now carry a resolved enumeration literal keyed by qualified name.
     assert {
         node.display_path: node.value
         for node in graph.attrs.values()
         if isinstance(node.value, str)
     } == {
-        "hif_driver__hif_driver_instance__scope": (
-            "economic_parameter::'CAS Scope'::ife_divergent"
-        ),
         "hif_plant_pkg__hif_plant__driver__scope": (
             "economic_parameter::'CAS Scope'::ife_divergent"
         ),

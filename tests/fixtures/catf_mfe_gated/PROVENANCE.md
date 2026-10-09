@@ -5,11 +5,7 @@ Forked from `tests/fixtures/catf_mfe_d5` on 2026-08-13 for **CONSTRAINT-SEMANTIC
 the ruled constraint policy**: nothing in it is invented, and every difference from `catf_mfe_d5`
 traces to a row in `owner-disposition.md` (RULED 2026-08-13).
 
-**The frozen twins are untouched.** `catf_mfe_model` and `catf_mfe_d5` keep their bytes and their
-byte-reversal relationship; the only edit to d5 was its stale acceptance paragraph. This fixture
-deliberately differs from d5, so the byte-reversal check does not transfer to it. Its integrity
-check is the **accounting identity** instead: `scripts/check_gated_manifest.py --check`, which
-joins the ruled table, the population expectation, and this file, and proves
+**The frozen source twins are untouched.** `catf_mfe_model` and the regenerable `catf_mfe_d5` source tree keep their byte-reversal relationship. The D5 snapshot was separately recaptured under the 2026-10-08 unit-removal ruling recorded below. This fixture deliberately differs from D5, so its integrity check is the accounting identity: `scripts/check_gated_manifest.py --check` joins the ruled table, population expectation, and this file, and proves
 
 > **65 = 56 carriers + 9 named deletions**
 
@@ -41,12 +37,7 @@ Package `CATFGateForms`, fixture-local, holding `PositiveQuantity`, `FractionWit
 `ProductWithinBand`. All three write their predicates over formals only — the blessed
 bindings-only gate shape (`rulings-20260812.md` Q4).
 
-`ProductWithinBand` was **authored by Item 9** for A9, once Item 8 made the row buildable.
-Unlike its two siblings it is **not** declared over bare `Real` formals: each of `observed`,
-`count`, `each_capacity` and `rel_tol` carries a trailing unit comment (`// m³/s`,
-`// Dimensionless`). That is load-bearing, not decoration — see §5's A9 subsection. The
-consequence is that this form is **dimension-specific**: a product band over another dimension
-needs its own definition. Authority: `owner-disposition.md` Group A, A9; open point O7.
+`ProductWithinBand` was authored by Item 9 for A9. Its bare `Real` formals carry human-readable `// m³/s` and `// Dimensionless` comments. Codegen stopped deriving labels from comments under the owner's 2026-10-08 ruling; these comments do not establish machine-checked dimensions. Authority: `owner-disposition.md` Group A, A9; open point O7.
 
 **`PositiveQuantity`'s formal is named `quantity`, not `value` — a change from the ruled table's
 proposed spelling.** `owner-disposition.md`'s A2 cell proposes
@@ -420,24 +411,7 @@ claim about intent**, verified at exactly two checkpoints — the owner's sign-o
 design review against the authored source — and **nowhere else**. A later reader must not read
 these paragraphs as evidence that anything machine-checked them.
 
-A2 and A3 take the dimensionless, unit-blind library band under human review (Item 5 design D3).
-A9's `ProductWithinBand` does not: its four formals carry unit comments, because **since Item 8
-(`62a07e5`) a constraint formal's port takes its unit text from the formal's own declaration**.
-The earlier record here said a constraint formal cannot carry unit text at all; that premise is
-now false. Its prediction held exactly — the per-dimension spelling is the only unit-carrying
-option and it costs **one definition per dimension**, so `ProductWithinBand` is m³/s-specific and
-a product band over another dimension needs its own definition. That cost is real and is recorded
-in the backlog as an unowned platform gap, not only here.
-
-**Carrying unit text is a build requirement, not a documentation preference.** Projection mints
-one entry point per public key and refuses when two consumer lanes render different metadata. A
-formal declared without readable unit text projects `unit_text=None`; if a calc lane already reads
-a real unit on the same design attribute, the whole model refuses with `SI_RENDERING_COLLISION`.
-Measured on exactly three keys when Item 9's ruled forms were first authored without annotation:
-`tf_coil__thickness` (`None` vs `'m'`), `n_pumps` (`'Dimensionless'` vs `None`),
-`pumping_speed_total` (`'m³/s'` vs `None`). The scope is **agreement between lanes**, not universal
-annotation — an attribute with a single consumer needs no readable unit text, which is why 13 layer
-thicknesses and `axis_region.inner_radius` are correctly left unannotated.
+A2 and A3 take the dimensionless library band under human review (Item 5 design D3). A9's `ProductWithinBand` records m³/s intent in comments. Item 8 (`62a07e5`) previously copied those comment labels to ports; the owner's 2026-10-08 ruling removed all three codegen unit guessers. Comment labels no longer participate in projection consistency or cause shared-input collisions. Parser-native units on written values retain their existing behavior and limits.
 
 ### Item 9's decision D3 — `tf_coil.thickness`'s unit comment
 
@@ -450,11 +424,7 @@ deletion record **D3** in §2.)
   `attribute thickness : Real = 0.25 [m];  // From line 83 (= tf_dr)` →
   `// m - from line 83 (= tf_dr)`. The original provenance text is preserved inside the amended
   comment; only a readable unit was prepended.
-- **Why it was necessary:** A6's derived `outer_radius := inner_radius + thickness` makes
-  `thickness` an input port on a new consumer lane, and that lane reads the unit from the consumed
-  attribute's **own** declaration. The extractor's comment rule takes the first token after `//`
-  and rejects a stop-word list that includes `from`, so the authored comment yielded no unit. The
-  `[m]` on the *value* never reaches port metadata. Without the edit the ruled form does not build.
+- **Why it was necessary then:** A6's derived `outer_radius := inner_radius + thickness` added a consumer lane whose metadata used the declaration comment's first token. The old reader rejected `From`, producing a conflict with the calc formal's `// m` label. The 2026-10-08 unit-guesser removal supersedes that build requirement; the source comment remains a human-readable provenance note.
 - **Why only this one thickness:** `tf_coil.thickness` is the only free thickness a calc also
   consumes (`magnet_surface_calc`, whose calc-def formal carries `// m`). Annotating the other 13
   would be unauthorised churn on declarations nothing requires it from.
@@ -500,10 +470,8 @@ here because the archived table is where they were ruled and this is where a lat
   and not a rate; and that `rel_tol` stays a fraction rather than acquiring an absolute meaning.
   Any of those bound wrong would be admitted silently and the gate would report cleanly while
   comparing incommensurable quantities.
-- **Note on the unit comments:** the `// m³/s` and `// Dimensionless` on `ProductWithinBand`'s
-  formals **do** reach port metadata and **do not** make the predicate dimension-checked. They
-  are how the projection agrees with the calc lane, nothing more. The unit claim above stays
-  human-owned.
+- **Note on the unit comments:** The `// m³/s` and `// Dimensionless` comments describe human-owned intent. They no longer reach generated port labels and do not make the predicate dimension-checked.
+
 
 ---
 
@@ -516,3 +484,8 @@ here because the archived table is where they were ruled and this is where a lat
 - **Population expectation:** `tests/expectations/constraint_population/catf_mfe_gated.json`,
   committed **before** this fixture existed (SC-6).
 - **Coverage expectation:** `tests/unit/data/expected-coverage.md`, ledger row `catf_mfe_gated`.
+
+
+## PR-readiness recapture — 2026-10-08
+
+[OWNER] Codegen removes comment, documentation-text, and type-table unit guesses; the final ruling is retained in `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/spec-review.md`, Resolution L2-2. [AGENT] Licensed recapture preserves 61 occurrences, 360 attributes, 58 calculations, and projected counts `62/55/3/59`. The instance graph differs only by unit fields becoming null. Generated changes are labels in seven module docstrings and three output-schema descriptions, plus their physical package seal; arithmetic, wiring, and the semantic model-contract bytes are unchanged.

@@ -1,356 +1,53 @@
 # Product Backlog
 
-Prioritized list of epics and features.
+**Updated:** 2026-10-09
 
-**Last Updated**: 2026-08-20
+Current work and independently justified follow-ons. Owner-originated rulings retain their source authority; agent proposals remain challengeable. Historical closed work is available through Git and durable registers.
 
----
+## Active Work
 
-## Priority Legend
+| Item | Status | Authority and next boundary |
+|------|--------|-----------------------------|
+| [ELABORATE-FIRST Item 8](epic_elaborate_first_architecture.md) | Bounded cleanup closed; Item 8 remains open | One completion authority; source-identity evidence bounds and Item 8 audit/close remain. |
+| [GAP-CLOSE](epic_gap_close.md) | Local scope certified; F1 runtime leg closed 2026-07-20 | The old full-suite PR-wave evidence gap remains historical and is not retroactively proved by today's tests. |
 
-- **P0**: Critical - Blocking, do immediately
-- **P1**: High - Important, do soon
-- **P2**: Medium - Valuable, do when possible
-- **P3**: Low - Nice to have, do eventually
+## Capabilities and Diagnostics
 
----
+### [INDEXED-ELEMENT-EXPRESSION-SUPPORT] Valid indexed element references — unscheduled `[AGENT]`
 
-## Standalone fixes — small, unblocked, not owned by any epic
+SysIDE preserves an authored index; codegen currently refuses before graph construction with `SI_INDEXED_SOURCE_UNSUPPORTED`. Adding execution semantics needs a separate scoped capability. Earlier agent filings proposed P1 and P3; they are consolidated here without assigning an owner priority. Sources: parser Phase-4 design D5/D7/D8 (Git history), `tests/fixtures/indexed_expression_source/model.sysml`, and `tests/conformance/test_expression_evidence_integrity.py`.
 
-Filed 2026-08-20 `[OWNER]`. Both were briefly attached to REPO-CLEANUP Item 1 because the epic's
-product-lens wanted them off Item 8's tail; neither has anything to do with scaffolding or cleanup,
-so they ride on their own. Each is a `/_my_quick_edit`, not a pipeline item.
+### [OUTPUT-ALIAS-DUPLICATE-SOURCE-SILENCE] Multiple aliases for one source — unscheduled `[AGENT]`
 
-### [POSITIONAL-FORMAL-REDEFINITION] A calc usage that skips a leading defaulted formal is refused, and the legacy route mis-wired it — P1, unowned (filed 2026-08-21 from fusion-tea stellarator-model-migration)
+Aliases survive in `graph.output_aliases`; generation currently selects the first alias for the single file per exit channel. Decide whether to emit additional files or diagnose the second alias in its own item. Earlier P1/P3 filings are consolidated without assigning an owner priority. Evidence: `elaboration/project.py`, `generation/pipeline.py`, and `tests/unit/test_exit_point_aliases.py`. The earlier extraction-loss premise is superseded.
 
-On the exact route a calc usage that binds later formals by name and leaves an *earlier* defaulted
-formal at its default lands each binding one slot early and refuses as `SI_RENDERING_COLLISION`
-"distinct inputs render to one parameter name" (`elaboration/project.py:674-685`). Four sites in
-the stellarator model at fusion-tea `7ee0c22a`: `generic_mfe/mfe_plant.sysml:116` (`geom`, skips
-`pi`), `:141` (`rb`, skips `pi`), `:530` (`supplementary`, skips four rate formals);
-`stellarator_09/stellarator_plant.sysml:855` (`wall_load_calc`, skips `ash_frac`); the defs are
-`mfe_plasma_scaling.sysml:30,71,231` and `mfe_account_costs.sysml:559-590`. Two findings:
-(a) the refusal is correct but the message does not say *which* skipped formal shifted the slots
-or that reordering the declaration fixes it; (b) premise-grade: the legacy route matched by name,
-so the old package was numerically right -- on the exact route these four would be mis-wired
-without the collision check. The customer-side fix (declare defaulted formals last) is applied and
-ledgered in fusion-tea (`models/stellarator_migration_ledger.md`, Class A rows 1-4); the diagnostic
-should name the formal and the fix.
+### [POSITIONAL-FORMAL-REDEFINITION] Improve skipped-formal diagnostics — P1, unowned `[AGENT]`
 
-### [UNIT-SCRAPE-BYTE-OFFSET] `extract_feature_unit` reads the wrong source line and projects comment prose as a unit — P1, unowned (filed 2026-08-21 from fusion-tea stellarator-model-migration)
+Current elaboration follows parser redefinition identity. The August 21 filing's name-matching/positional-codegen premise is superseded; it does not establish a binding defect. A clearer refusal should identify the skipped formal and corrective declaration order. Customer examples and the original four sites remain in the August 21 backlog revision and `models/stellarator_migration_ledger.md` in fusion-tea; `tests/fixtures/modeled_default_fidelity/PROVENANCE.md` records parser positional behavior.
 
-`extraction/feature_metadata.py::_unit_from_source` locates a declaration's line by
-`cst_node.start_byte` but walks the file by `len(line)` in *characters*, so every multi-byte
-character earlier in the file (an em dash in a doc comment is enough) shifts the scanned line
-forward -- 42-62 bytes on the stellarator model -- onto an unrelated comment, whose first word
-after `//` is then projected as that feature's unit (`unit='Manual'`, `unit='n'` were observed).
-Consumers of one entry point then disagree and the projection refuses with
-`SI_RENDERING_COLLISION` "conflicting projected metadata" (`elaboration/project.py:503`),
-naming the entry point but not the scraped unit or the line it came from. Second heuristic in the
-same function: on a correctly located line the first word after `//` is projected as the unit
-regardless of content (`unit='module'`, `unit='operating'`), so any trailing comment on a
-declaration is a latent collision. Third, `_unit_from_description` reads any short parenthetical in
-a doc body as a unit. Fix: seek by character offset (decode the byte offset against the file's
-encoding, or use the CST node's line number), and restrict comment-derived units to an explicit
-`[unit]` bracket form or drop the comment channel. Reproducer: fusion-tea `models/library/analyses/`
-at `7ee0c22a` (before the customer-side workaround); the workaround -- ASCII punctuation in comment
-text plus no trailing comments on declaration lines -- is ledgered as Class B
-(`models/stellarator_migration_ledger.md` F3) with a fusion-tea revert row. Fails loud, never
-silent: the collision check stops generation; no wrong unit reaches a sealed contract (the contract
-carries no unit field today).
+- **[SCALAR-FUNCTION-VOCABULARY] Add scalar invocation functions as a separately owned capability — P2 `[OWNER, 2026-08-18]`.** Supporting `min`, `max`, or other scalar functions is not part of the stop-parser remediation; its declaration/compilation semantics remain separately owned. Today every invocation except the exact standard-library `NumericalFunctions::sum` declaration refuses before graph construction with `SI_EXPRESSION_SOURCE_UNSUPPORTED`, naming the authored expression and its source location. A future capability must define and test each admitted function explicitly. **Motivating case (filed 2026-08-21, fusion-tea stellarator-model-migration):** the stellarator model authored six invocations -- `RealFunctions::sqrt` in `'DT Fusion Power'` (`mfe_plasma_scaling.sysml`, the Bosch-Hale peak reactivity) and `RealFunctions::max` ×3, `min`, `floor` in `'Levelized Replacement Cost'` (`mfe_account_costs.sysml`, jnp.clip and ceil written as identities). Both calcs were made opaque manual interfaces so the pinned route generates (fusion-tea `models/stellarator_migration_ledger.md`, Class B rows, Appendix A/B hold the verbatim bodies); fusion-tea carries a revert row to restore them when this capability lands. The wanted vocabulary for that model is exactly `sqrt`, `max`, `min`, `floor`.
 
-### ~~[ARTIFACT-MANIFEST-TESTS-HARD-FAIL] Release-evidence tests break an ordinary checkout~~ ✅
+- **[DEEP-QUALIFIED-OUTPUT-WIRING] Wire a deep qualified reference to its concrete calculation output — P2 `[AGENT]`.** The authored shape is `measurement_system::station::array::sensor::core::metric_value` in `tests/fixtures/deep_cross_scope_probe/design.sysml`. The current contract is `SI_OCCURRENCE_MISSING` because no producer exists in the consumer domain, with no captured snapshot. Transition A2 owns that refusal. Implement exact producer wiring as a separate capability; do not restore the removed globally-sole substitution.
 
-Closed 2026-08-25 by REPO-CLEANUP Move C, by retirement rather than the raise→skip flip:
-`verification/` and its manifest gate were deleted [OWNER, 2026-08-23], the four entangled
-product tests were disentangled onto `tests/helpers/source_roots.py` (ordinary-checkout
-roots), and the register-contract legs of the mixed doc-contract file moved to
-`test_register_contract.py`. A clean checkout now collects and passes the full suite with
-no omit list.
+### [DIAGNOSTIC-PROVENANCE-BY-CONSTRUCTION] Internal-defect diagnostic totality — separate follow-up
 
-### [SERIALIZE-NAN-SEAL] The contract seal writes invalid JSON on a NaN — P1
+The parser predecessor closed by owner direction with its historical `Needs Work` audit preserved. Model-caused reference/location fixes shipped; independently complete internal-defect provenance remains separate. Source: parser-close/shipment Git records, product-lens final dispositions, and `.project/adr/0004-derive-occurrences-from-exact-evidence-or-refuse.md`.
 
-`contracts/serialize.py` has two encoders and its own docstring calls them "the same decision seen
-twice". **Both** omit `allow_nan=False`, where the other three canonical encoders in the tree set it
-(`snapshot/instance_graph.py:87`, `snapshot/envelope.py:180`, `extraction/source_manifest.py:342`):
-
-- `canonical_json` (`:28`) — the `ModelContract` fingerprint payload that gets hashed
-- `write_contract_json` (`:34`) — the contract file that `PackageContract` hashes **and ships**
-
-`ContractParameter.default_value` is typed `float | None` (`contracts/models.py:33`), so a NaN
-default writes a bare `NaN` into the shipped contract — invalid JSON — and the seal computes a
-digest over it and reports success. A signed contract containing JSON most parsers reject, with
-nothing to tell you.
-
-**Latent, not live** — whether any real model produces a NaN default is unverified. Fixing only
-`:28` fixes the half that hashes and leaves the half that ships, so both go together.
-
-Falsifier / acceptance: build a `ModelContract` whose `ContractParameter.default_value` is
-`float("nan")`, run the package seal, and assert the written contract file parses under
-`json.loads(..., parse_constant=raise)`. Today it writes `NaN` and seals. Source: REPO-CLEANUP
-product-lens `epic_plan-F6` and Item 1 spec-lens `spec-F3`.
-
-### [EMIT-STEP-REGRESSION-GATE] The emit step has no output-regression comparison — P2, unowned (filed 2026-08-25, REPO-CLEANUP Move C, F4)
-
-`tests/fixtures/baseline_outputs/` (13,923 lines) and its reader `test_baselines.py` were
-deleted: nothing regenerated anything to compare against them, and all four of the
-reader's assertions passed on hand-written stubs — a false defender, not a gate (research
-§7.2; the suite itself admitted this at `test_zero_entry_package_golden.py`).
-
-The gap that remains owned by nobody until this item runs: apart from the single
-`zero_entry_package` golden (a genuine byte comparison) and the seal contracts, no test
-regenerates a full package per fixture and compares emitted bytes against a committed
-baseline, so an emit-step regression that keeps the graph identical but changes rendered
-output is caught only by the golden's one shape. Acceptance: a licensed gate that
-generates from each fixture snapshot and byte-compares against committed expected output
-(or digests), with the `captured_at` churn rule applied. The Move C byte-identity harness
-(session scratch, `byteid/run.sh`) is a working prototype of exactly this.
+## Retained Model and Assurance Work
 
 ### [SNAPSHOT-CODEC-AND-DUP-CONSOLIDATION] Digest-sensitive consolidations deferred from REPO-CLEANUP Move C — P3, unowned (filed 2026-08-25)
 
-Move C deleted the dead lanes; three *duplication* findings from the same inventory
-(`.project/research/20260820-201945_line-count-anatomy-and-salvageability.md` §5) are
-consolidations whose cost is a digest or byte change, so they were filed rather than done:
+Move C deleted the dead lanes; three *duplication* findings from the same inventory (`.project/research/20260820-201945_line-count-anatomy-and-salvageability.md` §5) are consolidations whose cost is a digest or byte change, so they were filed rather than done:
 
-- The hand-written snapshot codec (`snapshot/instance_graph.py`, ~550 collapsible lines of
-  field-copying) — needs dataclass→Pydantic, discriminators on three untagged unions, an
-  `instance-graph/v4` schema bump, and 22 licensed fixture re-captures.
-- The two ExpressionIR→Python numeric compilers (`calc_compat_renderer.py`,
-  `predicate_compiler.py`) differ mainly in spacing — consolidating changes emitted bytes,
-  so it rides with a deliberate baseline re-capture, not a cleanup pass.
-- The canonical-JSON encoder copies (three byte-identical of six) sit on sealed-digest
-  paths (contracts, snapshot, catalog); consolidate only with the byte-identity gate run
-  per encoder.
+- The hand-written snapshot codec (`snapshot/instance_graph.py`, ~550 collapsible lines of field-copying) — needs dataclass→Pydantic, discriminators on three untagged unions, an `instance-graph/v4` schema bump, and 22 licensed fixture re-captures.
+- The two ExpressionIR→Python numeric compilers (`calc_compat_renderer.py`, `predicate_compiler.py`) differ mainly in spacing — consolidating changes emitted bytes, so it rides with a deliberate baseline re-capture, not a cleanup pass.
+- The canonical-JSON encoder copies (three byte-identical of six) sit on sealed-digest paths (contracts, snapshot, catalog); consolidate only with the byte-identity gate run per encoder.
 
-Judged no-change, recorded here so it is not re-proposed: the error-subclass constructors
-(`extraction/errors.py`, `elaboration/occurrence.py` and friends) and the
-`_collect_unbound_{constraint,calculation}_formals` pair look like boilerplate but carry
-different payloads per site; collapsing them means a dispatch shim, and the owner ruling is
-qualitative simplicity — deletion over shims.
-
-### ~~[V11-DEAD-GATE-DOCS] Three live docs advertise a refusal that cannot happen~~ ✅
-
-Closed 2026-08-25 by REPO-CLEANUP Move C: the dead V11 code (collector, CLI branch) was
-deleted, and the four documents that advertised the refusal were corrected in the same
-commit — `CLAUDE.md` (preflight list), `docs/architecture/overview.md`,
-`docs/architecture/reference/00-pipeline-overview.md`, and
-`docs/architecture/modeling-assumptions.md` (Validation Rules; V1–V10 remain).
-The empty-set premise stays pinned by `tests/unit/test_warning_reconciliation_exact_route.py`.
-
----
-
-## In Progress
-
-| Item | Priority | Status | Started | Notes |
-|------|----------|--------|---------|-------|
-| generation-boundary | P1 | In Progress (BUILD phase) | 2026-02-20 | Step 7.6 — enforcing generation/ only consumes ComputationGraph. Phases 1-2-4 done. **FLAG (Item 8, 2026-07-06):** Item 8 deletes generation-layer symbols on a rebase-sensitive surface — `map_sysml_type_to_rootmodel_wrapper` (`generation/type_mapping.py`), `generate_derived_group_json` + its `generation/__init__.py` re-exports (`generation/entry_point.py`), and two dead Jinja templates in `src/sysml_codegen/templates/` (a sibling of `generation/`). Do not resurrect these exports on rebase. |
-| hierarchical-output | P2 | Draft (spec only) | 2026-02-22 | Convert flat JSON output to hierarchical structure reflecting SysML part hierarchy. |
-| new-pipeline-explainer | P2 | Draft (active) | 2026-02-22 | Interactive HTML explainer for refactored 7-step pipeline architecture. |
-
----
-
-## Exact-evidence follow-ups (filed by stop-reinventing-the-parser Phase 4)
-
-- **[INDEXED-ELEMENT-EXPRESSION-SUPPORT] Implement valid indexed element expressions — P1
-  `[AGENT]`, under 0001.** SysIDE preserves an authored index, but Codegen intentionally refuses
-  every expression consumer before graph construction with `SI_INDEXED_SOURCE_UNSUPPORTED` until
-  exact indexed-element semantics are implemented. Preserve the authored reference and the current
-  fail-before-mutate contract while adding the capability. Source:
-  `.project/completed/20260819_stop-reinventing-the-parser/design.md` D5/D7/D8 and transition rows A5/A5a/A5b.
-- **[SCALAR-FUNCTION-VOCABULARY] Add scalar invocation functions as a separately owned capability —
-  P2 `[OWNER, 2026-08-18]`.** Supporting `min`, `max`, or other scalar functions is not part of the
-  stop-parser remediation; no existing fixture or Fusion model needs them. Today every invocation
-  except the exact standard-library `NumericalFunctions::sum` declaration refuses before graph
-  construction with `SI_EXPRESSION_SOURCE_UNSUPPORTED`, naming the authored expression and its
-  source location. A future capability must define and test each admitted function explicitly.
-  **Motivating case (filed 2026-08-21, fusion-tea stellarator-model-migration):** the stellarator
-  model authored six invocations -- `RealFunctions::sqrt` in `'DT Fusion Power'`
-  (`mfe_plasma_scaling.sysml`, the Bosch-Hale peak reactivity) and `RealFunctions::max` ×3,
-  `min`, `floor` in `'Levelized Replacement Cost'` (`mfe_account_costs.sysml`, jnp.clip and ceil
-  written as identities). Both calcs were made opaque manual interfaces so the pinned route
-  generates (fusion-tea `models/stellarator_migration_ledger.md`, Class B rows, Appendix A/B hold
-  the verbatim bodies); fusion-tea carries a revert row to restore them when this capability lands.
-  The wanted vocabulary for that model is exactly `sqrt`, `max`, `min`, `floor`.
-- **[OUTPUT-ALIAS-DUPLICATE-SOURCE-SILENCE] Refuse or implement a second output alias — P1
-  `[AGENT]`.** A second authored alias for one source survives in `graph.output_aliases` but emits no
-  exit-point line, writes no `<name>.json`, and produces no diagnostic. Decide the supported
-  behavior and make it explicit before generation; first-wins silence is not evidence. Source:
-  `.project/completed/20260819_stop-reinventing-the-parser/product-lens.md` L-13 and the generation site it
-  records.
-- **[DEEP-QUALIFIED-OUTPUT-WIRING] Wire a deep qualified reference to its concrete calculation
-  output — P2 `[AGENT]`.** The authored shape is
-  `measurement_system::station::array::sensor::core::metric_value` in
-  `tests/fixtures/deep_cross_scope_probe/design.sysml`. The current contract is
-  `SI_OCCURRENCE_MISSING` because no producer exists in the consumer domain, with no captured
-  snapshot. Transition A2 owns that refusal. Implement exact producer wiring as a separate
-  capability; do not restore the removed globally-sole substitution.
-
----
-
-## P0 - Critical
-
-| Epic | Status | Notes |
-|------|--------|-------|
-| ~~[CONSTRAINT-SEMANTICS] Constraint Semantics and Design-Search Feasibility~~ ✅ | Complete (2026-08-14). Archived to: `.project/completed/20260814_epic_constraint_semantics_contract.md` (umbrella shaping folder preserved at `.project/completed/20260814_constraint-semantics-contract/`) | All nine items closed and archived; all ten epic Success Criteria ticked against their amended forms, Lessons Learned written. Delivered assert-only authoring policy, canonical 65/65 usage totality with a hard gate, truthful report/TEAx coverage (six states, fail-closed), the `catf_mfe_gated` derivative at `65 = 56 + 9` with three executing gates, two predicate fixes, the unit-lane defect cure, the staged calc-def gate design, and the three-repo doc/agent-prompt sync. Planned 8.5–9.5 days over 6 items; delivered 9 items at 10–12. **`pre_pr` deferred to the phase-D branch gate by ruling — not run at close.** Three owner-call residuals ride out: the codegen `.claude/` symlink target, `[CONSTRAINT-GATES-UNTAGGED]` (assigned to cutover step 4), and the parked D-2 vs D-4/SRC-01 premise conflict. |
-| ~~[SOURCE-IDENTITY] One Modeled Value, One Runtime Source~~ | Superseded (2026-08-07; archived 2026-08-10). Archived to: `.project/completed/20260810_epic_semantic_source_identity.md` | Items 1–3 complete and inherited unchanged as the semantic authority (29-cell matrix, dispositions, invariants); the Item-4/5 shadow-layer architecture was stopped after Item-4 Phases 1–2 (recovery assessment) and replaced by [ELABORATE-FIRST](epic_elaborate_first_architecture.md); Items 6–8 intent absorbed into ELABORATE-FIRST Items 7–8. Item-4 artifacts archived to `completed/20260810_source-identity-occurrence-foundation/`; stopped implementation preserved on `item4-phases12-forensic`. |
-| [GAP-CLOSE] Constraint-Expression Gap Closure | Local scope certified; external F1 leg now verified closed (2026-07-20) | The blocking `[GAP-CLOSE-F1-TEAX-NORMALIZATION]` leg is closed in merged teax main (see the closed entry below). Remaining before full certification: Item 5 closeout state and the independent audit's open full-suite wave-gate leg — a certification pass, not new code. See `epic_gap_close.md`. |
-| ~~[CONSTRAINT-LIFECYCLE-REMEDIATION] Constraint Execution Lifecycle Remediation~~ ✅ | Complete (2026-07-20). Archived to: `.project/completed/20260720_epic_constraint_execution_lifecycle_remediation.md` | All 14 items done; composed public proof 41/41 at the pinned set. Merged 2026-07-20: agentic-mbse #11 → sysml-codegen #9 → teax #3. Release record + 41/41 register in `completed/20260720_constraint-lifecycle-composed-proof/`. |
-| ~~[CONSTRAINT-WAVE-REMEDIATION] Constraint PR-Wave Remediation~~ | Superseded — partially completed (2026-07-19). Archived to: `.project/completed/20260720_epic_constraint_pr_wave_remediation.md` | Items 1/2 complete and Items 4/6 certified; all unfinished work was mapped into CONSTRAINT-LIFECYCLE-REMEDIATION (now complete). Retained as history. |
-
-CONSTRAINT-SEMANTICS items (epic CLOSED and archived 2026-08-14 — see epic row above; decomposition
-owner-approved 2026-08-12, grown from 6 items to 9):
-
-- [x] Item 1 — Contract and Authoring Policy *(closed + archived 2026-08-13 →
-      `completed/20260813_constraint-semantics-contract-amendments/`; ticked 2026-08-13 as a
-      bookkeeping catch-up at Item 6's close — the close itself happened earlier)*
-- [x] Item 2 — Canonical Usage Domain and Catalog Totality *(closed + archived 2026-08-13 →
-      `completed/20260813_constraint-catalog-totality/`)*
-- [x] Item 3 — Coverage Report and TEAx Policy *(closed + archived 2026-08-13 →
-      `completed/20260813_constraint-coverage-policy/`; coordinated TEAx branch
-      `constraint-semantics-item3` complete but **unmerged**)*
-- [x] Item 4 — Predicate Defect Hardening *(closed + archived 2026-08-13 →
-      `completed/20260813_constraint-predicate-hardening/`; ticked 2026-08-13 as a bookkeeping
-      catch-up at Item 6's close — the close itself happened earlier)*
-- [x] Item 5 — CATF Derivative and End-to-End Acceptance *(closed + archived 2026-08-13 →
-      `completed/20260813_catf-constraint-policy-acceptance/`; audited Certify-with-residuals.
-      Epic Items 8 and 9 were filed out of this item's D-S1/D-S2 ruling and remain open)*
-- [x] Item 6 — Calculation-Definition Gate Capability Design *(closed + archived 2026-08-13 →
-      `completed/20260813_calcdef-constraint-gate-design/`; audited Certify as a design/planning
-      delivery. The 7–9 day production implementation is **not authorized in this epic** — filed as
-      `[CALCDEF-GATE-IMPLEMENTATION]` below, unowned, parked with the owner)*
-- [x] Item 7 — ADR, Product Promise, and Agent-Facing Documentation Sync *(closed + archived
-      2026-08-14 → `completed/20260814_constraint-docs-agent-sync/`; audited
-      CERTIFY-WITH-RESIDUALS. Ran last, as the epic's final item. SC2 and SC5 stay unticked, each
-      naming an owner-call residual — the codegen `.claude/` symlink target and
-      `[CONSTRAINT-GATES-UNTAGGED]` — rather than work left undone)*
-- [x] Item 8 — Unit-Lane Port Metadata Defect *(closed + archived 2026-08-13 →
-      `completed/20260813_unit-lane-port-metadata/`; audited Certify, shipped standalone as ruled,
-      zero v3 recapture, no residuals)*
-- [x] Item 9 — Derivative Upgrade Under Held Intent *(closed + archived 2026-08-13 →
-      `completed/20260813_derivative-upgrade-held-intent/`; audited Certify-with-residuals, R1
-      cured in place. The epic item's third criterion — retiring the B1–B5 PROVENANCE workaround —
-      stays unticked by owner ruling: it is a conditional on `[INLINE-PREDICATE-MARKER-DROP]`,
-      which has not closed, so it never fired)*
-
-SOURCE-IDENTITY items (epic superseded 2026-08-07, archived 2026-08-10 — see epic row above):
-- [x] Item 1 — Binding semantics and authoring-form spike (complete 2026-08-05)
-- [x] Item 2 — Source-identity routes and evidence-sufficiency spike (complete 2026-08-05;
-      aggregation-family disposition ratified at the Item-3 checkpoint)
-- [x] Item 3 — Authoritative source-identity contract (complete + certified 2026-08-07; remains
-      the inherited semantic authority)
-- Items 4–5 — superseded by ELABORATE-FIRST (Item-4 archive:
-  `completed/20260810_source-identity-occurrence-foundation/`)
-- Items 6–8 — intent absorbed into ELABORATE-FIRST Items 7–8
-
-CONSTRAINT-LIFECYCLE-REMEDIATION items (all complete 2026-07-20):
-- [x] Item 0 — Compatible candidate landing and pin (register row 0)
-- [x] Item 1 — Occurrence and demand integrity (row 1)
-- [x] Item 2 — Shared producer resolution and Gate A (row 2)
-- [x] Item 3 — Gate B coverage-scope proof and correction (row 3)
-- [x] Item 4 — Diagnostic severity and modeled-default fidelity (row 4)
-- [x] Item 5 — Whole-tree snapshot portability (row 5)
-- [x] Item 6 — Public documentation and F1 evidence reconciliation (rows 6–7)
-- [x] Item 7 — Trusted package bootstrap and seal provenance (rows 8–9)
-- [x] Item 8 — Canonical embedded catalog and store transition (row 10)
-- [x] Item 9 — Multi-entry candidate bridge (row 11)
-- [x] Item 10 — Producer completeness and stellarator rollup (row 12)
-- [x] Item 11 — TEAx constraint evidence durability (rows 13–15)
-- [x] Item 12 — Legacy snapshot and tracking identity closure (row 16)
-- [x] Item 13 — Composed public lifecycle proof and release readiness (row 17)
-
-Superseded CONSTRAINT-WAVE-REMEDIATION items:
-- [x] Item 1 — Profile semantics and wrong-verdict closure (R-1, R-2) — complete
-- [x] Item 2 — Generated constraint name-safety boundary (R-3) — complete
-- [ ] Item 3 — Occurrence and demand identity integrity (R-4, R-5, R-7) — sysml-codegen
-- [ ] Item 3B — Constraint-extension V11 coverage ownership (Gate B)
-- [x] Item 4 — Snapshot portability and shape gates (R-6, R-11) — certified; licensed live A/live
-      B/replay A and moved replay pass the exact relocation manifest — sysml-codegen
-- [ ] Item 5 — Lowering diagnostic and modeled-default fidelity (R-8, R-9) — sysml-codegen
-- [x] Item 6 — Seal and verify symlink symmetry (R-10) — certified
-- [ ] Item 7 — Dependency discovery and review-tail disposition (R-12 + Low/latent tail)
-- [ ] Item 8 — Cross-repo compatibility and release-readiness evidence (no PR interaction)
-
-GAP-CLOSE items:
-- [x] Item 1 — Runtime evaluation contract: exceptional arithmetic + predicate naming (F1, F2)
-      — codegen leg complete 2026-07-18; TEAx normalization leg verified closed in merged main
-      2026-07-20 (see the closed F1 entry below)
-- [x] Item 2 — Lowering outcome integrity: warning order + excluded identity (F4, F5)
-- [x] Item 3 — Model and seal boundary guards (F6, F9)
-- [x] Item 4 — Profile default-deny totalization (F7, F8, promoted diagnostics) — agentic-mbse
-- [ ] Item 5 — Packaging, docs, hygiene closeout + wave gates (F3, F10, hygiene)
-
-- **~~[GAP-CLOSE-F1-TEAX-NORMALIZATION]~~ ✅ CLOSED in merged teax main** (verified 2026-07-20
-  against `fa0e06a`). The seam stamps `context.failed_module_key`
-  (`packages/teax-simkit/simkit/core/pipeline_executor.py:146-150`), both evaluators route
-  through `_normalize_run_failure` which sets `EvaluationFailure.module_or_channel` and raises
-  `from error` (`simkit/evaluation/evaluator.py:54-76,174-177,258-263`); pinned cross-backend by
-  `simkit/tests/evaluation/test_f1_arithmetic_normalization.py::test_both_backends_normalize_native_arithmetic_failure`.
-  Closed by teax `d545701`, phase-stamp refinement by lifecycle Item 11 (`c342b10`). One
-  certification-record item not re-verified: the spec's saved pre-fix RED evidence artifact
-  (`gap-runtime-contract/spec.md:57`) — confirm on file before ticking that spec box.
-
-- **[ANON-ELIGIBLE-KEY] Anonymous executable assertions share one catalog compile key — P3
-  `[AGENT]` (filed 2026-07-18, GAP-CLOSE Item 2 non-goal).** Eligible anonymous assertions all
-  get `"<anonymous>"` as their `predicate_definition_key`, so compile-once grouping cannot
-  distinguish them (pre-existing; distinct from the F5 exclusion-path collision GAP-CLOSE
-  fixes). Needs an owner ruling first: are anonymous *executable* assertions a supported
-  authoring form? (Gap review Open Question 2.) Evidence:
-  `.project/research/20260718-123558_constraint-expression-final-gap-review.md` (F5) and the
-  verification record's F5 sub-question (c).
-
-## P1 - High Priority
-
-| Epic | Status | Notes |
-|------|--------|-------|
-| [REPO-CLEANUP] Repo Cleanup — Keep the Decisions, Delete the Exhaust | Complete (2026-08-25); [PR #15](https://github.com/1cFE/sysml-codegen/pull/15) open | Moves A–C are complete. Durable decisions and promises are in the registers; archives, dead code, and obsolete tests are removed. Completion and validation: `epic_repo_cleanup.md`, close commit `1df2faa`. |
-| ~~[CONSTRAINT-EXEC] Constraint Execution and Design-Space Studies~~ ✅ | Complete (2026-07-13). Archived to: `.project/completed/20260713_epic_constraint_execution.md` (independent findings audit alongside) | Modeled assertions execute as graph modules + exact-schema report aggregator; graph-owned catalog, sealed contracts, crash-safe study layer (lists/grids). De-risked by spikes S1–S6 (all passed, verified re-runs; results + carry-forwards inline in the concept). Acceptance: IFE sweep's hand-coded viability rule replaced by the generated assertion, grid classifications match. All 15 items certified; IFE acceptance ratified [OWNER] (2294/2301 + 7 model-favoring boundary rows); CE-F1/F2 follow-ons registered below, CE-F3 fixed. |
-| ~~[PUSH-DOWN] agentic-mbse Push-Down~~ ✅ | Complete (2026-07-10). Archived to: `.project/completed/20260720_epic_push_down.md` (+ audit, independent audit, pre-PR reports alongside) | All 4 items certified; independently audited Certify after 2026-07-10 remediation; merged as sysml-codegen PR #8 + agentic-mbse PR #10. Expression reconstruction, qualified-name split, hierarchy primitives/models, aggregation decomposition pushed down; design overrides, usage-type indexing, Python rewriting, aliases, scoping, module construction stayed in sysml-codegen. |
-
-REPO-CLEANUP completion record (2026-08-25):
-
-- [x] **Item 1 — Scaffolding and register boundary** — certified at `3566fdd`; history retains its archived record.
-- [x] **Item 2 — Decision harvest** — completed 2026-08-23; retained at `.project/research/decision-harvest/execution-history.md`.
-- [x] **Move A — Write the entries** — builder decisions and product promises filed, including ADR-007/009 re-homing; commit `6831751`.
-- [x] **Move B — Purge `.project`** — historical exhaust removed from HEAD, citations repaired, registers and research preserved; commit `507e838`.
-- [x] **Move C — Delete what defends nothing** — dead production lanes, obsolete tests, unused fixtures, and closed-item tooling retired; final gates recorded in `1df2faa`, ledger follow-up in `3edbe81`.
-
-[INHERITED: `epic_repo_cleanup.md`, Owner Rulings] The three move folders were deleted at close under the standing record-then-delete rule. The epic, registers, and git history retain the decisions and evidence.
-
-CONSTRAINT-EXEC items:
-- [x] Item 0 — End-to-end integration spike (S6 lifecycle × S5 evaluator × S4 sealed package)
-- [x] Item 1 — Neutral constraint facts: production schemas + extraction (agentic-mbse)
-- [x] Item 2 — ExpressionIR: production tree, extraction, serialization (agentic-mbse)
-- [x] Item 3 — Executable profile: eligibility gates + named diagnostics (agentic-mbse)
-- [x] Item 4 — Part-instance index: subtype closure + cardinality expansion
-- [x] Item 5 — Concrete lowering: new phase, strict resolution, execution IDs
-- [x] Item 6 — module_kind + generation-seam refactor (byte-identity gated)
-- [x] Item 7 — Constraint module, Kleene compiler, aggregator, catalog generation
-- [x] Item 8 — Snapshot v3: constraint facts load-bearing
-- [x] Item 9 — Contracts + sealing: ModelContract / PackageContract
-- [x] Item 10 — Model evaluator + typed entry production API (teax)
-- [x] Item 11 — Study store, runner, and strategies (teax)
-- [x] Item 12 — Study policy, query, and CLI surface (teax)
-- [x] Item 13 — Calc-seam cutover: retire ExpressionAST (byte-identity gated)
-- [x] Item 14 — Migration, docs, and IFE acceptance
-
-PUSH-DOWN items (all certified; archived to `completed/20260720_*`):
-- [x] Item 1 — Expression reconstruction push-down
-- [x] Item 2 — Qualified-name utility split
-- [x] Item 3 — Hierarchy primitives and data models
-- [x] Item 4 — Aggregation decomposition and compatibility gates
-
----
+Judged no-change, recorded here so it is not re-proposed: the error-subclass constructors (`extraction/errors.py`, `elaboration/occurrence.py` and friends) and the `_collect_unbound_{constraint,calculation}_formals` pair look like boilerplate but carry different payloads per site; collapsing them means a dispatch shim, and the owner ruling is qualitative simplicity — deletion over shims.
 
 ### [CATF-CRYO-HEAT-LEAK-COEFFICIENT] Magnet static heat-leak coefficient ~3–6 orders high; authored CATF design point is gate-infeasible — P1, unowned (filed at owner direction, 2026-08-13)
 
-**The defect (measured, Item 5 finding 6-D; figures corrected 2026-08-13 — see below):**
-`heat_leak = magnet_volume * 0.05 // MW` (`library/analyses/thermal_loads.sysml:59`) puts
-**116.72 MW** of static heat leak into a **20 K** system — `magnet_volume = 2334.47 m³ × 0.05`.
-That is **69.5%** of the **167.92 MW** cryogenic-temperature load, which the refrigeration term
-then amplifies by **`300/(20 × 0.3)` = 50×** into `cooling_power = 8396.054399837172 MW`,
-**5.43× the plant's gross electric output of 1546.723690193402 MW**. Net electric power is
-therefore negative at the authored inputs. Real cryostats see kilowatt-scale static leak, so
-the coefficient reads as W/m³ or kW/m³ written as MW/m³.
+**The defect (measured, Item 5 finding 6-D; figures corrected 2026-08-13 — see below):** `heat_leak = magnet_volume * 0.05 // MW` (`library/analyses/thermal_loads.sysml:59`) puts **116.72 MW** of static heat leak into a **20 K** system — `magnet_volume = 2334.47 m³ × 0.05`. That is **69.5%** of the **167.92 MW** cryogenic-temperature load, which the refrigeration term then amplifies by **`300/(20 × 0.3)` = 50×** into `cooling_power = 8396.054399837172 MW`, **5.43× the plant's gross electric output of 1546.723690193402 MW**. Net electric power is therefore negative at the authored inputs. Real cryostats see kilowatt-scale static leak, so the coefficient reads as W/m³ or kW/m³ written as MW/m³.
 
 > **Correction, recorded.** This entry was filed carrying "~38 MW into a 4.5 K system, ~×220
 > amplification". Those figures came from a hand estimate in Item 5's STOP report that assumed
@@ -361,643 +58,80 @@ the coefficient reads as W/m³ or kW/m³ written as MW/m³.
 > self-checking. The conclusion is unchanged and the headline numbers (8396 MW vs 1547 MW,
 > 5.43×) were always right; only the internal breakdown moved.
 
-The identical number reproduces on untouched `catf_mfe_d5` —
-it was always true and always invisible, because d5 executes zero gates. The first execution
-of the derivative's asserted gates (CONSTRAINT-SEMANTICS Item 5) caught it: the epic's
-founding failure mode, demonstrated and closed by the same item.
+The identical number reproduces on untouched `catf_mfe_d5` — it was always true and always invisible, because d5 executes zero gates. The first execution of the derivative's asserted gates (CONSTRAINT-SEMANTICS Item 5) caught it: the epic's founding failure mode, demonstrated and closed by the same item.
 
-**Why P1, not P3 — the prioritization insight [AGENT] (ratified by owner, 2026-08-13):** a
-design search run against the uncorrected cryo model rejects essentially everything near the
-authored regime. The corrected coefficient is a **prerequisite for design search being
-useful**, not merely honest — so this should be scheduled soon after the CONSTRAINT-SEMANTICS
-epic lands, ahead of any real CATF study campaign.
+**Why P1, not P3 — the prioritization insight [AGENT] (ratified by owner, 2026-08-13):** a design search run against the uncorrected cryo model rejects essentially everything near the authored regime. The corrected coefficient is a **prerequisite for design search being useful**, not merely honest — so this should be scheduled soon after the CONSTRAINT-SEMANTICS epic lands, ahead of any real CATF study campaign.
 
 **Scope of the fix (separately authorized per the 6-D ruling; NOT inside Item 5):**
-- First decision is the fix's **home**, made in daylight with its own provenance: the
-  derivative's copy of the library (frozen twins untouched; physics diverges deliberately;
-  PROVENANCE records it) vs the upstream shared library (frozen-twin territory; needs its own
-  ruling).
-- A physically defensible replacement coefficient is a **modeling decision** — owner or
-  domain-source signed, never agent-invented (same rule as tolerances).
-- Re-run of the Item 5 Phase 6 acceptance under the corrected model (coverage unaffected;
-  headline flips back; the SC-5 candidate labeling reverts to the natural direction).
+- First decision is the fix's **home**, made in daylight with its own provenance: the derivative's copy of the library (frozen twins untouched; physics diverges deliberately; PROVENANCE records it) vs the upstream shared library (frozen-twin territory; needs its own ruling).
+- A physically defensible replacement coefficient is a **modeling decision** — owner or domain-source signed, never agent-invented (same rule as tolerances).
+- Re-run of the Item 5 Phase 6 acceptance under the corrected model (coverage unaffected; headline flips back; the SC-5 candidate labeling reverts to the natural direction).
 
-**Evidence home:** Item 5's verification record and the 6-D ruling
-(`.project/completed/20260813_catf-constraint-policy-acceptance/`); acceptance record states the authored
-point is gate-infeasible under the model as authored.
+**Evidence home:** Item 5's verification record and the 6-D ruling (`.project/completed/20260813_catf-constraint-policy-acceptance/`); acceptance record states the authored point is gate-infeasible under the model as authored.
 
 ---
 
 ### [CALCDEF-GATE-IMPLEMENTATION] Implement calculation-definition constraint gates (graph v4 + catalog 4.0.0) — P1, unowned, awaiting owner authorization (filed at owner direction, 2026-08-13)
 
-**What it is:** the production implementation of the capability CONSTRAINT-SEMANTICS Item 6
-designed. One asserted constraint owned by a calculation definition expands into one concrete check
-per calculation occurrence, with usage-level coverage and occurrence-level results joined through
-exact graph identity. Today such a usage ends as `non_reaching / owner_kind_unattachable`; nothing
-executes.
+**What it is:** the production implementation of the capability CONSTRAINT-SEMANTICS Item 6 designed. One asserted constraint owned by a calculation definition expands into one concrete check per calculation occurrence, with usage-level coverage and occurrence-level results joined through exact graph identity. Today such a usage ends as `non_reaching / owner_kind_unattachable`; nothing executes.
 
-**Authorization status `[OWNER 2026-08-13]`:** **not authorized in the CONSTRAINT-SEMANTICS epic.**
-The owner ruled at Item 6's close that this is a separate, later decision. It is unowned and
-unscheduled. It competes for the next slot with `[CATF-CRYO-HEAT-LEAK-COEFFICIENT]` (P1) and the
-paused ELABORATE-FIRST Item 7 resumption. **No agent may start it without a new owner ruling.**
+**Authorization status `[OWNER 2026-08-13]`:** **not authorized in the CONSTRAINT-SEMANTICS epic.** The owner ruled at Item 6's close that this is a separate, later decision. It is unowned and unscheduled. It competes for the next slot with `[CATF-CRYO-HEAT-LEAK-COEFFICIENT]` (P1) and the paused ELABORATE-FIRST Item 7 resumption. **No agent may start it without a new owner ruling.**
 
 **Estimate:** 7–9 working days, cross-repository (codegen + TEAx).
 
-**Plan of record:** `.project/completed/20260813_calcdef-constraint-gate-design/implementation-item.md`
-— file-level scope, dependency pins, phase order, and customer-shaped acceptance tests, revised
-against three rounds of independent design review (F1–F8). Its companions are `spec.md`,
-`design.md`, `design-review.md`, and `probes/findings.md` in the same archived folder. The spec's
-production-acceptance boxes are deliberately still open: they are this item's, not Item 6's.
+**Plan of record:** `.project/completed/20260813_calcdef-constraint-gate-design/implementation-item.md` — file-level scope, dependency pins, phase order, and customer-shaped acceptance tests, revised against three rounds of independent design review (F1–F8). Its companions are `spec.md`, `design.md`, `design-review.md`, and `probes/findings.md` in the same archived folder. The spec's production-acceptance boxes are deliberately still open: they are this item's, not Item 6's.
 
-**Start gate — SATISFIED, and here is why it mattered:** no lawful start SHA existed until Item 8's
-unit-lane characterizations landed, because the constraint-formal and computed-attribute unit lanes
-carried `unit=None` by construction and would have refused valid models. They landed at
-**`62a07e5c870158672eb100f1cba73adfe4c9df28`**. The gate dissolves; the only remaining block is
-owner authorization. Evidence bundle:
-`.project/completed/20260813_unit-lane-port-metadata/verification.md`.
+**Start gate — SATISFIED, and here is why it mattered:** no lawful start SHA existed until Item 8's unit-lane characterizations landed, because the constraint-formal and computed-attribute unit lanes carried `unit=None` by construction and would have refused valid models. They landed at **`62a07e5c870158672eb100f1cba73adfe4c9df28`**. The gate dissolves; the only remaining block is owner authorization. Evidence bundle: `.project/completed/20260813_unit-lane-port-metadata/verification.md`.
 
 **Carried guards and consequences:**
 
-- **SC8 — re-derive, never reuse.** The future graph-v4 snapshot record must derive its own
-  then-current tracked path set from Git and prove equality against that. It may **not** reuse Item
-  8's 23 paths or the older 15-path subset; those are dated evidence, not durable scope.
-- **TEAx re-vendor.** This work ships **catalog 4.0.0**, so TEAx must be re-vendored against a
-  catalog-4 producer candidate. TEAx stays on `constraint-semantics-item3` @ `5b70ae9` until one
-  exists.
-- **R5 joint delivery is declined.** Folding Item 8's unit-lane work into this implementation was
-  ruled out and executed as ruled — Item 8 shipped standalone. The option text survives in
-  `design.md` as a decision record only; **reviving it requires a new owner ruling**, not an agent
-  reading the recorded option.
+- **SC8 — re-derive, never reuse.** The future graph-v4 snapshot record must derive its own then-current tracked path set from Git and prove equality against that. It may **not** reuse Item 8's 23 paths or the older 15-path subset; those are dated evidence, not durable scope.
+- **TEAx re-vendor.** This work ships **catalog 4.0.0**, so TEAx must be re-vendored against a catalog-4 producer candidate. TEAx stays on `constraint-semantics-item3` @ `5b70ae9` until one exists.
+- **R5 joint delivery is declined.** Folding Item 8's unit-lane work into this implementation was ruled out and executed as ruled — Item 8 shipped standalone. The option text survives in `design.md` as a decision record only; **reviving it requires a new owner ruling**, not an agent reading the recorded option.
 
 ---
-
-### [CONSTRAINT-SILENCE] `assert constraint` invisible to the drop report — RESOLVED (PIPELINE-TRUTH Item 4)
-
-**RESOLVED by PIPELINE-TRUTH Item 4** (`.project/completed/20260720_epic_pipeline_truth.md`), 2026-07-06. The drop report now
-sweeps `ConstraintUsage` subtype-aware (`include_subtypes=True`), so `assert constraint`
-(`AssertConstraintUsage`) is reported; the summary is a scanned/reported/excluded sentinel that never
-goes fully silent. Pinned by the re-anchored REQ-EXT-09 (`tests/conformance/test_extractor.py`, wi014
-assert + mutation check) and available on the `--from-snapshot` path too. Retained below for
-provenance.
-
-**Source**: fusion-tea upstream-fix verification, 2026-07-06
-(`~/1cfe/fusion-tea/work/active/20260706_upstream-fix-verification/report.md`); verified
-in-repo 2026-07-06. `report_dropped_constraints` (`extraction/extractor.py:92`) enumerates
-`elements_of_type("ConstraintUsage")`; syside's `model.elements()` is exact-type, so
-`assert constraint` (`AssertConstraintUsage`, a subtype) is invisible. Both the per-item
-INFO loop and the summary WARN gate on a non-empty list (`extractor.py:123`), so the report
-is **completely silent** for exactly the shape fusion-tea uses (`ife_plant.sysml:155`
-`assert constraint viability`) — live probe: 0 ConstraintUsage, 1 AssertConstraintUsage.
-Compounding factors the fix must address, not just the query:
-- The REQ-EXT-09 test (`tests/conformance/test_extractor.py::TestReqExt09`, line 895)
-  computes its expected count **with the same query the implementation uses** —
-  self-referential, structurally unable to catch this. Re-anchor independently.
-- Its fixture (catf_mfe) has only plain constraints; `tests/fixtures/wi014_toy/toy_plant.sysml:51`
-  already carries an `assert constraint` but nothing asserts the report against it —
-  Item 1's "WI-014 toy emits the constraint diagnostics" criterion was never true for it.
-- `extraction/constraint_extractor.py:4` docstring claims "constraint, assert constraint,
-  and require constraint" support while using the same blind query (line 50) — check
-  `require constraint` (`RequireConstraintUsage`?) too.
-- Snapshot-path split (corrects the fusion-tea report's line-74 observation): `snapshot`
-  *capture* DOES run the report (`capture.py:42` → `build_pipeline_context` →
-  `pipeline_builder.py:685`) — it was silent there only because of this very bug — but
-  `generate --from-snapshot` (`snapshot_context.py:24`) does NOT, and cannot: constraint
-  data is **never serialized** (serializer writes no constraint fields;
-  `_deserialize_constraint_info`, `loader.py:275`, has zero callers — dead code). A
-  snapshot-first workflow loses constraint info permanently — decide whether to serialize
-  constraints (prerequisite for any from-snapshot report AND for the deferred
-  constraint-execution epic).
-- Docs impact: modeling-assumptions §8 ("scans the whole model for constraint usages and
-  reports them") overclaims until the fix lands.
-- Owner split: the exact-type behavior lives in agentic-mbse's `SysideAdapter.elements_of_type`
-  / syside `model.elements()`; the consumers are in this repo. Meta-item: audit every
-  `elements_of_type` call site for the same subtype-blindness pattern.
-
-## P2 - Medium Priority
-
-### [DEF-OWNED-SIDEWAYS-REACH] Remove the definition-owned lineage-miss fallback — IMPLEMENTED AND INDEPENDENTLY VERIFIED 2026-08-16
-
-`in unit_cost = 'Unit'::cost` written in a part with **no** local `'Unit'` occurrence used to
-resolve to the single occurrence under a sibling subtree. The elaborator invented that runtime
-source by positional descendant search even though the author did not name the occurrence and
-SysIDE resolved only the definition-owned feature. Measured at spike row 6 / F-4 and reproduced at
-`0f89673`; the retained position fixtures now pin the named refusal.
-
-**Owner source.** `[OWNER-VERBATIM]` “I really, truly hate fallbacks, especially to accomodate
-something not explicitly supported in KerML / SysMLv2 and the parse”, completed in the owner's
-next message as `[OWNER-VERBATIM]` “the parser (SysIDE).” `[OWNER 2026-08-16]` The derived ruling,
-ratified when the owner asked to capture it, is: SysIDE's resolved structure is authoritative.
-Codegen must not search descendants to invent an occurrence when a definition-owned qualified
-leaf has no occurrence on the consumer's lineage. It must refuse by a named diagnostic. An
-explicit occurrence path remains the supported way to reach another subtree.
-
-**Bound.** This ruling covers the definition-owned lineage-miss descendant fallback. It does not
-change exact usage-owner anchoring, explicit occurrence paths, or a definition-owned feature that
-maps through the consumer's own occurrence lineage.
-
-**Implementation.** The bounded codegen change carries authored qualification into
-`src/sysml_codegen/elaboration/elaborate.py::_resolve_leaf`. A qualified definition-owned leaf maps
-only through the consumer lineage; a miss refuses with `SI_OCCURRENCE_MISSING`. The retained
-one-occurrence-above, two-occurrences-above, and sibling-scope cases pin that refusal, and
-agentic-mbse's authoritative plant guide states it. Exact usage-owner anchoring, local
-definition-owned lineage mapping, bare references, and explicit occurrence paths are unchanged.
-Implementation is complete and independently verified. Sibling item
-`[ANCHORING-ARRAYED-DIAGNOSTIC]` remains limited to the separate arrayed-owner diagnostic.
-
-### [STELLARATOR-D5-MIGRATION] Migrate the stellarator demo's 114 self-named bindings — DONE 2026-08-21 (fusion-tea stellarator-model-migration)
-
-**Done.** The July hold was released by the owner (fusion-tea research Q3, 2026-08-21) and the
-migration ran in fusion-tea `.project/active/stellarator-model-migration/`: `make_d5_variant.py
---root` customer mode at this repo's `8a758e92` (the fusion-tea pin) over the self-contained MFE
-tree -- 66 formals, 99 binding sites, 95 declaring formals, preconditions clear, strip check 0
-problems -- plus the three further refusal classes found behind it (the positional-formal row, the
-scalar-function row, the unit-scrape row above). The regenerated package seals at runtime contract
-2.0.0 and reproduces the pre-migration 948-point grid byte for byte; ledger at fusion-tea
-`models/stellarator_migration_ledger.md`. Original triage text below, kept as filed.
-
-
-The one-run triage (self-binding-replacement `stellarator-triage.md`) confirms the exact route
-refuses `/home/reid/1cfe/fusion-tea-stellarator-mbse-demo/models` with exit 1 and exactly **114
-`SI_SELF_BINDING`** findings — the only diagnostic class, no traceback, no output. Per the
-2026-08-15 sizing: 15 are copied-in fusion-tea files (now migrated at the source by Phase 4) and
-99 are the stellarator's own sites in two files (`generic_mfe/mfe_plant.sysml` ×94,
-`stellarator_09/stellarator_plant.sysml` ×5). Vehicle: the D-5 recipe and
-`make_d5_variant.py --root` customer mode are proven on fusion-tea; the July owner hold on the
-stellarator repo stands and is not reversed by this row. Needs an owner before any edit.
-
-### [NESTED-OCCURRENCE-OVERRIDE] `:>>` override on a usage nested in an instantiated part def is lost (calc + constraint) — ABSORBED into SOURCE-IDENTITY Item 4 (2026-08-04)
-
-**Scheduling status:** the remaining fix is no longer scheduled independently. SOURCE-IDENTITY
-Item 2 must revalidate its evidence and overlap; Item 4 owns the one implementation, reusing the
-tripwire and fixture and sequencing against `[CONSTRAINT-ARCH-UNIFY]` sub-scope 2.
-
-**Owner: the Item-10 occurrence-materialization family** (CONSTRAINT-LIFECYCLE-REMEDIATION
-Item 10 / producer-completeness + occurrence rollup). **Filed 2026-07-20** by Item 13 composed
-proof, case-18 addendum (owner ruling Option A). General gap — affects both the calc binding and
-the constraint actual paths; not constraint-specific.
-
-**Symptom.** A `:>>` design-override on a usage nested inside an *instantiated* part def is
-captured **definition-relative**, while demand resolves **occurrence-relative**, so the
-supplied-value materializer never matches the literal (0 applied). Calc bindings fall to a
-manual-required entry point that silently drops the modeled value; constraint actuals halt
-generation under strict INV-2. The redefined value is lost either way.
-
-**Reproducible coordinate.** `tests/fixtures/nested_occurrence_override_probe/` (expected to
-halt; PROVENANCE.md pins the full coordinate). Its flat sibling
-`tests/fixtures/constraint_def_owned_redefining/` (package-level redefining usage) resolves
-correctly through the same shared machinery, isolating the nesting as the sole trigger.
-
-**Root cause (verbatim, pin `7526665`).** Override:
-`owning_part_qn = 'nested_occurrence_override_probe__Design__panel'`, `attribute_name='reading'`,
-`LITERAL`, `target_path=['source','reading']`, `literal_value=80.0`. Demand:
-`_binding_target('source.reading', '..._the_design__panel')` →
-`qn='..._the_design__panel__source__reading'`, `part_usage='source'`, `attr='reading'`.
-`supplied_values._match_override` tier-1 requires `ov.owning_part_qn == instance_scope`
-(`Design__panel` != `the_design__panel`); tier 2a misses because `usage_type_map` is
-definition-keyed and carries no entry for the occurrence `the_design`. There is no
-occurrence → definition bridge available to the materializer. Fixing it requires threading
-occurrence-type resolution (the occurrence index) into `enrich_graph_design_attributes` — an
-Item-10-scope change with a calc-path blast radius, deliberately NOT forced into the byte-clean
-Item-2 case-18 addendum. Contract row 18 does not mandate this shape (the flat form satisfies it).
-
-**Tripwire shipped 2026-07-24 (interim, not the fix).** The calc-path silent loss now WARNs:
-`enrich_graph_design_attributes` reports a dotted demand that fell through silently while a
-capture carries an override for that attribute of that part usage, naming both the captured and
-the demanded scope. Corpus scan recorded 0 false fires across all 19 `SNAPSHOT_MODELS` fixtures
-(`.project/completed/20260724_nested-override-tripwire/probes/verdict.md`). The warning changes
-no resolution outcome or output byte.
-
-**The filed fix (the remaining work of this entry).** Build the occurrence → definition bridge:
-thread occurrence-type resolution (the occurrence index, `analysis/part_instance_index.py`) into
-`enrich_graph_design_attributes` so a definition-relative captured override
-(`owning_part_qn = ...__Design__panel`) matches an occurrence-relative demand
-(`instance_scope = ...__the_design__panel`) for the instantiating occurrence(s). Both paths must
-benefit: the calc binding applies the literal (no manual-required fallback), and the constraint
-actual resolves instead of halting under strict INV-2. Acceptance: the probe fixture resolves
-`80.0` on both paths, the tripwire warning goes silent on it (and its RED unit test flips —
-update it deliberately), the flat sibling stays byte-identical, and the corpus byte-identity
-gates stay green. Blast radius is the calc path broadly — schedule as a deliberate item
-(Item-10-family scope), not an opportunistic edit. Overlaps `[CONSTRAINT-ARCH-UNIFY]`
-sub-scope 2 (one part-structure index): doing that consolidation first would hand this fix its
-bridge for free — sequence them consciously.
-
-Related: [SYNC-F4] (design-override name surfacing) and the "Two-level specialization —
-`attribute :>>` extraction gap" note under Ideas / Future Considerations.
-
-### ~~[TRUTH-DEBT] Truth-Debt Retirement — the PIPELINE-TRUTH follow-on ledger~~ ✅
-
-**Filed 2026-07-06** as `epic_truth_debt.md`. **Status: Complete (2026-07-08).**
-Archived to: `.project/completed/20260708_epic_truth_debt.md`.
-
-Retired the work PIPELINE-TRUTH deliberately filed rather than rush: the F4
-aggregation-resolution cutover, resolved multi-hop chain support, the three matrix test-gaps,
-the inherited-attr classifier fix, the matrix sweep residue, and the D3 hygiene tail. All six
-items were implemented and audited; pre-PR gates recorded 2120 passed / 4 skipped /
-0 xfailed, ruff src clean, mypy src 97.
-
-Items archived:
-- [x] Item 1 — F4 aggregation cutover (+ `[GB-PARAMGROUPS-TYPING]` folded in)
-- [x] Item 2 — resolved multi-hop chain bindings
-- [x] Item 3 — matrix test-gap authoring (DM-08, RES-05, RES-08)
-- [x] Item 4 — inherited-attr classifier fix (flip the 5 xfails)
-- [x] Item 5 — matrix sweep residue
-- [x] Item 6 — D3 hygiene tail
-
-### [SYNC-F3] Shape-B leaf-collision filename edge (UPSTREAM-FINDINGS Item 12, F3)
-
-**Source**: alias-surfacing (Item 11) audit Obs. 2. Two distinct shape-B owning parts that
-share a leaf name and expose the same alias to different channels produce the same output
-filename `{instance_path}__{alias}.json` — a collision codegen does not yet disambiguate.
-Not triggered by any in-repo fixture. File to disambiguate (e.g. qualify by owning-part
-path) before a real model hits it.
-
-**PIPELINE-TRUTH Item 9 disposition (S-F3): KEEP FILED.** No model hits the leaf-collision
-edge; nothing to build under Item 9's guard. Revisit when a real model produces two shape-B
-owning parts that share a leaf and expose the same alias.
-
-### [SYNC-F4] Redefinition / design_override name surfacing (UPSTREAM-FINDINGS Item 12, F4)
-
-**Source**: alias-surfacing (Item 11) release-notes §impact. `:>>` and design-override names
-resolve as channels but are not EXPOSE_PURE-sourced, so they do not surface as named
-outputs. Decide whether these names should surface (mirror of D6/EXPOSE surfacing) or stay
-internal.
-
-**PIPELINE-TRUTH Item 9 disposition (S-F4): KEEP FILED.** No consumer needs
-`:>>`/design-override names surfaced as named outputs today. Revisit if a downstream consumer
-(e.g. a report or a cross-part binding) needs them exposed.
-
-### [SYNC-F5] Positive unresolvable-warning test (UPSTREAM-FINDINGS Item 12, F5)
-
-**Source**: alias-surfacing (Item 11) audit Obs. 1. Item 11's INV-6 "unresolvable refs still
-warn" leg has no positive live assertion. Add a test that asserts an unresolvable ref emits
-its warning. Opportunistic — cheap to add in sysml-codegen's test suite.
-
-**PIPELINE-TRUTH Item 9 disposition (S-F5): DISCHARGED.** Verified against Item 5's landed
-tests. The old `unresolvable_attr_probe` fixture was *absorbed* by Item 9's plain-usage-override
-fix (`:>> local_val = 5.0` is now captured, so it resolves). The positive loud-on-gap proof is
-re-anchored on `chain_override_probe`: `tests/unit/test_uncovered_params.py::test_collector_pins_chain_override_probe`
-(an unresolved calc-output ref stays LOUD in the uncovered-params result) and
-`::test_reconcile_raises_v11_on_wired_gap` (V11 raises on the wired-valueless gap). The INV-6
-silent-on-clean leg is covered by `tests/unit/test_silent_failure_family2.py`
-(`test_d34_clean_report_no_warn`, `test_d313_all_known_no_warn`). No new test needed.
-
----
-
-## P3 - Low Priority
 
 ### [ANCHORING-ARRAYED-DIAGNOSTIC] Arrayed-owner aggregation: reconcile the two spellings — P3, unowned (filed at owner direction, 2026-08-16)
 
-For an arrayed owner `comp_a : Component[2]`, `sum(comp_a::length)` refuses with
-`SI_OCCURRENCE_AMBIGUOUS` while `sum(comp_a.length)` resolves to one input per occurrence. Direct
-one-segment references are deliberately scalar (design D4 of
-`qualified-reference-occurrence-anchoring`): a direct reference names one owner, so fanning it out
-would invent a cardinality the model never authored. **[OWNER 2026-08-16]** accepted that policy for
-the delivering item and filed this instead of reversing it.
+For an arrayed owner `comp_a : Component[2]`, `sum(comp_a::length)` refuses with `SI_OCCURRENCE_AMBIGUOUS` while `sum(comp_a.length)` resolves to one input per occurrence. Direct one-segment references are deliberately scalar (design D4 of `qualified-reference-occurrence-anchoring`): a direct reference names one owner, so fanning it out would invent a cardinality the model never authored. **[OWNER 2026-08-16]** accepted that policy for the delivering item and filed this instead of reversing it.
 
-Nothing that worked was lost — pre-repair, `sum(comp_a::length)` silently summed the *sibling's*
-value, so this is the same fix rather than a new break. What remains is author-facing: the
-diagnostic names neither the candidate occurrences nor the index syntax that would resolve it.
+Nothing that worked was lost — pre-repair, `sum(comp_a::length)` silently summed the *sibling's* value, so this is the same fix rather than a new break. What remains is author-facing: the diagnostic names neither the candidate occurrences nor the index syntax that would resolve it.
 
-**Scope the diagnostic message first** — that may be the whole fix. Reversing D4 would reopen a
-ratified design decision and its review, and risks the cardinality drift that item's risk register
-was written to prevent. Bound recorded at
-[0002](../product/0002-exact-owner-anchoring.md).
+**Scope the diagnostic message first** — that may be the whole fix. Reversing D4 would reopen a ratified design decision and its review, and risks the cardinality drift that item's risk register was written to prevent. Bound recorded at [0002](../product/0002-exact-owner-anchoring.md).
 
 ### [CATF-DIVERTOR-GATE] Divertor addition + HeatLoadBalance gating, CATF derivative — P3, unowned (filed at owner direction, 2026-08-13)
 
-`FusionComponents::Divertor::HeatLoadBalance` is a genuine one-sided power-exhaust gate with no
-divertor part anywhere in the CATF design, so Item 5's ruled disposition table leaves it
-`inapplicable` (owner-disposition.md B1/O5, **[OWNER 2026-08-13]**). Gating divertor physics
-means adding a divertor to the model — a modeling-scope decision to make in daylight. This entry
-records the option; priority is the owner's-later.
+`FusionComponents::Divertor::HeatLoadBalance` is a genuine one-sided power-exhaust gate with no divertor part anywhere in the CATF design, so Item 5's ruled disposition table leaves it `inapplicable` (owner-disposition.md B1/O5, **[OWNER 2026-08-13]**). Gating divertor physics means adding a divertor to the model — a modeling-scope decision to make in daylight. This entry records the option; priority is the owner's-later.
 
 ### [CATF-SHIELD-MODEL-DEBT] d5 shield closure/thickness inconsistencies carried into the derivative as recorded debt — P3, unowned (filed per O3 ruling, 2026-08-13)
 
-Two pre-existing d5 modeling-debt items, ruled "record, don't bake silently" (Item 5
-owner-disposition.md O3, **[OWNER 2026-08-13]**): the shield volume-fraction closure covers 2 of
-4 layers (`thermal_shield`/`biological_shield` have no `fraction_volume`), and
-`'Shield Assembly'::TotalThicknessConsistency` sums four layer thicknesses while the design's
-`thickness_total` is `0.4 [m]` ("HT shield + structure layers") — not the same set; the guard
-would fail if attached. Named model-debt entries live in the derivative's PROVENANCE; this is the
-one backlog note the ruling requires.
-
-### [INDEXED-ELEMENT-EXPRESSION-SUPPORT] Execute valid indexed element references — P3, unowned `[AGENT, 2026-08-17]`
-
-**Serves:** 0001's requirement that a modeled study vary and assess the values the author named.
-
-Agentic-mbse and SysIDE can identify a valid indexed element expression and preserve its index.
-Codegen does not yet have index execution semantics. The shipped route therefore refuses before
-graph construction as `SI_INDEXED_SOURCE_UNSUPPORTED`; it does not discard the index or bind the
-base feature. This is an agent-filed capability candidate. Its semantics and priority remain open.
-
-Evidence: `tests/fixtures/indexed_expression_source/model.sysml` and
-`tests/conformance/test_expression_evidence_integrity.py`.
-
-### [OUTPUT-ALIAS-DUPLICATE-SOURCE-SILENCE] Diagnose a second alias authored for one source — P3, unowned `[AGENT, 2026-08-17]`
-
-**Serves:** 0001's need for trustworthy study outputs.
-
-When a model authors a second output alias for a source that already has one, current extraction
-produces neither a second output file nor a diagnostic for that second alias. The first alias remains
-the output. This separate agent-filed row records the silent authored-source case without choosing
-whether duplicate aliases should be supported or refused.
+Two pre-existing d5 modeling-debt items, ruled "record, don't bake silently" (Item 5 owner-disposition.md O3, **[OWNER 2026-08-13]**): the shield volume-fraction closure covers 2 of 4 layers (`thermal_shield`/`biological_shield` have no `fraction_volume`), and `'Shield Assembly'::TotalThicknessConsistency` sums four layer thicknesses while the design's `thickness_total` is `0.4 [m]` ("HT shield + structure layers") — not the same set; the guard would fail if attached. Named model-debt entries live in the derivative's PROVENANCE; this is the one backlog note the ruling requires.
 
 ### [ACAUSAL-RELATIONS-CAPABILITY] Relation-style parametrics with study-selectable causality — P3, unowned capability bet (filed at owner direction, 2026-08-13)
 
-"Don't force independent vs dependent": acausal constraint relations whose solve direction is
-study-selectable are a capability this toolchain cannot currently express — Item 5's derive
-rulings (owner-disposition.md, ruling item 5, **[OWNER 2026-08-13]**) choose visible in-model
-bases precisely because the alternative hides causality in study harness config. Recorded so the
-bet doesn't quietly die.
-
-### ~~[CONSTRAINT-GATES-UNTAGGED] The Items 3/5/8/9 constraint-semantics gates have no REQ tags~~ ✅ COMPLETE 2026-08-14 — REQ-CS family minted at ELABORATE-FIRST cutover step 4 (filed 2026-08-14 at CONSTRAINT-SEMANTICS Item 7's audit; owner-ruled same day)
-
-**Discharged 2026-08-14 at cutover step 4, per the ruling below:** the REQ-CS family (8 rows,
-Items 3/8/9, every cited test run before filing) is live in `verification-matrix.md` §CS. Item 5
-mints no rows by recorded decision — its gates are traced by REQ-CL-04/REQ-EXT-09 and its ruled
-table is an owner decision record; the TEAx-side pins are named in the family header as
-cross-repo evidence. The matrix-rows SC box is ticked in both the epic archive and the item
-archive with dated amendments. The symlink residual (SC2/SC3) is untouched — it resolves at the
-phase-D merge, not here.
-
-**Ruling [AGENT] (ratified by owner, 2026-08-14):** mint the REQ family during the cutover
-resumption's step-4 matrix work (one matrix pass, the new family lands with the revised rows).
-
-This is the named vehicle for the half of epic SC5 that Item 7 parked rather than invented.
-
-**What Item 7 did discharge.** The verification-matrix recount, both falsified count blocks
-corrected, and the one tag-backed gap filed — the REQ-DIAG family, every cited test run before it
-was cited (`.project/completed/20260814_constraint-docs-agent-sync/verification.md`, "Verification-matrix
-reconciliation").
-
-**What is left, and why it was not done.** Items 3, 5, 8 and 9 carry **zero REQ tags** in their
-records, so their landed gates have nothing for a matrix Status column to be about. Filing rows for
-them means **minting a new REQ tag family first**, which is a requirements decision, not a matrix
-reconciliation — an agent-minted requirement id in a document whose whole value is that its rows
-trace to stated requirements is worse than an honest gap. Item 7 had no authority to make that call
-and did not make it.
-
-**The owner call.** Either (a) authorize minting REQ tags for the Items 3/5/8/9 gates and filing
-their rows in one pass, or (b) rule that these gates are traced by their acceptance records rather
-than by the matrix, and record that as the matrix's stated boundary. Do not leave it implicit — an
-untraced gate that nobody decided to leave untraced is how the matrix drifted the first time.
-
-Recount discipline applies to whichever route is taken (memory `verification-matrix-drift-modes`).
-Baseline after the step-4 pass (2026-08-14): **288 rows / 156 PASS / 1 PARTIAL / 0 UNTESTED /
-34 families / 64 kept test files**.
+"Don't force independent vs dependent": acausal constraint relations whose solve direction is study-selectable are a capability this toolchain cannot currently express — Item 5's derive rulings (owner-disposition.md, ruling item 5, **[OWNER 2026-08-13]**) choose visible in-model bases precisely because the alternative hides causality in study harness config. Recorded so the bet doesn't quietly die.
 
 ### [MATRIX-EPIC-SURFACE-ROWS] Add verification-matrix rows for the three uncovered lifecycle surfaces — P3 `[OWNER]` (ticketed 2026-07-24)
 
-Owner directed filing this as a ticket at the docs-lifecycle-sync wrap. The lifecycle epic
-added tested behaviors with no matrix rows; docs-lifecycle-sync Phase 4 added only the
-required portability pair (REQ-SNAP-21/22) and registered these three as candidates
-(`.project/completed/20260724_docs-lifecycle-sync/inventory.md`, MG1–MG3):
+Owner directed filing this as a ticket at the docs-lifecycle-sync wrap. The lifecycle epic added tested behaviors with no matrix rows; docs-lifecycle-sync Phase 4 added only the required portability pair (REQ-SNAP-21/22) and registered these three as candidates (`.project/completed/20260724_docs-lifecycle-sync/inventory.md`, MG1–MG3):
 
-1. **Producer resolution / completeness** — the unified ladder (`resolution/producer_resolution.py`,
-   `resolve_producer`, KEY_FORMS, TerminalPolicy) and `producer_completeness.py`. Reference
-   doc exists (`04-producer-resolution.md`); pinning tests exist (Item 2's suite, e.g.
-   `test_producer_completeness_acceptance.py`) — verify which tests pin which claim before
-   citing (no aspirational citations).
-2. **Catalog schema 2.0.0** — `CATALOG_SCHEMA_VERSION` (`contracts/versions.py:18`) and the
-   catalog contract (`test_catalog_schema_version.py`, `test_catalog_definition_join.py`).
-3. **Trust manifest / bootstrap** — `contracts/manifest.py` and the trust-anchor behavior
-   (Item 7's tests).
+1. **Producer resolution / completeness** — the unified ladder (`resolution/producer_resolution.py`, `resolve_producer`, KEY_FORMS, TerminalPolicy) and `producer_completeness.py`. Reference doc exists (`04-producer-resolution.md`); pinning tests exist (Item 2's suite, e.g. `test_producer_completeness_acceptance.py`) — verify which tests pin which claim before citing (no aspirational citations).
+2. **Catalog schema 2.0.0** — `CATALOG_SCHEMA_VERSION` (`contracts/versions.py:18`) and the catalog contract (`test_catalog_schema_version.py`, `test_catalog_definition_join.py`).
+3. **Trust manifest / bootstrap** — `contracts/manifest.py` and the trust-anchor behavior (Item 7's tests).
 
-Discipline: matrix recount per memory `verification-matrix-drift-modes` (index totals +
-per-family counts, not just the summary block); current baseline **288 rows / 156 PASS / 34
-families** after the ELABORATE-FIRST step-4 pass closed all UNTESTED rows and filed the REQ-CS
-family (2026-08-14).
+Discipline: matrix recount per memory `verification-matrix-drift-modes` (index totals + per-family counts, not just the summary block); current baseline **288 rows / 156 PASS / 34 families** after the ELABORATE-FIRST step-4 pass closed all UNTESTED rows and filed the REQ-CS family (2026-08-14).
 
-*The previous line here read "276 rows / 275 PASS / 32 families." The row and family counts were
-right for their date; **"275 PASS" was never true** — the matrix's own summary read 133 at the time
-and its tables read 134. Corrected by recount, not by adopting either number
-(`.project/completed/20260814_constraint-docs-agent-sync/verification.md`).*
-
-### [STALE-BASELINE-CLASS] Four committed fixtures latently stale vs live extraction — P3 (owner: leave filed, 2026-07-24)
-
-Owner ruling 2026-07-24: leave filed; no assignee. The class (documented in project memory
-`deep-cross-scope-stale-baseline`, verified during the lifecycle epic): `deep_cross_scope`,
-`plant_values`, `constraint_inline`, plus the `dropped_constraints` capture drift. All
-pre-existing (reproduce on parent commits); suites stay green because tests read the
-committed bytes; a future re-capture surfaces the diffs. Never block a byte-identity gate on
-this class. Scope when picked up: re-capture each, review the diff deliberately (classifier
-shifts included), land as a reviewed R3-style diff. Related (single-fixture precursor):
-`[TRUTH-DEBT-IFE-PLANT-CHAIN-STALE]` below.
-
-### [DOCS-SCRUB-F1] Delete the two dead templates (+ dead-code candidates nearby)
-
-**Absorbed into PIPELINE-TRUTH Item 8** (the cleanup-debt item; git history), 2026-07-06. Both dead
-templates deleted; `map_sysml_type_to_rootmodel_wrapper` (+ its now-orphaned
-`PYTHON_TO_ROOTMODEL_WRAPPER` dict) and `binding_to_entry_point` dual-write deleted in Phase 1;
-`get_default_value` / `generate_derived_group_json` resolved in Phase 2 (see close-out).
-
-**Source**: docs-scrub (post-UPSTREAM-FINDINGS docs pass), 2026-07-06. Zero render sites
-each (re-confirm with grep before deleting):
-- `src/sysml_codegen/templates/pydantic_schema.py.jinja2` (carries `generation_timestamp`;
-  originally verified dead during Item 2)
-- `src/sysml_codegen/templates/entry_point_schema.py.jinja2` (only
-  `parameter_group_schema.py.jinja2` is rendered by `generation/entry_point.py`)
-
-Same-cleanup candidates found during the scrub (verify, then delete or wire up):
-- `map_sysml_type_to_rootmodel_wrapper()` in `generation/type_mapping.py` — no external
-  callers; `modules.py` imports `map_sysml_type_to_python` without calling it (dead import).
-- `get_default_value()` on the ParameterGroupDeriver — only its conformance test calls it
-  (REQ-PGD-06 would need re-framing if removed).
-- `generate_derived_group_json()` in `generation/entry_point.py` still emits null-default
-  keys, unlike `generate_all_derived_jsons()` which omits them (Item 7's corrected shape) —
-  check reachability; it reintroduces the null-key shape if still live.
-- `BacktrackingResult.binding_to_entry_point` — marked DEPRECATED "will be removed after
-  all consumers updated" since long before the epic.
-
-### [DOCS-SCRUB-F2] Reconcile REQ-OR-05/06/08 with the Key_A/Key_F registrations at HEAD — RETIRED (Item 7)
-
-**Retired 2026-07-06 by Item 7.** Design check confirmed the construction-time
-`instance_attr_to_channel` dict does NOT bypass the typed-registry contract (it feeds
-only guarded `register_alias` calls), so F2 landed as **fix-text-to-code**: REQ-OR-05/06/08
-text + doc 10's key-format section now describe the actual registrations (Key_A guarded
-alias, Key_F scoped), REQ-ORCH-04's real phase-order contract is restored via a
-fixture-anchored presence assertion (red-mutation-gated), and the two lying docstrings
-(`test_output_registry.py`, `test_orchestrator.py`) are corrected. Superseded.
-
-**Absorbed into PIPELINE-TRUTH Item 7** (with D7 refinements: REQ-ORCH-04's test was
-weakened to fit the divergence; two test docstrings misstate their own bodies).
-
-**Source**: docs-scrub doc-10 pass, 2026-07-06. The REQ text and doc 10's "Eliminated Key
-Formats" section say Key_A and Key_F are not registered at all, but `build_output_registry()`
-Phase 1a registers Key_A via `register_alias()` (cross-scope CHAIN, first-wins) and Phase 1c
-registers Key_F via `register_scoped()` (REFERENCE secondary, spike Q5); Phases 3–4 also
-consult a construction-time Key_A-format dict (`instance_attr_to_channel`) before typed
-lookups (vs REQ-OR-06's "through typed lookup"). `test_output_registry.py::TestReqOR08` has
-already narrowed its own reading. Decide the intended contract, then fix REQ text + doc 10 +
-(possibly) code together — not a docs-only fix.
-
-### [DOCS-SCRUB-F4] `resolve_input()` cutover divergence — RETIRED (PIPELINE-TRUTH Item 7)
-
-**Retired 2026-07-06 by Item 7.** The three F4 kill probes ran and fired no kill
-(the matrix-truth probes; git history), so the reconciliation direction resolved to
-**LAND-with-split**: Item 7 reframed the matrix rows + docs 03/04/05 to the true state
-(`resolve_input` is a parity-validated, not-yet-wired consolidation; the live path is
-`_resolve_aggregation_input_channel`), and the executable cutover is filed below as
-**[ITEM7-F4-CUTOVER]**. This filing is superseded by that one.
-
-### [ITEM7-F4-CUTOVER] Wire aggregation resolution through `resolve_input()` — P2, executable follow-on
-
-**Absorbed into TRUTH-DEBT (`epic_truth_debt.md`) Item 1, 2026-07-06** — with `[GB-PARAMGROUPS-TYPING]`
-folded in (same graph_builder group-assembly region). Lands first among aggregation-resolution items.
-
-**Filed by PIPELINE-TRUTH Item 7, 2026-07-06.** Item 7's F4 reconciliation reframed the
-matrix/docs to the honest state but deliberately **split out the code cutover** (fallback
-refactor + baseline re-capture exceeds Item 7's 1.5–2 day budget; spec Open Question
-authorizes the split). This item carries the executable change, pickable cold.
-
-**Goal.** Make the live aggregation path call `resolve_input(AGG_STRATEGIES)` instead of
-the inline `_resolve_aggregation_input_channel` (`graph_builder.py:1212`), so the whole IR
-family finally pins live code.
-
-**The correct comparand (design-review M3 — DO NOT skip).** The cutover's safety-net
-parity suite MUST compare `resolve_input(AGG_STRATEGIES)` against
-**`_resolve_aggregation_input_channel`** — the function it replaces — not only the
-backtracker DFS. Probe (i) and Item 7's committed `TestResolveInputParityExtended` prove
-parity against the *backtracker*, which is general-correctness evidence, NOT
-parity-with-the-replaced-function. Add the `_resolve_aggregation_input_channel` comparand
-as this item's own gate before rewiring.
-
-**The EP-key reconciliation (design-review M4 — the load-bearing blocker).** See
-the matrix-truth probe `probe_iv_ep_key_divergence.md` (git history). The live path builds
-the SumTerm entry-point QN as `{module_eqn}__{part_usage}_{attr}` (e.g.
-`…site_infra__raw_material_cost__permitting_raw_material_cost`); `resolve_input`'s leaf-only
-fallback builds `…site_infra__raw_material_cost__raw_material_cost` — which **already
-coexists in the same graph as the module's own output channel** (concrete baseline lines:
-`tests/fixtures/baseline_outputs/solar_battery/computation_graph.json:2472/2483/3270/3486`).
-A naive drop-in collides an input EP with an output-channel name and drops the part-usage
-disambiguator. Reconcile `resolve_input`'s fallback to the live richer EP construction
-(part_usage-prefixed QN, `_find_literal_redefinition` defaults, param-groups, multiplicity
-EPs, SingletonTerm "Try 2" direct-channel construction) BEFORE rewiring.
-
-**Scope.**
-1. Reconcile `resolve_input`'s fallback to the live path's richer EP construction (above).
-2. Rewire the 3 aggregation resolution call sites: `graph_builder.py:1444, 1539, 1640`
-   (`_resolve_aggregation_input_channel` calls in SumTerm / SingletonTerm / LocalTerm-EXPOSE
-   handling). Line numbers as of Item 7; re-verify at pickup.
-3. Re-capture baselines byte-identically, or land as a reviewed `scripts/capture_*.py`
-   diff (R3 / SC-G).
-4. **Delete Strategy D** — `DesignAttributeLookup` (`input_resolver.py:200`) is a
-   documented no-op (`return None`, zero live surface: probe ii → 0 key churn on
-   catf_mfe/solar_battery). Remove it from `AGG_STRATEGIES` and **fix its lying docstring**
-   ("included in AGG_STRATEGIES for future extensibility") — the residual ghost Item 7 left
-   noted, not fixed.
-
-**Safety-net evidence (probe pointers).** the matrix-truth probes (git history):
-`probe_i_extended_parity.py` (+ run log, now committed as `TestResolveInputParityExtended`),
-`probe_ii_strategy_d_dedup.py` (+ run log — Strategy D delete justification),
-`probe_iii_module_drift.md` (byte-identical since COST-PATTERN birth),
-`probe_iv_ep_key_divergence.md` (the EP-key blocker above).
-
-**Done when:** IR rows re-pin the live path (drop the "not-yet-wired" family note),
-`_resolve_aggregation_input_channel` is deleted, Strategy D is gone, baselines are
-byte-identical or reviewed, and the parity gate runs against the replaced function.
-
-### [ITEM7-MATRIX-TEST-GAPS] Three REQ rows lack a pinning test — P3, test-coverage
-
-**Absorbed into TRUTH-DEBT (`epic_truth_debt.md`) Item 3, 2026-07-06.**
-
-**Filed by PIPELINE-TRUTH Item 7, 2026-07-06.** The matrix reconciliation dispositioned
-most UNTESTED rows by cross-citing an existing component test, but three claims have no
-honest test to cite and are left UNTESTED with an argument in the matrix:
-
-- **REQ-DM-08** — "name fields with semantic format constraints SHALL use NewType wrappers,
-  not bare `str`." The wrappers exist (`core/identifier_types.py`) but no test asserts the
-  relevant model fields are *annotated* with them. Needs a small static test (assert the
-  wrappers are `NewType` and the target fields use them).
-- **REQ-RES-05** — "the orchestrator SHALL be a linear sequence: classify → build modules →
-  rebuild groups → toposort → validate." `test_orchestrator.py::test_step_ordering_call_sequence`
-  pins only the OUTER `build_pipeline_context` DAG order (REQ-ORCH-01), a different function.
-  No test pins `build_computation_graph`'s internal sequence.
-- **REQ-RES-08** — "consumer scope derivation SHALL apply to ALL resolution paths." Per-path
-  derivation is verified (aggregation REQ-IR-07, CalcUsage-CHAIN REQ-DRA-04) but no single
-  test pins the cross-cutting invariant. Needs a new independently-anchored test enumerating
-  the paths (R1 ban: expectation written independently, not computed by the code under test).
-  Item 1's cross-part fixtures are substrate.
-
-None is feature work — all three are test-authoring. Kept out of Item 7 (matrix-truth budget;
-new-test authoring, not matrix reconciliation).
-
-### [ITEM7-CLASSIFIER-FIX] Inherited-attr EXPOSE_COMPUTED misclassification — RESOLVED (TRUTH-DEBT Item 4)
-
-**✅ LANDED by TRUTH-DEBT Item 4, 2026-07-07.** Step-2b widened to prefix-match any ancestor
-PartDef QN (`computed_attribute_extractor._ancestor_part_qns`); snapshot re-captured (5 flips +
-a depth-2 case); the xfail site deleted for a positively-asserting 7-row table (REQ-CA-12); D5
-graph-builder diagnostic added. **The "loud" framing below was corrected to "silent no-op"** —
-the misclassification dropped silently at `graph_builder.py:269-288`, it was never a loud reject.
-
-**Absorbed into TRUTH-DEBT (`epic_truth_debt.md`) Item 4, 2026-07-06.**
-
-**Filed by PIPELINE-TRUTH Item 7, 2026-07-06.** `test_computed_attributes.py::TestInheritedAttrClassification::test_misclassification_documented`
-xfails N inherited-attribute patterns classified EXPOSE_COMPUTED where FORMULA is correct: an
-inherited attribute's QN resolves to the **supertype** namespace, which defeats the classifier's
-Step-2b `owning_part_qn` prefix check (`test_computed_attributes.py::test_inherited_refs_have_supertype_qn`
-pins the root cause). **Re-frame chosen over fix in Item 7:** the misclassification is *loud*
-(EXPOSE_COMPUTED rejection, not silent wrong output), no fusion-tea model hits it, and the fix
-(supertype-namespace QN resolution vs the Step-2b prefix check) is out of proportion to a
-matrix-truth item. Fix scope: teach the Step-2b check to accept a supertype-namespace QN for an
-inherited attribute. When landed, the xfail cases flip to PASS (xfail strict=False).
+*The previous line here read "276 rows / 275 PASS / 32 families." The row and family counts were right for their date; **"275 PASS" was never true** — the matrix's own summary read 133 at the time and its tables read 134. Corrected by recount, not by adopting either number (`.project/completed/20260814_constraint-docs-agent-sync/verification.md`).*
 
 ### [DM08-MODEL-FIELD-TYPING] NewType-annotate the resolution-model name fields — P3
 
-**Filed by TRUTH-DEBT Item 3 (Route A ruling), 2026-07-07.** REQ-DM-08's original text
-claimed the *model fields* use NewType wrappers; at HEAD they are deliberately bare `str`
-(`resolution/models.py`: `EntryPoint.qualified_name`, `InputSource.qualified_name` /
-`producer_channel`, `ModuleOutput.channel_name`), and `09-data-models.md` documents the
-field↔format table with this deferral. Item 3 pinned the *enforced surface* (OutputRegistry
-dicts + `make_*` constructors, `test_dm08_enforced_surface.py`) and reframed the REQ text to
-match (INV-B). **Scope**: annotate the documented model fields with their NewTypes
-(field↔format table in doc 09 is the target list), update the DM-08 row + doc 09 note, and
-extend the AST-scan test to cover the widened surface. Pure typing churn — zero runtime
-change (NewType is erased), but touches many models; mypy must not regress.
-
-### [TRUTH-DEBT-INHERITED-FORMULA-COMPILE] Compile inherited-attr FORMULAs into real modules — P3
-
-**Filed by TRUTH-DEBT Item 4, 2026-07-07.** Item 4 fixed *classification* — an attribute
-referencing only inherited/local attrs now classifies FORMULA. But these stay
-`MANUAL_REQUIRED` and produce **no pipeline module**: the compiler's `input_names` is built
-from `owned_members` (`computed_attribute_extractor.py:188-191,247-249`), which per SysML v2
-excludes inherited attrs, so an inherited ref compiles to `UNSUPPORTED` →
-`compilability=MANUAL_REQUIRED`, `compiled_expression=None`. The D5 graph-builder diagnostic
-now makes that no-module outcome **loud** at generation, but it does not build the module.
-**Scope**: thread the ancestor PartDefs' attribute names into the FORMULA compiler's
-`input_names` (mirroring the ancestor-QN walk already added for classification) so an
-inherited-attr FORMULA compiles to a real module. Out of scope for Item 4 (classification-only,
-D1). No corpus model hits the shape today, so no baseline moves.
-
-### [TRUTH-DEBT-IFE-PLANT-CHAIN-STALE] `ife_plant` snapshot latently stale (pre-existing classifier drift) — P3
-
-**Filed by TRUTH-DEBT Item 4 B3 check, 2026-07-07; attribution corrected by Item 2's audit
-(multihop-chain/audit.md).** While reproducing B3 for Item 4, one **orthogonal** drift
-surfaced: `ife_plant` `radial_build.magnet_volume_total` is committed as `expose_pure` but
-live extraction now classifies it `expose_chain_tentative`. Confirmed pre-existing on the
-pre-Item-4 classifier (`0f75062`). The original filing attributed it to Item-2 multi-hop
-machinery; **Item 2's audit refuted that** — Item 2's entire source diff is
-`usage_extractor.py` + `dependency_backtracker.py`, neither on the attribute/classifier
-path, and it provably cannot produce the `expose_pure → expose_chain_tentative` transition.
-The drift is prior-epoch classifier staleness (pre-Item-2, from `891cf8e`), latent until
-`ife_plant` is re-captured. NOT an Item-4 effect either. Latent: the conformance suite reads the committed snapshot, so it is green
-today; it would surface on a future `ife_plant` re-capture. **Scope**: re-capture `ife_plant`
-and review the resulting diff (expect the one chain-classification flip and its downstream
-effects), landing it as a reviewed R3 diff. Deliberately not done in Item 4 (mixing Item-2
-drift into the Item-4 change would break the byte-identity carve-out).
+**Filed by TRUTH-DEBT Item 3 (Route A ruling), 2026-07-07.** REQ-DM-08's original text claimed the *model fields* use NewType wrappers; at HEAD they are deliberately bare `str` (`resolution/models.py`: `EntryPoint.qualified_name`, `InputSource.qualified_name` / `producer_channel`, `ModuleOutput.channel_name`), and `09-data-models.md` documents the field↔format table with this deferral. Item 3 pinned the *enforced surface* (OutputRegistry dicts + `make_*` constructors, `test_dm08_enforced_surface.py`) and reframed the REQ text to match (INV-B). **Scope**: annotate the documented model fields with their NewTypes (field↔format table in doc 09 is the target list), update the DM-08 row + doc 09 note, and extend the AST-scan test to cover the widened surface. Pure typing churn — zero runtime change (NewType is erased), but touches many models; mypy must not regress.
 
 ### [ITEM7-MATRIX-SWEEP-RESIDUE] Deep-read sweep findings — P3, test-coverage / matrix-honesty
 
 **Absorbed into TRUTH-DEBT (`epic_truth_debt.md`) Item 5, 2026-07-06.**
 
-**Filed by PIPELINE-TRUTH Item 7, 2026-07-06.** The leashed ~175-row deep-read sweep (Phase 8)
-ran to substantial completion via delegated per-family readers (~167 qualifying strong-word PASS
-rows examined). Every finding is a **PASS-but-pins-narrower** row — the cited test passes and the
-behavior is real, but the test pins less than the full requirement text (INV-B). **None is a
-correctness lie**; none is feature work. Three were reframed in-matrix already (SR-03 6-case,
-EXT-07, EXT-14). The rest are filed here rather than reframed/strengthened in-item (matrix-truth
-budget; test-authoring, not reconciliation). Each carries its disposition; fix per row when the
-owning component is next touched.
+**Filed by PIPELINE-TRUTH Item 7, 2026-07-06.** The leashed ~175-row deep-read sweep (Phase 8) ran to substantial completion via delegated per-family readers (~167 qualifying strong-word PASS rows examined). Every finding is a **PASS-but-pins-narrower** row — the cited test passes and the behavior is real, but the test pins less than the full requirement text (INV-B). **None is a correctness lie**; none is feature work. Three were reframed in-matrix already (SR-03 6-case, EXT-07, EXT-14). The rest are filed here rather than reframed/strengthened in-item (matrix-truth budget; test-authoring, not reconciliation). Each carries its disposition; fix per row when the owning component is next touched.
 
 **Reframe REQ text to what the test checks (cheap, byte-safe):**
 - **REQ-CA-01** — test uses the 6-member enum set (incl. transient `EXPOSE_CHAIN_TENTATIVE`); INV-F/no-tentative-survives is REQ-CA-10's job, not pinned here. Reframe: "assign each attr exactly one enum member."
@@ -1038,524 +172,74 @@ owning component is next touched.
 - **REQ-HR-08** — the "`part redefines` keeps all RHS types" leg is pinned by `test_virtual_binding_rewrite.py::TestChainOverrideFixtureCoverage` (marked REQ-VBR-04). Add a `# REQ-HR-08` marker there.
 - **REQ-PY-08 / REQ-DM-09** — cited methods carry the REQ only in a docstring, no `@pytest.mark.req`; matrix tooling may not bind them.
 
-**Residue (register discipline — NOT swept, named with count):** the sweep examined ~167 of the
-~213 qualifying strong-word/diagnostic/count rows. ~46 qualifying rows were not independently
-deep-read this pass (primarily the EPC diagnostics, LVP literal-propagation, and GA topo-sort
-internals judged adequate on their family reader's spot-check but not line-by-line). These are
-**not** asserted swept — a future pass completes them. No silent truncation.
-
-### [DOCS-SCRUB-F3] Stale code docstrings found while verifying docs (one-line fixes)
-
-**Source**: docs-scrub, 2026-07-06. Code changes, out of scope for the docs-only pass:
-- `_resolve_binding_via_registry` docstring (`analysis/dependency_backtracker.py`): lists a
-  REFERENCE "Step 1b: Normalize :: to dotted -> scoped_lookup" that doesn't exist in
-  `_resolve_reference_dispatch`, and its CHAIN summary omits Step 1c.
-- `OutputRegistry` class docstring (`core/output_registry.py`): says "Three typed
-  registries" (there are four) and its phase list omits Phase 3b; `__repr__` omits the
-  `_scoped_alias` count.
-- `build_pipeline_context` docstring (`orchestration/pipeline_builder.py`): old 7-step
-  summary with the group deriver ahead of the registry (it runs at Step 5.7, after).
-- `tests/conformance/test_graph_assembly.py` section header/class docstring still say
-  "exactly 3 fields" (the test body pins 5).
-
-### [SANITIZER-MERGE] Two-sanitizer consolidation (D1-F2) — P3, load-bearing divergence
-
-**Filed by PIPELINE-TRUTH Item 8 (D1-F2), 2026-07-06.** `core.sanitize_name`
-(`core/qualified_names.py:13`) vs `expression_compiler._sanitize_name`
-(`extraction/expression_compiler.py:167`) diverge deliberately: the compiler drops the
-reserved-word suffix `core.sanitize_name` applies, and the FORMULA REFERENCE wire matches *by
-construction* on that difference. **Assessed → FILE (not merged):** a naive shared core risks
-breaking the FORMULA REFERENCE match, and the byte-identity discipline makes a speculative merge
-high-risk for near-zero gain. Implement a shared core only if it falls out safely with the
-byte-identity gate green. Not forced in a cleanup pass.
-
-### [SC11-IMPORT-REWRITE] AST-based import rewrite (D1-F1 / SC-11) — P3, not small
-
-**Filed by PIPELINE-TRUTH Item 8 (§G), 2026-07-06.** `identifier-sanitization/close-out.md:31`
-claimed the AST-based import rewrite (substring, first-match) was a "filed follow-up" — it was
-filed **nowhere**; the false claim is now corrected in that close-out. **Assessed → FILE:** the
-size judgment is *not small*. Compared against the registry alias-rewrite's no-not-found branch (a
-D3 hygiene site, a 1–2-site local change), a correct substring/first-match import rewrite is a
-cross-module AST rework. Build it as its own scoped change, not opportunistically. This entry is
-the SC-11 assessment-verdict artifact.
-
-### [GB-PARAMGROUPS-TYPING] graph_builder `param_groups` type-ignore cluster (D1-F4) — P3
-
-**Absorbed into TRUTH-DEBT (`epic_truth_debt.md`) Item 1, 2026-07-06** — folded into the F4
-cutover (same graph_builder group-assembly region).
-
-**Filed by PIPELINE-TRUTH Item 8 (D1-F4), 2026-07-06.** The 2-ignore cluster
-(`resolution/graph_builder.py:408/412`, `[assignment]` + `[attr-defined]`) guards a genuine mypy
-narrowing: `param_groups` is bound twice (Step-5 `_group_entry_points_via_deriver`, then the
-Step-6.6 rebuild via `_convert_derived_groups`) and mypy keeps a `DerivedParameterGroup` typing at
-the sort site. **Assessed at implement:** removing the ignores raised mypy 104→106 (real errors,
-not stale); a root annotation at the first binding did **not** clear it — the fix needs splitting
-the double-binding into two distinctly-named variables (the Step-5 result is discarded by the
-Step-6.6 rebuild anyway, so it is likely a removable dead computation). Deferred rather than churn
-graph_builder's group-assembly flow in a cleanup pass. **Constraint honored: mypy stayed at 104
-(ignores retained).**
-
-### [DOTTED-LEAF-PART-BLIND] Tighten the dotted-leaf alias match to be part-aware (D6 edge) — P3
-
-**Filed by PIPELINE-TRUTH Item 10, 2026-07-06.** The `.`-suffix branch of
-`_chain_sibling_aliases_aggregation` (`extraction/hierarchy_resolver.py`) matches any dotted
-`source_path` whose leaf equals the aggregation attribute, **regardless of which part it
-references** — so `parent.capital_cost` matches `attribute_name="capital_cost"` on an unrelated
-part. It could produce a spurious alias for a hierarchical CHAIN redefinition. **Item 10
-disposition: keep the current behavior.** No supported model triggers the edge; the behavior is
-pinned by `tests/unit/test_hierarchy_resolver.py::TestDottedLeafAliasMatch` (doc-25's dotted-leaf
-section), so any tightening is a red-then-green change. Tightening (make the match part-aware) is a
-code change, deliberately left un-done at epic close — pick it up if a real model produces the
-spurious-alias collision.
-
-### [ITEM7-PGD06] Re-frame REQ-PGD-06's matrix PASS row — RETIRED (Item 7 consumed)
-
-**Retired 2026-07-06 by Item 7.** Confirmed `get_default_value` is deleted (0 hits in `src/`
-and `tests/`). REQ-PGD-06 re-framed in the matrix from the PENDING-ITEM7 row to an
-UNTESTED row with its argument: the numeric default now resolves inline via
-`_parse_default_value` in `_derive_from_*` (live), but it is a side-output of grouping
-(pinned by REQ-PGD-01/08) and not independently asserted — the standalone accessor that
-pinned it is gone. REQ-PGD-08's `get_default_value` mention in doc-17 was already cleared by
-Item 8. Superseded.
-
-
-
-**Source**: PIPELINE-TRUTH Item 8 (the cleanup-debt spec, row B; git history), filed
-2026-07-06. **FIRED (2026-07-06) — Item 8 confirmed `get_default_value` DEAD and deleted it**
-(zero production callers; the live default path resolves inline via `_parse_default_value` in
-`_derive_from_*`). Item 8 landed the doc-17 re-frame (rows `:26`/`:28`/`:143`) and the matrix
-breadcrumb (`verification-matrix.md:379` now `PENDING-ITEM7 · [ITEM7-PGD06]`). **Item 7's remaining
-job:** reconcile/retire the `verification-matrix.md:379` REQ-PGD-06 PASS row (its pinning tests are
-gone) and confirm REQ-PGD-08's `:28` mention was cleared (it was). Item 8's
-fork-B deletes `ParameterGroupDeriver.get_default_value()` when the method is confirmed
-dead (only its own conformance tests call it). When that happens, Item 8 updates the
-reference doc in the same change (doc-17 rows `:26`/`:28` + prose `:143`, per R1) and
-leaves a breadcrumb on the matrix, but the **matrix PASS-row re-frame is Item 7's** (it
-owns the verification matrix). Item 7 must, at its spec: check whether Item 8 deleted the
-method (read `cleanup-debt/` close-out); if so, re-frame or retire `verification-matrix.md:379`
-(REQ-PGD-06, currently PASS verified-by `test_parameter_group_deriver.py` — those tests are
-gone) and reconcile REQ-PGD-08's `get_default_value` mention (`:28`). If Item 8 kept the
-method, this entry is a no-op — retire it. **Item 7 required reading must include this
-entry.**
-
-**Also for Item 7's matrix sweep (Item 8, Row D):** Item 8 added a new PASS row
-**REQ-AST-10** to `verification-matrix.md` (`_walk_aggregation_ast` dispatches literals
-before the invocation catch-all, verified by `test_agg_literal_dispatch.py`). Matrix
-*additions* are in-item per R1; this is flagged only so Item 7's reconciliation sweep sees
-the new row and does not treat it as an orphan.
-
----
-
-## Completed
-
-| Epic | Completed | Duration | Notes |
-|------|-----------|----------|-------|
-| [PIPELINE-TRUTH] The Generated Package Is the Truth | 2026-07-06 | ~2 days (orchestrated) | All 10 items landed and audited PASS. **The generated package is the truth**: fusion-tea generates/wires/executes end-to-end at TRUE ZERO V11 offenders (SVM value-fill, Item 2); run-C lcoe reproduces bit-exact ($270.1211779380445) and every workaround deleted upstream (Item 3); constraint drop report subtype-aware incl. `assert` (Item 4); 13 silent-failure findings fixed by family (Item 5); 25 self-referential tests re-anchored (Item 6); matrix 253 = 249 PASS + 4 UNTESTED-argued + 0 DEFERRED, F2/F4 resolved by decision (Item 7); dead code cleared + REQ-AST-10 (Item 8); agentic-mbse taught+checked (Item 9); docs+explainer refreshed (Item 10). Follow-on filings kept below (outlive the epic): `[ITEM7-F4-CUTOVER]`, `[ITEM7-MATRIX-TEST-GAPS]`, `[ITEM7-CLASSIFIER-FIX]`, `[ITEM7-MATRIX-SWEEP-RESIDUE]`, `[SANITIZER-MERGE]`, `[SC11-IMPORT-REWRITE]`, `[GB-PARAMGROUPS-TYPING]`, `[DOTTED-LEAF-PART-BLIND]`, SYNC-F3/F4. See `.project/completed/20260720_epic_pipeline_truth.md` (Lessons Learned). |
-| [UPSTREAM-FINDINGS] Upstream Findings Remediation & Plant-Idiom Support | 2026-07-06 | ~2 days (orchestrated) | All 12 items landed and audited PASS; merged as PR #3. Fixed SC-1–SC-11 + 6 research defects; staged cross-part wiring; snapshot CLI; agentic-mbse sync. Residue (10 V11 offenders, assert-constraint silence, F2/F4) shaped into — and now closed by — PIPELINE-TRUTH. See `.project/completed/20260720_epic_upstream_findings.md`. |
-| [COST-PATTERN] Costed Component Pattern Support | 2026-02-22 | ~12 days | 41 items completed: full conformance test suite (C01-C27, X01-X02), Phase 7 structural refactors, bug fixes (7, 11), docs consolidation. |
-| [ATTR-EXPR] Attribute Expression Capture | 2026-02-09 | ~2 days (Items 1-5) | FORMULA computed attributes generate synthetic pipeline modules. 5-way classification scheme. ADR-004/005 formalized. 285 tests, 0 failures. |
-| [EXPR-CODEGEN] Expression-Aware Code Generation | 2026-02-08 | ~8.5 days | 15/15 solar_battery, 19/21 CATF auto-implemented. 167 tests, 0 xfail. |
-
----
-
-## Ideas / Future Considerations
-
-- **In-predicate feature-chain admission (CONSTRAINT-SEMANTICS Item 1, filed 2026-08-12).** The
-  blessed gate shape restricts predicate bodies to formals; feature chains stay supported in
-  binding position. Admitting them inside the predicate body was left open as a candidate rather
-  than decided against — the published contract calls it a filed future capability, and this is
-  the filing.
-- **Evaluated advisory tier for plain constraints (CONSTRAINT-SEMANTICS Item 1, filed
-  2026-08-12).** A plain `constraint` is a visible, cataloged, never-executed description. Whether
-  a plain constraint could additionally be *evaluated* and surfaced as a non-gating advisory was
-  left open as a candidate; this is the filing.
-- ~~**Aggregation-literal dispatch bug (from UPSTREAM-FINDINGS Item 6, SC-6).**~~
-  **✅ RESOLVED by PIPELINE-TRUTH Item 8 (Row D), 2026-07-06.** `_walk_aggregation_ast`'s
-  literal branch was hoisted above the invocation catch-all (the executable-path twin of the
-  Item-6 `reconstruct_expression` fix). Reproduced RED first on a new literal-bearing fixture
-  (`agg_literal_probe`: `sum(module.cost) + 5.0`), GREEN after; all 23 existing v2 corpora
-  byte-identical (only `captured_at` timestamps moved, reverted). Governed by **REQ-AST-10**
-  (doc-19 + `verification-matrix.md`), verified by `test_agg_literal_dispatch.py`. The doc-19
-  known-deviation note is re-framed to "conforms" and handed to Item 10's caveat sweep for
-  final removal.
-- **Constraint-reconstruction coverage (from UPSTREAM-FINDINGS Item 6, SC-6).**
-  `reconstruct_expression` also serves constraint text, but constraint expressions are not
-  captured in extraction snapshots (the Item-6 design's Appendix-A #4 wrongly assumed the
-  catf_mfe divertor constraint `(surface_area_inner + surface_area_outer)` would appear in
-  the snapshot; it does not — 0 occurrences). The paren/literal fix applies to constraint
-  text too but has no snapshot-level regression coverage. Add a test that exercises
-  constraint reconstruction directly if that coverage is wanted.
-- **Stale-fixture snapshot refresh (from UPSTREAM-FINDINGS Item 9).**
-  *→ Candidate rider for PIPELINE-TRUTH Item 1 (same live-capture session); decide at its spec.* Three committed
-  extraction snapshots drift from current live output but were left untouched by Item 9
-  (its live re-capture reverted them to keep INV-5's "exactly four fixtures change"). They
-  must be refreshed so the committed corpus ends the epic script-reproducible — deferred,
-  not dropped. Run as one stale-fixture-refresh chore in the Item 6 Step-1 style: own
-  commit, reviewed diff, and any test updates that assert the stale form. Execute at
-  epic close-out.
-  - (`ife_plant` was migrated to the canonical form in Item 9's re-capture — no longer
-    in this chore's scope.)
-  - `wi014_toy`, `self_named_binding_trap` — **path canonicalization only.** Last captured
-    at Item 8 (`84ae948`) under the old convention; re-capture normalizes `source_file`
-    (repo-relative → model-relative), `design_attributes` keys (repo-relative → absolute),
-    and `document_path` (`file:…` → `file:///home/…`). No `design_overrides` / binding
-    change — provably orthogonal to Item 9 (0 diff lines on those surfaces).
-  - `quoted_owner_formula` — **path canonicalization + a classification shift.** Re-capture
-    also drops two `design_attributes` (`net_margin`, `total_payout`), which now classify as
-    computed attributes instead. Likely cause: post-Item-7 computed-attribute classification
-    behavior reaching this Item-6-vintage snapshot (`346cf47`). The refresher should review
-    this reclassification deliberately — confirm `net_margin`/`total_payout` SHOULD be
-    computed, not design attributes — rather than wave the diff through. The repo already
-    flags this fixture's path drift in `scripts/capture_extraction_snapshots.py:56-60`.
-- InvocationExpression / function call support (sqrt, min, max whitelist)
-- SelectExpression / if-then-else support (piecewise functions)
-- EXPOSE_COMPUTED decomposition (calc output + arithmetic, deferred from ATTR-EXPR)
-- Non-uniform array instances (flat expansion strategy for arrays with per-element parameters)
-- Body-assignment expression capture (P3, M-lift; deferred from UPSTREAM-FINDINGS Item 3 / SC-2). For the `return attribute y : Real; y = expr;` form, wire the direction-None `member_expressions[y]` (the body assignment) into `output_expression_asts[y]` so `y` auto-implements instead of degrading to a `NotImplementedError` stencil. Inline `return y : Real = expr` already auto-implements, and the A-2 stencil fix steers modelers to the inline form, so this is low value — it restores auto-impl only for the deprecated body-assignment pattern.
-- **fusion-tea whole-plant cross-part wiring — PROMOTED (2026-07-06).** This P1 item was
-  mis-shelved under Ideas; it is now **PIPELINE-TRUTH Items 1–3** (`.project/completed/20260720_epic_pipeline_truth.md`):
-  the 10 remaining V11 offenders, the extended `spec_chain_twolevel` acceptance fixture,
-  zero-offender fusion-tea generation, and the run-C ($270.12/MWh) reproduction + workaround
-  retirement. Mechanism evidence (offenders reconciled 1:1, bridge reproduction bit-exact):
-  `~/1cfe/fusion-tea/work/active/20260706_upstream-fix-verification/report.md` and
-  `.project/research/20260706_pipeline-truth-discovery.md` §D6.
-- **Two-level specialization — `attribute :>>` extraction gap (P3; from UPSTREAM-FINDINGS Item 10,
-  D-F).** *→ The validation WARNING half is built by PIPELINE-TRUTH Item 9; the extraction
-  relaxation itself stays deferred.* A value-carrying redefinition authored as `attribute :>> attr = <expression>` (an
-  AttributeUsage) is silently dropped at extraction — `_extract_single_redefinition`
-  (`hierarchy_resolver.py`) only scans ReferenceUsage members — so `hierarchy_data.redefinitions`
-  comes back empty and the specialized-def resolver has nothing to read. Item 10 did NOT relax
-  this: fusion-tea uses only the bare `:>> attr = value` form (86 occurrences, zero
-  `attribute :>>`; the real gamma edge is `hif_driver.sysml:82 :>> cost_per_joule = meier_cost.gamma`).
-  Recorded as an agentic-mbse guidance/validation candidate for Item 12 (teach the bare form; warn
-  when an `attribute :>>` carries an expression RHS), not a codegen change.
-
-### PIPELINE-TRUTH Item 5 — Silent-Failure Hardening close-out filings (2026-07-06)
-
-- **[D3-HYGIENE-TAIL]** — **absorbed into TRUTH-DEBT (`epic_truth_debt.md`) Item 6, 2026-07-06.** Consolidated hygiene entry (pointer: `.project/research/20260706_pipeline-truth-discovery.md` §D3). The benign-leaning silent sites not folded into a family fix: loader `.get` defaults on load-bearing fields, naive substring `.replace()` in aggregation compile, `type_map` "Any" exit-point skip, registry alias-rewrite no-not-found branch. Each is low blast-radius; batch them into one hardening pass. (Dead `_check_semantic_match` is Item 8's dead-code sweep — cross-referenced, not filed twice.)
-- **[MULTIHOP-CHAIN-PARSE]** — **absorbed into TRUTH-DEBT (`epic_truth_debt.md`) Item 2, 2026-07-06.** Full multi-hop chain parsing follow-on (from D3-2). `extract_feature_chain_segments` (`expression_utils.py`) already yields all segments; Item 5 uses it for the COUNT only (loud-reject 3+-seg chains). Building the resolved multi-hop path is new capability — cheap (helper exists), unblocks deep cross-scope chains, and would let `deep_cross_scope_probe`'s Pattern-A pin assert a *resolved* chain instead of a loud rejection. Argued at Item 5 design; deferred as new-capability, not this item.
-- **Item-9 (agentic-mbse lockstep) impact accumulation from Item 5.** New diagnostics that agentic-mbse guidance/validation should teach & check: (1) the totality/uniqueness/exception invariants (INV-1..INV-5) as new-dispatch/lookup-site review rules; (2) `extract_feature_refs` under-report (D3-9 tripwire) — a non-literal AST root yielding zero refs is a traversal gap in agentic-mbse; (3) `str(direction)` repr and the non-float entry-point (SC-5) shape as modeling-guide anti-patterns. Recorded for Item 9 per R2; not implemented here.
-
-### TRUTH-DEBT Item 6 — D3 Hygiene Tail Phase 0 filings (2026-07-07)
-
-- **[D3-HYGIENE-TAIL-SITE4-TRANSITIVE-ALIAS]** — **reclassified, not fixed, at Item 6 Phase 0.**
-  Site 4 (`orchestration/output_registry_builder.py:353-367`, Phase 4 transitive design-attribute
-  alias resolution) was expected to reproduce only synthetically ("reproduces cleanly" per the
-  plan) and get a mechanical sibling-copy `logger.warning` mirroring Phases 2/3. The Phase-0
-  corpus-scan gate found instead that the identical unresolved-lookup shape already fires on
-  **5 of 15 `SNAPSHOT_MODELS` fixtures today**: `solar_battery_model`
-  (`misc_hardware_cost` → `'allocation_model.total_allocation'`), `wi014_toy`
-  (`total_cost` → `'cost_calc.cost'`), `ife_plant` (`volume` → `'volume_calc.volume'`,
-  `lcoe` → `'lcoe_calc.lcoe'`), `plant_values` (`plant_cost` → `'cost_calc.plant_cost'`). Root
-  cause: these `default_value`s use a short leaf-instance dotted form (`"cost_calc.cost"`) but
-  all three of Phase 4's lookup keys are full-EQN forms — none ever match. A mechanical WARN
-  here would fire on all 5 currently-clean fixtures, breaking INV-6 [HARD]. No downstream binding
-  in the corpus references any of the 5 orphaned names, so the gap has no observable effect on
-  current generated output — which is exactly why the mechanical fix would have been a false-fire,
-  not a true one.
-
-  **This is the same underlying gap already discovered and deliberately deferred** at
-  `analysis/parameter_groups.py:672-682` (`_derive_from_design_attributes`), where a
-  present-but-unparseable design-attribute default is silently dropped from the derived JSON
-  parameter list. That code's own comment (citing SC-5/D3-12) states a naive WARN there
-  "over-fires on legitimate chain/reference defaults... resolved elsewhere, breaking INV-6," and
-  that the correct fix "needs the EP-omission membership check across the full derivation" —
-  deferred, and never filed until now.
-
-  **Filing:** a correct fix spans both sites (an EP-omission / cross-derivation membership check
-  that only warns when a transitive default resolves in *neither* Phase 4 *nor* the parameter-group
-  JSON path) — design-level work, not a single-choke mechanical hygiene fix. Out of Item 6's scope.
-  Evidence: the hygiene-tail probes `probe_site4_output_registry.py` and `verdict.md` (git history).
+**Residue (register discipline — NOT swept, named with count):** the sweep examined ~167 of the ~213 qualifying strong-word/diagnostic/count rows. ~46 qualifying rows were not independently deep-read this pass (primarily the EPC diagnostics, LVP literal-propagation, and GA topo-sort internals judged adequate on their family reader's spot-check but not line-by-line). These are **not** asserted swept — a future pass completes them. No silent truncation.
 
 ### [ITEM5-SWEEP-RESIDUE-OVERFLOW] D7 sweep completion — 21 rows read-spot-checked, not line-by-line deep-read — P3, test-coverage / matrix-honesty
 
 **Filed by TRUTH-DEBT Item 5 (matrix-sweep-residue), 2026-07-08.**
 
-Step 5.0's D7 qualifier grep (`SHALL|ALL|every|never|exactly|warn|fire|count`, case-insensitive)
-across all 259 current matrix rows returns 232 qualifying rows. Subtracting the ~167 the
-Item-7 register already swept and the 33 rows this item dispositioned in Phases 1-4 (17
-strengthen + 11 reframe + 5 cite) leaves **32 rows** as the concrete residue (the spec's ~46
-estimate included rows this item's own Phase 2 work re-verified/absorbed).
+Step 5.0's D7 qualifier grep (`SHALL|ALL|every|never|exactly|warn|fire|count`, case-insensitive) across all 259 current matrix rows returns 232 qualifying rows. Subtracting the ~167 the Item-7 register already swept and the 33 rows this item dispositioned in Phases 1-4 (17 strengthen + 11 reframe + 5 cite) leaves **32 rows** as the concrete residue (the spec's ~46 estimate included rows this item's own Phase 2 work re-verified/absorbed).
 
-Of those 32, the 23 in the three named families (EPC 8, GA 8, LVP 9, minus REQ-EPC-05/07
-already strengthened in Phase 2 = 21 unread here) were spot-checked (not individually
-line-by-line deep-read): REQ-GA-04's `TestNoSelfDependency` and REQ-LVP-04's LocalTerm-fallback
-assertions both read as real, non-vacuous checks matching their row text on inspection. No
-correctness lie or feature gap was found in the spot-check, consistent with the Item-7 register's
-finding that every prior deep-read row was PASS-pins-narrower, never a lie.
+Of those 32, the 23 in the three named families (EPC 8, GA 8, LVP 9, minus REQ-EPC-05/07 already strengthened in Phase 2 = 21 unread here) were spot-checked (not individually line-by-line deep-read): REQ-GA-04's `TestNoSelfDependency` and REQ-LVP-04's LocalTerm-fallback assertions both read as real, non-vacuous checks matching their row text on inspection. No correctness lie or feature gap was found in the spot-check, consistent with the Item-7 register's finding that every prior deep-read row was PASS-pins-narrower, never a lie.
 
-**Stopping rule invoked:** the D7 stopping rule (0 new findings in 40 consecutive rows after the
-first 60) was not reached on row-count grounds — this pass stopped short of it, at the item's
-remaining implementation budget, having read 2 of 21 representative rows in the named families
-(GA-04, LVP-04) plus the row-text/citation check for all 21 during Step 5.0's grep pass. This is
-an **honest budget-bound stop**, not a claim the D7 heuristic's row-count threshold was hit --
-named separately per the plan's risk-management section (an unread residual vs. a
-read-but-too-big-to-fix residual are both named, separately).
+**Stopping rule invoked:** the D7 stopping rule (0 new findings in 40 consecutive rows after the first 60) was not reached on row-count grounds — this pass stopped short of it, at the item's remaining implementation budget, having read 2 of 21 representative rows in the named families (GA-04, LVP-04) plus the row-text/citation check for all 21 during Step 5.0's grep pass. This is an **honest budget-bound stop**, not a claim the D7 heuristic's row-count threshold was hit -- named separately per the plan's risk-management section (an unread residual vs. a read-but-too-big-to-fix residual are both named, separately).
 
 **Residue, named exactly:**
-- **21 rows** in EPC/GA/LVP families not individually deep-read beyond the spot-check above:
-  REQ-EPC-01, -02, -03, -04, -06, -08; REQ-GA-01, -02, -03, -05, -06, -07, -08; REQ-LVP-01, -02,
-  -03, -05, -06, -07, -08, -09.
-- **11 rows** elsewhere in the qualifying set (the "~21 spread across other families" the spec
-  named) not enumerated by REQ id in this filing -- reconstructing the exact list requires
-  re-running the Step 5.0 grep minus the 167+33+21 already accounted for; left as a precise
-  follow-on rather than guessed here.
+- **21 rows** in EPC/GA/LVP families not individually deep-read beyond the spot-check above: REQ-EPC-01, -02, -03, -04, -06, -08; REQ-GA-01, -02, -03, -05, -06, -07, -08; REQ-LVP-01, -02, -03, -05, -06, -07, -08, -09.
+- **11 rows** elsewhere in the qualifying set (the "~21 spread across other families" the spec named) not enumerated by REQ id in this filing -- reconstructing the exact list requires re-running the Step 5.0 grep minus the 167+33+21 already accounted for; left as a precise follow-on rather than guessed here.
 
-**Scope for the follow-on:** re-run the Step 5.0 grep, subtract this item's full disposition
-(33 dispositioned + 21 spot-checked here), deep-read the remainder under a fresh D7 budget, land
-cheap dispositions (reframe/cite) inline, re-file only genuine budget-exceeding strengthens.
+**Scope for the follow-on:** re-run the Step 5.0 grep, subtract this item's full disposition (33 dispositioned + 21 spot-checked here), deep-read the remainder under a fresh D7 budget, land cheap dispositions (reframe/cite) inline, re-file only genuine budget-exceeding strengthens.
 
-## CONSTRAINT-EXEC follow-ons (registered at epic close, 2026-07-13)
+### [SANITIZER-MERGE] Two-sanitizer consolidation (D1-F2) — P3, load-bearing divergence
 
-The fusion-tea IFE acceptance (Item 14 Appendix C) was the first real multi-entry-channel
-whole-plant package through the full sealed-package → study-layer path; it surfaced three
-integration gaps, each bridged consumer-side in fusion-tea (`exploration/ife_e2e/study/findings.md`)
-and each a claim-narrowing on a certified item that should become real work, not a permanent adapter:
+**Filed by PIPELINE-TRUTH Item 8 (D1-F2), 2026-07-06.** `core.sanitize_name` (`core/qualified_names.py:13`) vs `expression_compiler._sanitize_name` (`extraction/expression_compiler.py:167`) diverge deliberately: the compiler drops the reserved-word suffix `core.sanitize_name` applies, and the FORMULA REFERENCE wire matches *by construction* on that difference. **Assessed → FILE (not merged):** a naive shared core risks breaking the FORMULA REFERENCE match, and the byte-identity discipline makes a speculative merge high-risk for near-zero gain. Implement a shared core only if it falls out safely with the byte-identity gate green. Not forced in a cleanup pass.
 
-- **[CE-F1] Canonical catalog join — ABSORBED by CONSTRAINT-LIFECYCLE-REMEDIATION Item 8.** The
-  owner selected codegen's embedded model-contract catalog as the sole schema authority. Item 8
-  adds the required entry fields/store transition and deletes the standalone TEAx schema,
-  materializer, fixture, stand-in fingerprint, and reconstruction paths.
-- **[CE-F2] Multi-channel CandidateBridge — ABSORBED by CONSTRAINT-LIFECYCLE-REMEDIATION Item 9.**
-  Item 9 extends the stock bridge to complete zero/one/multiple typed entry-channel mappings and
-  deletes the consumer wrapper.
-- **[CE-F3] PreparedEvaluator hardcoded fixture class (teax, Item 10 surface).** ✅ FIXED
-  (2026-07-13, teax `0d606a4`, owner-approved): `entry_models` property derives channel → typed
-  model from the pipeline spec; consumers migrated; a source-scan guard test now blocks any
-  model-specific fixture symbol in simkit source (the leak class the import-scan isolation leg
-  cannot see). fusion-tea's alias bridge in the two driver scripts is now unnecessary (harmless;
-  retire with the docs sweep — **done** 2026-07-13, docs-explainer-refresh Phase 6, fusion-tea `bfff2b4f`).
+### [SC11-IMPORT-REWRITE] AST-based import rewrite (D1-F1 / SC-11) — P3, not small
 
-## docs-explainer-refresh follow-ons (registered at item close, 2026-07-13)
+**Filed by PIPELINE-TRUTH Item 8 (§G), 2026-07-06.** `identifier-sanitization/close-out.md:31` claimed the AST-based import rewrite (substring, first-match) was a "filed follow-up" — it was filed **nowhere**; the false claim is now corrected in that close-out. **Assessed → FILE:** the size judgment is *not small*. Compared against the registry alias-rewrite's no-not-found branch (a D3 hygiene site, a 1–2-site local change), a correct substring/first-match import rewrite is a cross-module AST rework. Build it as its own scoped change, not opportunistically. This entry is the SC-11 assessment-verdict artifact.
 
-The docs-explainer-refresh sweep re-projected the four repos' teaching surfaces onto
-post-CONSTRAINT-EXEC HEAD and rewrote `EXPLAINER_PROMPT.md` into a buildable v2 brief. It
-registered three follow-ons:
+- **[ANON-ELIGIBLE-KEY] Anonymous executable assertions share one catalog compile key — P3 `[AGENT]` (filed 2026-07-18, GAP-CLOSE Item 2 non-goal).** Eligible anonymous assertions all get `"<anonymous>"` as their `predicate_definition_key`, so compile-once grouping cannot distinguish them (pre-existing; distinct from the F5 exclusion-path collision GAP-CLOSE fixes). Needs an owner ruling first: are anonymous *executable* assertions a supported authoring form? (Gap review Open Question 2.) Evidence: `.project/research/20260718-123558_constraint-expression-final-gap-review.md` (F5) and the verification record's F5 sub-question (c).
 
-- **[V2-HTML-BUILD] Build `pipeline_explainer_v2.html` from the refreshed brief — P2.** The
-  deliverable of docs-explainer-refresh was the *brief* (`EXPLAINER_PROMPT.md`; git history),
-  re-anchored to `constraint-exec-epic` HEAD with the eight constraint-exec areas slotted and its
-  buildability infrastructure refreshed (responsibility-map rows, reading-list data sources,
-  corrected matrix counts 274/32, reuse-guidance delta). This item is the actual v2 HTML build a
-  separate agent picks up: build the self-contained interactive explainer per the brief, save to
-  `.project/diagrams/pipeline_explainer_v2.html` (do not overwrite the deprecated Gen-1
-  `new_pipeline_explainer.html`). Not built by the refresh item ([OWNER] 2026-07-13: "update the
-  EXPLAINER_PROMPT.md. I will have another agent pick this up.").
-- **[DOC19-DISPATCH-REAUDIT] Re-audit doc 19's dispatch-site inventory — ABSORBED into
-  `docs-lifecycle-sync` (spec R7, plan Phase 2) and DELIVERED ✅ (item closed 2026-07-24 to
-  `completed/20260724_docs-lifecycle-sync/`).** The refresh fixed
-  the surveyed `build_expression_ast` cite but found the wider `19-ast-dispatch-invariant.md`
-  prose table (`reconstruct_expression` now in agentic-mbse `sysml/expression.py`; the audited
-  aggregation dispatch is now agentic `_decompose_node`) and the "8 functions / 6 files" claim
-  drifted vs the test's current `DUAL_CHECK_SITES`. Out of the refresh's surveyed scope; the table
-  now points at the authoritative test inventory. A full doc-19 re-audit reconciles the prose.
-- **[MODULEKIND-DOC-SWEEP] Sweep the retired `is_computed_attribute`/`is_aggregation` → `module_kind`
-  migration through the MF family — ABSORBED into `docs-lifecycle-sync` (spec R7, plan
-  Phase 2) and DELIVERED ✅ (item closed 2026-07-24).** The refresh corrected doc 09 + doc 16, but the retired
-  bool flags survive as live claims in `05-module-factory.md` (pervasive), `22-output-schema-rules.md:179`,
-  and `verification-matrix.md` REQ-MF-03 (its cited `test_factory_formula.py` now pins
-  `module_kind==ModuleKind.FORMULA`). Out of the refresh's surveyed inventory (a partial fix would
-  split the matrix from doc 05); this item sweeps them together.
-
-## CONSTRAINT-EXEC code-quality follow-on (registered 2026-07-14)
-
-Source: the independent code-quality review
-(`.project/research/20260713-213722_constraint-exec-pr-code-quality.md`), findings verified
-against the code 2026-07-14. The review's small correctness/hardening items landed pre-merge on
-`constraint-exec-epic` (model validators + rejection tests; renderer unary/arity/identifier
-guards; load-bearing asserts → explicit errors; resolver precedence-under-conflict and
-path-grammar pins — commits `5785055`, `baca960`, `c756fc7`, `05690f0`). The architectural debt
-below is the recorded, owned remainder — merging the PR does not bless it as the permanent
-constraint architecture.
-
-- **[CONSTRAINT-ARCH-UNIFY] Unified path/instance infrastructure — P2 `[AGENT]`
-  (filed P1 2026-07-14, owner-ratified for filing; re-assessed and re-graded P2 at 2026-07-20
-  against merged main `936315c` — the resolver-ladder sub-scope, which carried the P1 drift
-  risk, was delivered by CONSTRAINT-LIFECYCLE Item 2).** The original five sub-scopes are now
-  four; the resolver unification is recorded as satisfied by
-  `.project/completed/20260720_constraint-lifecycle-shared-resolution/` (one registry-owned
-  ordered table `KEY_FORMS` in `resolution/producer_resolution.py:527`, single entry point
-  `resolve_producer:616`, consumed by constraint/calc/aggregation paths; strict vs lenient
-  differ only at `TerminalPolicy`; old `input_resolver.py` deleted; `resolve_actual` reduced
-  to a ~59-line adapter). Remaining scope, one refactor design staged behind the existing
-  byte-identity and parity gates:
-  1. *Canonical typed paths (re-scoped).* The resolution-request half landed as frozen
-     `ProducerRequest`/`ProducerResolution` (`producer_resolution.py:100-146`). Still open:
-     named path types (`InstancePath`/`ReferencePath`/`ConstraintDemand`) over the raw
-     `(instance_scope, source_path, source_file)` tuples and string surgery in
-     `supplied_values.py:102-119,191-277,397-464`, with validated conversions to EQN / dotted
-     scope / de-indexed scope / SysML QN; the `NewType` identifiers
-     (`core/identifier_types.py:24-46`) still validate nothing — give them validating
-     constructors or drop the claim.
-  2. *One part-structure index.* Collapse the three concrete-instance walkers — still all
-     present: `usage_extractor._find_instantiation_paths` (`extraction/usage_extractor.py:393`),
-     `part_instance_index._structured_paths` (`analysis/part_instance_index.py:190`, hand-synced
-     by docstring decree), `pipeline_builder.find_instance_paths_for_partdef`
-     (`orchestration/pipeline_builder.py:382`) — into one index built once per pipeline;
-     project legacy strings at the edges until byte-identity gates permit deleting the old
-     walkers. Split the snapshot transport adapters (`FrozenOccurrenceIndex:447`,
-     `deserialize_part_occurrences:463`) out of `part_instance_index.py`. Before collapsing,
-     add differential singleton parity and edge characterizations for cycles, diamonds,
-     zero/multiple blocked definitions, multi-digit occurrence indices.
-     **SOURCE-IDENTITY sequencing (2026-08-04):** Items 2 and 4 own the source-identity
-     characterization and any occurrence-index work required by the absorbed nested-override fix.
-     Do not implement this sub-scope independently across that seam or introduce a second
-     occurrence→definition authority; the remainder beyond source identity stays filed here.
-  3. *Shared live/offline phases.* `snapshot/graph_rebuild.py:65-68` still imports
-     `pipeline_builder` private helpers (`_register_partdef_expose_scoped_aliases`,
-     `_rescue_self_named_bindings`); the demand→lower→extend→catalog sequence is mirrored by
-     convention (`graph_rebuild.py:204-227`). Extract callable phase objects both orchestrators
-     consume. Hazard intact: all live-vs-snapshot parity legs are license-gated, so the default
-     environment cannot see drift between the two orchestrators.
-  4. *Graph extension folded into assembly.* `extend_graph_with_constraints`
-     (`analysis/constraint_lowering.py:1456`) still runs as a distinct post-build phase in both
-     orchestrators; move constraint module/EP factories into graph assembly and run one
-     grouping, topological sort, and validation pass across every module kind.
-- **[EXIT-PIN-SEAM] Decide the exit-selection seam — P3.** `generation/pipeline.py:233-288`
-  carries `selected_channels`/`pin_report_channels` used only by `test_exit_pin.py` (production
-  always no-op; disclosed in design-review and docstring). Either real exit selection owns this
-  API or the test proves capture-everything behavior without dormant production branches.
-
-## CONSTRAINT-EXEC remediation audit follow-on (registered 2026-07-17)
-
-Source: independent audits in
-the constraint-exec-code-quality-remediation audit (git history): the initial audit at
-sysml-codegen `c2967f0`, and the 2026-07-17 re-audit of the uncommitted remediation on `036ec39`
-against `agentic-mbse@82fef09`. These are `[AGENT]` findings. They are not owner-originated settled
-requirements. The re-audit verified formal-target coverage and occurrence ordering, so those
-completed rows were removed from this unresolved backlog.
-
-- **[PROFILE-COMPILER-PARITY] Make executable-profile admission total for predicate compilation —
-  P1 `[AGENT]`.** The partial cure handles unary plus and literal Boolean/string/integer/synthetic-
-  enum equality, but exact companion profile v2 still admits quantity-reference ordering and
-  arithmetic that `predicate_compiler.py` rejects. The generated path also remains float-only, so
-  non-real feature inputs, defaults, observations, and production enum constants cannot preserve
-  their admitted semantics. Resolve the contract conflict between expanded profile admission and
-  the completed float-shaped generation design, reconcile every admitted operator/category pair,
-  and add a matrix-driven profile-`ADMIT` → compile → generated-execution gate. Include blocked
-  parity so the compiler cannot accept profile-blocked derivations such as integer exponentiation
-  equality.
-- **[INLINE-CONSTRAINT-WIRING] Wire inline owner references through generated modules — P1
-  `[AGENT]`.** The committed `constraint_inline` snapshot lowers an inline predicate with leaf
-  `value` but no module inputs. Graph construction passes; module rendering fails because the
-  compiled leaf has no matching input. Define how inline owner feature references resolve to graph
-  inputs and entry points, then prove the offline fixture renders and executes. The existing test
-  named “end to end” stops at graph construction.
-- **[CONSTRAINT-MODEL-INVARIANTS] Close the remaining eligible/unassessed model states — P2
-  `[AGENT]`.** Construction-time validators now reject the original impossible states and
-  generation no longer coerces null polarity. The mutable models still allow those invariants to
-  be broken after construction and serialized. An eligible record changed to `eligible=False`
-  keeps its executable payload and is silently dropped by catalog/graph filtering; catalog
-  polarity and expectation can also diverge. Make these shapes immutable or assignment-validating,
-  or comprehensively revalidate at serialization and consumption boundaries. Cover nested
-  mutation, silent filtering, and fingerprint effects.
-- **[CONTRACT-VERIFY-BOUNDARY] Normalize missing and malformed package seals — P2 `[AGENT]`.**
-  Missing, unreadable, non-JSON, and broadly malformed seal files now return diagnostics, and the
-  runtime comparison uses value equality. The verifier still accepts arbitrary self-inconsistent
-  executable fingerprints and artifact keys that are absolute or escape the package root; recorded
-  artifact read errors can still raise raw `OSError`. Validate digest syntax, path containment and
-  normalization, and the fingerprint derivation rule before integrity checks. Normalize artifact
-  walk/read errors into path-specific fatal diagnostics and retain stdlib-only coverage.
-- **[INLINE-PREDICATE-MARKER-DROP] `@inapplicable:` markers on inline-predicate constraints never
-  reach the domain — P3 `[AGENT]`, unowned.** SysIDE drops a `doc` comment inside an
-  inline-predicate constraint body (`constraint X { doc /* … */ <predicate> }`), so an
-  `@inapplicable:` marker written on that shape is silently discarded. Measured in
-  CONSTRAINT-SEMANTICS Item 5 Phase 1 on the CATF derivative's five part-definition guards:
-  **5 markers written in source, 0 carried on the domain**, with the markers in the exact form and
-  first-line placement the Item 2 fixtures pin. Every Item 2 fixture that carries a working marker
-  is bindings-form, so the gap was never exercised. Already named as rule 3 of
-  `tests/conformance/test_constraint_population_oracle.py`, which fails loudly when it happens —
-  this entry is for closing the gap, not for detecting it. Until it closes, an inapplicability
-  disposition on an inline-predicate usage has to be recorded in PROVENANCE instead of in source.
-  **Closing this defect is what fires the B1–B5 marker migration** — move the five `@inapplicable:`
-  markers out of `tests/fixtures/catf_mfe_gated/PROVENANCE.md` §3b and into source, and retire the
-  workaround. Epic Item 9 ran on 2026-08-13 with that criterion recorded as a conditional that did
-  not fire, precisely because this entry is still open; it is not Item 9 that retires the
-  workaround.
-- **[CONSTRAINT-FORM-PER-DIMENSION-COST] A unit-carrying constraint definition is authored once
-  per dimension — P3 `[AGENT]`, unowned.** A constraint formal's port takes its unit text from the
-  formal's **own** declaration (`extraction/feature_metadata.py:57-65`, the trailing `//` comment
-  rule). A formal declared without readable unit text projects `unit_text=None`, and if a calc lane
-  already reads a real unit on the same design attribute, projection refuses the whole model with
-  `SI_RENDERING_COLLISION`. So a constraint definition that must agree with a calc lane cannot be
-  generic over dimensions: its formals carry a specific unit, and a band over a different dimension
-  needs its own definition. Measured in CONSTRAINT-SEMANTICS Item 9 while authoring
-  `ProductWithinBand` for the CATF derivative's A9 row — the form is m³/s-specific, unlike its two
-  dimensionless siblings in the same library file. Recorded as a platform cost the fixture absorbs;
-  nothing in the fixture is wrong. Whether the unit lane should let a formal defer its unit to the
-  binding, and what that would cost the collision check, is the open question.
-- **[CATALOG-FINGERPRINT-ROUTE-PORTABILITY] The constraint catalog fingerprint is not portable
-  across the live and snapshot routes — P3 `[AGENT]`, unowned, pre-existing.**
-  `ConstraintCatalog.recomputed_fingerprint` (`src/sysml_codegen/resolution/models.py:597-622`)
-  hashes the full model dump of `usage_records`, and those rows carry `source_file`. The live
-  route records paths relative to the invocation root (`tests/fixtures/catf_mfe_gated/…`); the
-  snapshot route records `root-0/…`. Same sealed graph, same semantics, different paths,
-  **different fingerprint** — and the generated aggregator bakes it in as
-  `CATALOG_FINGERPRINT`, a runtime coherence check, so two packages generated from one graph via
-  different routes ship different values. It also propagates into the model contract's
-  `semantic_fingerprint`.
-  **Measured** (CONSTRAINT-SEMANTICS Item 5 Phase 6). On `catf_mfe_gated`, live
-  `4edaf85e8c6737e5fb55a7c07cf2beabf8a3112ec5539d1267a3648bda7c022c` versus snapshot
-  `65083fb7e1350f6862974428c7bf1f6b960bc6b76011583b42d62c7848f33b25`; normalising the source-root
-  prefix in every provenance comment leaves this as the **only** substantive difference between
-  the two packages. **Reproduces on the untouched frozen twin `catf_mfe_d5`** (live
-  `39d02855…027f`, snapshot `beaaa339…c91ca`), so it is pre-existing and not caused by Item 5.
-  It does **not** reproduce on `constraint_domain_satisfy_calc_def`, whose model is a single flat
-  `model.sysml` — both routes agree there (`9b93a157…5254`). That is why no existing fixture caught
-  it: the split needs a nested source layout. In-place and relocated snapshot reads agree with each
-  other exactly, so only the live-versus-snapshot pair diverges. Fix direction: make the hashed
-  identity route-independent (relative-to-model-root paths, or exclude `source_file` from the
-  fingerprint and pin it elsewhere).
+- **[CATALOG-FINGERPRINT-ROUTE-PORTABILITY] The constraint catalog fingerprint is not portable across the live and snapshot routes — P3 `[AGENT]`, unowned, pre-existing.** `ConstraintCatalog.recomputed_fingerprint` (`src/sysml_codegen/resolution/models.py:597-622`) hashes the full model dump of `usage_records`, and those rows carry `source_file`. The live route records paths relative to the invocation root (`tests/fixtures/catf_mfe_gated/…`); the snapshot route records `root-0/…`. Same sealed graph, same semantics, different paths, **different fingerprint** — and the generated aggregator bakes it in as `CATALOG_FINGERPRINT`, a runtime coherence check, so two packages generated from one graph via different routes ship different values. It also propagates into the model contract's `semantic_fingerprint`. **Measured** (CONSTRAINT-SEMANTICS Item 5 Phase 6). On `catf_mfe_gated`, live `4edaf85e8c6737e5fb55a7c07cf2beabf8a3112ec5539d1267a3648bda7c022c` versus snapshot `65083fb7e1350f6862974428c7bf1f6b960bc6b76011583b42d62c7848f33b25`; normalising the source-root prefix in every provenance comment leaves this as the **only** substantive difference between the two packages. **Reproduces on the untouched frozen twin `catf_mfe_d5`** (live `39d02855…027f`, snapshot `beaaa339…c91ca`), so it is pre-existing and not caused by Item 5. It does **not** reproduce on `constraint_domain_satisfy_calc_def`, whose model is a single flat `model.sysml` — both routes agree there (`9b93a157…5254`). That is why no existing fixture caught it: the split needs a nested source layout. In-place and relocated snapshot reads agree with each other exactly, so only the live-versus-snapshot pair diverges. Fix direction: make the hashed identity route-independent (relative-to-model-root paths, or exclude `source_file` from the fingerprint and pin it elsewhere).
 
 ---
 
-## CONSTRAINT-SEMANTICS Item 5 close-time filings (registered 2026-08-13)
+- **[PROFILE-COMPILER-PARITY] Make executable-profile admission total for predicate compilation — P1 `[AGENT]`.** The partial cure handles unary plus and literal Boolean/string/integer/synthetic- enum equality, but exact companion profile v2 still admits quantity-reference ordering and arithmetic that `predicate_compiler.py` rejects. The generated path also remains float-only, so non-real feature inputs, defaults, observations, and production enum constants cannot preserve their admitted semantics. Resolve the contract conflict between expanded profile admission and the completed float-shaped generation design, reconcile every admitted operator/category pair, and add a matrix-driven profile-`ADMIT` → compile → generated-execution gate. Include blocked parity so the compiler cannot accept profile-blocked derivations such as integer exponentiation equality.
 
-Source: the Item 5 audit's accepted residuals
-(`.project/completed/20260813_catf-constraint-policy-acceptance/audit.md` §Residuals). Both are
-`[AGENT]` findings recorded as **stated limits** at close — the scope calls were defensible; what
-was missing was writing them down. Neither blocks the epic.
+- **[EXIT-PIN-SEAM] Decide the exit-selection seam — P3.** `generation/pipeline.py:233-288` carries `selected_channels`/`pin_report_channels` used only by `test_exit_pin.py` (production always no-op; disclosed in design-review and docstring). Either real exit selection owns this API or the test proves capture-everything behavior without dormant production branches.
 
-Already filed above and **not duplicated here**: `[INLINE-PREDICATE-MARKER-DROP]` (the B1–B5
-marker mechanism; epic Item 7 documents it, and closing it retires the PROVENANCE workaround) and
-`[CATALOG-FINGERPRINT-ROUTE-PORTABILITY]` (pre-existing, reproduces on the untouched frozen twin).
-Residual A-7 (the satisfied leg's policy disposition is probe-asserted) is recorded in the item's
-close record only — SC-5's load-bearing reject leg goes through the real policy table, so there is
-nothing to execute. Residual A-8 (verification-matrix rows) is carried by epic Item 7's
-reconciliation pass, not by a backlog entry.
+- **[INLINE-PREDICATE-MARKER-DROP] `@inapplicable:` markers on inline-predicate constraints never reach the domain — P3 `[AGENT]`, unowned.** SysIDE drops a `doc` comment inside an inline-predicate constraint body (`constraint X { doc /* … */ <predicate> }`), so an `@inapplicable:` marker written on that shape is silently discarded. Measured in CONSTRAINT-SEMANTICS Item 5 Phase 1 on the CATF derivative's five part-definition guards: **5 markers written in source, 0 carried on the domain**, with the markers in the exact form and first-line placement the Item 2 fixtures pin. Every Item 2 fixture that carries a working marker is bindings-form, so the gap was never exercised. Already named as rule 3 of `tests/conformance/test_constraint_population_oracle.py`, which fails loudly when it happens — this entry is for closing the gap, not for detecting it. Until it closes, an inapplicability disposition on an inline-predicate usage has to be recorded in PROVENANCE instead of in source. **Closing this defect is what fires the B1–B5 marker migration** — move the five `@inapplicable:` markers out of `tests/fixtures/catf_mfe_gated/PROVENANCE.md` §3b and into source, and retire the workaround. Epic Item 9 ran on 2026-08-13 with that criterion recorded as a conditional that did not fire, precisely because this entry is still open; it is not Item 9 that retires the workaround.
 
-- **[GOLDEN-BYPASSES-RUN-CODEGEN] The zero-entry committed-bytes golden drives private generation
-  seams, not the shipping route — P3 `[AGENT]`, unowned.**
-  `tests/conformance/test_zero_entry_package_golden.py:69-87` hand-rolls the generation sequence
-  from seven private `_generate_*` calls, omitting the preflight block, `_generate_primitives`,
-  `_generate_backlog` and `_generate_tests` that `run_codegen` actually runs
-  (`src/sysml_codegen/cli/__init__.py:1204-1299`). So the tree's first committed-bytes gate pins a
-  route kept in sync with the shipping route **by hand** — against `CLAUDE.md`'s stated rule that
-  `run_codegen` is the single public entry point and constructs exactly one way. Measured and
-  dispositioned in CONSTRAINT-SEMANTICS Item 5 (audit finding A-4, Smell 1). Fix direction: drive
-  the golden through `run_codegen` with a zero-entry model, or record in the test why the private
-  seams are deliberately the subject.
-- **[CATF-ACCEPTANCE-LANE-MANUAL] The CATF end-to-end feasibility-rejection lane is a reproduced
-  run, not a committed test — P3 `[AGENT]`, unowned.** Item 5's SC-5 has two halves. The coverage
-  half is durably gated (population oracle by scan; `tests/unit/data/expected-coverage.md` drives
-  `tests/unit/test_coverage_ledger_agreement.py`). The feasibility half — the authored CATF design
-  point reaching `reject` through generate → seal → load → execute → policy → durable record — is
-  recorded evidence reproducible from `probes/acceptance_run.py` in the archived item home, and
-  nothing fails if it regresses. Deliberate at the time (the lane needs the TEAx checkout on
-  `constraint-semantics-item3`, which is unmerged). Fix direction: mark the lane as intentionally
-  manual in a named place, or file it as a licensed/marked test once the TEAx branch lands.
+- **[CATF-ACCEPTANCE-LANE-MANUAL] The CATF end-to-end feasibility-rejection lane is a reproduced run, not a committed test — P3 `[AGENT]`, unowned.** Item 5's SC-5 has two halves. The coverage half is durably gated (population oracle by scan; `tests/unit/data/expected-coverage.md` drives `tests/unit/test_coverage_ledger_agreement.py`). The feasibility half — the authored CATF design point reaching `reject` through generate → seal → load → execute → policy → durable record — is recorded evidence reproducible from `probes/acceptance_run.py` in the archived item home, and nothing fails if it regresses. Deliberate at the time (the lane needs the TEAx checkout on `constraint-semantics-item3`, which is unmerged). Fix direction: mark the lane as intentionally manual in a named place, or file it as a licensed/marked test once the TEAx branch lands.
 
-- **[DIAGNOSTIC-PROVENANCE-BY-CONSTRUCTION] Make diagnostic provenance unrepresentable-when-wrong,
-  the same way the item made evidence so — P2 `[OWNER]`-filed (2026-08-19), unowned.**
-  Three consecutive stop-parser audit revisions found the same property failing at new sites:
-  a failure's reported cause/location is a per-site discipline with no enforcement point, so
-  sites drop it, guess it, or hard-code its guard. Owner ruled (2026-08-19) this is a separate
-  item, not a fourth fix round. Seed findings: audit.md rev-3's four (collision provenance
-  discarded before both CLI outputs; `generate_registry` fabricating `unknown:0`; wrong
-  attribution with overlapping model roots; totality guard hard-coded to three files), plus the
-  carried R3-R6 DISPOSE rows where related. Fix direction (from the run's own diagnosis): one
-  closed diagnostic value type whose constructor makes provenance measured-or-absent by
-  construction; a single public formatter; an AST gate that no public raise bypasses the
-  constructor; mechanical migration of the existing (correct) per-site patches onto the type.
-  The stop-parser item's per-site repairs are kept behavior, not reverted — this item subsumes
-  them.
+## Disposition References
+
+These entries preserve reference targets; they are completion/retirement records, not active implementation requests.
+
+- **[UNIT-SCRAPE-BYTE-OFFSET]** Resolved by owner-directed deletion of all three unit guessers, with parser-native value units retained. Authority: cleanup spec-review Resolution L2-2, 2026-10-08; public live/snapshot unit tests.
+- **[SERIALIZE-NAN-SEAL]** Strict contract/input encoders and public non-finite refusal checks implemented. The public route already refused upstream; this encoder repair is additional defense, not proof an invalid public package previously shipped.
+- **[EMIT-STEP-REGRESSION-GATE]** Implemented by the durable all-22 public package oracle and template/rendering mutation checks; candidate evidence is retained at `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/evidence.md`.
+- **[CONSTRAINT-GATES-UNTAGGED]** Discharged at ELABORATE-FIRST cutover step 4 on 2026-08-14. REQ-CS records the retained gates; the Item-5 minting disposition is unchanged.
+- **[ARTIFACT-MANIFEST-TESTS-HARD-FAIL]** Closed by owner-authorized verification-tool retirement in REPO-CLEANUP Move C, 2026-08-25.
+- **[V11-DEAD-GATE-DOCS]** Closed by deletion of the dead gate and correction of its live references.
+- **[NESTED-OCCURRENCE-OVERRIDE]** The old resolver mechanism is retired. Surviving occurrence behavior and diagnostic bounds are tracked by source-identity evidence and [ANCHORING-ARRAYED-DIAGNOSTIC].
+- **[TRUTH-DEBT-INHERITED-FORMULA-COMPILE]** The legacy inherited-formula compiler is retired; current computed-attribute evidence uses exact elaboration.
+- **[STALE-BASELINE-CLASS]** V5 extraction baseline mechanism retired; actual v6 snapshot freshness is checked in this cleanup.
+- **[TRUTH-DEBT-IFE-PLANT-CHAIN-STALE]** The v5 classifier/snapshot mechanism is retired.
+- **[GB-PARAMGROUPS-TYPING]** The old graph-builder surface is retired; current generation typing is repaired without relaxing mypy.
+- **[DOTTED-LEAF-PART-BLIND]** The name-fallback alias mechanism is retired; exact source identity owns current resolution.
+- **[ITEM7-F4-CUTOVER]** Discharged by later cutover/retirement; no old aggregation resolver remains to wire.
+- **[ITEM7-MATRIX-TEST-GAPS]** Current source-identity/matrix evidence replaces the retired-row proof gap; any surviving partial evidence remains in the matrix.
+- **[CONSTRAINT-FORM-PER-DIMENSION-COST]** Superseded by owner-directed unit-guesser removal; declaration comment labels no longer force duplicated dimension-specific forms.
+- **[CONSTRAINT-ARCH-UNIFY]** The legacy resolver/lowering stack is retired; the original cross-stack unification proposal no longer describes current work. Codec/compiler follow-ons remain separately scoped above.
+- **[GAP-CLOSE-F1-TEAX-NORMALIZATION]** Verified closed in merged TEAx `fa0e06a`, 2026-07-20; no new F1 implementation is pending.
+- **[REPO-CLEANUP]** Complete and merged in PR #15. Historical rulings and replacement evidence remain in registers/ledger and Git.
+- **generation-boundary** Delivered at `6523521`; it is not a February active feature.
+- **new-pipeline-explainer** Built then purged at `507e838`; it is not current active work.
+- **hierarchical-output** Its folder is absent and original scope is not independently recovered. This is an unscheduled historical-scope question, not a completed feature claim.
+
+- **[CONSTRAINT-MODEL-INVARIANTS]** The old mutable lowered-record shape is retired; current catalog/receipt totality and assignment validators retain the live invariant. New defects need a current reproducer, not the old removed-model premise.
+- **[CONTRACT-VERIFY-BOUNDARY]** Digest syntax, fingerprint derivation, hostile artifact paths, and symlink containment are covered by `tests/unit/test_verify_package.py`; the older missing-validation claim is superseded.
+- **[INLINE-CONSTRAINT-WIRING]** The old fixture collides with a generated binding and is correctly refused publicly before mutation. Evidence: `tests/execution/test_constraint_verdicts_exact_route.py::test_a_binding_that_collides_with_a_generated_name_is_refused_at_generation`; it is not an unimplemented valid binding shape.
+- **[V2-HTML-BUILD]** The explainer was added at `5be8276`, shipped at `385e163`, and purged at `507e838`; this is a historical delivered artifact, not active implementation.
+- **[GOLDEN-BYPASSES-RUN-CODEGEN]** The new all-22 public package oracle covers the shipped route; the older zero-entry private-helper test retains its narrower component scope.

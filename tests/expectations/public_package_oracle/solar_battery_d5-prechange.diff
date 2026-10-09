@@ -1,0 +1,908 @@
+--- committed
+
++++ live
+
+@@ -1,5 +1,5 @@
+
+ {
+-  "fingerprint": "0944544f83ca540071d3dc749e4a1a174f733721f440a3fa02cec00954a80ac5",
++  "fingerprint": "ff9134462e1662c752a0be66e7d36ca243a0b2fd3c95fa6514f8c4ec69ca3da4",
+   "graph": {
+     "attrs": [
+       {
+@@ -15462,7 +15462,7 @@
+
+             "edge": {
+               "kind": "producer",
+               "target": {
+-                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",10]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
++                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",1]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
+                 "output": "8d26a152-e4cf-5497-9e25-09fc020592ef"
+               }
+             },
+@@ -15482,7 +15482,34 @@
+
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "59ce0172-b560-52e5-adab-1fb8d46ee538",
+-              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",10]]"
++              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",1]]"
++            }
++          },
++          {
++            "edge": {
++              "kind": "producer",
++              "target": {
++                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",18]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
++                "output": "8d26a152-e4cf-5497-9e25-09fc020592ef"
++              }
++            },
++            "metadata": {
++              "default_value": null,
++              "description": null,
++              "formal_provenance": null,
++              "python_type": "float",
++              "qualified_name": "SolarBatteryLibrary::'PV Module'::fabrication_cost",
++              "unit": null,
++              "unresolved_default_kind": null
++            },
++            "name": "fabrication_cost",
++            "port": {
++              "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"039f64a7-95ba-5aeb-ab16-daf35b08b3dc\"]]",
++              "edge_ordinal": 10,
++              "kind": "expression",
++              "reference_ordinal": 0,
++              "referenced_declaration": "59ce0172-b560-52e5-adab-1fb8d46ee538",
++              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",18]]"
+             }
+           },
+           {
+@@ -15505,38 +15532,11 @@
+
+             "name": "fabrication_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"039f64a7-95ba-5aeb-ab16-daf35b08b3dc\"]]",
+-              "edge_ordinal": 10,
++              "edge_ordinal": 11,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "59ce0172-b560-52e5-adab-1fb8d46ee538",
+               "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",19]]"
+-            }
+-          },
+-          {
+-            "edge": {
+-              "kind": "producer",
+-              "target": {
+-                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",1]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
+-                "output": "8d26a152-e4cf-5497-9e25-09fc020592ef"
+-              }
+-            },
+-            "metadata": {
+-              "default_value": null,
+-              "description": null,
+-              "formal_provenance": null,
+-              "python_type": "float",
+-              "qualified_name": "SolarBatteryLibrary::'PV Module'::fabrication_cost",
+-              "unit": null,
+-              "unresolved_default_kind": null
+-            },
+-            "name": "fabrication_cost",
+-            "port": {
+-              "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"039f64a7-95ba-5aeb-ab16-daf35b08b3dc\"]]",
+-              "edge_ordinal": 11,
+-              "kind": "expression",
+-              "reference_ordinal": 0,
+-              "referenced_declaration": "59ce0172-b560-52e5-adab-1fb8d46ee538",
+-              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",1]]"
+             }
+           },
+           {
+@@ -15759,6 +15759,33 @@
+
+             "edge": {
+               "kind": "producer",
+               "target": {
++                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",10]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
++                "output": "8d26a152-e4cf-5497-9e25-09fc020592ef"
++              }
++            },
++            "metadata": {
++              "default_value": null,
++              "description": null,
++              "formal_provenance": null,
++              "python_type": "float",
++              "qualified_name": "SolarBatteryLibrary::'PV Module'::fabrication_cost",
++              "unit": null,
++              "unresolved_default_kind": null
++            },
++            "name": "fabrication_cost",
++            "port": {
++              "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"039f64a7-95ba-5aeb-ab16-daf35b08b3dc\"]]",
++              "edge_ordinal": 2,
++              "kind": "expression",
++              "reference_ordinal": 0,
++              "referenced_declaration": "59ce0172-b560-52e5-adab-1fb8d46ee538",
++              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",10]]"
++            }
++          },
++          {
++            "edge": {
++              "kind": "producer",
++              "target": {
+                 "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",11]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
+                 "output": "8d26a152-e4cf-5497-9e25-09fc020592ef"
+               }
+@@ -15775,7 +15802,7 @@
+
+             "name": "fabrication_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"039f64a7-95ba-5aeb-ab16-daf35b08b3dc\"]]",
+-              "edge_ordinal": 2,
++              "edge_ordinal": 3,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "59ce0172-b560-52e5-adab-1fb8d46ee538",
+@@ -15802,7 +15829,7 @@
+
+             "name": "fabrication_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"039f64a7-95ba-5aeb-ab16-daf35b08b3dc\"]]",
+-              "edge_ordinal": 3,
++              "edge_ordinal": 4,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "59ce0172-b560-52e5-adab-1fb8d46ee538",
+@@ -15829,7 +15856,7 @@
+
+             "name": "fabrication_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"039f64a7-95ba-5aeb-ab16-daf35b08b3dc\"]]",
+-              "edge_ordinal": 4,
++              "edge_ordinal": 5,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "59ce0172-b560-52e5-adab-1fb8d46ee538",
+@@ -15856,7 +15883,7 @@
+
+             "name": "fabrication_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"039f64a7-95ba-5aeb-ab16-daf35b08b3dc\"]]",
+-              "edge_ordinal": 5,
++              "edge_ordinal": 6,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "59ce0172-b560-52e5-adab-1fb8d46ee538",
+@@ -15883,7 +15910,7 @@
+
+             "name": "fabrication_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"039f64a7-95ba-5aeb-ab16-daf35b08b3dc\"]]",
+-              "edge_ordinal": 6,
++              "edge_ordinal": 7,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "59ce0172-b560-52e5-adab-1fb8d46ee538",
+@@ -15910,7 +15937,7 @@
+
+             "name": "fabrication_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"039f64a7-95ba-5aeb-ab16-daf35b08b3dc\"]]",
+-              "edge_ordinal": 7,
++              "edge_ordinal": 8,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "59ce0172-b560-52e5-adab-1fb8d46ee538",
+@@ -15937,38 +15964,11 @@
+
+             "name": "fabrication_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"039f64a7-95ba-5aeb-ab16-daf35b08b3dc\"]]",
+-              "edge_ordinal": 8,
++              "edge_ordinal": 9,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "59ce0172-b560-52e5-adab-1fb8d46ee538",
+               "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",17]]"
+-            }
+-          },
+-          {
+-            "edge": {
+-              "kind": "producer",
+-              "target": {
+-                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",18]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
+-                "output": "8d26a152-e4cf-5497-9e25-09fc020592ef"
+-              }
+-            },
+-            "metadata": {
+-              "default_value": null,
+-              "description": null,
+-              "formal_provenance": null,
+-              "python_type": "float",
+-              "qualified_name": "SolarBatteryLibrary::'PV Module'::fabrication_cost",
+-              "unit": null,
+-              "unresolved_default_kind": null
+-            },
+-            "name": "fabrication_cost",
+-            "port": {
+-              "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"039f64a7-95ba-5aeb-ab16-daf35b08b3dc\"]]",
+-              "edge_ordinal": 9,
+-              "kind": "expression",
+-              "reference_ordinal": 0,
+-              "referenced_declaration": "59ce0172-b560-52e5-adab-1fb8d46ee538",
+-              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",18]]"
+             }
+           }
+         ],
+@@ -16567,7 +16567,7 @@
+
+             "edge": {
+               "kind": "producer",
+               "target": {
+-                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",10]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
++                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",1]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
+                 "output": "1d929ded-cf70-5dc4-ad9a-405a9d001dba"
+               }
+             },
+@@ -16587,7 +16587,34 @@
+
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "44dd2367-609b-5ca5-bdd3-b6504a82a709",
+-              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",10]]"
++              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",1]]"
++            }
++          },
++          {
++            "edge": {
++              "kind": "producer",
++              "target": {
++                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",18]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
++                "output": "1d929ded-cf70-5dc4-ad9a-405a9d001dba"
++              }
++            },
++            "metadata": {
++              "default_value": null,
++              "description": null,
++              "formal_provenance": null,
++              "python_type": "float",
++              "qualified_name": "SolarBatteryLibrary::'PV Module'::capital_cost",
++              "unit": null,
++              "unresolved_default_kind": null
++            },
++            "name": "capital_cost",
++            "port": {
++              "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"3425a0bb-2ee5-5fed-a411-79a355cb613e\"]]",
++              "edge_ordinal": 10,
++              "kind": "expression",
++              "reference_ordinal": 0,
++              "referenced_declaration": "44dd2367-609b-5ca5-bdd3-b6504a82a709",
++              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",18]]"
+             }
+           },
+           {
+@@ -16610,38 +16637,11 @@
+
+             "name": "capital_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"3425a0bb-2ee5-5fed-a411-79a355cb613e\"]]",
+-              "edge_ordinal": 10,
++              "edge_ordinal": 11,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "44dd2367-609b-5ca5-bdd3-b6504a82a709",
+               "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",19]]"
+-            }
+-          },
+-          {
+-            "edge": {
+-              "kind": "producer",
+-              "target": {
+-                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",1]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
+-                "output": "1d929ded-cf70-5dc4-ad9a-405a9d001dba"
+-              }
+-            },
+-            "metadata": {
+-              "default_value": null,
+-              "description": null,
+-              "formal_provenance": null,
+-              "python_type": "float",
+-              "qualified_name": "SolarBatteryLibrary::'PV Module'::capital_cost",
+-              "unit": null,
+-              "unresolved_default_kind": null
+-            },
+-            "name": "capital_cost",
+-            "port": {
+-              "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"3425a0bb-2ee5-5fed-a411-79a355cb613e\"]]",
+-              "edge_ordinal": 11,
+-              "kind": "expression",
+-              "reference_ordinal": 0,
+-              "referenced_declaration": "44dd2367-609b-5ca5-bdd3-b6504a82a709",
+-              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",1]]"
+             }
+           },
+           {
+@@ -16864,6 +16864,33 @@
+
+             "edge": {
+               "kind": "producer",
+               "target": {
++                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",10]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
++                "output": "1d929ded-cf70-5dc4-ad9a-405a9d001dba"
++              }
++            },
++            "metadata": {
++              "default_value": null,
++              "description": null,
++              "formal_provenance": null,
++              "python_type": "float",
++              "qualified_name": "SolarBatteryLibrary::'PV Module'::capital_cost",
++              "unit": null,
++              "unresolved_default_kind": null
++            },
++            "name": "capital_cost",
++            "port": {
++              "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"3425a0bb-2ee5-5fed-a411-79a355cb613e\"]]",
++              "edge_ordinal": 2,
++              "kind": "expression",
++              "reference_ordinal": 0,
++              "referenced_declaration": "44dd2367-609b-5ca5-bdd3-b6504a82a709",
++              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",10]]"
++            }
++          },
++          {
++            "edge": {
++              "kind": "producer",
++              "target": {
+                 "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",11]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
+                 "output": "1d929ded-cf70-5dc4-ad9a-405a9d001dba"
+               }
+@@ -16880,7 +16907,7 @@
+
+             "name": "capital_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"3425a0bb-2ee5-5fed-a411-79a355cb613e\"]]",
+-              "edge_ordinal": 2,
++              "edge_ordinal": 3,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "44dd2367-609b-5ca5-bdd3-b6504a82a709",
+@@ -16907,7 +16934,7 @@
+
+             "name": "capital_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"3425a0bb-2ee5-5fed-a411-79a355cb613e\"]]",
+-              "edge_ordinal": 3,
++              "edge_ordinal": 4,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "44dd2367-609b-5ca5-bdd3-b6504a82a709",
+@@ -16934,7 +16961,7 @@
+
+             "name": "capital_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"3425a0bb-2ee5-5fed-a411-79a355cb613e\"]]",
+-              "edge_ordinal": 4,
++              "edge_ordinal": 5,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "44dd2367-609b-5ca5-bdd3-b6504a82a709",
+@@ -16961,7 +16988,7 @@
+
+             "name": "capital_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"3425a0bb-2ee5-5fed-a411-79a355cb613e\"]]",
+-              "edge_ordinal": 5,
++              "edge_ordinal": 6,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "44dd2367-609b-5ca5-bdd3-b6504a82a709",
+@@ -16988,7 +17015,7 @@
+
+             "name": "capital_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"3425a0bb-2ee5-5fed-a411-79a355cb613e\"]]",
+-              "edge_ordinal": 6,
++              "edge_ordinal": 7,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "44dd2367-609b-5ca5-bdd3-b6504a82a709",
+@@ -17015,7 +17042,7 @@
+
+             "name": "capital_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"3425a0bb-2ee5-5fed-a411-79a355cb613e\"]]",
+-              "edge_ordinal": 7,
++              "edge_ordinal": 8,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "44dd2367-609b-5ca5-bdd3-b6504a82a709",
+@@ -17042,38 +17069,11 @@
+
+             "name": "capital_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"3425a0bb-2ee5-5fed-a411-79a355cb613e\"]]",
+-              "edge_ordinal": 8,
++              "edge_ordinal": 9,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "44dd2367-609b-5ca5-bdd3-b6504a82a709",
+               "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",17]]"
+-            }
+-          },
+-          {
+-            "edge": {
+-              "kind": "producer",
+-              "target": {
+-                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",18]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
+-                "output": "1d929ded-cf70-5dc4-ad9a-405a9d001dba"
+-              }
+-            },
+-            "metadata": {
+-              "default_value": null,
+-              "description": null,
+-              "formal_provenance": null,
+-              "python_type": "float",
+-              "qualified_name": "SolarBatteryLibrary::'PV Module'::capital_cost",
+-              "unit": null,
+-              "unresolved_default_kind": null
+-            },
+-            "name": "capital_cost",
+-            "port": {
+-              "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"3425a0bb-2ee5-5fed-a411-79a355cb613e\"]]",
+-              "edge_ordinal": 9,
+-              "kind": "expression",
+-              "reference_ordinal": 0,
+-              "referenced_declaration": "44dd2367-609b-5ca5-bdd3-b6504a82a709",
+-              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",18]]"
+             }
+           }
+         ],
+@@ -18244,7 +18244,7 @@
+
+             "edge": {
+               "kind": "producer",
+               "target": {
+-                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",10]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
++                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",1]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
+                 "output": "24ddffce-ba58-5fce-aea7-96d532e24690"
+               }
+             },
+@@ -18264,7 +18264,34 @@
+
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "790a655f-0035-5af4-8a1c-23e8a8760487",
+-              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",10]]"
++              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",1]]"
++            }
++          },
++          {
++            "edge": {
++              "kind": "producer",
++              "target": {
++                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",18]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
++                "output": "24ddffce-ba58-5fce-aea7-96d532e24690"
++              }
++            },
++            "metadata": {
++              "default_value": null,
++              "description": null,
++              "formal_provenance": null,
++              "python_type": "float",
++              "qualified_name": "SolarBatteryLibrary::'PV Module'::installation_cost",
++              "unit": null,
++              "unresolved_default_kind": null
++            },
++            "name": "installation_cost",
++            "port": {
++              "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b313c602-e879-5298-b5f5-518a4feb6c12\"]]",
++              "edge_ordinal": 10,
++              "kind": "expression",
++              "reference_ordinal": 0,
++              "referenced_declaration": "790a655f-0035-5af4-8a1c-23e8a8760487",
++              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",18]]"
+             }
+           },
+           {
+@@ -18287,38 +18314,11 @@
+
+             "name": "installation_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b313c602-e879-5298-b5f5-518a4feb6c12\"]]",
+-              "edge_ordinal": 10,
++              "edge_ordinal": 11,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "790a655f-0035-5af4-8a1c-23e8a8760487",
+               "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",19]]"
+-            }
+-          },
+-          {
+-            "edge": {
+-              "kind": "producer",
+-              "target": {
+-                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",1]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
+-                "output": "24ddffce-ba58-5fce-aea7-96d532e24690"
+-              }
+-            },
+-            "metadata": {
+-              "default_value": null,
+-              "description": null,
+-              "formal_provenance": null,
+-              "python_type": "float",
+-              "qualified_name": "SolarBatteryLibrary::'PV Module'::installation_cost",
+-              "unit": null,
+-              "unresolved_default_kind": null
+-            },
+-            "name": "installation_cost",
+-            "port": {
+-              "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b313c602-e879-5298-b5f5-518a4feb6c12\"]]",
+-              "edge_ordinal": 11,
+-              "kind": "expression",
+-              "reference_ordinal": 0,
+-              "referenced_declaration": "790a655f-0035-5af4-8a1c-23e8a8760487",
+-              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",1]]"
+             }
+           },
+           {
+@@ -18541,6 +18541,33 @@
+
+             "edge": {
+               "kind": "producer",
+               "target": {
++                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",10]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
++                "output": "24ddffce-ba58-5fce-aea7-96d532e24690"
++              }
++            },
++            "metadata": {
++              "default_value": null,
++              "description": null,
++              "formal_provenance": null,
++              "python_type": "float",
++              "qualified_name": "SolarBatteryLibrary::'PV Module'::installation_cost",
++              "unit": null,
++              "unresolved_default_kind": null
++            },
++            "name": "installation_cost",
++            "port": {
++              "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b313c602-e879-5298-b5f5-518a4feb6c12\"]]",
++              "edge_ordinal": 2,
++              "kind": "expression",
++              "reference_ordinal": 0,
++              "referenced_declaration": "790a655f-0035-5af4-8a1c-23e8a8760487",
++              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",10]]"
++            }
++          },
++          {
++            "edge": {
++              "kind": "producer",
++              "target": {
+                 "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",11]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
+                 "output": "24ddffce-ba58-5fce-aea7-96d532e24690"
+               }
+@@ -18557,7 +18584,7 @@
+
+             "name": "installation_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b313c602-e879-5298-b5f5-518a4feb6c12\"]]",
+-              "edge_ordinal": 2,
++              "edge_ordinal": 3,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "790a655f-0035-5af4-8a1c-23e8a8760487",
+@@ -18584,7 +18611,7 @@
+
+             "name": "installation_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b313c602-e879-5298-b5f5-518a4feb6c12\"]]",
+-              "edge_ordinal": 3,
++              "edge_ordinal": 4,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "790a655f-0035-5af4-8a1c-23e8a8760487",
+@@ -18611,7 +18638,7 @@
+
+             "name": "installation_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b313c602-e879-5298-b5f5-518a4feb6c12\"]]",
+-              "edge_ordinal": 4,
++              "edge_ordinal": 5,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "790a655f-0035-5af4-8a1c-23e8a8760487",
+@@ -18638,7 +18665,7 @@
+
+             "name": "installation_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b313c602-e879-5298-b5f5-518a4feb6c12\"]]",
+-              "edge_ordinal": 5,
++              "edge_ordinal": 6,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "790a655f-0035-5af4-8a1c-23e8a8760487",
+@@ -18665,7 +18692,7 @@
+
+             "name": "installation_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b313c602-e879-5298-b5f5-518a4feb6c12\"]]",
+-              "edge_ordinal": 6,
++              "edge_ordinal": 7,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "790a655f-0035-5af4-8a1c-23e8a8760487",
+@@ -18692,7 +18719,7 @@
+
+             "name": "installation_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b313c602-e879-5298-b5f5-518a4feb6c12\"]]",
+-              "edge_ordinal": 7,
++              "edge_ordinal": 8,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "790a655f-0035-5af4-8a1c-23e8a8760487",
+@@ -18719,38 +18746,11 @@
+
+             "name": "installation_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b313c602-e879-5298-b5f5-518a4feb6c12\"]]",
+-              "edge_ordinal": 8,
++              "edge_ordinal": 9,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "790a655f-0035-5af4-8a1c-23e8a8760487",
+               "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",17]]"
+-            }
+-          },
+-          {
+-            "edge": {
+-              "kind": "producer",
+-              "target": {
+-                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",18]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
+-                "output": "24ddffce-ba58-5fce-aea7-96d532e24690"
+-              }
+-            },
+-            "metadata": {
+-              "default_value": null,
+-              "description": null,
+-              "formal_provenance": null,
+-              "python_type": "float",
+-              "qualified_name": "SolarBatteryLibrary::'PV Module'::installation_cost",
+-              "unit": null,
+-              "unresolved_default_kind": null
+-            },
+-            "name": "installation_cost",
+-            "port": {
+-              "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b313c602-e879-5298-b5f5-518a4feb6c12\"]]",
+-              "edge_ordinal": 9,
+-              "kind": "expression",
+-              "reference_ordinal": 0,
+-              "referenced_declaration": "790a655f-0035-5af4-8a1c-23e8a8760487",
+-              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",18]]"
+             }
+           }
+         ],
+@@ -18872,7 +18872,7 @@
+
+             "edge": {
+               "kind": "producer",
+               "target": {
+-                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",10]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
++                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",1]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
+                 "output": "0a3bd623-cc4c-50f2-a2ab-63e1d28a252e"
+               }
+             },
+@@ -18892,7 +18892,34 @@
+
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "1584112f-d09b-5415-b71a-f4e4611c1ca1",
+-              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",10]]"
++              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",1]]"
++            }
++          },
++          {
++            "edge": {
++              "kind": "producer",
++              "target": {
++                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",18]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
++                "output": "0a3bd623-cc4c-50f2-a2ab-63e1d28a252e"
++              }
++            },
++            "metadata": {
++              "default_value": null,
++              "description": null,
++              "formal_provenance": null,
++              "python_type": "float",
++              "qualified_name": "SolarBatteryLibrary::'PV Module'::raw_material_cost",
++              "unit": null,
++              "unresolved_default_kind": null
++            },
++            "name": "raw_material_cost",
++            "port": {
++              "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b93420b0-c43b-5bf6-ab2a-19640d43773e\"]]",
++              "edge_ordinal": 10,
++              "kind": "expression",
++              "reference_ordinal": 0,
++              "referenced_declaration": "1584112f-d09b-5415-b71a-f4e4611c1ca1",
++              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",18]]"
+             }
+           },
+           {
+@@ -18915,38 +18942,11 @@
+
+             "name": "raw_material_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b93420b0-c43b-5bf6-ab2a-19640d43773e\"]]",
+-              "edge_ordinal": 10,
++              "edge_ordinal": 11,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "1584112f-d09b-5415-b71a-f4e4611c1ca1",
+               "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",19]]"
+-            }
+-          },
+-          {
+-            "edge": {
+-              "kind": "producer",
+-              "target": {
+-                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",1]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
+-                "output": "0a3bd623-cc4c-50f2-a2ab-63e1d28a252e"
+-              }
+-            },
+-            "metadata": {
+-              "default_value": null,
+-              "description": null,
+-              "formal_provenance": null,
+-              "python_type": "float",
+-              "qualified_name": "SolarBatteryLibrary::'PV Module'::raw_material_cost",
+-              "unit": null,
+-              "unresolved_default_kind": null
+-            },
+-            "name": "raw_material_cost",
+-            "port": {
+-              "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b93420b0-c43b-5bf6-ab2a-19640d43773e\"]]",
+-              "edge_ordinal": 11,
+-              "kind": "expression",
+-              "reference_ordinal": 0,
+-              "referenced_declaration": "1584112f-d09b-5415-b71a-f4e4611c1ca1",
+-              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",1]]"
+             }
+           },
+           {
+@@ -19169,6 +19169,33 @@
+
+             "edge": {
+               "kind": "producer",
+               "target": {
++                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",10]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
++                "output": "0a3bd623-cc4c-50f2-a2ab-63e1d28a252e"
++              }
++            },
++            "metadata": {
++              "default_value": null,
++              "description": null,
++              "formal_provenance": null,
++              "python_type": "float",
++              "qualified_name": "SolarBatteryLibrary::'PV Module'::raw_material_cost",
++              "unit": null,
++              "unresolved_default_kind": null
++            },
++            "name": "raw_material_cost",
++            "port": {
++              "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b93420b0-c43b-5bf6-ab2a-19640d43773e\"]]",
++              "edge_ordinal": 2,
++              "kind": "expression",
++              "reference_ordinal": 0,
++              "referenced_declaration": "1584112f-d09b-5415-b71a-f4e4611c1ca1",
++              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",10]]"
++            }
++          },
++          {
++            "edge": {
++              "kind": "producer",
++              "target": {
+                 "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",11]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
+                 "output": "0a3bd623-cc4c-50f2-a2ab-63e1d28a252e"
+               }
+@@ -19185,7 +19212,7 @@
+
+             "name": "raw_material_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b93420b0-c43b-5bf6-ab2a-19640d43773e\"]]",
+-              "edge_ordinal": 2,
++              "edge_ordinal": 3,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "1584112f-d09b-5415-b71a-f4e4611c1ca1",
+@@ -19212,7 +19239,7 @@
+
+             "name": "raw_material_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b93420b0-c43b-5bf6-ab2a-19640d43773e\"]]",
+-              "edge_ordinal": 3,
++              "edge_ordinal": 4,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "1584112f-d09b-5415-b71a-f4e4611c1ca1",
+@@ -19239,7 +19266,7 @@
+
+             "name": "raw_material_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b93420b0-c43b-5bf6-ab2a-19640d43773e\"]]",
+-              "edge_ordinal": 4,
++              "edge_ordinal": 5,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "1584112f-d09b-5415-b71a-f4e4611c1ca1",
+@@ -19266,7 +19293,7 @@
+
+             "name": "raw_material_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b93420b0-c43b-5bf6-ab2a-19640d43773e\"]]",
+-              "edge_ordinal": 5,
++              "edge_ordinal": 6,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "1584112f-d09b-5415-b71a-f4e4611c1ca1",
+@@ -19293,7 +19320,7 @@
+
+             "name": "raw_material_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b93420b0-c43b-5bf6-ab2a-19640d43773e\"]]",
+-              "edge_ordinal": 6,
++              "edge_ordinal": 7,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "1584112f-d09b-5415-b71a-f4e4611c1ca1",
+@@ -19320,7 +19347,7 @@
+
+             "name": "raw_material_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b93420b0-c43b-5bf6-ab2a-19640d43773e\"]]",
+-              "edge_ordinal": 7,
++              "edge_ordinal": 8,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "1584112f-d09b-5415-b71a-f4e4611c1ca1",
+@@ -19347,38 +19374,11 @@
+
+             "name": "raw_material_cost",
+             "port": {
+               "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b93420b0-c43b-5bf6-ab2a-19640d43773e\"]]",
+-              "edge_ordinal": 8,
++              "edge_ordinal": 9,
+               "kind": "expression",
+               "reference_ordinal": 0,
+               "referenced_declaration": "1584112f-d09b-5415-b71a-f4e4611c1ca1",
+               "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",17]]"
+-            }
+-          },
+-          {
+-            "edge": {
+-              "kind": "producer",
+-              "target": {
+-                "calculation": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null],[\\\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\\\",18]]\"],[\"declaration\",\"eb342c73-6ac9-5a32-85f2-0b77476daf08\"]]",
+-                "output": "0a3bd623-cc4c-50f2-a2ab-63e1d28a252e"
+-              }
+-            },
+-            "metadata": {
+-              "default_value": null,
+-              "description": null,
+-              "formal_provenance": null,
+-              "python_type": "float",
+-              "qualified_name": "SolarBatteryLibrary::'PV Module'::raw_material_cost",
+-              "unit": null,
+-              "unresolved_default_kind": null
+-            },
+-            "name": "raw_material_cost",
+-            "port": {
+-              "consumer": "[\"calculation\",[\"occurrence\",\"[[\\\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\\\",null],[\\\"3b2fed06-76cb-5810-8b39-35eb64905ddb\\\",null]]\"],[\"slot\",\"b93420b0-c43b-5bf6-ab2a-19640d43773e\"]]",
+-              "edge_ordinal": 9,
+-              "kind": "expression",
+-              "reference_ordinal": 0,
+-              "referenced_declaration": "1584112f-d09b-5415-b71a-f4e4611c1ca1",
+-              "target_occurrence": "[[\"85dfe52e-e9c1-5f66-899c-985a7e82c73e\",null],[\"3b2fed06-76cb-5810-8b39-35eb64905ddb\",null],[\"7262839c-52ec-5df9-9bc5-ffa28b4150ea\",18]]"
+             }
+           }
+         ],

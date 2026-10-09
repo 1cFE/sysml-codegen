@@ -165,14 +165,7 @@ file that **declares** the owner node. Both rules, with their measured consequen
 Projection also orders the modules (REQ-PIPE-04), claims each channel name exactly once, and
 refuses on a rendering collision rather than letting two distinct things render as one name.
 
-**Constraints.** Eligible modelled assertions become `CONSTRAINT` modules and the
-`ConstraintCatalog` embedded on the graph. A `REPORT_AGGREGATOR` module is emitted **only when
-there is at least one constraint output** (`elaboration/project.py:887`); the legacy route
-emitted one whenever the constraint pathway ran at all, including for a model that asserts
-nothing. A constraint-free model produces neither family. See
-28-constraint-lowering-and-catalog (retired doc; git history) for the catalog's
-shape, and read its lowering half as a description of `analysis/constraint_lowering.py`, which
-is not the public route.
+**Constraints.** Eligible assertions become `CONSTRAINT` modules. The embedded catalog retains every authored usage and its disposition. Any authored constraint usage requires a `REPORT_AGGREGATOR`, including a model with no executable assessments; constraint-free models have neither family. See `elaboration/project.py` and product promise [0005](../../../.project/product/0005-full-satisfaction-requires-full-assessment.md).
 
 ### [4] Render code ([detail](08-generation.md))
 
@@ -182,7 +175,7 @@ to produce: `modules/*.py`, `handwritten/*_impl.py`, `pipelines/*.yaml`,
 
 Rendering is gated by checks that all run **before** any output is written or cleared
 (`cli/__init__.py`): constraint name safety, duplicate output paths, registry class-name
-collisions, and constraint totality. (The V11 params-coverage collector was dead by
+collisions, constraint totality, supported exit-point types, and renderer metadata validity. (The V11 params-coverage collector was dead by
 construction on the exact route — projection always builds `fallback_entry_points` empty —
 and was deleted by REPO-CLEANUP Move C.) Fail-before-mutate is the point: a refusal leaves the target tree exactly as it was.
 Surfaced modeler names travel as `output_aliases` on the ComputationGraph and override

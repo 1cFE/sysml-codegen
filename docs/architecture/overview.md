@@ -44,7 +44,7 @@ Generated package
 
 `run_codegen` (`cli/__init__.py`) is the single public entry point and constructs one way. `--models` and `--from-snapshot` are two *sources* for the same authority, not two implementations: both seal into an `ExactPipelineContext` whose receipt binds the sealed instance graph to what it projects to. No flag, environment variable, or config field selects an implementation. See [02-orchestration](reference/02-orchestration.md).
 
-Eligible modelled assertions become `CONSTRAINT` modules during projection, together with the `ConstraintCatalog` embedded on the graph. A `REPORT_AGGREGATOR` module is emitted only when there is at least one constraint output; a constraint-free model produces neither family. See 28-constraint-lowering-and-catalog (retired doc; git history), whose lowering half describes `analysis/constraint_lowering.py` — deleted by the Item 7 retirement, so read that half as history, not as the product.
+Eligible modeled assertions become `CONSTRAINT` modules. Every authored constraint usage remains in the embedded catalog, including exclusions. A model with any authored constraint usages gets a `REPORT_AGGREGATOR`, even when no usage can be assessed; the report exposes that empty assessment denominator. A constraint-free model has neither family. See `elaboration/project.py` and product promise [0005](../../.project/product/0005-full-satisfaction-requires-full-assessment.md).
 
 The license-free path is the **v6 instance-graph snapshot**. `sysml-codegen snapshot` admits the sources, elaborates them once, and seals the resulting graph into an envelope (`capture_instance_graph_snapshot` in `snapshot/capture.py` — this capture step needs the live syside license). `generate --from-snapshot` loads that envelope with no license at runtime. A v5 extraction snapshot is refused at load, by name. See [27-snapshot-generation](reference/27-snapshot-generation.md).
 
@@ -209,7 +209,7 @@ Deleted by the Item 7 retirement and no longer in the tree:
 
 ## Component Index
 
-**Read this index with the retirement in mind.** C05, C06, C08–C19, C27, and X02 name
+**Read this index with the retirement in mind.** C06, C08–C19, C27, and X02 name
 components of the string-resolution stack that the Item 7 retirement deleted
 (`core/output_registry.py`, `analysis/`, `orchestration/pipeline_builder.py`,
 `resolution/graph_builder.py` and its resolver). The off-route computed-attribute classifier

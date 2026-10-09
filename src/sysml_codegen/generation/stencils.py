@@ -13,13 +13,16 @@ Usage:
 """
 
 from pathlib import Path
+from typing import Any
 
 import jinja2
 
+from sysml_codegen.core.errors import CodeGenerationError
 from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
+from sysml_codegen.resolution.models import ComputationGraph, ModuleOutput, PipelineModule
 
 
-def _output_attr_name(out) -> str:
+def _output_attr_name(out: ModuleOutput) -> str:
     """Get original output attribute name from ModuleOutput.
 
     For multi-output modules, field_name IS the attribute name.
@@ -31,7 +34,7 @@ def _output_attr_name(out) -> str:
     return out.channel_name.split("__")[-1]
 
 
-def _get_module_sysml_qn(module) -> str:
+def _get_module_sysml_qn(module: PipelineModule) -> str:
     """Get the full SysML qualified name for path/import derivation.
 
     Module types store calc_def_qualified_name differently:
@@ -47,13 +50,23 @@ def _get_module_sysml_qn(module) -> str:
     elif module.module_kind == ModuleKind.AGGREGATION:
         return module.name.replace("__", "::")
     elif module.module_kind == ModuleKind.CALCULATION:
+        if module.calc_def_qualified_name is None:
+            raise CodeGenerationError(
+                f"GENERATION_METADATA_MISSING: module {module.name!r} "
+                "lacks calc_def_qualified_name"
+            )
         return module.calc_def_qualified_name
     else:
         raise unrenderable_module_kind_error(module, "stencil")
 
 
-def _build_stub_docstring_from_graph(module) -> str:
+def _build_stub_docstring_from_graph(module: PipelineModule) -> str:
     """Build stub docstring from PipelineModule fields."""
+    if module.calc_def_name is None:
+        raise CodeGenerationError(
+            f"GENERATION_METADATA_MISSING: module {module.name!r} lacks calc_def_name"
+        )
+
     lines = []
 
     # Derive output info from module outputs
@@ -108,8 +121,15 @@ def _build_stub_docstring_from_graph(module) -> str:
     return "\n".join(lines)
 
 
-def _build_stencil_context_from_graph(module, output_path, package_name="generated_code"):
+def _build_stencil_context_from_graph(
+    module: PipelineModule, output_path: Path, package_name: str = "generated_code"
+) -> dict[str, Any]:
     """Build shared template context from PipelineModule fields."""
+    if module.calc_def_name is None:
+        raise CodeGenerationError(
+            f"GENERATION_METADATA_MISSING: module {module.name!r} lacks calc_def_name"
+        )
+
     output_names = [_output_attr_name(out) for out in module.outputs]
 
     if len(module.outputs) == 0:
@@ -154,7 +174,7 @@ def _build_stencil_context_from_graph(module, output_path, package_name="generat
 
 
 def generate_implementation(
-    module,
+    module: PipelineModule,
     template_env: jinja2.Environment,
     output_path: Path,
     package_name: str = "generated_code",
@@ -200,7 +220,7 @@ generate_implementation_from_graph = generate_implementation
 
 
 def generate_backlog_report(
-    graph,
+    graph: ComputationGraph,
     output_path: Path,
     package_name: str = "generated_code",
 ) -> str:
@@ -236,6 +256,11 @@ def generate_backlog_report(
         # Skip FULLY_COMPILABLE CalcUsage modules
         if module.auto_impl_context is not None:
             continue
+
+        if module.calc_def_name is None:
+            raise CodeGenerationError(
+                f"GENERATION_METADATA_MISSING: module {module.name!r} lacks calc_def_name"
+            )
 
         # Estimate complexity from calc_expressions
         total_ops = 0

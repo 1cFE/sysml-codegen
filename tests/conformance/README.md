@@ -29,16 +29,14 @@ Read a concrete value out of a committed source and hardcode it, with a provenan
 comment saying where it came from:
 
 ```python
-# provenance: tests/fixtures/catf_mfe_model/extraction_snapshot.json:4527
+# provenance: tests/fixtures/catf_mfe_model/designs: authored gross_electric value
 #   (literal_value 1546.72 bound to auxiliary_load.gross_electric)
 assert ep.default_value == 1546.72
 ```
 
 Rules that make a literal trustworthy:
 
-- **Committed source only.** Draw from the snapshots
-  (`tests/fixtures/{model}/extraction_snapshot.json`), the `computation_graph.json`
-  baselines, or the `*.sysml` design/library sources. License-free — no live extraction.
+- **Committed source only.** Use authored `*.sysml`, sealed `instance_graph_snapshot.json` payloads, or independent hand-computed expectations. A same-run generated package is not an independent oracle.
 - **Every literal carries a provenance comment** next to it (snapshot path + line,
   fixture `file:line`, or "hand-computed from <inputs>"). This is the review-time defense
   against a value pasted from production output.
@@ -68,9 +66,7 @@ assert found, "the required fixture element was not present"
 ## Existing conventions to reuse
 
 - **`req(id)` marker** maps a test to a requirement (`tests/conformance/conftest.py:66`).
-- **Snapshot fixtures** load committed extraction snapshots
-  (`tests/conformance/conftest.py:70-91`: `extraction_snapshots`, `solar_battery_snapshot`,
-  `catf_mfe_snapshot`).
+- **Snapshot fixtures** use `tests/conftest.py:instance_graph_fixture` to locate committed v6 instance graphs. Public output comparisons use `tests/conformance/test_public_package_oracle.py`.
 - **Exemplar literal tables** to copy the style from:
   `tests/conformance/test_naming_conventions.py:93-149` (`REAL_EQNS`, `PQN_EXAMPLES`) and
   the literal type-map tests in `tests/conformance/test_gen_schemas.py:355-381`.

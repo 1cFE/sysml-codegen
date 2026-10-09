@@ -224,7 +224,9 @@ def test_status_records_owner_close_and_satisfied_downstream_dependency() -> Non
     current = _read(".project/CURRENT_WORK.md")
     epic = _read(".project/backlog/epic_elaborate_first_architecture.md")
     assert "stop-reinventing-the-parser CLOSED by owner direction" in current
-    assert ".project/completed/20260819_stop-reinventing-the-parser/" in current
+    assert "PR #13 shipped it" in current
+    assert "8a758e9240707b58fe32a509c3b509941ca4fa01" in current
+    assert "924eadfd12f39401a6ea8e578b405d4ba8833b51" in current
     assert "Bounded predecessor closed 2026-08-19 by owner direction" in epic
     assert "predecessor dependency is satisfied" in epic
     assert "8a758e9240707b58fe32a509c3b509941ca4fa01" in epic

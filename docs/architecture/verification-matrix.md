@@ -6,105 +6,63 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 | Metric | Count |
 |--------|-------|
-| Total requirements | 288 |
-| PASS (a kept test proves it and passes) | 156 |
-| PARTIAL (a kept test covers part of the requirement; the gap is named in the cell) | 1 |
-| RETIRED (subject deleted with the legacy stack) | 131 |
-| UNTESTED (subject live, no test proves it) | 0 |
+| Total requirements | 313 |
+| PASS (a kept test proves it and passes) | 123 |
+| PARTIAL (a kept test covers part of the requirement; the gap is named in the cell) | 28 |
+| RETIRED (subject deleted with the legacy stack) | 161 |
+| UNTESTED (subject live, no test proves it) | 1 |
 | DEFERRED | 0 |
-| REQ families | 34 |
-| Distinct kept test files cited | 64 |
+| REQ families | 35 |
+| Distinct kept test files cited | 77 |
 
-> **Recounted from the tables 2026-08-14 at ELABORATE-FIRST cutover step 4**, per the recount
-> discipline — index totals **and** per-family counts, never the summary block on trust; test-file
-> count by the recorded A-4 method (Test File column, non-RETIRED rows, file exists on disk). Delta
-> from the previous block (280/136/3/131/10/0, 33 families, 55 files, recounted the same day at
-> CONSTRAINT-SEMANTICS Item 7): step 4 closed all ten UNTESTED rows (nine L-149/L-150/L-152
-> replacements plus the REQ-DIAG-04 tripwire), moved REQ-EPC-01 and REQ-GA-03 to PASS with their
-> missing failing arms, and filed the 8-row REQ-CS family under the owner-authorized
-> `[CONSTRAINT-GATES-UNTAGGED]` minting. The one remaining PARTIAL is REQ-DIAG-01, a recorded
-> deliberate grade (its gap is upstream-shaped). Item 7's recount record:
-> the constraint-docs-agent-sync verification record (2026-08-14; git history).
+Recount with `python scripts/check_verification_matrix.py`; use `--write` to refresh summary, family index, and footer together. Counts and citation/node existence are mechanical checks, not semantic certification. PASS rows retain the cited tests' actual bounds; partial rows name missing proof. This cleanup re-read the finite discovery list and checked every active citation. The older Item-7 semantic sweep had unswept and narrower-than-text residue; no fresh universal semantic audit is claimed.
 
 **Status definitions:**
-- **PASS**: At least one test **that exists in the tree** proves this requirement and passes
-- **PARTIAL**: A kept, passing test covers part of the requirement, and the cell names exactly what a violation could do without failing it (audit-7 finding F2: a partially-covered row must not sit beside full-strength green unmarked)
-- **RETIRED**: The requirement's subject was deleted by the Item 7 retirement. The row is the record of a removed design, not a claim about the product. The cell names the deletion-ledger row that carries the deletion and, through its `replacement_proof_node`, whatever behaviour survived
-- **UNTESTED**: The subject is live but nothing proves it — either it never had a dedicated test, or its test retired with no replacement. The cell says which
-- **DEFERRED**: Behavior implemented; real-fixture test deferred to a later item (none open — REQ-CA-09 discharged by Item 10)
-- **Contract disposition** (SOURCE-IDENTITY Item 3): a row-local `> **Contract disposition — REQ-…**` line under a family table records how the source-identity contract treats that row's reading — `SUPERSEDED`, `PARTIAL` (every clause labeled `stands` or `SUPERSEDED`), or `FAILED` — pointing to the owning contract Appendix B row or Appendix C cell (`.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`; the contract's Current conclusion is the sole authority-state statement). Status stays test-state only: historical tests remain evidence of old behavior, not certification of the new contract.
 
-> **This matrix was re-cited against the retired tree (Revise step 6d, 2026-08-12).** Before
-> that pass, 56 of the 81 test modules it cited no longer existed, so 205 rows carried a PASS
-> beside a file nobody could run. Every one of those rows was re-read against its requirement
-> text and given one of two endings:
->
-> - **The subject is live and the proof moved.** The row now cites the kept node(s) that prove
->   it. Where the recovery's deletion ledger recorded where a deleted module's responsibility
->   went (`.project/ledger/ledger-4a.json`, `replacement_proof_node`), that
->   recorded heir is what the row cites — the mapping carries the ledger's authority, not this
->   pass's guess. Nine rows found no heir: their subject is live, nothing proves it, and they
->   read UNTESTED with the gap named.
-> - **The subject died with its shape.** The row reads RETIRED and names the ledger row that
->   deleted it. No dangling citation is left behind. 131 rows ended here, which is the honest
->   size of what the retirement removed.
->
-> **Every test file named in a PASS row exists in this tree.** A test filename inside an
-> UNTESTED cell is part of the disposition — it says which retired module took the proof with
-> it — and is deliberately not a citation.
->
-> Read the RETIRED families — AS, BT, DRA, IR, MF, OR, ORCH, PGD, SVM, VBR, most of SNAP and
-> RES — as the record of a deleted design. Where a row's requirement text names a legacy
-> function (`build_pipeline_context()`, `build_computation_graph()`, `resolve_producer()`), it
-> is naming code that was removed, not the product. The shipped route's own evidence is in
-> `test_public_authority_switch.py`, `test_exact_*`, `test_elaboration_*`, and
-> `test_snapshot_v6_*`, which is what the PASS rows now point at.
->
-> **What this pass did not do.** It did not write REQ families for mechanisms the elaborator
-> introduced and the legacy stack never had — the v6 envelope, occurrence identity, the
-> projection receipt. Those are unwritten, named in the SNAP banner below, and still need an
-> owner. Status stays test-state, as the contract-disposition convention above establishes.
+- **PASS:** Retained functional/structural evidence proves the stated current obligation at its recorded bounds; final candidate execution is recorded separately in the cleanup evidence.
+- **PARTIAL:** Retained evidence covers a named portion; the evidence cell identifies what remains unproved.
+- **RETIRED:** The original mechanism is gone. The historical row does not certify a surviving product obligation; current source-identity obligations have separate authority and rows.
+- **UNTESTED:** The live obligation has no retained independent test proving it.
+- **DEFERRED:** A recorded future acceptance obligation; no current passing proof is implied.
+- **DESCOPED:** Owner removed the obligation, with the ruling cited; this is not PASS.
 
-> **Sweep note (PIPELINE-TRUTH Item 7).** The ~175-row deep-read sweep found ~30 PASS
-> rows whose cited test passes but pins *less* than the full requirement text (e.g.
-> field-name-only compares, `>=` count floors, self-contained parse checks). None is a
-> correctness lie. They are enumerated with per-row dispositions in
-> `[ITEM7-MATRIX-SWEEP-RESIDUE]` (backlog), to fix when each owning component is next
-> touched. ~46 qualifying rows remain un-deep-read (named there — not asserted swept).
+Existing row-local contract dispositions preserve the lifecycle acceptance authority over contradictory legacy readings. REQ-SI rows derive from the independent LC-SI catalog and Item-3 acceptance cells, not from the test inventory. See the source-identity reconciliation for exact evidence bounds and the 29-cell/35-coordinate distinction. Diagnostic provenance debt remains governed by REQ-DIAG-01 and the existing diagnostic backlog.
 
 ## Index
 
 - [AS — Aggregation Scoping](#as) (8 retired)
-- [AST — AST Dispatch Invariant](#ast) (10/10 pass)
-- [BASE — Baseline Conformance](#base) (5/5 pass, 1 retired)
+- [AST — AST Dispatch Invariant](#ast) (7 pass, 3 retired)
+- [BASE — Baseline Conformance](#base) (1 pass, 4 retired, 1 untested)
 - [BT — Backtracker](#bt) (13 retired)
-- [CA — Computed Attributes](#ca) (9/9 pass, 3 retired)
-- [CL — Constraint Lowering & Catalog](#cl) (4/4 pass, 1 retired)
-- [CON — Contracts & Sealing](#con) (10/10 pass)
-- [DIAG — Diagnostic Severity](#diag) (2/4 pass, 1 partial, 1 untested)
-- [DM — Data Models](#dm) (9/9 pass)
+- [CA — Computed Attributes](#ca) (3 pass, 9 retired)
+- [CL — Constraint Lowering & Catalog](#cl) (4 pass, 1 retired)
+- [CS — Constraint Source Metadata](#cs) (8 pass)
+- [SI — Source Identity](#si) (2 pass, 23 partial)
+- [CON — Contracts & Sealing](#con) (10 pass)
+- [DIAG — Diagnostic Severity](#diag) (3 pass, 1 partial)
+- [DM — Data Models](#dm) (8 pass, 1 retired)
 - [DRA — Resolution Architecture](#dra) (5 retired)
-- [EC — Expression Compiler](#ec) (7/7 pass)
-- [EPC — Entry Point Classification](#epc) (1/1 pass, 7 retired)
-- [EXT — Extraction](#ext) (14/14 pass)
-- [GA — Graph Assembly](#ga) (5/5 pass, 2 retired, 1 untested)
-- [GEN — Generation](#gen) (6/6 pass, 1 untested)
-- [HR — Hierarchy Resolver](#hr) (8/8 pass)
+- [EC — Expression Compiler](#ec) (6 pass, 1 retired)
+- [EPC — Entry Point Classification](#epc) (1 pass, 7 retired)
+- [EXT — Extraction](#ext) (8 pass, 6 retired)
+- [GA — Graph Assembly](#ga) (5 pass, 3 retired)
+- [GEN — Generation](#gen) (7 pass)
+- [HR — Hierarchy Resolver](#hr) (8 retired)
 - [IR — Producer Resolution (re-projected)](#ir) (7 retired)
-- [LVP — Literal Value Propagation](#lvp) (1/1 pass, 8 retired)
+- [LVP — Literal Value Propagation](#lvp) (9 retired)
 - [MF — Module Factory](#mf) (9 retired)
-- [NC — Naming Conventions](#nc) (9/9 pass)
+- [NC — Naming Conventions](#nc) (9 pass)
 - [OR — Output Registry](#or) (9 retired)
 - [ORCH — Orchestration](#orch) (7 retired)
-- [OSR — Output Schema Rules](#osr) (4/4 pass, 3 untested)
+- [OSR — Output Schema Rules](#osr) (7 pass)
 - [PGD — Parameter Group Deriver](#pgd) (8 retired)
-- [PIPE — Pipeline](#pipe) (7/7 pass)
-- [PMM — PipelineModule Migration](#pmm) (4/4 pass, 1 retired)
-- [PY — Pipeline YAML](#py) (8/8 pass)
-- [REG — Module Registry](#reg) (9/9 pass)
-- [RES — Resolution Overview](#res) (2/2 pass, 6 retired)
-- [SNAP — Snapshots: Extraction Format & Snapshot-Driven Generation](#snap) (1/1 pass, 21 retired)
-- [SR — Smart Regen / Preservation](#sr) (3/3 pass, 4 untested)
+- [PIPE — Pipeline](#pipe) (7 pass)
+- [PMM — PipelineModule Migration](#pmm) (1 pass, 3 partial, 1 retired)
+- [PY — Pipeline YAML](#py) (8 pass)
+- [REG — Module Registry](#reg) (9 pass)
+- [RES — Resolution Overview](#res) (2 pass, 6 retired)
+- [SNAP — Snapshots: Extraction Format & Snapshot-Driven Generation](#snap) (1 pass, 21 retired)
+- [SR — Smart Regen / Preservation](#sr) (6 pass, 1 partial)
 - [SVM — Supplied-Value Materializer](#svm) (4 retired)
 - [VBR — Virtual Binding Rewrite](#vbr) (11 retired)
 
@@ -135,16 +93,16 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
-| REQ-AST-01 | Every `is_instance()` dispatch that checks both FCE and OE SHALL check FCE first | `test_ast_dispatch_invariant.py`, `test_expression_compiler.py` | PASS |
-| REQ-AST-02 | Every dispatch site checking both FCE and OE SHALL include a comment: "MUST be before Ope... | `test_ast_dispatch_invariant.py` | PASS |
-| REQ-AST-03 | Among reference/operator branches, dispatch ordering SHALL be FCE, OE, FRE (the cited test pins this ordering clause only; literal-before-catch-all is REQ-AST-08's row) | `test_ast_dispatch_invariant.py` | PASS |
-| REQ-AST-04 | New dispatch sites SHALL follow REQ-AST-03 ordering | `test_ast_dispatch_invariant.py` | PASS |
-| REQ-AST-05 | `hierarchy_resolver._walk_aggregation_ast()` SHALL classify FCE nodes as `SingletonTerm` ... | `test_ast_dispatch_invariant.py` | PASS |
+| REQ-AST-01 | No live codegen function checks both FeatureChainExpression and OperatorExpression without a deliberate audit. | `test_ast_dispatch_invariant.py::TestReqAst04DispatchSiteGuardrail::test_no_dual_check_site_exists` | PASS |
+| REQ-AST-02 | Every dispatch site checking both FCE and OE SHALL include a comment: "MUST be before Ope... | Historical mechanism retired: legacy hierarchy/usage AST dispatch was deleted in REPO-CLEANUP Move C; reference/19 records the live audited sites; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
+| REQ-AST-03 | Both audited raw-reference dispatch sites check FeatureChainExpression before the broader FeatureReferenceExpression. | `test_ast_dispatch_invariant.py::TestReqAst04DispatchSiteGuardrail::test_audited_sites_check_fce_before_fre` | PASS |
+| REQ-AST-04 | The complete live multi-expression-type dispatch inventory matches the two audited sites. | `test_ast_dispatch_invariant.py::TestReqAst04DispatchSiteGuardrail::test_total_dispatch_function_count` | PASS |
+| REQ-AST-05 | `hierarchy_resolver._walk_aggregation_ast()` SHALL classify FCE nodes as `SingletonTerm` ... | Historical mechanism retired: legacy hierarchy/usage AST dispatch was deleted in REPO-CLEANUP Move C; reference/19 records the live audited sites; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
 | REQ-AST-06 | A feature-chain reference in a CalcDef output SHALL be rejected as unsupported by the renderer (`calc_compat_renderer._render_reference`), not misread as an operator | `test_expression_compiler.py::TestRenderCalcExpression::test_feature_chain_raises_compilation_error` | PASS |
 | REQ-AST-07 | `expression_utils.reconstruct_expression()` SHALL return `"name.attr"` for FCE (not `".(n... | `test_ast_dispatch_invariant.py` | PASS |
 | REQ-AST-08 | `reconstruct_expression` SHALL dispatch all literal/`NullExpression` branches (via `is_instance`) before the invocation catch-all | `test_expression_reconstruction_fidelity.py`, offline totality guard | PASS |
 | REQ-AST-09 | `reconstruct_operator_expression` SHALL parenthesize a child operand iff it binds looser than its parent, or equal and on the associativity-unfavored side | `test_expression_reconstruction_fidelity.py`, `test_expression_paren_helper.py` | PASS |
-| REQ-AST-10 | `hierarchy_resolver._walk_aggregation_ast()` SHALL dispatch all literal/null branches before the invocation catch-all | `test_agg_literal_dispatch.py` (`agg_literal_probe` fixture) | PASS |
+| REQ-AST-10 | `hierarchy_resolver._walk_aggregation_ast()` SHALL dispatch all literal/null branches before the invocation catch-all | Historical mechanism retired: legacy hierarchy/usage AST dispatch was deleted in REPO-CLEANUP Move C; reference/19 records the live audited sites; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
 
 ### BASE
 
@@ -152,12 +110,12 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
-| REQ-BASE-01 | ComputationGraph JSON matches captured baseline | `test_baselines.py`, `test_public_route_baselines.py::test_regenerating_from_the_same_v6_snapshot_is_byte_identical` | PASS |
-| REQ-BASE-02 | Baseline JSON deserializes back to valid ComputationGraph | `test_baselines.py` | PASS |
-| REQ-BASE-03 | Registry __init__.py baseline is syntactically valid Python | `test_baselines.py` | PASS |
-| REQ-BASE-04 | execution_order length equals modules length in every baseline | `test_baselines.py` | PASS |
+| REQ-BASE-01 | Public generation from all 22 committed snapshots matches independently captured complete file sets/digests or refusal outcomes, with separately reviewed exact differences. | `test_public_package_oracle.py::test_baseline_inventory_is_complete`, `::test_public_package_matches_independent_baseline`, `::test_oracle_rejects_template_mutation`, `::test_oracle_rejects_rendering_code_mutation`; immutable pre-change baseline at `6872977`, version fields compared unnormalized. This replaces the deleted ComputationGraph baseline mechanism; same-run repetition is separate determinism evidence. | PASS |
+| REQ-BASE-02 | Baseline JSON deserializes back to valid ComputationGraph | Historical mechanism retired: stored ComputationGraph JSON baselines and their reader were deleted (ledger L-147); complete package regression protection is REQ-BASE-01; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
+| REQ-BASE-03 | Registry __init__.py baseline is syntactically valid Python | Historical mechanism retired: stored ComputationGraph JSON baselines and their reader were deleted (ledger L-147); complete package regression protection is REQ-BASE-01; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
+| REQ-BASE-04 | execution_order length equals modules length in every baseline | Historical mechanism retired: stored ComputationGraph JSON baselines and their reader were deleted (ledger L-147); complete package regression protection is REQ-BASE-01; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
 | REQ-BASE-05 | solar_battery (YAML + graph + registry) and catf_mfe (graph + registry) re-captured via scripts, ordering-only, reviewed | — *(subject deleted — ledger L-147 / L-200 / L-278)* | RETIRED |
-| REQ-BASE-06 | `entry_point_groups` SHALL be name-sorted in every ComputationGraph, so a model-discovery-order shift cannot redden a byte-exact baseline | `test_public_route_baselines.py::test_regenerating_from_the_same_v6_snapshot_is_byte_identical` | PASS |
+| REQ-BASE-06 | `entry_point_groups` SHALL be name-sorted in every ComputationGraph, so a model-discovery-order shift cannot redden a byte-exact baseline | No retained test varies model-discovery order and asserts this ordering obligation; same-snapshot repetition does not supply that proof. | UNTESTED |
 
 ### BT
 
@@ -181,20 +139,13 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 | REQ-BT-12 | For a 3+-segment CHAIN (`source_path.count(".") >= 2`), `_resolve_chain_dispatch` SHALL, after Step 2 misses, retry `scoped_lookup` over progressively shorter ancestor prefixes of the consumer scope (Step CLIMB, Item 2), collect every distinct non-self-reference hit, resolve iff exactly one, and refuse (return None → loud Step-4 fallback) on two or more — never silently pick (M-1 / INV-2b). Gated so 2-segment resolutions stay byte-identical (D4) | — *(subject deleted — ledger L-217 / L-122)* | RETIRED |
 | REQ-BT-13 | A 3+-segment CHAIN that reaches the Step-4 fallback SHALL emit a genuine `logger.warning` (WARNING level, distinct from the benign per-binding DEBUG line) naming the full untruncated chain, and surface as an entry point — never truncated to root, never silently wired (Item-5 loud-diagnostic contract, D3 home) | — *(subject deleted — ledger L-217)* | RETIRED |
 
-> **Contract disposition — REQ-BT-13: `PARTIAL`** (SOURCE-IDENTITY Item 3). The loud-warning /
-> never-truncated / never-silently-wired clause `stands`. The surface-as-entry-point outcome for
-> a bound model reference is `SUPERSEDED` (contract D-17; Appendix B row "A bound model reference
-> that fails resolution may lenient-mint a per-consumer entry point").
+> **Contract disposition — REQ-BT-13: `PARTIAL`** (SOURCE-IDENTITY Item 3). The loud-warning / never-truncated / never-silently-wired clause `stands`. The surface-as-entry-point outcome for a bound model reference is `SUPERSEDED` (contract D-17; Appendix B row "A bound model reference that fails resolution may lenient-mint a per-consumer entry point").
 
 ### CA
 
 **Computed Attributes** — Component C05 — [reference/16-computed-attributes.md](reference/16-computed-attributes.md)
 
-**Current contract.** The off-route classifier and its golden tests were deleted in the Phase 5
-audit fix round because production never imported them. The shipped route lifts computed
-attributes in the elaborator. Its evidence is `test_elaboration_computed_attrs.py` and
-`tests/integration/test_computed_attributes_exact_route.py`. Rows below that describe the old
-classification pipeline are historical and retired.
+**Current contract.** The off-route classifier and its golden tests were deleted in the Phase 5 audit fix round because production never imported them. The shipped route lifts computed attributes in the elaborator. Its evidence is `test_elaboration_computed_attrs.py` and `tests/integration/test_computed_attributes_exact_route.py`. Rows below that describe the old classification pipeline are historical and retired.
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
@@ -207,7 +158,7 @@ classification pipeline are historical and retired.
 | REQ-CA-06 | `AttributeResolutionKind` SHALL classify each FORMULA input as FORMULA or EXPOSE_ALIAS as exercised (the LITERAL classification is exercised via the design-attribute/entry-point path, not this route) | — *(subject deleted — ledger L-104)* | RETIRED |
 | REQ-CA-07 | Legacy classifier self-reference exclusion | — *(classifier deleted in Phase 5 audit fix round)* | RETIRED |
 | REQ-CA-08 | Legacy classifier sibling-output rule | — *(classifier deleted in Phase 5 audit fix round)* | RETIRED |
-| REQ-CA-09 | Shape-A resolution (part-def EXPOSE): the wi014_toy `demo_plant.total_cost` consumer SHALL resolve via `_scoped_alias` to the `cost_calc__cost` channel (the Item-1 malformed-refs deferral, discharged by Item 10 #4/#1) | `test_wi014_toy.py::test_wi014_toy_shape_a_resolves_via_scoped_alias` — repointed onto the exact route, which asserts the public shape-A `OutputAlias`; the `_scoped_alias` registry the text names retired with the v5 family | PASS |
+| REQ-CA-09 | The wi014_toy exposed computed attribute aliases the retained cost producer through exact projection, preserving the public modeler name. | `test_wi014_toy.py::test_wi014_toy_shape_a_resolves_via_scoped_alias`; the historical test name does not imply the deleted scoped registry survives. | PASS |
 | REQ-CA-11 | Shape-A EXPOSE_PURE (part def) in the attribute resolution map SHALL route by `is_on_part_definition` to a LITERAL fallback (not the refs-parser) and consult `_scoped_alias` to decide the warning: a registered leaf is silent (the name resolves via Item 10 and surfaces via Item 11), an unregistered one warns naming the real cause — retiring the Item-1 malformed-refs warning (`_resolve_expose_pure` in `graph_builder.py`) for the resolvable case | — *(subject deleted — ledger L-223)* | RETIRED |
 | REQ-CA-12 | Legacy inherited-name classifier rule | — *(classifier deleted in Phase 5 audit fix round)* | RETIRED |
 
@@ -215,45 +166,25 @@ classification pipeline are historical and retired.
 
 **Constraint Lowering & Catalog** — Items 5-9, Item 14 — reference/28-constraint-lowering-and-catalog.md (retired doc; git history)
 
-Partial register (Item 14 docs pass): these five rows cover the mechanisms Item 14
-directly touched or verified test-first; the full Items 5-9 surface (module wiring
-detail, occurrence expansion, tracking-key correlation) is broader than this pass
-re-derives from scratch and is named here as a known gap, not silently covered.
+Partial register (Item 14 docs pass): these five rows cover the mechanisms Item 14 directly touched or verified test-first; the full Items 5-9 surface (module wiring detail, occurrence expansion, tracking-key correlation) is broader than this pass re-derives from scratch and is named here as a known gap, not silently covered.
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
 | REQ-CL-01 | `resolve_actual`'s strict ladder SHALL resolve a bound actual through, in order: registry scoped/alias/scoped-alias lookup, occurrence-scoped design attribute, definition-scoped target QN, definition-scoped base-literal-default (Item 14 D2-twin) — before the shared terminal-disposition switch (`strict=True`, never synthesizes) | — *(subject deleted — ledger L-214)* | RETIRED |
-| REQ-CL-02 | Every concrete entry expanded from one `ConstraintUsageFact` SHALL share one compile-once predicate (grouped by `usage_qualified_name`), even across N owner-instance occurrences | `test_constraint_emission.py` | PASS |
-| REQ-CL-03 | The shipped catalog (`elaboration/project.py`, `_build_constraint_catalog`) SHALL derive `source_records` from the constraints it projects — definition qualified name plus sorted formal names, from eligible (`ADMIT`/`BLOCK`) nodes only, so a definition with no eligible entry yields no source record — and `concrete_entries` from eligible concrete constraints only, deterministically ordered and fingerprinted by the one shared rule the generation preflight recomputes. *(Amended at cutover step 4 from the retired assembler's total-inventory wording — see the resolved divergence record below.)* | `test_constraint_catalog_totality.py::test_a_usage_only_catalog_fingerprints_deterministically` (zero eligible → empty `source_records`, deterministic fingerprint — the shipped rule, pinned), `::test_the_catalog_carries_every_domain_member` (totality lives on the usage domain), `test_concrete_constraint_model.py` (catalog collection shape) | PASS |
+| REQ-CL-02 | Concrete occurrences share one polarity-neutral compiled predicate for their true definition source, with distinct per-instance verdicts. | `tests/unit/test_constraint_emission.py::test_two_instances_of_one_definition_share_one_compiled_predicate`, `::test_opposite_polarity_usages_share_one_neutral_source_body`, `tests/execution/test_constraint_verdicts_exact_route.py::test_n_instances_produce_n_verdicts_from_one_compiled_predicate`; occurrence identity is separate from rendered usage names. | PASS |
+| REQ-CL-03 | The shipped catalog (`elaboration/project.py`, `_build_constraint_catalog`) SHALL derive `source_records` from the constraints it projects — definition qualified name plus sorted formal names, from eligible (`ADMIT`/`BLOCK`) nodes only, so a definition with no eligible entry yields no source record — and `concrete_entries` from eligible concrete constraints only, deterministically ordered and fingerprinted by the one shared rule the generation preflight recomputes. *(Amended at cutover step 4 from the retired assembler's total-inventory wording — see the resolved divergence record below.)* | `test_constraint_catalog_totality.py::test_a_usage_only_catalog_fingerprints_deterministically`, `::test_the_catalog_carries_every_domain_member`; tests cover the shipped source/usage inventory and deterministic fingerprint, not the retired concrete-constraint model. | PASS |
 | REQ-CL-04 | The domain->catalog mapping SHALL be total and silent-drop-free: every member of `InstanceGraph.constraint_usages` has exactly one `usage_records` row, joined by `declaration_id` and never by qualified name, and every occurrence row joins exactly one member | `test_constraint_catalog_totality.py::test_the_catalog_carries_every_domain_member`, `::test_catf_mfe_d5_ships_all_sixty_five_rows`, the four preflight mutations (removed disposition, duplicated row, orphaned occurrence row, disagreeing counts) and the three graph-level mutations refused at `validate()` | PASS *(audit-7 F2 closed: the heir is no longer a 2-constraint specimen — the totality claim is asserted over the whole domain on every constraint-bearing fixture, and a dropped carrier fails by identity)* |
 | REQ-CL-05 | A constraint input resolved to a design attribute SHALL mint a deduped entry point (reused, not re-minted, if already present); a resolved module-output input SHALL wire the producer channel with no mint; a resolved modeled-default input SHALL mint a `LIBRARY_DEFAULT` entry point scoped to its constraint | `test_exact_constraint_route.py::test_identified_facts_gate_and_projected_constraints_agree_by_usage_id`, `test_exact_route_constraint_portability.py::test_the_predicate_module_and_pipeline_are_identical_on_every_route` | PASS |
 
-> **Divergence RESOLVED at cutover step 4 — the usage domain is the totality boundary**
-> **[AGENT] (ratified by owner, 2026-08-14)**. The total-inventory guarantee the old row carried
-> — a `source_record` for *every* `ConstraintDefinition`, visible with zero eligible entries —
-> was the retired assembler's design (now the fixture builder
-> `tests/helpers/retired_catalog_assembly.py`), not a promise anyone restated: a definition with
-> no usages participates in no coverage claim, and silent absence of a *usage* is already
-> hard-gated by the totality oracle. The row above now states the shipped projector rule and
-> cites live tests. If definition-level inventory ever matters, it gets its own filed item.
+> **Divergence RESOLVED at cutover step 4 — the usage domain is the totality boundary** **[AGENT] (ratified by owner, 2026-08-14)**. The total-inventory guarantee the old row carried — a `source_record` for *every* `ConstraintDefinition`, visible with zero eligible entries — was the retired assembler's design (now the fixture builder `tests/helpers/retired_catalog_assembly.py`), not a promise anyone restated: a definition with no usages participates in no coverage claim, and silent absence of a *usage* is already hard-gated by the totality oracle. The row above now states the shipped projector rule and cites live tests. If definition-level inventory ever matters, it gets its own filed item.
 
-> **Contract disposition — REQ-CL-05: `PARTIAL`** (SOURCE-IDENTITY Item 3). The dedup-mint
-> clause `stands`; the producer-wiring clause `stands` (cell C24 owns the computed-source
-> mixed-consumer target and C17 the aggregation-producer target); the `LIBRARY_DEFAULT` scoping clause `stands` under the per-usage ruling
-> (contract D-12, cell C23). All three stand as mechanics
-> under the single identity authority; the row's evidence does not yet certify the
-> source-identity contract.
+> **Contract disposition — REQ-CL-05: `PARTIAL`** (SOURCE-IDENTITY Item 3). The dedup-mint clause `stands`; the producer-wiring clause `stands` (cell C24 owns the computed-source mixed-consumer target and C17 the aggregation-producer target); the `LIBRARY_DEFAULT` scoping clause `stands` under the per-usage ruling (contract D-12, cell C23). All three stand as mechanics under the single identity authority; the row's evidence does not yet certify the source-identity contract.
 
 ### CON
 
 **Contracts & Sealing** — Item 9 — [reference/29-contracts-and-sealing.md](reference/29-contracts-and-sealing.md)
 
-Register covering the two contracts (`ModelContract` semantic identity,
-`PackageContract` physical seal), fingerprint determinism, seal/verify parity, and the
-emit/re-seal/subcommand wiring. The `contract INV-*` labels are the contracts
-machinery's own numbering (a distinct namespace from the matrix REQ IDs). The
-`verify_package` diagnostic surface beyond the verbatim-emission guard is exercised
-indirectly via the emitted verifier.
+Register covering the two contracts (`ModelContract` semantic identity, `PackageContract` physical seal), fingerprint determinism, seal/verify parity, and the emit/re-seal/subcommand wiring. The `contract INV-*` labels are the contracts machinery's own numbering (a distinct namespace from the matrix REQ IDs). The `verify_package` diagnostic surface beyond the verbatim-emission guard is exercised indirectly via the emitted verifier.
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
@@ -272,34 +203,20 @@ indirectly via the emitted verifier.
 
 **Constraint-Semantics epic gates** — CONSTRAINT-SEMANTICS Items 3, 8, 9
 
-Filed 2026-08-14 at ELABORATE-FIRST cutover step 4, under the owner-authorized
-`[CONSTRAINT-GATES-UNTAGGED]` ruling (BACKLOG; minting assigned to this step so the matrix is
-touched once). Requirement texts are `[INHERITED]` distillations of the items' archived Success
-Criteria — the constraint-coverage-policy (Item 3), unit-lane-port-metadata (Item 8), and
-derivative-upgrade-held-intent (Item 9) close records of 2026-08-13 (git history). Every cited test was run
-before its row was filed (44 conformance/unit licensed with zero license-skip lines, 14 under the
-`execution` marker; the run is recorded in the recovery plan's step-4 completion record).
+Filed 2026-08-14 at ELABORATE-FIRST cutover step 4, under the owner-authorized `[CONSTRAINT-GATES-UNTAGGED]` ruling (BACKLOG; minting assigned to this step so the matrix is touched once). Requirement texts are `[INHERITED]` distillations of the items' archived Success Criteria — the constraint-coverage-policy (Item 3), unit-lane-port-metadata (Item 8), and derivative-upgrade-held-intent (Item 9) close records of 2026-08-13 (git history). Every cited test was run before its row was filed (44 conformance/unit licensed with zero license-skip lines, 14 under the `execution` marker; the run is recorded in the recovery plan's step-4 completion record).
 
 Two deliberate scope notes, so absence reads as decision rather than drift:
 
-- **Item 5** mints no new rows: its population and witness gates are already traced by
-  REQ-CL-04 and REQ-EXT-09 (filed at Item 2's re-anchor — `catf_mfe_d5` ships all 65 rows, the
-  authored population is total by identity), its ruled all-65 table is an owner decision record
-  rather than a testable promise (`20260813_catf-constraint-policy-acceptance/owner-disposition.md`),
-  and the derivative obligations it seeded were restated by Item 9 and are rowed below.
-- **Item 3's canonical-runtime halves** (the six TEAx dispositions, keep-for-boundary vs the
-  feed-strategy opt-in, evidence durability) are pinned in the TEAx tree
-  (`teax/packages/teax-simkit` — `test_headline_vocabulary.py`, `test_partial_coverage_policy.py`,
-  `test_constraint_evidence_durability.py`) and are not rowed here: this matrix cites only tests
-  that exist in this repository. The codegen-side report halves are rowed.
+- **Item 5** mints no new rows: its population and witness gates are already traced by REQ-CL-04 and REQ-EXT-09 (filed at Item 2's re-anchor — `catf_mfe_d5` ships all 65 rows, the authored population is total by identity), its ruled all-65 table is an owner decision record rather than a testable promise (`20260813_catf-constraint-policy-acceptance/owner-disposition.md`), and the derivative obligations it seeded were restated by Item 9 and are rowed below.
+- **Item 3's canonical-runtime halves** (the six TEAx dispositions, keep-for-boundary vs the feed-strategy opt-in, evidence durability) are pinned in the TEAx tree (`teax/packages/teax-simkit` — `test_headline_vocabulary.py`, `test_partial_coverage_policy.py`, `test_constraint_evidence_durability.py`) and are not rowed here: this matrix cites only tests that exist in this repository. The codegen-side report halves are rowed.
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
 | REQ-CS-01 | The report SHALL distinguish the six coverage states, each pinned by an outcome no other state satisfies; the sixth state (unconstrained) is the absence of a report; the retired `all_satisfied` token refuses with a named error | `test_constraint_coverage_matrix.py::test_each_state_is_pinned_by_something_no_other_state_satisfies`, `::test_the_sixth_state_is_the_absence_of_a_report` (execution marker), `test_report_precedence.py::test_the_headline_literal_refuses_the_retired_token` | PASS |
 | REQ-CS-02 | An outranking headline SHALL never hide coverage: a `violation` report still states its coverage into the durable case record, `indeterminate` outranks `partial_coverage` end to end, and inconsistent coverage arithmetic refuses at construction | `test_constraint_coverage_matrix.py::test_violation_states_its_coverage_all_the_way_into_the_case_record`, `::test_indeterminate_outranks_partial_coverage_end_to_end` (execution marker), `test_report_precedence.py::test_a_violation_still_states_its_coverage`, `::test_coverage_account_rejects_inconsistent_arithmetic` | PASS |
 | REQ-CS-03 | Full satisfaction SHALL be unclaimable while any applicable asserted gate is unassessed; a descriptive-only model is not silent, and the two `not_assessed` shapes are told apart by the coverage account | `test_constraint_coverage_matrix.py::test_full_satisfaction_is_unclaimable_when_anything_was_unassessed`, `::test_a_descriptive_only_model_is_no_longer_silent`, `::test_the_two_not_assessed_models_are_still_told_apart_by_the_account`, `test_constraint_coverage_characterization.py::test_partial_assessment_does_not_read_as_full_satisfaction` (execution marker) | PASS |
-| REQ-CS-04 | Authored unit text SHALL reach ports and entry points exactly — the A9 constraint formals mint `m³/s` and `Dimensionless`, the radius-derivation design attributes mint `m` — never normalized, never dropped | `test_unit_lane_port_metadata.py::test_a9_constraint_formals_preserve_authored_units`, `::test_radius_derivation_inputs_preserve_authored_units` | PASS |
-| REQ-CS-05 | Unit agreement across a shared source's consumers SHALL project one entry point; unit disagreement SHALL fail closed — proven on all four arms (constraint-formal × calc usage, computed attribute × calc usage) | `test_unit_lane_port_metadata.py::test_constraint_and_calculation_unit_agreement_projects_one_entry`, `::test_constraint_and_calculation_unit_disagreement_refuses`, `::test_computed_and_calculation_unit_agreement_projects_one_entry`, `::test_computed_and_calculation_unit_disagreement_refuses` | PASS |
+| REQ-CS-04 | [NEED] Owner removed all three guessed-unit readers (cleanup review Resolution L2-2); comments/doc text/type labels no longer create generated units. Parser-native written-value units retain their existing behavior. | `test_unit_lane_port_metadata.py::test_consumed_comments_do_not_create_units_live_or_from_snapshot`, `::test_a9_comment_units_are_absent_from_all_formals`, `::test_radius_comment_units_are_absent_from_derivation_inputs`, `::test_parser_native_written_unit_default_survives_both_routes`; owner authority: `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/spec-review.md`, Resolution L2-2. | PASS |
+| REQ-CS-05 | Projection keeps one consistent metadata record per exact shared public input; a resealed conflicting metadata record fails certifiability. Removed comment guesses do not create live shared-input conflicts. | `test_unit_lane_port_metadata.py::test_constraint_and_calculation_comment_disagreement_projects`, `::test_computed_and_calculation_comment_disagreement_projects`, `test_snapshot_v6_envelope.py::test_resealed_unit_collision_is_not_certifiable`; the last test forges a metadata label after capture, not a parser unit. | PASS |
 | REQ-CS-06 | `PortMetadata.unit` and `EntryPoint.unit_text` SHALL be identical across the live, in-place-snapshot, and relocated-snapshot routes | `test_unit_lane_port_metadata.py::test_live_in_place_and_relocated_routes_preserve_unit_metadata` | PASS |
 | REQ-CS-07 | The gated derivative's accounting identity SHALL close machine-checkably — `65 = 56 carriers + 9 named deletions` — with an unmatched carrier, an unauthorized deletion, and a misused `renamed_from:` each failing closed | `test_gated_manifest_identity.py::test_the_identity_closes`, `::test_every_deletion_cites_an_authorizing_table_row`, `::test_an_unmatched_carrier_fails_closed`, `::test_a_deletion_without_an_authorizing_row_fails`, `::test_a_renamed_from_claimed_by_a_deletion_fails` | PASS |
 | REQ-CS-08 | Each of the 27 A5/A6 radius derivations SHALL resolve per-occurrence to its own in-source initializer and basis comment; a stripped or unfindable layer is named as a problem, never a skip and never satisfied by a sibling | `test_gated_manifest_identity.py::test_every_derive_instead_row_has_its_derivation_in_source`, `::test_stripping_one_layers_documentation_names_that_layer`, `::test_removing_one_layers_initializer_names_that_layer`, `::test_an_unfindable_owner_block_is_a_problem_not_a_skip`, `::test_an_ambiguous_owner_block_is_a_problem_not_a_skip`, `::test_a_derivation_missing_its_basis_comment_fails_closed`, `::test_a_missing_derivation_fails_closed` | PASS |
@@ -315,19 +232,16 @@ Two deliberate scope notes, so absence reads as decision rather than drift:
 | REQ-DM-03 | Field lists SHALL match source code (name) | `test_data_models.py` | PASS |
 | REQ-DM-04 | Every model SHALL be importable from its documented source file | `test_data_models.py` | PASS |
 | REQ-DM-05 | At least one populated `ComputationGraph` example SHALL demonstrate both `entry_point` an... | `test_data_models.py` | PASS |
-| REQ-DM-06 | The delegated data models (`ComputedAttributeData`, `ExpressionRef`, `PhantomDetectionReport`) are importable from their source modules (the doc-linking / no-duplication claim is not tested) | `test_data_models.py` | PASS |
+| REQ-DM-06 | The delegated data models (`ComputedAttributeData`, `ExpressionRef`, `PhantomDetectionReport`) are importable from their source modules (the doc-linking / no-duplication claim is not tested) | Historical mechanism retired: the delegated extraction models were deleted; `test_data_models.py::TestDelegatedModelsImportable::test_expression_ref_is_retired` proves absence; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
 | REQ-DM-07 | Resolution-model field type annotations (`ComputationGraph`, `PipelineModule`, `ModuleInput`, `ParameterGroup`) match the documented containment hierarchy from doc 09 (no data-flow diagram is checked) | `test_data_models.py` | PASS |
-| REQ-DM-08 | The typed-registry **enforced surface** SHALL use NewType wrappers: the wrappers in `identifier_types.py` are genuine `NewType`s over their bases, the four `OutputRegistry` registry dicts are annotated `dict[NewType, NewType]`, and `make_scoped_key`/`make_canonical_channel` return their NewType. (The `resolution/models.py` field annotations remain bare `str` by design — documented in 09-data-models.md and filed `[DM08-MODEL-FIELD-TYPING]`; `register_alias`'s `\| str` unions are a designed boundary, not drift) | `test_dm08_enforced_surface.py` (AST-scan — PEP-526 `self.x` annotations never reach `__annotations__`) | PASS |
+| REQ-DM-08 | Surviving name wrappers are genuine NewType wrappers over their documented bases, and their make_* constructors declare the wrapper return types. | `test_dm08_enforced_surface.py::TestDM08EnforcedSurface::test_wrappers_are_newtype_over_base`, `::TestDM08EnforcedSurface::test_make_constructor_return_annotations_name_newtypes`; OutputRegistry dictionaries and their uncollected assertion body are retired. Graph-model strings remain the documented boundary. | PASS |
 | REQ-DM-09 | `ComputationGraph.output_aliases: list[OutputAlias]` SHALL be a serialized field (no `exclude`, contrast `fallback_entry_points`) carrying each EXPOSE_PURE modeler name, its canonical channel (validated to exist — INV-3), instance path, and `shape`; stable-sorted by `(instance_path, alias_name)` (INV-5) so regen yields no ordering-only diff | `test_data_models.py`, `test_exact_route_alias_aggregation.py::test_the_aggregation_and_its_chain_alias_both_reach_a_consumer` | PASS |
 
 ### DIAG
 
 **Diagnostic Severity** — [reference/30-diagnostic-severity.md](reference/30-diagnostic-severity.md)
 
-Filed 2026-08-14 by CONSTRAINT-SEMANTICS Item 7 (`[MATRIX-EPIC-SURFACE-ROWS]`, BACKLOG:447). These
-four requirements were traced in doc 30 and had **no rows here** — the family existed in prose and
-not in the matrix. Every cited test was run before its row was written; the run is recorded in
-the constraint-docs-agent-sync verification record (2026-08-14; git history).
+Filed 2026-08-14 by CONSTRAINT-SEMANTICS Item 7 (`[MATRIX-EPIC-SURFACE-ROWS]`, BACKLOG:447). These four requirements were traced in doc 30 and had **no rows here** — the family existed in prose and not in the matrix. Every cited test was run before its row was written; the run is recorded in the constraint-docs-agent-sync verification record (2026-08-14; git history).
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
@@ -358,13 +272,13 @@ the constraint-docs-agent-sync verification record (2026-08-14; git history).
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
-| REQ-EC-01 | `FeatureChainExpression` SHALL be checked BEFORE `OperatorExpression` (FCE is OE subtype ... | `test_expression_compiler.py` | PASS |
+| REQ-EC-01 | `FeatureChainExpression` SHALL be checked BEFORE `OperatorExpression` (FCE is OE subtype ... | Historical mechanism retired: legacy compiler FCE/OE dispatch retired; live raw-node dispatch is guarded by REQ-AST-01/03/04; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
 | REQ-EC-02 | N-ary operands SHALL be left-folded into nested binary operations | `test_expression_compiler.py` | PASS |
 | REQ-EC-03 | Unit annotations (`[` operator) SHALL be stripped; only the value operand is retained | `test_expression_compiler.py` | PASS |
 | REQ-EC-04 | Every compiled expression SHALL be validated via `python_ast.parse(result, mode="eval")` | `test_expression_compiler.py` | PASS |
-| REQ-EC-05 | Cycle detection in dependency graph SHALL mark ALL outputs as `MANUAL_REQUIRED` | `test_expression_compiler.py` | PASS |
+| REQ-EC-05 | An exact dependency cycle marks every declared output MANUAL_REQUIRED and yields an empty execution order. | `test_exact_compiler_core.py::test_an_exact_dependency_cycle_is_total_and_manual` | PASS |
 | REQ-EC-06 | `classify_compilability()` SHALL use worst-case roll-up semantics | `test_expression_compiler.py` | PASS |
-| REQ-EC-07 | Undeclared intermediates SHALL be discovered iteratively from `member_expressions` | `test_expression_compiler.py` | PASS |
+| REQ-EC-07 | Undeclared intermediate expressions are attached by member UUID and assigned before their dependent outputs, without a rendered-name lookup. | `test_exact_compiler_core.py::test_an_undeclared_intermediate_is_assigned_before_the_output_that_uses_it`, `test_elaboration_payload_identity.py::test_exact_compiler_keys_definition_outputs_and_dependencies_by_uuid` | PASS |
 
 ### EPC
 
@@ -372,7 +286,7 @@ the constraint-docs-agent-sync verification record (2026-08-14; git history).
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
-| REQ-EPC-01 | Every entry point SHALL be classified as exactly one EntryPointType: {`DESIGN_ATTRIBUTE`,... | `test_projection_wiring_contract.py::test_the_classification_is_a_closed_three_value_set`, `::test_every_emitted_entry_point_carries_exactly_one_classification` (membership totality over every committed snapshot), `::test_fusion_tea_classification_matches_the_authored_oracle_exactly` (authored 27-key oracle covering all three classes — closes the audit-7 F2 misclassification gap); route parity remains separately held by `test_exact_pipeline_context.py::test_the_live_and_v6_contexts_agree_on_the_public_entry_point_surface` | PASS |
+| REQ-EPC-01 | Every entry point SHALL be classified as exactly one EntryPointType: {`DESIGN_ATTRIBUTE`,... | `test_projection_wiring_contract.py::test_the_classification_is_a_closed_three_value_set`, `::test_every_emitted_entry_point_carries_exactly_one_classification` (membership totality over every committed snapshot), `::test_fusion_tea_classification_matches_the_authored_oracle_exactly` (authored 23-key oracle covering all three classes — closes the audit-7 F2 misclassification gap); route parity remains separately held by `test_exact_pipeline_context.py::test_the_live_and_v6_contexts_agree_on_the_public_entry_point_surface` | PASS |
 | REQ-EPC-02 | Classification SHALL follow strict precedence: `DESIGN_ATTRIBUTE` > `LIBRARY_DEFAULT` > `... | — *(subject deleted — ledger L-131)* | RETIRED |
 | REQ-EPC-03 | `default_value` SHALL be converted to `float` at classification time; if conversion fails... | — *(subject deleted — ledger L-131)* | RETIRED |
 | REQ-EPC-04 | Every classified entry point SHALL be assigned a `param_group` via ParameterGroupDeriver.... | — *(subject deleted — ledger L-131)* | RETIRED |
@@ -388,19 +302,19 @@ the constraint-docs-agent-sync verification record (2026-08-14; git history).
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
 | REQ-EXT-01 | Extraction SHALL produce exactly one CalculationDefinitionData per `calc def` in the SysM... | `test_extractor.py` | PASS |
-| REQ-EXT-02 | Every parameter binding on a CalcUsageData SHALL have exactly one BindingType from {CHAIN... | `test_extractor.py` | PASS |
-| REQ-EXT-03 | Every `:>>` redefinition SHALL be classified as exactly one RedefinitionType from {LITERA... | `test_extractor.py` | PASS |
-| REQ-EXT-04 | Every aggregation expression SHALL be decomposed into typed terms: SumTerm, SingletonTerm... | `test_extractor.py` | PASS |
-| REQ-EXT-05 | Template calc usages (`is_template=True`) SHALL produce one virtual CalcUsageData per Par... | `test_extractor.py` | PASS |
+| REQ-EXT-02 | Every parameter binding on a CalcUsageData SHALL have exactly one BindingType from {CHAIN... | Historical mechanism retired: legacy usage/hierarchy extraction and type-index mechanisms were deleted in REPO-CLEANUP Move C; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
+| REQ-EXT-03 | Every `:>>` redefinition SHALL be classified as exactly one RedefinitionType from {LITERA... | Historical mechanism retired: legacy usage/hierarchy extraction and type-index mechanisms were deleted in REPO-CLEANUP Move C; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
+| REQ-EXT-04 | Every aggregation expression SHALL be decomposed into typed terms: SumTerm, SingletonTerm... | Historical mechanism retired: legacy usage/hierarchy extraction and type-index mechanisms were deleted in REPO-CLEANUP Move C; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
+| REQ-EXT-05 | Template calc usages (`is_template=True`) SHALL produce one virtual CalcUsageData per Par... | Historical mechanism retired: legacy usage/hierarchy extraction and type-index mechanisms were deleted in REPO-CLEANUP Move C; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
 | REQ-EXT-06 | Extraction SHALL NOT import from `analysis/`, `resolution/`, or `generation/`. | `test_extractor.py` | PASS |
-| REQ-EXT-07 | The `CalculationDefinitionData.output_expression_asts` field SHALL exist as `dict[str, Any]` and be nullified at the snapshot serialization boundary (raw-AST content is exercised via REQ-EXT-10's live-extraction population check, not here) | `test_extractor.py` | PASS |
+| REQ-EXT-07 | Live calculation payloads carry exact declaration/member UUID sidecars and UUID-keyed expression ASTs; v6 snapshots transport normalized instance graphs rather than raw ASTs. | `test_extractor.py::TestReqExt07AstFields::test_live_exact_identity_sidecar_fields_exist`, `test_elaboration_payload_identity.py::test_live_extraction_carries_total_calc_declaration_identity`, `test_snapshot_v6_envelope.py::test_added_and_removed_graph_row_fields_are_refused`; retired snapshot_exclude metadata assertions are removed. | PASS |
 | REQ-EXT-08 | A `calc def` extracting with zero output attributes SHALL raise `ValueError` at extraction (V7), never reaching generation | `test_extractor.py` | PASS |
 | REQ-EXT-09 | Every `ConstraintUsage` (calc-def, part-def, part-usage, package, and requirement-def owners) SHALL be a member of the constraint usage domain and carry exactly one disposition, with nothing silently absent (CONSTRAINT-SEMANTICS Item 2 re-anchor; the `collect_constraint_manifest` sweep this row previously named is retired) | `test_constraint_population_oracle.py` (reviewed expected-population file per constraint-bearing fixture, asserted by identity list; missing file fails by name), `test_constraint_usage_domain_totality.py::test_catf_mfe_d5_authored_population_is_total` | PASS |
 | REQ-EXT-10 | A direction-carrying `ReferenceUsage` member (named `return`, bare `in`) SHALL extract as a parameter; a named inline `return y : Real = expr` SHALL auto-implement | `test_return_style_extraction.py` | PASS |
 | REQ-EXT-11 | A calc def with an anonymous `return` (empty `declared_name`) SHALL raise the V8 diagnostic before V7 | `test_return_style_extraction.py` | PASS |
 | REQ-EXT-12 | The `return attribute y; y = expr` form SHALL extract `y` once with no double-ingestion (direction-None body ref excluded) | `test_return_style_extraction.py` | PASS |
-| REQ-EXT-13 | `_build_part_usage_index` SHALL index each PartUsage under all its owned FeatureTyping targets and every user-model PartDef in `usage.types` (user-filtered), never by list position | `test_type_indexing.py` | PASS |
-| REQ-EXT-14 | Same-named templates from a retyped usage's super/subtype (same virtual QN) SHALL keep the most-specific owner + emit V9; differently-named templates SHALL both instantiate (the collision warning fires only for same-named clashes) | `test_type_indexing.py` | PASS |
+| REQ-EXT-13 | `_build_part_usage_index` SHALL index each PartUsage under all its owned FeatureTyping targets and every user-model PartDef in `usage.types` (user-filtered), never by list position | Historical mechanism retired: legacy usage/hierarchy extraction and type-index mechanisms were deleted in REPO-CLEANUP Move C; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
+| REQ-EXT-14 | Same-named templates from a retyped usage's super/subtype (same virtual QN) SHALL keep the most-specific owner + emit V9; differently-named templates SHALL both instantiate (the collision warning fires only for same-named clashes) | Historical mechanism retired: legacy usage/hierarchy extraction and type-index mechanisms were deleted in REPO-CLEANUP Move C; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
 
 ### GA
 
@@ -435,25 +349,18 @@ the constraint-docs-agent-sync verification record (2026-08-14; git history).
 
 **Hierarchy Resolver** — Component C06 — reference/25-hierarchy-resolver.md (retired doc; git history)
 
-**Where this family stands after the retirement.** The component these rows describe,
-`extraction/hierarchy_resolver.py`, is in the tree but **off the shipped route** — nothing in
-`src/` imports it. It is retained because `tests/helpers/live_extraction.py` (the evidence
-source six conformance modules read) depends on it (disposition and reason recorded in the
-module docstring, REVISE step 6d). So a PASS here certifies component correctness, not
-shipped-route coverage; the shipped route lifts aggregation in the elaborator, whose evidence
-the GA and elaboration families carry. (Added at audit-7 finding F1 — this family previously
-read as shipped coverage with no disclosure, unlike its CA sibling.)
+**Where this family stands after the retirement.** The component these rows describe, `extraction/hierarchy_resolver.py`, is in the tree but **off the shipped route** — nothing in `src/` imports it. It is retained because `tests/helpers/live_extraction.py` (the evidence source six conformance modules read) depends on it (disposition and reason recorded in the module docstring, REVISE step 6d). So a PASS here certifies component correctness, not shipped-route coverage; the shipped route lifts aggregation in the elaborator, whose evidence the GA and elaboration families carry. (Added at audit-7 finding F1 — this family previously read as shipped coverage with no disclosure, unlike its CA sibling.)
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
-| REQ-HR-01 | Every `:>>` redefinition SHALL be classified as exactly one RedefinitionType from {LITERA... | `test_hierarchy_resolver.py` | PASS |
-| REQ-HR-02 | Both `FeatureChainExpression` and `FeatureReferenceExpression` value expressions SHALL pr... | `test_hierarchy_resolver.py` | PASS |
-| REQ-HR-03 | Deep-path redefinitions SHALL set `is_deep_path=True` and populate `target_path` from `ch... | `test_hierarchy_resolver.py` | PASS |
-| REQ-HR-04 | Multiplicity extraction SHALL use `cached_lower_bound` (not `cached_upper_bound`) due to ... | `test_hierarchy_resolver.py` | PASS |
-| REQ-HR-05 | `_walk_aggregation_ast()` SHALL check `FeatureChainExpression` BEFORE `OperatorExpression... | `test_hierarchy_resolver.py` | PASS |
-| REQ-HR-06 | `sum(child.attr)` SHALL be transformed to `(count_attr * child.attr)` using the `mult_loo... | `test_hierarchy_resolver.py` | PASS |
-| REQ-HR-07 | CHAIN-type sibling redefinitions that reference the aggregation attribute SHALL be added ... | `test_hierarchy_resolver.py` | PASS |
-| REQ-HR-08 | `extract_design_overrides()` SHALL scan `:>>` overrides on plain part usages (not only `part redefines`), keeping a newly-scanned plain-usage override only when its RHS is LITERAL; `part redefines` keeps all RHS types | `test_uncovered_params.py` | PASS |
+| REQ-HR-01 | Every `:>>` redefinition SHALL be classified as exactly one RedefinitionType from {LITERA... | Historical mechanism retired: legacy usage/hierarchy extraction and type-index mechanisms were deleted in REPO-CLEANUP Move C; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
+| REQ-HR-02 | Both `FeatureChainExpression` and `FeatureReferenceExpression` value expressions SHALL pr... | Historical mechanism retired: legacy usage/hierarchy extraction and type-index mechanisms were deleted in REPO-CLEANUP Move C; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
+| REQ-HR-03 | Deep-path redefinitions SHALL set `is_deep_path=True` and populate `target_path` from `ch... | Historical mechanism retired: legacy usage/hierarchy extraction and type-index mechanisms were deleted in REPO-CLEANUP Move C; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
+| REQ-HR-04 | Multiplicity extraction SHALL use `cached_lower_bound` (not `cached_upper_bound`) due to ... | Historical mechanism retired: legacy usage/hierarchy extraction and type-index mechanisms were deleted in REPO-CLEANUP Move C; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
+| REQ-HR-05 | `_walk_aggregation_ast()` SHALL check `FeatureChainExpression` BEFORE `OperatorExpression... | Historical mechanism retired: legacy usage/hierarchy extraction and type-index mechanisms were deleted in REPO-CLEANUP Move C; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
+| REQ-HR-06 | `sum(child.attr)` SHALL be transformed to `(count_attr * child.attr)` using the `mult_loo... | Historical mechanism retired: legacy usage/hierarchy extraction and type-index mechanisms were deleted in REPO-CLEANUP Move C; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
+| REQ-HR-07 | CHAIN-type sibling redefinitions that reference the aggregation attribute SHALL be added ... | Historical mechanism retired: legacy usage/hierarchy extraction and type-index mechanisms were deleted in REPO-CLEANUP Move C; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
+| REQ-HR-08 | `extract_design_overrides()` SHALL scan `:>>` overrides on plain part usages (not only `part redefines`), keeping a newly-scanned plain-usage override only when its RHS is LITERAL; `part redefines` keeps all RHS types | Historical mechanism retired: legacy usage/hierarchy extraction and type-index mechanisms were deleted in REPO-CLEANUP Move C; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
 
 ### IR
 
@@ -473,21 +380,11 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 | REQ-IR-06 | A LENIENT terminal miss SHALL mint an entry point with QN `{consumer_eqn}__{param_name-or-flattened-reference}` (`entry_point_qualified_name`, D9). | — *(subject deleted — ledger L-238)* | RETIRED |
 | REQ-IR-07 | The same reference SHALL resolve to the same channel across consumers (one shared table); two consumers of one design attribute converge on one producer. | — *(subject deleted — ledger L-172 / L-126)* | RETIRED |
 
-> **Contract disposition — REQ-IR-01: `PARTIAL`** (SOURCE-IDENTITY Item 3). The STRICT
-> terminal-miss raise clause `stands`. The LENIENT unconditional-mint clause is `SUPERSEDED` for
-> bound model references (contract D-17; Appendix B lenient-mint row); minting survives only
-> under the explicit external-input contract.
+> **Contract disposition — REQ-IR-01: `PARTIAL`** (SOURCE-IDENTITY Item 3). The STRICT terminal-miss raise clause `stands`. The LENIENT unconditional-mint clause is `SUPERSEDED` for bound model references (contract D-17; Appendix B lenient-mint row); minting survives only under the explicit external-input contract.
 
-> **Contract disposition — REQ-IR-06: `SUPERSEDED`** (SOURCE-IDENTITY Item 3). Minting an entry
-> point for a bound model reference is impermissible (contract D-17; Appendix B row "A bound
-> model reference that fails resolution may lenient-mint a per-consumer entry point"). The
-> QN-format clause survives only for the explicit external-input contract.
+> **Contract disposition — REQ-IR-06: `SUPERSEDED`** (SOURCE-IDENTITY Item 3). Minting an entry point for a bound model reference is impermissible (contract D-17; Appendix B row "A bound model reference that fails resolution may lenient-mint a per-consumer entry point"). The QN-format clause survives only for the explicit external-input contract.
 
-> **Contract disposition — REQ-IR-07: `PARTIAL`** (SOURCE-IDENTITY Item 3). The
-> one-shared-table clause `stands`; the two-consumer convergence clause `stands`. The reading
-> that this route-specific evidence certifies convergence generally is `SUPERSEDED` (Appendix B
-> row "Route-specific convergence evidence certifies source convergence generally"; cells C2,
-> C4, C11–C15, C24, and C25 own the acceptance).
+> **Contract disposition — REQ-IR-07: `PARTIAL`** (SOURCE-IDENTITY Item 3). The one-shared-table clause `stands`; the two-consumer convergence clause `stands`. The reading that this route-specific evidence certifies convergence generally is `SUPERSEDED` (Appendix B row "Route-specific convergence evidence certifies source convergence generally"; cells C2, C4, C11–C15, C24, and C25 own the acceptance).
 
 ### LVP
 
@@ -501,7 +398,7 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 | REQ-LVP-04 | LocalTerms SHALL NOT use literal redefinition lookup (different resolution path) | — *(subject deleted — ledger L-136)* | RETIRED |
 | REQ-LVP-05 | Entry point default backfill SHALL replace `None` defaults with literal values discovered... | — *(subject deleted — ledger L-136)* | RETIRED |
 | REQ-LVP-06 | `usage_type_map` SHALL be threaded from `HierarchyExtractionResult` through `build_comput... | — *(subject deleted — ledger L-136)* | RETIRED |
-| REQ-LVP-08 | `usage_type_map` SHALL resolve each `(owning_qn, usage_name)` to the most-specific owned FeatureTyping target (not `next(iter(member.types))`); incomparable multi-typings resolve sorted-first with V10 | `test_type_indexing.py` | PASS |
+| REQ-LVP-08 | `usage_type_map` SHALL resolve each `(owning_qn, usage_name)` to the most-specific owned FeatureTyping target (not `next(iter(member.types))`); incomparable multi-typings resolve sorted-first with V10 | Historical mechanism retired: legacy usage/hierarchy extraction and type-index mechanisms were deleted in REPO-CLEANUP Move C; surviving model-source obligations are tracked independently in REQ-SI. | RETIRED |
 | REQ-LVP-09 | `_index_usage_level_retypes` SHALL index usage-level retypes of inherited part usages (`part hif_plant : Base { part :>> driver : Subtype }`) into `usage_type_map` keyed by the CONTAINER usage's instance QN, limited to GENUINE retypes (a `:>>` redefinition whose most-specific owned type differs from the base def's declared type for that member) so value-only `:>>` overrides are excluded and non-two-level snapshots stay byte-identical (REQ-HR-09 released) | — *(subject deleted — ledger L-184)* | RETIRED |
 | REQ-LVP-07 | Literal default found SHALL keep module `FULLY_COMPILABLE`; no default SHALL set `MANUAL_... | — *(subject deleted — ledger L-136)* | RETIRED |
 
@@ -535,7 +432,7 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 | REQ-NC-04 | Module type SHALL use `{namespace}.{ElementName}Module` format | `test_naming_conventions.py` | PASS |
 | REQ-NC-05 | Channel names SHALL be PQNs — no separate channel concept exists | `test_naming_conventions.py` | PASS |
 | REQ-NC-06 | `sanitize_name()` SHALL apply 6 transforms in order: strip quotes, spaces→`_`, non-alnum→... | `test_naming_conventions.py` | PASS |
-| REQ-NC-07 | Registry keys SHALL use typed wrappers: scoped and alias registries use `ScopedKey` (dott... | `test_naming_conventions.py` | PASS |
+| REQ-NC-07 | The surviving scoped-key formatter strips the design prefix and uses dotted key spelling; its NewType constructor surface is separately traced by REQ-DM-08. | `test_naming_conventions.py::TestKeyFormats::test_key_c_strips_design_prefix`, `::TestKeyFormats::test_key_c_uses_dots_not_colons`, `::TestKeyFormats::test_key_c_parametrized`; typed registry dictionaries are retired, not inferred from formatter tests. | PASS |
 | REQ-NC-08 | Identifier derivation SHALL sanitize each qualified-name segment before it becomes a class name, module file path, or FORMULA module_eqn/channel | `test_exact_route_alias_aggregation.py::test_every_derived_identifier_is_quote_and_space_free`, `test_elaboration_identity_collisions.py::test_output_and_expression_keys_do_not_collapse_on_rendered_name` | PASS |
 | REQ-NC-09 | Generation SHALL fail fast when two distinct SysML names sanitize to one output path, naming both source names and the shared path | `test_duplicate_path_failfast.py` | PASS |
 
@@ -604,11 +501,7 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 | REQ-PGD-07 | Group names SHALL follow `{snake_case_stem}_params` / `{PascalCaseStem}Params` convention | — *(subject deleted — ledger L-160)* | RETIRED |
 | REQ-PGD-08 | No deriver change is required for def-owned design-attribute matching (D1): once the backtracker (REQ-BT-10) returns the design-attr QN, the deriver's `_attr_index`-keyed classification and inline default resolution handle grouping and default automatically | — *(subject deleted — ledger L-160)* | RETIRED |
 
-> **Contract disposition — REQ-PGD-06: `SUPERSEDED`** (SOURCE-IDENTITY Item 3). Inline default
-> resolution at group derivation is the parameter-group value backfill — a superseded fourth
-> value authority (contract D-18; Appendix B row "The parameter-group deriver's default backfill
-> is a benign value repair"); it derives from the single identity authority or is deleted
-> (Item 5). Status is now RETIRED: the deriver itself was deleted (ledger L-160), so the row records a removed mechanism rather than an untested live one.
+> **Contract disposition — REQ-PGD-06: `SUPERSEDED`** (SOURCE-IDENTITY Item 3). Inline default resolution at group derivation is the parameter-group value backfill — a superseded fourth value authority (contract D-18; Appendix B row "The parameter-group deriver's default backfill is a benign value repair"); it derives from the single identity authority or is deleted (Item 5). Status is now RETIRED: the deriver itself was deleted (ledger L-160), so the row records a removed mechanism rather than an untested live one.
 
 ### PIPE
 
@@ -618,7 +511,7 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 |--------|-------------|-----------|--------|
 | REQ-PIPE-01 | The pipeline SHALL produce exactly one ComputationGraph from a set of SysML model files. | `test_elaboration_projection.py::test_projection_is_topological_and_every_input_is_covered`, `test_exact_route_generated_package.py::test_both_routes_generate_the_same_package_files` | PASS |
 | REQ-PIPE-02 | Every ModuleInput SHALL be wired to exactly one source: `module_output` or `entry_point`. | `test_elaboration_projection.py::test_projection_is_topological_and_every_input_is_covered` | PASS |
-| REQ-PIPE-03 | Every `module_output` reference SHALL resolve to a canonical channel in the OutputRegistr... | `test_elaboration_projection_one_way.py::test_graph_validation_rejects_missing_occurrence_and_typed_producer_cycle` — the clause "in the OutputRegistry" names deleted code; the projector's channel claim is the live equivalent | PASS |
+| REQ-PIPE-03 | Every module-output input channel resolves to an output declared by its exact retained producer. | `test_projection_wiring_contract.py::test_an_absent_producer_is_refused_specifically_at_both_layers`; exact projected channel membership is carried by REQ-GA-03 and its retained graph-validity controls. | PASS |
 | REQ-PIPE-04 | `execution_order` SHALL be a valid topological sort -- no module reads from a module that... | `test_elaboration_projection.py::test_projection_is_topological_and_every_input_is_covered` | PASS |
 | REQ-PIPE-05 | Every EntryPoint SHALL be classified as exactly one of {`LIBRARY_DEFAULT`, `DESIGN_ATTRIB... | `test_exact_pipeline_context.py::test_the_live_and_v6_contexts_agree_on_the_public_entry_point_surface` | PASS |
 | REQ-PIPE-06 | The graph SHALL tag each module with its `module_kind`; a calc-bearing model includes `CALCULATION`, `FORMULA`, and `AGGREGATION` modules (the `CONSTRAINT` / `REPORT_AGGREGATOR` families appear when constraints are lowered) | `test_elaboration_projection.py::test_projection_covers_every_live_module_kind`, `test_module_kind_faildloud.py` | PASS |
@@ -630,9 +523,9 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
-| REQ-PMM-01 | `PipelineModule` SHALL carry all metadata needed by module wrapper generation (calc def n... | `test_elaboration_generation_boundary.py::test_exact_projection_renders_real_pipeline_and_registry`, `test_exact_route_registry.py::test_the_registry_covers_every_module_the_graph_projected` | PASS |
-| REQ-PMM-02 | `ModuleInput` and `ModuleOutput` SHALL carry `description` and `default_value` fields for... | `test_elaboration_generation_boundary.py::test_exact_projection_renders_real_pipeline_and_registry`, `test_exact_route_registry.py::test_the_registry_covers_every_module_the_graph_projected` | PASS |
-| REQ-PMM-03 | `PipelineModule` SHALL carry `calc_expressions` for stencil comment generation. | `test_elaboration_generation_boundary.py::test_exact_projection_renders_real_pipeline_and_registry`, `test_exact_route_registry.py::test_the_registry_covers_every_module_the_graph_projected` | PASS |
+| REQ-PMM-01 | `PipelineModule` SHALL carry all metadata needed by module wrapper generation (calc def n... | `test_data_models.py::test_req_dm_03_fields_pipeline_module` proves field presence; `test_elaboration_generation_boundary.py::test_exact_projection_renders_real_pipeline_and_registry` proves pipeline/registry rendering. Gap: neither proves full wrapper metadata fidelity. | PARTIAL |
+| REQ-PMM-02 | `ModuleInput` and `ModuleOutput` SHALL carry `description` and `default_value` fields for... | `test_data_models.py::test_req_dm_03_fields_module_input`, `::test_req_dm_03_fields_module_output` prove description/default field presence. Gap: those fields can render incorrectly without failing these presence checks; complete package baseline covers only its fixed fixture values. | PARTIAL |
+| REQ-PMM-03 | `PipelineModule` SHALL carry `calc_expressions` for stencil comment generation. | `test_data_models.py::test_req_dm_03_fields_pipeline_module` proves calc_expressions field presence. Gap: a dropped or changed stencil expression comment can pass that field-presence test. | PARTIAL |
 | REQ-PMM-04 | Every generated module SHALL remain valid, non-empty Python after the field migration (the one-time byte-identity-vs-pre-migration-baseline gate ran once at cutover and is not re-asserted here) | `test_exact_route_alias_aggregation.py::test_every_generated_file_parses` | PASS |
 | REQ-PMM-05 | Migrated modules SHALL be importable in all variants with fields unchanged (the phased-sequence claim -- add/create/deprecate/remove -- is a one-time process record, not a testable module property) | — *(subject deleted — ledger L-162)* | RETIRED |
 
@@ -658,7 +551,7 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
 | REQ-REG-01 | Aggregation module import paths SHALL use design-scoped EQN (`module_eqn`), not library Q... | `test_exact_route_registry.py` | PASS |
-| REQ-REG-02 | Import paths in registry SHALL match actual filesystem paths generated by CLI | `test_exact_route_registry.py::test_the_registry_covers_every_module_the_graph_projected` | PASS |
+| REQ-REG-02 | Import paths in registry SHALL match actual filesystem paths generated by CLI | `test_exact_route_registry.py::test_every_registry_import_points_at_a_file_on_disk` | PASS |
 | REQ-REG-03 | Class names in `module_type_override` dict SHALL be globally unique | `test_exact_route_registry.py`, `tests/unit/test_sc11_recheck.py` | PASS |
 | REQ-REG-04 | When class names collide, registry SHALL use aliased imports (`import X as Assembly_X`) | `tests/unit/test_registry_generation.py`, `tests/unit/test_sc11_recheck.py` | PASS |
 | REQ-REG-05 | CalcUsage, computed attribute, and aggregation modules SHALL all derive paths from design... | `test_exact_route_registry.py` | PASS |
@@ -676,7 +569,7 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 | REQ-RES-01 | Every ModuleInput SHALL resolve to exactly one of {`module_output`, `entry_point`}. | `test_elaboration_projection.py::test_projection_is_topological_and_every_input_is_covered` | PASS |
 | REQ-RES-02 | Positive resolution has one authority, `resolve_producer()` (04), called by the CalcUsage (during backtracker DFS, 11), constraint, and aggregation (`_build_agg_input_source()`, `graph_builder.py`) consumers; FORMULA uses the pre-computed attribute resolution map (16) | — *(subject deleted — ledger L-101 / L-104 / L-136)* | RETIRED |
 | REQ-RES-03 | Factory functions SHALL return `(PipelineModule, dict[str, EntryPoint])` -- no mutation o... | — *(subject deleted — ledger L-139)* | RETIRED |
-| REQ-RES-04 | Every `module_output` reference SHALL resolve to a canonical channel in the OutputRegistr... | `test_elaboration_projection_one_way.py::test_graph_validation_rejects_missing_occurrence_and_typed_producer_cycle` | PASS |
+| REQ-RES-04 | Every module-output input channel resolves to an output declared by its exact retained producer. | `test_projection_wiring_contract.py::test_an_absent_producer_is_refused_specifically_at_both_layers`; exact projected channel membership is carried by REQ-GA-03 and its retained graph-validity controls. | PASS |
 | REQ-RES-05 | The orchestrator SHALL be a linear sequence: classify -> build modules -> rebuild groups ... | — *(subject deleted — ledger L-158)* | RETIRED |
 | REQ-RES-06 | `binding_resolutions` from the backtracker SHALL be the single source of truth for CalcUs... | — *(subject deleted — ledger L-137)* | RETIRED |
 | REQ-RES-07 | Resolution of scope-relative references (CHAIN `source_path`) SHALL use the consumer's pa... | — *(subject deleted — ledger L-239)* | RETIRED |
@@ -686,16 +579,7 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 
 **Extraction Snapshots** — Extraction Snapshots — [reference/27-snapshot-generation.md](reference/27-snapshot-generation.md)
 
-> **These rows are the v5 extraction snapshot, and its code is gone.** REQ-SNAP-01..21 describe
-> a format the product no longer produces or consumes; `generate --from-snapshot` takes a **v6
-> instance-graph** snapshot and refuses a v5 document by name. The v5 loader, serializer and
-> rebuild modules were deleted by the retirement, and so were the tests these rows cite —
-> "current: 5" in REQ-SNAP-09 named the deleted loader's gate, never the product's snapshot
-> version, and REQ-SNAP-16's `--design-path-filter` clause survives as a refusal but not as a
-> flag (Gate 4B-G0 removed it, so argparse rejects it before a snapshot is opened). Read the
-> whole family as history. The v6 envelope's evidence is
-> `test_snapshot_v6_{envelope,capture,routes}.py` and `test_source_admission_routes.py`; a REQ
-> family for it is unwritten and needs an owner.
+> **These rows are the v5 extraction snapshot, and its code is gone.** REQ-SNAP-01..21 describe a format the product no longer produces or consumes; `generate --from-snapshot` takes a **v6 instance-graph** snapshot and refuses a v5 document by name. The v5 loader, serializer and rebuild modules were deleted by the retirement, and so were the tests these rows cite — "current: 5" in REQ-SNAP-09 named the deleted loader's gate, never the product's snapshot version, and REQ-SNAP-16's `--design-path-filter` clause survives as a refusal but not as a flag (Gate 4B-G0 removed it, so argparse rejects it before a snapshot is opened). Read the whole family as history. The v6 envelope's evidence is `test_snapshot_v6_{envelope,capture,routes}.py` and `test_source_admission_routes.py`; a REQ family for it is unwritten and needs an owner.
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
@@ -730,7 +614,7 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 |--------|-------------|-----------|--------|
 | REQ-SR-01 | Signature comparison SHALL use two-level matching: type-level (required) then field-level (referenced fields a **subset** of graph-declared inputs; amended from exact equality `[AGENT] (ratified by owner, 2026-08-14)` — equality made the generator's own output fail its own check and churn, doc 23) | `test_smart_regen_behavior.py::test_matching_interface_is_preserved_with_edits_intact`, `::test_return_type_change_regenerates_and_backs_up`, `::test_changed_input_field_set_regenerates` (behavioral, through public `run_codegen`; replaces the retired L-150 static tests) | PASS |
 | REQ-SR-02 | Field comparison SHALL be order-independent: reference order alone never counts as an interface change (set semantics) | `test_smart_regen_behavior.py::test_reference_order_alone_never_regenerates` | PASS |
-| REQ-SR-03 | `should_regenerate_stencil()` SHALL implement the 6-case decision tree (Item 5 split the unparseable leaf: preserve-on-transient / preserve-non-empty / regenerate-empty) | `tests/unit/test_stencils.py::TestSmartRegenStubUpgrade` (four of the six leaves: stub-upgrade, handwritten-preserved, auto-impl-preserved, stub-preserved-when-not-compilable) | PASS |
+| REQ-SR-03 | `should_regenerate_stencil()` SHALL implement the 6-case decision tree (Item 5 split the unparseable leaf: preserve-on-transient / preserve-non-empty / regenerate-empty) | `tests/unit/test_stencils.py::TestSmartRegenStubUpgrade` covers four decision leaves (stub upgrade, handwritten preservation, auto-implementation preservation, non-compilable stub preservation). Gap: the transient/unparseable preservation and empty-unparseable regeneration leaves lack equivalent functional evidence. | PARTIAL |
 | REQ-SR-04 | Stub upgrade SHALL require all 3 conditions: signature match, `NotImplementedError` prese... | `tests/unit/test_stencils.py::TestSmartRegenStubUpgrade::test_stub_upgraded_when_fully_compilable` | PASS |
 | REQ-SR-05 | Backup SHALL be created before every regeneration or upgrade | `tests/unit/test_stencils.py::TestSmartRegenStubUpgrade::test_backup_created_before_regen_through_real_stencil_path` | PASS |
 | REQ-SR-06 | Every stencil-bearing module kind (calculation, formula, aggregation) SHALL ride the same smart-regen preservation path (amended 2026-08-14 from the static single-path wording; the old "synthetic modules are always regenerated in practice" claim is false at the exact route — doc 23) | `test_smart_regen_behavior.py::test_every_stencil_bearing_module_kind_is_preserved` (a marker planted in every `solar_battery_d5` impl survives a smart rerun; anti-vacuity pins all three kinds present) | PASS |
@@ -749,22 +633,11 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 | REQ-SVM-03 | A synthetic attribute SHALL never overwrite a real captured design attribute; on collision the real one wins and the materializer WARNs | — *(subject deleted — ledger L-248)* | RETIRED |
 | REQ-SVM-04 | Apply LITERAL only; emit a count-summary WARN naming non-literal (CHAIN/EXPRESSION) skips; a referenced non-literal-only binding falls through to Step-4 (V11), never a silent drop | — *(subject deleted — ledger L-248)* | RETIRED |
 
-> **Contract disposition — REQ-SVM-01: `PARTIAL`** (SOURCE-IDENTITY Item 3). The synthesis
-> clause — materialize the precedence-resolved LITERAL as a design attribute — `stands` as
-> value-adapter behavior once it derives from the single identity authority; as an independent
-> identity authority it is `SUPERSEDED` (Appendix B row "Supplied-value synthesis may decide
-> source identity on its own authority"). The reference→literal stamp is a different mechanism
-> (VBR tier 1) with its own Appendix B row, not an SVM clause.
+> **Contract disposition — REQ-SVM-01: `PARTIAL`** (SOURCE-IDENTITY Item 3). The synthesis clause — materialize the precedence-resolved LITERAL as a design attribute — `stands` as value-adapter behavior once it derives from the single identity authority; as an independent identity authority it is `SUPERSEDED` (Appendix B row "Supplied-value synthesis may decide source identity on its own authority"). The reference→literal stamp is a different mechanism (VBR tier 1) with its own Appendix B row, not an SVM clause.
 
-> **Contract disposition — REQ-SVM-02: `PARTIAL`** (SOURCE-IDENTITY Item 3). The source-QN
-> convergence direction `stands` (cell C14 owns the target topology); keying as an independent
-> identity decision is `SUPERSEDED` (Appendix B synthesis row).
+> **Contract disposition — REQ-SVM-02: `PARTIAL`** (SOURCE-IDENTITY Item 3). The source-QN convergence direction `stands` (cell C14 owns the target topology); keying as an independent identity decision is `SUPERSEDED` (Appendix B synthesis row).
 
-> **Contract disposition — REQ-SVM-04: `PARTIAL`** (SOURCE-IDENTITY Item 3). The LITERAL-only
-> application clause `stands`; the skip-summary WARN clause `stands`; the
-> no-silent-drop/V11-fall-through clause `stands` — all as value-adapter behavior. The row is
-> `SUPERSEDED` only insofar as tier matching by name/scope is read as an independent identity
-> decision (Appendix B synthesis row) — the same authority boundary as REQ-SVM-01.
+> **Contract disposition — REQ-SVM-04: `PARTIAL`** (SOURCE-IDENTITY Item 3). The LITERAL-only application clause `stands`; the skip-summary WARN clause `stands`; the no-silent-drop/V11-fall-through clause `stands` — all as value-adapter behavior. The row is `SUPERSEDED` only insofar as tier matching by name/scope is read as an independent identity decision (Appendix B synthesis row) — the same authority boundary as REQ-SVM-01.
 
 ### VBR
 
@@ -786,53 +659,54 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 | REQ-VBR-10 | Mechanism-D home (Item 10 #3): `_rewrite_specialized_chain` SHALL rewrite a `part_usage.attr` CHAIN binding through the retyped usage's specialized-def `:>>` chain (three-tier merge: usage override > specialized-def `:>>` > base def); and `_rescue_self_named_bindings` SHALL rewrite a full-QN self-reference (`in x = x`) to its upstream channel when an outer same-named EXPOSE resolves, else leave it as-is (the `self_named_binding_trap` negative) | — *(subject deleted — ledger L-183 / L-171)* | RETIRED |
 | REQ-VBR-11 | The `_rewrite_specialized_chain` type-select SHALL be instance-aware: it SHALL try the consumer INSTANCE's path key (`usage.qualified_name.rsplit("__",1)[0]`, `part_usage`) in `usage_type_map` before the declaring-def key, so a two-level specialization (usage-level `:>> driver : Subtype` on an inherited part usage) selects the specialized def where the declaring-def key sees only the base type | — *(subject deleted — ledger L-184)* | RETIRED |
 
-> **Contract disposition — REQ-VBR-03: `SUPERSEDED`** (SOURCE-IDENTITY Item 3). Clearing
-> `source_path` while stamping a literal converts a reference-derived value into a
-> consumer-local literal — the reference→literal stamp, impermissible as an identity mechanism
-> (contract D-16; Appendix B row "Stamping an occurrence override literal onto same-named
-> consumer inputs preserves the modeled source"). Any surviving value-adapter behavior derives
-> from the single identity authority (Item 5).
+> **Contract disposition — REQ-VBR-03: `SUPERSEDED`** (SOURCE-IDENTITY Item 3). Clearing `source_path` while stamping a literal converts a reference-derived value into a consumer-local literal — the reference→literal stamp, impermissible as an identity mechanism (contract D-16; Appendix B row "Stamping an occurrence override literal onto same-named consumer inputs preserves the modeled source"). Any surviving value-adapter behavior derives from the single identity authority (Item 5).
 
-> **Contract disposition — REQ-VBR-10: `PARTIAL`** (SOURCE-IDENTITY Item 3). The
-> `_rewrite_specialized_chain` clause `stands` (kin of cell C21; test Status untouched). The
-> `_rescue_self_named_bindings` clause is `SUPERSEDED`: the self-binding is inert and is never
-> rewritten to an outer channel (contract D-4, family SRC-01; Appendix B row "A consumed input
-> whose value expression resolves to its own parameter is rescued by binding to a same-named
-> outer feature").
+> **Contract disposition — REQ-VBR-10: `PARTIAL`** (SOURCE-IDENTITY Item 3). The `_rewrite_specialized_chain` clause `stands` (kin of cell C21; test Status untouched). The `_rescue_self_named_bindings` clause is `SUPERSEDED`: the self-binding is inert and is never rewritten to an outer channel (contract D-4, family SRC-01; Appendix B row "A consumed input whose value expression resolves to its own parameter is rescued by binding to a same-named outer feature").
 
 ---
 
-## Untested Requirements
+### SI
 
-**None.** The retirement's coverage debt — nine rows whose only pin was a module the Item 7
-retirement deleted with no recorded replacement (`test_gen_schemas.py` L-149 → REQ-GEN-03,
-REQ-OSR-02/03/05; `test_gen_stencils.py` L-150 → REQ-SR-01/02/06/07; `test_graph_assembly.py`
-L-152 → REQ-GA-05) — was closed at ELABORATE-FIRST cutover step 4 (2026-08-14) with behavioral
-replacements through the public route: `test_output_schema_contract.py`,
-`test_smart_regen_behavior.py`, and the `test_data_models.py` field-set pin. The tenth,
-REQ-DIAG-04's impossible-rather-than-guarded state, was converted into a guarded boundary by
-`test_envelope_severity_tripwire.py` the same day. Each row's cell carries its replacement.
+**Source Identity** — authority: LC-SI catalog and Item-3 Appendix C, with bounded evidence in `.project/reference/source-identity-reconciliation.md`. Grades are copied from the lifecycle requirements; test state is separate from acceptance certification.
 
-Closing the SR rows surfaced and cured a real defect: exact-set field comparison made the
-generator's own output fail its own preservation check on defs with declared-but-unused inputs
-(perpetual churn, handwritten edits stubbed over). The cure is the subset rule in
-`generation/preservation.py` — `[AGENT] (ratified by owner, 2026-08-14)`, recorded at REQ-SR-01
-and doc 23.
+| REQ ID | Requirement | Test File | Status |
+|---|---|---|---|
+| REQ-SI-01 | [NEED] LC-SI-01: Self-binding prohibition; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_elaboration_fail_closed.py`, `test_cli_snapshot_refusal.py`; SRC-01 variants have focused refusal controls; the seven named family coordinates lack a single published candidate/source trace. | PARTIAL |
+| REQ-SI-02 | [HARD] LC-SI-02: Parser referent authority; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_feature_typing_integrity.py`, `test_elaboration_contract_matrix.py`; Exact typing/referent controls exist; no complete cross-form referent/occurrence coordinate record. | PARTIAL |
+| REQ-SI-03 | [INFERRED] LC-SI-03: Context-dependent supported referents; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_elaboration_contract_matrix.py`; C1–C6/C25 projected referents and changed inputs are tested; public runtime transport is not established for every cell. | PARTIAL |
+| REQ-SI-04 | [HARD] LC-SI-04: Contextual redefinition; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_unit_lane_port_metadata.py`, `test_c19_nested_occurrence_teax.py`; Selected-formal/override identity and C19 public runtime are covered; C7/C8/C21 full coordinates remain bounded. | PARTIAL |
+| REQ-SI-05 | [INFERRED] LC-SI-05: Distinct occurrence sources; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_occurrence_derivation_mutation_teax.py`; Public occurrence-isolation mutations exist; the complete C7–C10 acceptance coordinate inventory is not certified. | PARTIAL |
+| REQ-SI-06 | [INFERRED] LC-SI-06: Indexed #(i) readiness refusal; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_elaboration_fail_closed.py`, `test_elaboration_contract_matrix.py`; Indexed-source refusal is tested; the specific 02a full coordinate/public capture disposition is not published here. | PARTIAL |
+| REQ-SI-07 | [HARD] LC-SI-07: Language-rejected [i]; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_elaboration_contract_matrix.py`; SRC-03 load rejection is exercised; the 03a authority coordinate is not separately published. | PARTIAL |
+| REQ-SI-07A | [INFERRED] LC-SI-07A: Deferred expression-binding readiness; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_elaboration_contract_matrix.py`; C22 invocation refusal carries a located diagnostic; all expression variants are not certified by that single control. | PARTIAL |
+| REQ-SI-08 | [INHERITED] LC-SI-08: One declaration/occurrence authority; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_elaboration_payload_identity.py`, `test_public_authority_switch.py`, `test_expression_evidence_ownership.py`; UUID payload and retired-authority boundaries are guarded; structural absence alone does not certify source-to-runtime coordinates. | PARTIAL |
+| REQ-SI-09 | [NEED] LC-SI-09: One runtime source, every/only consumers; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_fusion_tea_mutation_teax.py`, `test_occurrence_derivation_mutation_teax.py`; Stock runtime mutations establish selected customer/occurrence topologies, not all forms/contexts at all 35 coordinates. | PARTIAL |
+| REQ-SI-10 | [INFERRED] LC-SI-10: Aggregation identity; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_elaboration_contract_matrix.py`, `test_exact_projection_aggregation.py`; C17/C26 aggregation edges/inputs are covered; complete public runtime mutation and coordinate artifacts for both cells remain unestablished. | PARTIAL |
+| REQ-SI-11 | [INHERITED] LC-SI-11: Independent authored literals; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_elaboration_contract_matrix.py`; C16 compares independent projected fields; no full stock-runtime per-literal coordinate is recorded here. | PARTIAL |
+| REQ-SI-11A | [INFERRED] LC-SI-11A: Independent per-usage defaults; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_elaboration_contract_matrix.py`; C23 field override is checked; full stock-runtime independence at each concrete usage is not supplied by input-only mutation. | PARTIAL |
+| REQ-SI-12 | [INHERITED] LC-SI-12: Terminal-miss policy bounds; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_elaboration_contract_matrix.py`; C18 language rejection is covered; old lenient missing-name minting is retired, not passing evidence of a source. | PARTIAL |
+| REQ-SI-13 | [INHERITED] LC-SI-13: Versioned live/snapshot/relocated identity; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_exact_route_snapshot_generation.py`, `test_snapshot_v6_envelope.py`, `test_c19_nested_occurrence_teax.py`; Public envelope/version/relocation guards exist; inner-codec equality in the cell matrix is narrower than public sealed replay for all cells. | PARTIAL |
+| REQ-SI-14 | [INHERITED] LC-SI-14: Off-default public mutation; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_occurrence_derivation_mutation_teax.py`, `test_fusion_tea_mutation_teax.py`; Selected public runtime mutations pass; changed generated input JSON in the 29-cell test is not runtime mutation for every cell. | PARTIAL |
+| REQ-SI-15 | [NEED] LC-SI-15: Blocking self-binding diagnostics; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_elaboration_fail_closed.py`, `test_cli_snapshot_refusal.py`; Independent codegen refusal and target preservation are covered; all SRC-01 per-variant coordinate metadata remains incomplete. | PARTIAL |
+| REQ-SI-16 | [NEED] LC-SI-16: Named valid-but-unsupported readiness; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_elaboration_fail_closed.py`, `test_elaboration_contract_matrix.py`; Indexed/expression readiness controls exist; complete per-variant public wording/source coordinates are not certified here. | PARTIAL |
+| REQ-SI-17 | [INHERITED] LC-SI-17: Independent codegen boundary; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_public_authority_switch.py`, `test_elaboration_fail_closed.py`; Codegen exact-route refusal and no legacy authority are guarded; no general claim that companion validation certifies codegen output. | PARTIAL |
+| REQ-SI-18 | [NEED] LC-SI-18: Published modeling guidance; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_self_binding_guidance_contract.py`; Authoritative companion guidance and current committed C1 warning are tested; authority is the owner request, not its tests. | PASS |
+| REQ-SI-19 | [INFERRED] LC-SI-19: Guidance content/example force; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_self_binding_guidance_contract.py`; Pinned/measured labels, fixture identity, unmarked-example detection, and retained deliberate negatives are covered. | PASS |
+| REQ-SI-20 | [INHERITED] LC-SI-20: One amended source-identity contract; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_elaboration_contract_matrix.py`; The lifecycle catalog and Appendix C remain independent authority; this reconciliation does not certify every implementation clause. | PARTIAL |
+| REQ-SI-21 | [INHERITED] LC-SI-21: Acceptance authority over legacy rows; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_elaboration_contract_matrix.py`; Existing BT/CL/IR/PGD/SVM/VBR row-local dispositions are retained; documentation reconciliation is not runtime certification. | PARTIAL |
+| REQ-SI-22 | [INHERITED] LC-SI-22: Superseded mechanisms derive or die; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_public_authority_switch.py`, `test_expression_evidence_ownership.py`; Retired construction authority and raw evidence ownership have absence guards; all adjacent mechanisms are not re-audited by a single absence test. | PARTIAL |
+| REQ-SI-23 | [INHERITED] LC-SI-23: Published complete acceptance coordinates; governing authority `.project/concepts/constraint-execution-lifecycle-requirements.md` SI and `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` Appendix C. | `test_elaboration_contract_matrix.py`; 29 cell keys are enumerated, but the family test collapses nine subcoordinates and no complete 35-coordinate candidate/artifact record exists. Joined study proof was separately owner-descoped; missing coordinate evidence is not PASS. | PARTIAL |
 
-The one remaining non-PASS live row is REQ-DIAG-01 (PARTIAL) — a recorded deliberate grade: its
-gap is a code-shape absence claim whose only codegen-side test would be the retired
-static-inspection style, and the construction rule is pinned upstream.
+## Remaining evidence bounds
 
-REQ-PGD-06, previously the matrix's single UNTESTED row, is now RETIRED: the deriver it
-describes was deleted (ledger L-160).
-
-(TRUTH-DEBT Item 3's three discharges stand where their subjects do: REQ-DM-08 via
-`test_dm08_enforced_surface.py`, which is in the tree. REQ-RES-05 and REQ-RES-08 read RETIRED
-— `TestInnerStepOrdering` and `test_res08_consumer_scope_paths.py` both pinned deleted code.)
+REQ-BASE-06 remains UNTESTED: deterministic replay does not vary model-discovery order. REQ-PMM-01–03 and REQ-SR-03 remain PARTIAL for the explicit rendering/preservation gaps in their cells. REQ-DIAG-01 retains its recorded upstream construction boundary. Source-identity rows retain bounded implementation evidence without claiming the lifecycle's complete per-coordinate certification. The owner-descoped joined model/package/store proof is recorded as descoped, not passing evidence; this matrix does not reopen that work.
 
 ## Related Documents
 
 - [Architecture Overview](overview.md)
 - [Modeling Assumptions](modeling-assumptions.md)
-- Design docs: [reference/](reference/) (28 documents)
-- Conformance tests: `tests/conformance/`, `tests/unit/`, `tests/integration/` (55 distinct kept test files cited by non-RETIRED rows — recounted 2026-08-14, CONSTRAINT-SEMANTICS Item 7, method recorded in the item's verification.md; this line read 50 before, and an intermediate 59 was corrected at the audit resume)
+- Current reference documents: [reference/](reference/)
+- [Source-identity reconciliation](../../.project/reference/source-identity-reconciliation.md)
+- Cleanup evidence (Git `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/evidence.md`)
+
+<!-- matrix-counts: total=313, families=35, tests=77, PASS=123, PARTIAL=28, RETIRED=161, UNTESTED=1, DEFERRED=0, DESCOPED=0 -->

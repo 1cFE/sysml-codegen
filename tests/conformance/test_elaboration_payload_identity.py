@@ -126,14 +126,16 @@ def test_calc_payload_attachment_is_exact_and_total(
             name="display_only_second",
             qualified_name="DisplayOnly::Second",
             input_attributes=list(reversed(second.input_attributes)),
-            output_attributes=list(reversed(second.output_attributes)),
+            output_attributes=[replace(member, description="length metadata")
+                               for member in reversed(second.output_attributes)],
         ),
         replace(
             first,
             name="display_only_first",
             qualified_name="DisplayOnly::First",
             input_attributes=list(reversed(first.input_attributes)),
-            output_attributes=list(reversed(first.output_attributes)),
+            output_attributes=[replace(member, description="power metadata")
+                               for member in reversed(first.output_attributes)],
         ),
     ]
     graph = _elaborate(extractor, reordered)
@@ -146,8 +148,10 @@ def test_calc_payload_attachment_is_exact_and_total(
     assert length.compilation_definition_id == DeclarationId(second.element_id)
     assert set(power.compiled_output_ids) == set(power.outputs)
     assert set(length.compiled_output_ids) == set(length.outputs)
-    assert next(iter(power.output_metadata.values())).unit == "W"
-    assert next(iter(length.output_metadata.values())).unit == "m"
+    assert next(iter(power.output_metadata.values())).description == "power metadata"
+    assert next(iter(length.output_metadata.values())).description == "length metadata"
+    assert next(iter(power.output_metadata.values())).unit is None
+    assert next(iter(length.output_metadata.values())).unit is None
     assert power.auto_impl_context != length.auto_impl_context
 
 

@@ -39,3 +39,8 @@ An earlier revision of this file recorded a second refusal behind the rename:
 rather than resolved. That refusal no longer reproduces — the nested-occurrence resolution
 it named was fixed in the product, and the model builds. The record is kept in this file's
 git history.
+
+
+## PR-readiness recapture — 2026-10-08
+
+[OWNER] Codegen removes all three unit guessers while retaining parser-native written-value units; authority is the cleanup review Resolution L2-2. [AGENT] Regenerated D5 sources in scratch using the existing migration recipe and licensed-recaptured the snapshot without restoring the collapsed source tree to HEAD. The graph preserves 61 occurrences, 376 attributes, 42 calculations, and projected counts `43/60/0/46`; only inferred unit fields become null. Generated differences match `catf_mfe_gated`: seven module docstrings, three output-schema descriptions, and the physical package seal. Arithmetic, wiring, and semantic model-contract bytes are unchanged.

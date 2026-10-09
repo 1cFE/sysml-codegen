@@ -54,7 +54,6 @@ RAW_SYSIDE_MODULES = (
     "extraction/calc_compat_renderer.py",
     "extraction/expression_utils.py",
     "extraction/extractor.py",
-    "extraction/feature_metadata.py",
     "extraction/modeled_defaults.py",
     "extraction/source_manifest.py",
     "generation/constraint_name_safety.py",

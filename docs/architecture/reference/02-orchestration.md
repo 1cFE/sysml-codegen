@@ -71,11 +71,7 @@ collapsing them loses which gate refused:
 | `SysMLParsingError` | the sources did not load |
 | `CodeGenerationError` | projection, a preflight check, or generation refused |
 
-Four preflight checks then run **before** any output is written or cleared
-(`cli/__init__.py:1042-1060`): constraint name safety, duplicate output paths, params coverage
-(V11), and registry class-name collisions. Fail-before-mutate is deliberate and is pinned by
-two conformance nodes that inject a refusal at that boundary and assert the target tree is
-byte-for-byte as it was.
+Preflight checks run before any output is written or cleared: exact context receipt, exit-point type support, constraint totality/name safety, duplicate paths, registry class-name collisions, and renderer metadata validity. The current gate sequence lives in `cli/__init__.py`; boundary tests assert refusals preserve the target tree byte for byte.
 
 ## The single-authority state, stated exactly
 

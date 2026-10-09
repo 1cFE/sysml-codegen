@@ -162,6 +162,8 @@ def test_model_contract_is_graph_only(monkeypatch):
     def _raise(*args, **kwargs):
         raise AssertionError("build_model_contract touched the filesystem")
 
+    # Import renderer validation before prohibiting filesystem access.
+    build_model_contract(_graph_with_constraints())
     monkeypatch.setattr("builtins.open", _raise)
     mc = build_model_contract(_graph_with_constraints())
     assert mc.semantic_fingerprint
@@ -331,3 +333,49 @@ def test_package_tree_inspector_bodies_identical_across_seal_and_verify():
         return [ast.dump(node) for node in tree.body[0].body]
 
     assert code_body(seal._inspect_package_tree) == code_body(verify._inspect_package_tree)
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), -float("inf")])
+def test_contract_encoders_refuse_nonfinite_before_writing(value: float, tmp_path: Path) -> None:
+    from pydantic import BaseModel
+
+    from sysml_codegen.contracts.serialize import canonical_json, write_contract_json
+
+    class FloatPayload(BaseModel):
+        value: float
+
+    with pytest.raises(ValueError, match="Out of range float"):
+        canonical_json({"value": value})
+    path = tmp_path / "contract.json"
+    path.write_bytes(b"existing contract\n")
+    with pytest.raises(ValueError, match="Out of range float"):
+        write_contract_json(path, FloatPayload(value=value))
+    assert path.read_bytes() == b"existing contract\n"
+
+
+@pytest.mark.parametrize("value", [1.25, 1.0e20, 1.7976931348623157e308, 5.0e-324, -0.0])
+def test_finite_contract_encoding_preserves_bytes_and_fingerprint(
+    value: float, tmp_path: Path,
+) -> None:
+    import hashlib
+
+    from pydantic import BaseModel
+
+    from sysml_codegen.contracts.serialize import canonical_json, write_contract_json
+
+    class FloatPayload(BaseModel):
+        value: float
+
+    payload = {"value": value}
+    expected = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+    assert canonical_json(payload) == expected
+    graph = _graph_with_constraints()
+    graph.entry_point_groups[0].parameters[0].default_value = value
+    contract = build_model_contract(graph)
+    legacy = json.dumps(contract.model_dump(exclude={"semantic_fingerprint"}), sort_keys=True,
+                        separators=(",", ":"), ensure_ascii=True)
+    assert contract.semantic_fingerprint == hashlib.sha256(legacy.encode()).hexdigest()
+    path = tmp_path / "contract.json"
+    write_contract_json(path, FloatPayload(value=value))
+    expected_written = json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=True) + "\n"
+    assert path.read_text() == expected_written

@@ -12,6 +12,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
+from sysml_codegen.core.errors import CodeGenerationError
+from sysml_codegen.resolution.models import PipelineModule
+
 logger = logging.getLogger(__name__)
 
 
@@ -116,7 +119,7 @@ def _extract_signature_from_impl(impl_path: Path) -> FunctionSignature | None:
 
 
 def should_regenerate_stencil(
-    module,
+    module: PipelineModule,
     impl_path: Path,
 ) -> tuple[bool, str]:
     """Determine if stencil should be regenerated.
@@ -172,8 +175,13 @@ def should_regenerate_stencil(
         return True, "Signature changed (interface differs)"
 
 
-def _generate_expected_signature_from_module(module) -> FunctionSignature:
+def _generate_expected_signature_from_module(module: PipelineModule) -> FunctionSignature:
     """Generate expected function signature from PipelineModule."""
+    if module.calc_def_name is None:
+        raise CodeGenerationError(
+            f"GENERATION_METADATA_MISSING: module {module.name!r} lacks calc_def_name"
+        )
+
     func_name = f"run_{module.calc_def_name.lower()}"
     input_type = f"{module.calc_def_name}Input"
 

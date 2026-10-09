@@ -51,17 +51,12 @@ This directory contains SysML v2 textual models for fusion power plant techno-ec
 
 Previous CATF-oriented models (foundation package, power balance, test patterns) have been archived to `archive/models/`. They can be revived when tokamak modeling begins under the new investigation-driven workflow.
 
-## Committed snapshots
+## Committed snapshot and historical provenance
 
-| File | Format | Who reads it |
-|------|--------|--------------|
-| `extraction_snapshot.json` | v5 extraction snapshot | Retired specimens only. No public surface produces or consumes v5 after recovery Slice 3E; its retirement is Phase 4 work against the deletion ledger. |
-| `instance_graph_snapshot.json` | v6 instance graph | `tests/runtime/test_fusion_tea_acceptance.py`, through the shipped `generate --from-snapshot`. |
+`instance_graph_snapshot.json` is the accepted v6 recapture fixture, generated through the licensed public snapshot route and replayed license-free. Batch expectations live in `tests/fixtures/v6_recapture_batch/batch.json`; breadth evidence lives in `.project/reference/elaborator-breadth-diff-ledger.md`.
 
-**The v6 file is a test fixture, not an accepted corpus recapture.** It exists so
-the migrated hand-arithmetic acceptance oracle keeps running on the shipped
-public route, which the recovery plan requires it to do throughout. Deciding
-which snapshots the candidate accepts, and recapturing the corpus as a batch,
-stays Phase 5 / owner territory — do not read this file as that decision having
-been made. Regenerate it with `sysml-codegen snapshot --models
-tests/fixtures/fusion_tea -o tests/fixtures/fusion_tea/instance_graph_snapshot.json`.
+The owner-directed duplicate-driver removal makes the eleven fixture model files match fusion-tea `9e1ff87bb:models/` (2026-08-16). This historical topology has seven numerical exits plus constraint evaluation/report, retaining LCOE `270.1211779380445`. Today's customer models have their own physics and acceptance identities.
+
+```bash
+sysml-codegen snapshot --models tests/fixtures/fusion_tea --output tests/fixtures/fusion_tea/instance_graph_snapshot.json
+```

@@ -17,7 +17,6 @@ from sysml_codegen.elaboration import ElaborationCode, ElaborationDiagnosticErro
 from sysml_codegen.elaboration.expression_evidence import ExpressionEvidenceInventory
 from sysml_codegen.extraction.errors import ExactTypeError
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
-from sysml_codegen.extraction.feature_metadata import _source_file, extract_feature_unit
 from sysml_codegen.orchestration.elaborated_pipeline import elaborate_loaded_extractor
 from tests.conftest import FIXTURES_DIR, requires_license
 
@@ -156,42 +155,21 @@ def test_exact_type_refusal_uses_the_one_public_bridge(
     assert public.__cause__ is error
 
 
-def test_document_origin_is_exact_for_each_file_without_path_election() -> None:
+def test_multifile_comments_do_not_create_unit_metadata() -> None:
     extractor = _loaded_extractor(METADATA_FIXTURE)
     expected_files = {path.resolve() for path in METADATA_FIXTURE.glob("*.sysml")}
-    witnessed: set[Path] = set()
-    for feature in SysideAdapter.elements_of_type(
-        extractor.model, "AttributeUsage", include_subtypes=True
+    witnessed = set()
+    for name in (
+        "FeatureMetadataLibrary::Reservoir::library_flow",
+        "FeatureMetadataDesign::reservoir::design_length",
     ):
-        source = _source_file(feature)
-        if source is None or source.resolve() not in expected_files:
-            continue
-        if extract_feature_unit(feature) is not None:
-            witnessed.add(source.resolve())
-
+        attribute = _attribute(extractor, name)
+        extracted = extractor._extract_attribute(attribute)
+        assert extracted.unit is None
+        location = SysideAdapter.get_source_location(attribute)
+        assert location is not None
+        witnessed.add(Path(location[0]).resolve())
     assert witnessed == expected_files
-
-
-def test_document_origin_has_no_glob_or_model_path_fallback() -> None:
-    import sysml_codegen.extraction.feature_metadata as feature_metadata
-
-    source = Path(feature_metadata.__file__).read_text(encoding="utf-8")
-    tree = ast.parse(source)
-    source_function = next(
-        node
-        for node in tree.body
-        if isinstance(node, ast.FunctionDef) and node.name == "_source_file"
-    )
-    calls = {
-        node.func.attr
-        for node in ast.walk(source_function)
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
-    }
-    names = {node.id for node in ast.walk(source_function) if isinstance(node, ast.Name)}
-    assert calls.isdisjoint({"glob", "rglob", "is_file", "is_dir"})
-    assert "model_paths" not in names
-    assert "model_paths" not in inspect.signature(extract_feature_unit).parameters
-    assert "model_paths" not in inspect.signature(_source_file).parameters
 
 
 def test_exact_scalar_view_is_the_canonical_qualified_only_mapping() -> None:

@@ -110,7 +110,6 @@ from sysml_codegen.extraction.expression_compiler import (
     compile_calc_def_exact,
 )
 from sysml_codegen.extraction.expression_utils import extract_literal_value
-from sysml_codegen.extraction.feature_metadata import extract_feature_unit
 from sysml_codegen.extraction.modeled_defaults import resolve_modeled_default
 from sysml_codegen.extraction.source_evidence import (
     ReadinessCode,
@@ -1892,7 +1891,7 @@ class _ExactElaborator:
                     ElaborationCode.SI_EDGE_DANGLING,
                     f"bound input {member_id.to_wire()} has no selected definition",
                 )
-            effective_formal_id = self._unit_source_for_formal(definition, member_id)
+            effective_formal_id = self._effective_formal_for_member(definition, member_id)
             structural_formal_id = (
                 effective_formal_id if isinstance(consumer, ConstraintNode) else member_id
             )
@@ -1910,11 +1909,6 @@ class _ExactElaborator:
                 ),
                 description=(extracted.description if extracted is not None else None),
                 default_value=(extracted.default_value if extracted is not None else None),
-                unit=(
-                    extracted.unit
-                    if extracted is not None
-                    else self._unit_for_declaration(effective_formal_id)
-                ),
                 qualified_name=str(getattr(member, "qualified_name", None) or ""),
                 formal_provenance=(
                     self._formal_provenance(effective_formal_id)
@@ -1981,7 +1975,7 @@ class _ExactElaborator:
             consumer.input_metadata[port] = PortMetadata(
                 python_type=self._feature_python_type(formal_id),
                 default_value=resolved_default.value,
-                unit=resolved_default.unit_text or self._unit_for_declaration(formal_id),
+                unit=resolved_default.unit_text,
                 qualified_name=str(getattr(formal, "qualified_name", None) or ""),
                 unresolved_default_kind=resolved_default.unresolved_node_kind,
                 formal_provenance=self._formal_provenance(formal_id),
@@ -2018,9 +2012,7 @@ class _ExactElaborator:
                 default_value=(
                     resolved_default.value if expression is not None else extracted.default_value
                 ),
-                unit=resolved_default.unit_text
-                or extracted.unit
-                or self._unit_for_declaration(formal_id),
+                unit=resolved_default.unit_text,
                 qualified_name=str(getattr(formal, "qualified_name", None) or ""),
                 unresolved_default_kind=resolved_default.unresolved_node_kind,
             )
@@ -2093,7 +2085,7 @@ class _ExactElaborator:
             self._effective_formals_by_definition[definition_id] = selected
         return selected
 
-    def _unit_source_for_formal(
+    def _effective_formal_for_member(
         self, definition: Any, declaration_id: DeclarationId
     ) -> DeclarationId:
         slot = self._slots.slot_of(declaration_id)
@@ -2114,9 +2106,6 @@ class _ExactElaborator:
                 f"feature {declaration_id.to_wire()} has no exact live declaration",
             )
         return feature
-
-    def _unit_for_declaration(self, declaration_id: DeclarationId) -> str | None:
-        return extract_feature_unit(self._feature(declaration_id))
 
     def _formal_provenance(self, declaration_id: DeclarationId) -> FormalProvenance:
         formal = self._elements.get(declaration_id)
@@ -2643,7 +2632,6 @@ class _ExactElaborator:
                     pending.consumer.input_names[port] = input_name
                     pending.consumer.input_metadata[port] = PortMetadata(
                         python_type=self._feature_python_type(leaf),
-                        unit=self._unit_for_declaration(leaf),
                         qualified_name=leaf_fact.qualified_name,
                         formal_provenance=(
                             self._formal_provenance(leaf)

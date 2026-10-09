@@ -25,10 +25,14 @@ __all__ = ["canonical_json", "write_contract_json"]
 
 def canonical_json(obj: Any) -> str:
     """Return the compact, key-sorted, ASCII-safe JSON form used as a fingerprint payload."""
-    return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+    return json.dumps(
+        obj, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False
+    )
 
 
 def write_contract_json(path: Path, model: BaseModel) -> None:
     """Write ``model`` as deterministic, pretty-printed JSON bytes."""
-    payload = json.dumps(model.model_dump(), indent=2, sort_keys=True, ensure_ascii=True)
+    payload = json.dumps(
+        model.model_dump(), indent=2, sort_keys=True, ensure_ascii=True, allow_nan=False
+    )
     path.write_text(payload + "\n")
