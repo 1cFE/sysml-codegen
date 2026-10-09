@@ -1,6 +1,6 @@
 # Product Backlog
 
-**Updated:** 2026-10-08
+**Updated:** 2026-10-09
 
 Current work and independently justified follow-ons. Owner-originated rulings retain their source authority; agent proposals remain challengeable. Historical closed work is available through Git and durable registers.
 
@@ -8,8 +8,7 @@ Current work and independently justified follow-ons. Owner-originated rulings re
 
 | Item | Status | Authority and next boundary |
 |------|--------|-----------------------------|
-| [PR-readiness cleanup](../active/pr-readiness-cleanup/spec.md) | Implemented; final validation/audit in progress | Owner-authorized cleanup, with historical assurance descoped at the recorded review resolutions. |
-| [ELABORATE-FIRST Item 8](epic_elaborate_first_architecture.md) | Implementation shipped; evidence/tracking reconciliation in progress | One Item 8 completion authority; final source-identity mapping and audit remain. |
+| [ELABORATE-FIRST Item 8](epic_elaborate_first_architecture.md) | Bounded cleanup closed; Item 8 remains open | One completion authority; source-identity evidence bounds and Item 8 audit/close remain. |
 | [GAP-CLOSE](epic_gap_close.md) | Local scope certified; F1 runtime leg closed 2026-07-20 | The old full-suite PR-wave evidence gap remains historical and is not retroactively proved by today's tests. |
 
 ## Capabilities and Diagnostics
@@ -219,7 +218,7 @@ These entries preserve reference targets; they are completion/retirement records
 
 - **[UNIT-SCRAPE-BYTE-OFFSET]** Resolved by owner-directed deletion of all three unit guessers, with parser-native value units retained. Authority: cleanup spec-review Resolution L2-2, 2026-10-08; public live/snapshot unit tests.
 - **[SERIALIZE-NAN-SEAL]** Strict contract/input encoders and public non-finite refusal checks implemented. The public route already refused upstream; this encoder repair is additional defense, not proof an invalid public package previously shipped.
-- **[EMIT-STEP-REGRESSION-GATE]** Implemented by the durable all-22 public package oracle and template/rendering mutation checks; candidate evidence is recorded in the active cleanup.
+- **[EMIT-STEP-REGRESSION-GATE]** Implemented by the durable all-22 public package oracle and template/rendering mutation checks; candidate evidence is retained at `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/evidence.md`.
 - **[CONSTRAINT-GATES-UNTAGGED]** Discharged at ELABORATE-FIRST cutover step 4 on 2026-08-14. REQ-CS records the retained gates; the Item-5 minting disposition is unchanged.
 - **[ARTIFACT-MANIFEST-TESTS-HARD-FAIL]** Closed by owner-authorized verification-tool retirement in REPO-CLEANUP Move C, 2026-08-25.
 - **[V11-DEAD-GATE-DOCS]** Closed by deletion of the dead gate and correction of its live references.

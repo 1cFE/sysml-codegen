@@ -1,26 +1,26 @@
 # Spec: Elaborator Downstream Remediation and Certification
 
-**Status:** Reconciled — retained Item 8 scope implemented through PR-readiness cleanup; final evidence and independent audit govern completion
+**Status:** Reconciled — bounded PR-readiness cleanup certified and closed; Item 8 remains open at its own audit/close boundary
 **Owner:** Reid W
 **Created:** 2026-08-16
-**Reconciled:** 2026-10-08
+**Reconciled:** 2026-10-09
 **Completion authority:** ELABORATE-FIRST Item 8; no replacement item or epic
 
 ## Problem
 
-Elaboration, parser/identity follow-through, and repository retirement have shipped. Item 8's remaining work is accurate fixture convergence, current customer validation, guidance, documentation, and evidence reconciliation. The [PR-readiness cleanup spec](../pr-readiness-cleanup/spec.md) is the execution contract for that bounded remainder; this record reconciles the original 21 criteria without creating another completion authority. Both predecessor dependencies are satisfied.
+Elaboration, parser/identity follow-through, and repository retirement have shipped. Item 8's remaining work is accurate fixture convergence, current customer validation, guidance, documentation, and evidence reconciliation. The PR-readiness cleanup spec (Git `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/spec.md`) is the execution contract for that bounded remainder; this record reconciles the original 21 criteria without creating another completion authority. Both predecessor dependencies are satisfied.
 
 ## Known Requirements
 
 - **[NEED]** A modeled source occurrence supplies exactly one runtime source to all and only its modeled consumers, across supported calculation/constraint/aggregation forms; unsupported forms refuse. Authority: parent epic's owner mission invariant; [source-identity reconciliation](../../reference/source-identity-reconciliation.md) preserves original grades and evidence bounds.
-- **[NEED]** Regeneration/proof, historical impact, and certification retain one Item 8 completion authority, amended by the later owner scope rulings. Authority: [original review](spec-review.md), Resolution L2-1 (2026-08-16); [cleanup review](../pr-readiness-cleanup/spec-review.md), Resolution L2-1 (2026-10-07).
+- **[NEED]** Regeneration/proof, historical impact, and certification retain one Item 8 completion authority, amended by the later owner scope rulings. Authority: [original review](spec-review.md), Resolution L2-1 (2026-08-16); cleanup review (Git `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/spec-review.md`), Resolution L2-1 (2026-10-07).
 - **[NEED]** Delete the inert fixture workaround and converge its post-R-2 shape. Authority: original review Resolution L2-2; cleanup review records the mechanical accepted-batch amendment and source provenance at fusion-tea `9e1ff87bb:models/` (2026-08-16). Current customer models are validated at their own named revision; they are not copied wholesale into the historical fixture.
 - **[NEED]** Validate current customer compatibility before PR; diagnose causes and permit coordinated model/consumer repairs. Authority: cleanup review Resolution L2-4 and the later owner clarification in the cleanup spec.
 - **[INHERITED]** Preserve product `0002`'s deep-override evidence bound and `[ANCHORING-ARRAYED-DIAGNOSTIC]`; preserve retired mechanism dispositions and independent evidence requirements. Sources: product `0002` and the original review's ratified-agent resolutions.
 
 ## Original Success Criteria — Current Dispositions
 
-Original wording and order are recoverable at `6872977:.project/active/elaborator-downstream/spec.md`. This table is their current disposition, not a claim that every old checkbox was tested anew. Fresh candidate results and remaining bounds live in the [cleanup evidence](../pr-readiness-cleanup/evidence.md); the independent audit verifies retained outcomes.
+Original wording and order are recoverable at `6872977:.project/active/elaborator-downstream/spec.md`. This table is their current disposition, not a claim that every old checkbox was tested anew. Fresh candidate results and remaining bounds live in the cleanup evidence (Git `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/evidence.md`); the independent audit verifies retained outcomes.
 
 | Original SC | Current disposition | Authority / evidence coordinate |
 |-------------|---------------------|---------------------------------|
@@ -44,7 +44,7 @@ Original wording and order are recoverable at `6872977:.project/active/elaborato
 | 18 — Fourteen mixed historical docs | Later authorized retirements supersede deleted-doc authorship; finite remaining live accounts corrected. | PR #15 retirement; cleanup C8 finite document changes. |
 | 19 — Retain document 25/legacy hierarchy extraction | Superseded by later owner-authorized retirement of that off-route surface. | Research SC19; PR #15 and absence/replacement ledger evidence. |
 | 20 — Named pre-work/final regression evidence | Durable all-22 output oracle and pre-change licensed/customer identities captured; final results distinguish intended differences and reproduced causes. | Cleanup SC7/SC11/SC13; baseline `6872977`, immutable expectation manifest. |
-| 21 — Final evidence/audit readiness | Final candidate evidence and independent audit govern readiness; cleanup delivery does not itself close Item 8 or the epic. | Cleanup plan phase4/5, evidence, and audit. |
+| 21 — Final evidence/audit readiness | The bounded cleanup is independently certified and closed; its evidence does not itself close Item 8 or the epic. | Cleanup plan phase4/5, evidence, and audit. |
 
 ## Non-Goals
 
@@ -54,8 +54,8 @@ Original wording and order are recoverable at `6872977:.project/active/elaborato
 ## Related Artifacts
 
 - [Parent epic](../../backlog/epic_elaborate_first_architecture.md), Item 8.
-- [Original review](spec-review.md) and [cleanup review/resolutions](../pr-readiness-cleanup/spec-review.md).
-- [Cleanup specification](../pr-readiness-cleanup/spec.md), [plan](../pr-readiness-cleanup/plan.md), [evidence](../pr-readiness-cleanup/evidence.md), and [source-identity reconciliation](../../reference/source-identity-reconciliation.md).
+- [Original review](spec-review.md) and cleanup review/resolutions (Git `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/spec-review.md`).
+- Cleanup specification (Git `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/spec.md`), plan (Git `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/plan.md`), evidence (Git `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/evidence.md`), and [source-identity reconciliation](../../reference/source-identity-reconciliation.md).
 - Product promises `0002`, `0003`, `0005`, `0006`, and the original authoritative lifecycle contract/LC-SI catalog.
 
 **Next boundary:** Independent audit of retained outcomes, then the human-controlled close and post-close branch gate.

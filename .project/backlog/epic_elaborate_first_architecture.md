@@ -1,12 +1,12 @@
 # Epic: Elaborate First — Instance-Graph Front End
 
-**Epic ID**: ELABORATE-FIRST **Status**: Implementation shipped; Item 8 cleanup/evidence reconciliation and audit remain (2026-10-08) **Priority**: Critical (P0 — same defect family as SOURCE-IDENTITY) **Created**: 2026-08-07 **Estimated Effort**: 4–5 weeks (re-estimated 2026-08-09 after inserting identity completion)
+**Epic ID**: ELABORATE-FIRST **Status**: Implementation shipped; bounded cleanup closed; Item 8 audit/close remain (2026-10-09) **Priority**: Critical (P0 — same defect family as SOURCE-IDENTITY) **Created**: 2026-08-07 **Estimated Effort**: 4–5 weeks (re-estimated 2026-08-09 after inserting identity completion)
 
 ---
 
 ## Executive Summary
 
-The elaborate-then-project front end shipped in PR #10; parser/identity follow-through shipped in PR #13, and legacy repository retirement shipped in PR #15. One instance graph remains the semantic authority and projection renders the existing computation graph. Item 8 now reconciles fixture, guidance, documentation, and assurance records through [PR-readiness cleanup](../active/pr-readiness-cleanup/spec.md); final audit and close remain pending.
+The elaborate-then-project front end shipped in PR #10; parser/identity follow-through shipped in PR #13, and legacy repository retirement shipped in PR #15. One instance graph remains the semantic authority and projection renders the existing computation graph. Item 8 now reconciles fixture, guidance, documentation, and assurance records through PR-readiness cleanup (Git `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/spec.md`); the bounded cleanup closed on 2026-10-09 with independent certification. Item 8 and epic audit/close remain open.
 
 **Delivery philosophy (owner directive, 2026-08-07):** *"plenty of spikes and learning tests so we fail fast."* Every item that carries architectural risk starts with a spike or learning-test leg whose failure is cheap, whose findings are kept, and whose kill criteria are written down before the work starts. No phase commits expensive, hard-to-unwind work (snapshot formats, corpus recaptures, deletions) before the representation it depends on is proven load-bearing.
 
@@ -264,7 +264,7 @@ Ticked at close 2026-08-14 on the step-10 record: narrow-correction steps 1–10
 
 **[OWNER 2026-08-16] Item boundary:** regeneration/proof, the July impact audit, and certification/documentation repair remain one work item. They may be phased but do not split into separate completion authorities. Source: `.project/active/elaborator-downstream/spec-review.md`, Resolution L2-1.
 
-**Current scope (2026-10-08):** Retain the owner-originated fixture convergence and single Item 8 completion authority. The corrected historical fixture matches fusion-tea `9e1ff87bb:models/`, with current customer compatibility checked separately. Bounded generation, guidance, documentation, and requirement/evidence reconciliation are implemented through [cleanup spec](../active/pr-readiness-cleanup/spec.md); [source-identity reconciliation](../reference/source-identity-reconciliation.md) records the Item-3 obligations at their original grades.
+**Current scope (2026-10-09):** Retain the owner-originated fixture convergence and single Item 8 completion authority. The corrected historical fixture matches fusion-tea `9e1ff87bb:models/`, with current customer compatibility checked separately. Bounded generation, guidance, documentation, and requirement/evidence reconciliation are implemented through cleanup spec (Git `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/spec.md`); [source-identity reconciliation](../reference/source-identity-reconciliation.md) records the Item-3 obligations at their original grades.
 
 **Owner scope amendments:** Additional end-to-end/reopened-study proof, copied-store refusal, lineage, and external-use attestation are descoped by cleanup `spec-review.md`, Resolution L2-1 (2026-10-07). July study outputs are superseded by rebuilt models/rerun, and the July impact report is retired by the same ruling. Unit-comment inference is removed by Resolution L2-2 (2026-10-08); parser-native written-value units remain. These rulings supersede the earlier scope at this home without manufacturing completed evidence.
 
