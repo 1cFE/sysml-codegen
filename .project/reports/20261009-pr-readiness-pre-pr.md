@@ -1,7 +1,7 @@
 # PR-readiness cleanup — post-close branch gate
 
 **Date:** 2026-10-09
-**Result:** Pass; PR submission awaiting owner confirmation.
+**Result:** Pass; published [sysml-codegen PR #16](https://github.com/1cFE/sysml-codegen/pull/16) and [Agentic guidance PR #17](https://github.com/1cFE/agentic-mbse/pull/17) after owner confirmation.
 **Tested commit:** `5696bbec85eed9b42591fa0c0489ab7ce7a391e0` (post-close candidate); base `6872977541eae935d4be2789f48f723ffea7101b` (`main`).
 
 The independently certified cleanup is closed under the owner-standing record-then-delete rule. Its audit, owner resolutions, product-lens CLEAR verdict, and receipts are retained at `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/`. Item 8 and the epic remain open, with source-identity bounds preserved.
