@@ -10,7 +10,7 @@ The elaborator implementation shipped in PR #10, parser/identity follow-through 
 
 ## Shipped State and Historical Authority
 
-PR-readiness cleanup closed 2026-10-09 after independent certification. C1–C10 and scoped customer compatibility are complete; audit, owner rulings, and receipts are retained at `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/`. Archived default: 2,207 passed, nine historical parity gaps; stock TEAx: 96 passed. The local `pr-readiness-cleanup` branch carries implementation; companion/customer repair branches remain separately preserved. Post-close pre-PR remains pending.
+PR-readiness cleanup closed 2026-10-09 after independent certification. C1–C10 and scoped customer compatibility are complete; audit, owner rulings, and receipts are retained at `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/`. Archived default: 2,207 passed, nine historical parity gaps; stock TEAx: 96 passed. The local `pr-readiness-cleanup` branch carries implementation; companion/customer repair branches remain separately preserved. The [post-close pre-PR gate](reports/20261009-pr-readiness-pre-pr.md) passes; PR submission awaits owner confirmation.
 
 REPO-CLEANUP merged through PR #15 at `6872977541eae935d4be2789f48f723ffea7101b`. Its deletion rulings and replacement evidence remain in the decision/product registers and ledger; Git retains the removed working-state artifacts.
 
@@ -22,4 +22,4 @@ Numeric study evidence acceptance shipped in PR #14: real multi-output numbers, 
 
 [Backlog](backlog/BACKLOG.md) lists current capabilities, model debt, and diagnostic/assurance bounds. [Product promises](product/INDEX.md) and [builder decisions](adr/INDEX.md) retain their own authority grades. Historical logs and counts are recoverable from Git and linked research, not current acceptance claims.
 
-The mental-alignment drafts remain owner review material; this cleanup neither includes them in its branch nor changes their original staged/unstaged contents. The cleanup is closed; its post-close pre-PR gate remains pending. Item 8 retains its separate audit/close boundary.
+The mental-alignment drafts remain owner review material; this cleanup neither includes them in its branch nor changes their original staged/unstaged contents. The cleanup is closed and its pre-PR checks pass; PR submission awaits owner confirmation. Item 8 retains its separate audit/close boundary.
