@@ -1,12 +1,12 @@
 # Epic: Elaborate First — Instance-Graph Front End
 
-**Epic ID**: ELABORATE-FIRST **Status**: Implementation shipped; bounded cleanup closed; Item 8 audit/close remain (2026-10-09) **Priority**: Critical (P0 — same defect family as SOURCE-IDENTITY) **Created**: 2026-08-07 **Estimated Effort**: 4–5 weeks (re-estimated 2026-08-09 after inserting identity completion)
+**Epic ID**: ELABORATE-FIRST **Status**: Certified for bounded delivered scope; partial lifecycle evidence retained; ready for owner-authorized close (2026-10-10) **Priority**: Critical (P0 — same defect family as SOURCE-IDENTITY) **Created**: 2026-08-07 **Estimated Effort**: 4–5 weeks (re-estimated 2026-08-09 after inserting identity completion)
 
 ---
 
 ## Executive Summary
 
-The elaborate-then-project front end shipped in PR #10; parser/identity follow-through shipped in PR #13, and legacy repository retirement shipped in PR #15. One instance graph remains the semantic authority and projection renders the existing computation graph. Item 8 now reconciles fixture, guidance, documentation, and assurance records through PR-readiness cleanup (Git `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/spec.md`); the bounded cleanup closed on 2026-10-09 with independent certification. Item 8 and epic audit/close remain open.
+The elaborate-then-project front end shipped in PR #10; parser/identity follow-through shipped in PR #13, and legacy repository retirement shipped in PR #15. One instance graph remains the semantic authority and projection renders the existing computation graph. Item 8 now reconciles fixture, guidance, documentation, and assurance records through PR-readiness cleanup (Git `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/spec.md`); the bounded cleanup closed on 2026-10-09 with independent certification. Item 8 closed on 2026-10-09 after independent bounded certification. The final epic audit certifies the bounded delivered scope on 2026-10-10; broader lifecycle evidence and unverified historical clauses remain explicit limits.
 
 **Delivery philosophy (owner directive, 2026-08-07):** *"plenty of spikes and learning tests so we fail fast."* Every item that carries architectural risk starts with a spike or learning-test leg whose failure is cheap, whose findings are kept, and whose kill criteria are written down before the work starts. No phase commits expensive, hard-to-unwind work (snapshot formats, corpus recaptures, deletions) before the representation it depends on is proven load-bearing.
 
@@ -41,12 +41,12 @@ The elaborate-then-project front end shipped in PR #10; parser/identity follow-t
 
 - [ ] **[OWNER] Mission invariant** (inherited): one semantic source occurrence → exactly one runtime source across all calculation, constraint, and aggregation consumers; public mutation reaches every and only the bound consumers; unsupported forms fail loudly pre-generation.
 - [ ] **[AGENT] Fail-fast gate:** every risk-bearing item opens with a spike or learning-test leg with written kill criteria; a failed spike stops the epic for redesign at spike cost, not after production landings.
-- [ ] **[AGENT] Product-behavior gates:** every item's completion gate is an observable public behavior (a mutation that propagates, a diagnostic that fires, a diff that is empty or classified) — never artifact-to-artifact fidelity.
-- [ ] **[AGENT] One-authority gate:** no item completes with old and new front ends both live. The dual-run harness is internal scaffolding only and is deleted in the cutover landing.
-- [ ] **[AGENT] Deletion ledger:** the cutover lands the research report's deletion inventory (VBR + rescue, virtual-usage expansion, aggregation QN-surgery, backtracker ladder, 21-key-form table, supplied-value materializer, registry namespaces, value backfill, and their wrong-oracle tests). New mechanisms name what they delete.
+- [x] **[AGENT] Product-behavior gates:** every item's completion gate is an observable public behavior (a mutation that propagates, a diagnostic that fires, a diff that is empty or classified) — never artifact-to-artifact fidelity.
+- [x] **[AGENT] One-authority gate:** no item completes with old and new front ends both live. The dual-run harness is internal scaffolding only and is deleted in the cutover landing.
+- [x] **[AGENT] Deletion ledger:** the cutover lands the research report's deletion inventory (VBR + rescue, virtual-usage expansion, aggregation QN-surgery, backtracker ladder, 21-key-form table, supplied-value materializer, registry namespaces, value backfill, and their wrong-oracle tests). New mechanisms name what they delete.
 - [ ] The 29-cell Item-3 acceptance matrix passes at the public boundary on live and relocated-snapshot routes; the C19 nested-occurrence fixture applies 80.0 on both consumer paths; the exact customer composition proves one input with mutation reaching all consumers.
 - [ ] Snapshot format = serialized instance graph, version-bumped fail-closed, all 37 fixtures recaptured exactly once, in the same landing as the cutover.
-- [ ] Downstream packages, studies, certification record, and `agentic-mbse` modeling guidance corrected (absorbed SOURCE-IDENTITY 6–8 intent).
+- [x] Downstream packages, studies, certification record, and `agentic-mbse` modeling guidance corrected (absorbed SOURCE-IDENTITY 6–8 intent).
 
 ## Non-Goals
 
@@ -90,7 +90,9 @@ Process rules (correcting the recorded failure mode where artifact consistency s
 
 **Success Criteria**:
 - [ ] Both dirty trees recoverable from named branches; working branches clean at base.
-- [ ] Exactly one epic reads as active for this defect family.
+- [x] Exactly one epic reads as active for this defect family.
+
+**Final verification (2026-10-10):** Named forensic branches retain codegen `69eef3b3b5e4daa460409edab8c9a69e3953385d` and companion `9724f1d215963185361b4761f805e752535aa2e7`; predecessor supersession and one active epic are verified. Historical clean working bases were not independently verified, so the first conjunctive criterion stays unchecked.
 
 **Dependencies**: None.
 
@@ -262,7 +264,7 @@ Ticked at close 2026-08-14 on the step-10 record: narrow-correction steps 1–10
 
 **Objective**: Move real consumers, studies, guidance, and the assurance record onto the corrected architecture.
 
-**[OWNER 2026-08-16] Item boundary:** regeneration/proof, the July impact audit, and certification/documentation repair remain one work item. They may be phased but do not split into separate completion authorities. Source: `.project/active/elaborator-downstream/spec-review.md`, Resolution L2-1.
+**[OWNER 2026-08-16] Item boundary:** regeneration/proof, the July impact audit, and certification/documentation repair remain one work item. They may be phased but do not split into separate completion authorities. Source: `33405e81b1695cd90b302dc575742458ccad5310:.project/active/elaborator-downstream/spec-review.md`, Resolution L2-1.
 
 **Current scope (2026-10-09):** Retain the owner-originated fixture convergence and single Item 8 completion authority. The corrected historical fixture matches fusion-tea `9e1ff87bb:models/`, with current customer compatibility checked separately. Bounded generation, guidance, documentation, and requirement/evidence reconciliation are implemented through cleanup spec (Git `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/spec.md`); [source-identity reconciliation](../reference/source-identity-reconciliation.md) records the Item-3 obligations at their original grades.
 
@@ -273,19 +275,19 @@ Ticked at close 2026-08-14 on the step-10 record: narrow-correction steps 1–10
 - [x] The retained Item 8 fixture, customer-compatibility, guidance, and certification obligations have final evidence with honest bounds and independent audit.
 - [x] Item-3 obligations are reconciled to authority/evidence coordinates, with any remaining obligation visibly dispositioned; no descoped outcome is labeled PASS.
 
-**Independent audit (2026-10-09):** [Certify](../active/elaborator-downstream/audit.md) for retained bounded Item 8 outcomes; ready for close. Complete 35-coordinate lifecycle certification and LC-SI-23 remain PARTIAL; this item certification does not waive that broader inherited requirement.
+**Independent audit (2026-10-09):** Certify (Git `33405e81b1695cd90b302dc575742458ccad5310:.project/active/elaborator-downstream/audit.md`) for retained bounded Item 8 outcomes; closed 2026-10-09. Complete 35-coordinate lifecycle certification and LC-SI-23 remain PARTIAL; this item certification does not waive that broader inherited requirement.
 
-**Location**: `.project/active/elaborator-downstream/`
+**Closed record**: `33405e81b1695cd90b302dc575742458ccad5310:.project/active/elaborator-downstream/` (Git history); the active folder is removed.
 
-**Dependencies**: Item 7 complete; `self-binding-replacement` closed on 2026-08-16 with all functional criteria independently verified and its testing/developer-tooling edge accepted as risk by the owner. **[AGENT] (ratified by owner, 2026-08-16):** `stop-reinventing-the-parser` is implemented, audited, and closed before Item 8 downstream design or implementation; downstream performs none of either predecessor's remediation. Source: the active item's `spec-review.md` L4-1 and the owner's direction to apply the review fixes.
+**Dependencies**: Item 7 complete; `self-binding-replacement` closed on 2026-08-16 with all functional criteria independently verified and its testing/developer-tooling edge accepted as risk by the owner. **[AGENT] (ratified by owner, 2026-08-16):** `stop-reinventing-the-parser` is implemented, audited, and closed before Item 8 downstream design or implementation; downstream performs none of either predecessor's remediation. Source: `33405e81b1695cd90b302dc575742458ccad5310:.project/active/elaborator-downstream/spec-review.md`, L4-1, and the owner's direction to apply the review fixes.
 
 **Bounded predecessor closed 2026-08-19 by owner direction:** `.project/completed/20260819_stop-reinventing-the-parser/` owns exact occurrence derivation and evidence integrity. The historical rev-3 audit remains `Needs Work`; the owner later narrowed the close scope, authorized the two model-caused repairs and one dependent-chain rebuild, and ruled out a fourth audit loop. Internal-defect diagnostic totality remains separately owned by `[DIAGNOSTIC-PROVENANCE-BY-CONSTRUCTION]`.
 
 Final immutable identities are Agentic `443388823f0db46c14df1728d3843d0a74ee7590`, Codegen production `8a758e9240707b58fe32a509c3b509941ca4fa01`, Fusion `8cb0b838c78c661f0553cdd3d0063610a2826301`, and direct evidence child `924eadfd12f39401a6ea8e578b405d4ba8833b51`. The committed runner matched all 21 declared lanes; Codegen passed 2,544 with 9 policy skips and 94 deselections, generated execution passed 94/94, and Fusion generated execution passed 23/23. The four-group mechanical verifier passed. The predecessor dependency is satisfied; this close does not mark either Item 8 success criterion.
 
-**Bounded child closed 2026-08-16:** exact occurrence-owner anchoring for usage-owned one-segment references is certified and archived at `.project/completed/20260816_qualified-reference-occurrence-anchoring/`. 0002 carries the shipped promise, the deep-override evidence bound, and the owner-disposed arrayed diagnostic follow-up. This closes that repair only; Item 8's two broader success criteria remain open.
+**Bounded child closed 2026-08-16:** exact occurrence-owner anchoring for usage-owned one-segment references is certified and archived at `.project/completed/20260816_qualified-reference-occurrence-anchoring/`. 0002 carries the shipped promise, the deep-override evidence bound, and the owner-disposed arrayed diagnostic follow-up. That child close did not certify Item 8's broader success criteria.
 
-**Bounded child closed 2026-08-16 — owner-accepted testing/tooling edge risk:** `.project/completed/20260816_self-binding-replacement/` discharges the owner-restated authoring obligation and implements the Fusion Tea source-model migration half of sub-item 1. The re-audit verified the injective source/consumer proof, failure-honest validation, and the owner-ruled definition-owned lineage-miss refusal. It also found that both migration-tool CLI modes write through a dangling pre-existing target symlink, and that the final three-repository repair set remains uncommitted. **[OWNER 2026-08-16]** The symlink behavior is a testing/developer-tooling edge case and accepted risk; the owner directed closure without another remediation/audit cycle. The public-oracle and runtime functional claims are independently verified. Its temporary live/snapshot proof stops before committed downstream regeneration and TEAx study execution; those remain here at `.project/active/elaborator-downstream/`.
+**Bounded child closed 2026-08-16 — owner-accepted testing/tooling edge risk:** `.project/completed/20260816_self-binding-replacement/` discharges the owner-restated authoring obligation and implements the Fusion Tea source-model migration half of sub-item 1. The re-audit verified the injective source/consumer proof, failure-honest validation, and the owner-ruled definition-owned lineage-miss refusal. It also found that both migration-tool CLI modes write through a dangling pre-existing target symlink, and that the final three-repository repair set remains uncommitted. **[OWNER 2026-08-16]** The symlink behavior is a testing/developer-tooling edge case and accepted risk; the owner directed closure without another remediation/audit cycle. The public-oracle and runtime functional claims are independently verified. At that child close, temporary live/snapshot proof stopped before committed downstream regeneration and TEAx study execution; remaining work was assigned to Item 8 (`33405e81b1695cd90b302dc575742458ccad5310:.project/active/elaborator-downstream/spec.md`).
 
 ---
 
@@ -295,3 +297,30 @@ Final immutable identities are Agentic `443388823f0db46c14df1728d3843d0a74ee7590
 - **Breadth long tail** (Item 5) → bounded by the inherited 29-cell matrix and the zero-unclassified-diffs rule; a shape outside the matrix is an owner question, not silent scope growth.
 - **Coexistence temptation** → the harness is internal-only and its deletion is inside the Item-7 landing's success criteria.
 - **Recapture churn** → single recapture, after the round-trip learning test, reviewed against the classified ledger; the timestamp-churn protocol isolates real changes.
+
+## Final Certification — 2026-10-10
+
+**Verdict: Certify for bounded delivered scope (partial certification).** [Final independent audit](epic_elaborate_first_architecture_audit.md) records fresh 195 licensed conformance/remediation passes, 53 stock-runtime passes, current retirement gates, historical item audits, and hash-verified acceptance receipts. Global criteria 3/4/5/8 and Item 1's single-active-epic criterion are verified at their stated scopes. Global criteria 1/2/6/7 and Item 1's historical-clean-base conjunction remain unchecked. Full 35-coordinate/LC-SI-23 lifecycle evidence remains PARTIAL; no owner-descoped outcome is labeled PASS. Earlier historical adverse verdicts retain their original text. The owner-directed close is bounded to delivered architecture and retained downstream outcomes.
+
+## Product-Lens
+
+### epic-audit — 2026-10-10 — rev 33405e81b1695cd90b302dc575742458ccad5310
+
+Point (re-derived): Emit parser-resolved modeled math into executable TEAx packages. Derive exact modeled occurrences or refuse by name; publish supported binding patterns without model workarounds. [source: `.project/product/0003-no-workarounds-for-bad-models.md` and `.project/product/0004-product-identity-parse-walk-emit.md` owner-verbatim first captures; `.project/adr/0004-derive-occurrences-from-exact-evidence-or-refuse.md` / `.project/adr/0006-constraint-lifecycle-owner-rulings.md`; epic owner-verbatim 2026-08-15; grade: owner]
+
+Falsifier: Public source mutation misses a bound consumer or changes an unrelated consumer; generation guesses unresolved semantics, duplicates one source into consumer inputs, or guidance teaches unsupported binding.
+
+Findings:
+
+- epic-audit-F1 [DO] Complete 35-coordinate acceptance evidence remains unestablished. — lifecycle requirements LC-SI-23 [INHERITED]; Appendix C coordinate schema — disposition: retain PARTIAL in `.project/reference/source-identity-reconciliation.md` and leave broader epic certification criteria unchecked. October 7 owner descoping removes named study/impact deliverables, not this evidence gap.
+
+Smells: None newly established in assembled code/test inspection. Current runtime mutation controls compare complete consumer/output sets and include live/in-place/relocated snapshot routes. The independent lens did not rerun tests; the certification auditor ran the separate scoped checks recorded in the audit.
+
+Resolves:
+
+- breadth/audit-F16: FIXED — authority: original owner semantics and `[AGENT] (ratified by owner, 2026-08-09)` corrected DCS witness ruling — basis: `68317512754d61c14e9b5674f77acc97402ec5a6:.project/completed/20260809_elaborator-breadth/product-lens.md`, targeted re-verification explicitly resolves re-anchored F28/F29; its audited valid witness retains one producer and invalid namespace refuses before expansion. The original F16 is now resolved by citation; its historical block is unchanged.
+- breadth/audit-F21: FIXED — authority: `[AGENT] (ratified by owner, 2026-08-09)` corrected contract amendment — basis: the same historical targeted verification resolves the F28/F29 descendants of F21 and restores DCS:82 supported producer semantics; fresh remediation/validation checks pass. This records ratified agent authority without upgrading it.
+
+Historical gates: Identity-completion audit-F7 and cutover-recovery audit-F1/F2 have explicit later resolution citations in their original Git ledgers; Item 8 resolves its spec-F1/audit-F1 in Git `33405e81b1695cd90b302dc575742458ccad5310`. Original Needs Work/CERTIFY-WITH-RESIDUALS verdicts are preserved.
+
+Gate: DISPOSED (epic-audit-F1) for bounded delivered scope. No unresolved retained owner/HARD behavioral contradiction was established; complete lifecycle certification is not supported.

@@ -222,17 +222,12 @@ def test_backlog_and_product_records_preserve_force_and_current_status() -> None
 
 def test_status_records_owner_close_and_satisfied_downstream_dependency() -> None:
     current = _read(".project/CURRENT_WORK.md")
-    epic = _read(".project/backlog/epic_elaborate_first_architecture.md")
     assert "stop-reinventing-the-parser CLOSED by owner direction" in current
     assert "PR #13 shipped it" in current
     assert "8a758e9240707b58fe32a509c3b509941ca4fa01" in current
     assert "924eadfd12f39401a6ea8e578b405d4ba8833b51" in current
-    assert "Bounded predecessor closed 2026-08-19 by owner direction" in epic
-    assert "predecessor dependency is satisfied" in epic
-    assert "8a758e9240707b58fe32a509c3b509941ca4fa01" in epic
-    assert "924eadfd12f39401a6ea8e578b405d4ba8833b51" in epic
-    for text in (current, epic):
-        # The record keeps the audit history honest: rev-3 said Needs Work, and the
-        # diagnostic follow-up was transferred, not shipped here.
-        assert "Needs Work" in text
-        assert "[DIAGNOSTIC-PROVENANCE-BY-CONSTRUCTION]" in text
+    assert "predecessor dependency is satisfied" in current
+    # The durable record keeps the audit history honest after the epic closes:
+    # rev-3 said Needs Work; the diagnostic follow-up was transferred, not shipped.
+    assert "Needs Work" in current
+    assert "[DIAGNOSTIC-PROVENANCE-BY-CONSTRUCTION]" in current

@@ -8,7 +8,7 @@ Current work and independently justified follow-ons. Owner-originated rulings re
 
 | Item | Status | Authority and next boundary |
 |------|--------|-----------------------------|
-| [ELABORATE-FIRST Item 8](epic_elaborate_first_architecture.md) | Bounded cleanup closed; Item 8 remains open | One completion authority; source-identity evidence bounds and Item 8 audit/close remain. |
+| [ELABORATE-FIRST](epic_elaborate_first_architecture.md) | Item 8 closed; epic certification/close remains | Source-identity PARTIAL evidence and existing diagnostic bounds are retained; item close does not certify the epic. |
 | [GAP-CLOSE](epic_gap_close.md) | Local scope certified; F1 runtime leg closed 2026-07-20 | The old full-suite PR-wave evidence gap remains historical and is not retroactively proved by today's tests. |
 
 ## Capabilities and Diagnostics

@@ -4,11 +4,11 @@
 
 ## Active Work
 
-### ELABORATE-FIRST Item 8 — certified; ready for close
-
-The elaborator implementation shipped in PR #10, parser/identity follow-through in PR #13, and repository retirement in PR #15. The [downstream spec](active/elaborator-downstream/spec.md) retains one Item 8 completion authority; the merged cleanup supplies its fixture/documentation/evidence reconciliation. The independent [Item 8 audit](active/elaborator-downstream/audit.md) certifies the retained bounded scope against that evidence and the owner amendments. Final [source-identity mapping](reference/source-identity-reconciliation.md) must preserve unsupported shapes, diagnostic debt, and partial evidence bounds. Item 8 is ready for close; the epic remains open at its own certification/close boundary. Complete 35-coordinate lifecycle assurance remains PARTIAL; this audit preserves that limit rather than creating a new proof task or waiving retained source behavior.
+ELABORATE-FIRST remains open at its epic-level certification/close boundary. Its bounded Item 8 downstream reconciliation is closed; the source-identity map retains PARTIAL lifecycle evidence and existing diagnostic/deep-override/array limits.
 
 ## Shipped State and Historical Authority
+
+ELABORATE-FIRST Item 8 (`elaborator-downstream`) closed 2026-10-09 after independent bounded certification. Its spec, original owner review, product-lens resolutions, and audit are retained at `33405e81b1695cd90b302dc575742458ccad5310:.project/active/elaborator-downstream/`. Fixture/customer/guidance/documentation/reconciliation outcomes are complete at the recorded bounds; full 35-coordinate lifecycle assurance and LC-SI-23 remain PARTIAL. This closes the item, not the epic.
 
 PR-readiness cleanup closed 2026-10-09 after independent certification. C1–C10 and scoped customer compatibility are complete; audit, owner rulings, and receipts are retained at `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/`. Archived default: 2,207 passed, nine historical parity gaps; stock TEAx: 96 passed. The local `pr-readiness-cleanup` branch carries implementation; companion/customer repair branches remain separately preserved. The [post-close pre-PR gate](reports/20261009-pr-readiness-pre-pr.md) passes; merged [codegen PR #16](https://github.com/1cFE/sysml-codegen/pull/16), and [companion guidance PR #17](https://github.com/1cFE/agentic-mbse/pull/17).
 
@@ -22,4 +22,4 @@ Numeric study evidence acceptance shipped in PR #14: real multi-output numbers, 
 
 [Backlog](backlog/BACKLOG.md) lists current capabilities, model debt, and diagnostic/assurance bounds. [Product promises](product/INDEX.md) and [builder decisions](adr/INDEX.md) retain their own authority grades. Historical logs and counts are recoverable from Git and linked research, not current acceptance claims.
 
-The mental-alignment drafts remain owner review material; this cleanup neither includes them in its branch nor changes their original staged/unstaged contents. The cleanup is closed and its pre-PR checks pass; merged [codegen PR #16](https://github.com/1cFE/sysml-codegen/pull/16), and [companion guidance PR #17](https://github.com/1cFE/agentic-mbse/pull/17). Item 8 is independently certified for its retained bounded scope and awaits close; the epic is not certified by that item verdict.
+The mental-alignment drafts remain owner review material; this cleanup neither includes them in its branch nor changes their original staged/unstaged contents. The cleanup is closed and its pre-PR checks pass; merged [codegen PR #16](https://github.com/1cFE/sysml-codegen/pull/16), and [companion guidance PR #17](https://github.com/1cFE/agentic-mbse/pull/17). Item 8 is closed for its certified bounded scope; the epic is not certified by that item verdict.
