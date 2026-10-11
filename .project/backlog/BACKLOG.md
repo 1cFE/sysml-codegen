@@ -1,6 +1,6 @@
 # Product Backlog
 
-**Updated:** 2026-10-09
+**Updated:** 2026-10-10
 
 Current work and independently justified follow-ons. Owner-originated rulings retain their source authority; agent proposals remain challengeable. Historical closed work is available through Git and durable registers.
 
@@ -8,7 +8,6 @@ Current work and independently justified follow-ons. Owner-originated rulings re
 
 | Item | Status | Authority and next boundary |
 |------|--------|-----------------------------|
-| [ELABORATE-FIRST](epic_elaborate_first_architecture.md) | Item 8 closed; epic certification/close remains | Source-identity PARTIAL evidence and existing diagnostic bounds are retained; item close does not certify the epic. |
 | [GAP-CLOSE](epic_gap_close.md) | Local scope certified; F1 runtime leg closed 2026-07-20 | The old full-suite PR-wave evidence gap remains historical and is not retroactively proved by today's tests. |
 
 ## Capabilities and Diagnostics
@@ -213,6 +212,8 @@ Of those 32, the 23 in the three named families (EPC 8, GA 8, LVP 9, minus REQ-E
 - **[CATF-ACCEPTANCE-LANE-MANUAL] The CATF end-to-end feasibility-rejection lane is a reproduced run, not a committed test — P3 `[AGENT]`, unowned.** Item 5's SC-5 has two halves. The coverage half is durably gated (population oracle by scan; `tests/unit/data/expected-coverage.md` drives `tests/unit/test_coverage_ledger_agreement.py`). The feasibility half — the authored CATF design point reaching `reject` through generate → seal → load → execute → policy → durable record — is recorded evidence reproducible from `probes/acceptance_run.py` in the archived item home, and nothing fails if it regresses. Deliberate at the time (the lane needs the TEAx checkout on `constraint-semantics-item3`, which is unmerged). Fix direction: mark the lane as intentionally manual in a named place, or file it as a licensed/marked test once the TEAx branch lands.
 
 ## Disposition References
+
+- **[ELABORATE-FIRST]** Closed 2026-10-10 by owner direction after independent bounded certification. Final epic/audit/product-lens: Git `0e43cc76179e21473c36f2b30d473a3cf9626c4a:.project/backlog/epic_elaborate_first_architecture.md` and `0e43cc76179e21473c36f2b30d473a3cf9626c4a:.project/backlog/epic_elaborate_first_architecture_audit.md`. Full 35-coordinate/LC-SI-23 assurance remains PARTIAL in [source-identity reconciliation](../reference/source-identity-reconciliation.md); diagnostic/deep-override/array follow-ons retain their existing scope.
 
 These entries preserve reference targets; they are completion/retirement records, not active implementation requests.
 
