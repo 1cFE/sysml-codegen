@@ -1,1 +1,1 @@
-/home/reid/1cfe/agentic-mbse/claude/agents/sysml-expert.md
+/home/reid/1cfe/agentic-mbse/agents/sysml-expert.md
