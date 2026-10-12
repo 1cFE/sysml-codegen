@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from sysml_codegen.study import census, integrate
-from tests.study.conftest import STATION_PACKAGE
+from sysml_codegen.study import census, integrate, manifest
+from tests.study.conftest import STATION, STATION_PACKAGE
 
 
 def _package(root: Path, parameters: list[dict[str, str]]) -> Path:
@@ -57,4 +57,15 @@ def test_integrate_rederives_its_census_through_the_shipped_helper() -> None:
         "by_entry_type": {
             key: sorted(value) for key, value in census.by_entry_type(STATION_PACKAGE).items()
         },
+    }
+
+
+def test_the_stations_tracked_census_is_what_integrate_rederives() -> None:
+    """``census.json`` is what gate 4 compares the package against (PROVENANCE.md)."""
+    tracked = json.loads((STATION / "census.json").read_text())
+    assert tracked == {
+        "derived_against_semantic_fingerprint": (
+            manifest.read_semantic_fingerprint(STATION_PACKAGE)
+        ),
+        **integrate.rederived_census(STATION_PACKAGE),
     }

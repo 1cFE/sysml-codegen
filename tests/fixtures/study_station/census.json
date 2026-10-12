@@ -1,0 +1,14 @@
+{
+  "derived_against_semantic_fingerprint": "e2240e55292fa104eabc342b53453b5f7e1ee9d41153917c70065967bcb1cf6f",
+  "entry_points": 6,
+  "by_entry_type": {
+    "design_attribute": [
+      "PumpStation__station__allowed_rise_rate",
+      "PumpStation__station__basin_area",
+      "PumpStation__station__design_inflow",
+      "PumpStation__station__energy_price",
+      "PumpStation__station__installed_capacity",
+      "PumpStation__station__pump_head"
+    ]
+  }
+}
