@@ -45,6 +45,7 @@ import math
 import random
 import sys
 from pathlib import Path
+from typing import Any
 
 from sysml_codegen.study import common, identity, roots
 from sysml_codegen.study import manifest as manifest_mod
@@ -477,9 +478,21 @@ def verify_store(store_path: Path, package_root: Path, loaded, identity_doc,
 # ----------------------------------------------------------------- the summary
 
 
+def _import_simkit() -> Any:
+    """teax's ``simkit`` module, or a :class:`VerifyError` naming teax when it cannot import."""
+    try:
+        import simkit
+    except ImportError as exc:
+        raise VerifyError(
+            f"verify needs teax, and its simkit package cannot be imported here ({exc}); "
+            f"install teax's simkit into this environment, or put a simkit root on PYTHONPATH"
+        ) from exc
+    return simkit
+
+
 def build_summary(package_root: Path, manifest_path: Path, identity_path: Path,
                   store_paths: list[Path], sample_size: int, explicit_seed, argv) -> dict:
-    import simkit
+    simkit = _import_simkit()
 
     loaded = manifest_mod.load(manifest_path)
     manifest_mod.assert_package_identity(loaded, package_root)
