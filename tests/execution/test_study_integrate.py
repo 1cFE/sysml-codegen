@@ -165,8 +165,8 @@ def test_an_oracle_that_disagrees_with_the_store_is_refused_at_gate_8(
 ) -> None:
     """``verify.py:10-11``: named channels agree at rel < 1e-9, or verify refuses.
 
-    The station's oracle is skewed by one part in a million on the annual cost. Gates 0 to 7
-    never read the oracle, so they pass, and gate 8 files verify's exit as a refusal
+    The station's oracle is skewed by one part in a million on the annual cost. No gate before
+    8 judges the oracle's arithmetic, so they pass, and gate 8 files verify's exit as a refusal
     (``integrate.gate_verification``). verify writes no summary when it refuses.
     """
     repo = commit_station_copy(tmp_path / "station")
