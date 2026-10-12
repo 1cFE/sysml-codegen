@@ -1,8 +1,8 @@
 # Implementation Plan: Move the study layer to sysml-codegen (WRAP-SPLIT Item 3)
 
-**Status:** In Progress (Phase A and Phases 1–3 done; Phase 4 paused at SC12's stop rule)
+**Status:** In Progress (Phase A and Phases 1–4 done; Phase 5 running in parallel)
 **Created:** 2026-10-12
-**Last Updated:** 2026-10-12 (Phase 4 paused: five parity cases differ)
+**Last Updated:** 2026-10-12 (Phase 4 done: SC12 parity passes on all 28 cases; fusion-tea code drafts)
 **Branch:** `study-layer-to-codegen` in both sysml-codegen and agentic-mbse
 
 ## Source Documents
@@ -435,24 +435,24 @@ for name, case in CASES.items():                                  # Appendix G's
 
   `parity.py` runs as one command, which `README.md` states.
 - [x] Run it, and write `report.md` and `cases/`.
-- [ ] **Stop rule.** Any `DIFFERENT` case, or noise no reviewed pattern explains, stops the item. Report it to the orchestrator with the diff. Never add a pattern to hide a real difference. If the difference is a port bug, meaning a change outside B1–B13, fix the moved code, re-run the full suite, re-run parity, and record it.
-- [ ] Draft the fusion-tea code in `$EV/fusion-tea/`:
+- [x] **Stop rule.** Any `DIFFERENT` case, or noise no reviewed pattern explains, stops the item. Report it to the orchestrator with the diff. Never add a pattern to hide a real difference. If the difference is a port bug, meaning a change outside B1–B13, fix the moved code, re-run the full suite, re-run parity, and record it.
+- [x] Draft the fusion-tea code in `$EV/fusion-tea/`:
   - **`wrappers/`.** The eight module aliases per DD14. Each pins `roots.use_project_root(Path(__file__).resolve().parents[2])`, or `parents[1]` for `scripts/integrate.py`. None touches `os.environ`. Each calls `main()` when run as `__main__`, and otherwise replaces itself in `sys.modules`.
   - **`routes.sed`.** It rewrites `scripts.study` to `sysml_codegen.study` in the eight `study_route.py` imports at `$STAGED/CONSUMER_SURFACE.md:43,50,57,62,67,72,89,97`.
   - **`declaration.toml`.** Appendix D's fusion-tea table, verbatim.
-- [ ] Smoke-test the drafts in a copy of the parity layout, and record the results in `$EV/fusion-tea/SMOKE.md`:
+- [x] Smoke-test the drafts in a copy of the parity layout, and record the results in `$EV/fusion-tea/SMOKE.md`:
   - replace the originals with `wrappers/`; `python -c "import scripts.study.manifest as m, sysml_codegen.study.manifest as n; print(m is n)"` prints `True`;
   - `python scripts/study/indicators.py …` run from `/tmp` gives the moved run's bytes;
   - `routes.sed` applied to a route variant that imports `from scripts.study import identity` yields the package import;
   - `declaration.toml` loads through `declarations.load_declaration`. The parity layout already uses it, so rows 1a and 5 equal orig.
-- [ ] Write `$EV/fusion-tea/step5-tests.patch`:
+- [x] Write `$EV/fusion-tea/step5-tests.patch`:
   - edit copies of `$STAGED/tests/` per design Appendix H3's table, except `test_integrate_guide_contract.py`, which Phase 5 adds;
   - produce the patch with `diff -u`;
   - check that `patch -p1 --dry-run` applies cleanly to a fresh copy of `$STAGED`.
-- [ ] Write the rehearsal helpers:
+- [x] Write the rehearsal helpers:
   - `$EV/rehearsal/junit-diff.py` compares test ids, outcomes, skip counts and failure messages across two junit XML files. **Cut 1** removes it;
   - `$EV/rehearsal/env.sh.example` lists the variables in Appendix H3 "Environment control". It records the license by presence only.
-- [ ] Commit `$EV/parity/`, `$EV/fusion-tea/` and `$EV/rehearsal/`, naming SC12 and SC9.
+- [x] Commit `$EV/parity/`, `$EV/fusion-tea/` and `$EV/rehearsal/`, naming SC12 and SC9.
 
 ### Validation
 
@@ -806,57 +806,96 @@ Detailed risks are in `design.md#potential-risks`. These are the phase-specific 
   - The choice is the orchestrator's. One option is a reviewed rule naming these modules as B8 and B13 consequences (orig-only `runtime-observed` reads of modules the moved driver preloads). The other is a code change outside the closed list, such as importing them lazily in `roots`; the `zoneinfo` group has no such change available. Neither rule 4 nor the code was changed.
 
 ### Phase 4 Completion
-**Completed:** Not yet. Paused 2026-10-12 at SC12's stop rule: 5 of 28 parity cases are `DIFFERENT`. The parity harness and its evidence are committed at `06ff48b`. The fusion-tea drafts are not started, except `evidence/fusion-tea/declaration.toml` (Appendix D verbatim), which the parity layout uses as its `pyproject.toml`.
+**Completed:** 2026-10-12. The first session committed the parity harness (`06ff48b`) and paused at SC12's stop rule (`12c38b9`). After the orchestrator's decision (`700f095`), the second session committed `2e21955` (B1 refinement), `ca0cd79` (parity passes), `790fb1e` (wrappers, `routes.sed`, smoke test), `bba6bac` (the step-5 test patch; `routes.sed` to nine routes) and `1bf9ec9` (rehearsal helpers).
 
-**Wheel SHAs:** sysml-codegen `24cce2c` (wheel sha256 `95db479eddbc…`), agentic-mbse `2894647` (wheel sha256 `04a69b26134…`), teax `8d87746`. Two separate builds from `git archive HEAD` gave byte-identical wheels. Both are in `evidence/parity/report.md`.
+**Final parity result (SC12): passes.** 3 `EQUAL`, 25 `EQUAL after closed-list fields`, 0 `DIFFERENT`, none unreachable (`evidence/parity/report.md`).
+- Sources: sysml-codegen `2e21955` (wheel sha256 `153f49ab1247…`), agentic-mbse `2894647` (`04a69b26134…`), teax `8d87746`, on `/usr/bin/python3.12`, scratch `/tmp/study-parity-20261012-114254`.
+- Every exit code agrees across orig, orig2 and moved. orig and orig2 agree after the declared patterns, so no case has unexplained noise. Library parity (rule 6) holds for all four functions.
+- Gate 3 is reachable, and cut 2 is not applied.
 
-**Parity result: 3 `EQUAL`, 20 `EQUAL after closed-list fields`, 5 `DIFFERENT`, none unreachable** (`evidence/parity/report.md`).
-- `EQUAL`: indicators pin mismatch, indicators `--print-fingerprint`, and verify with the oracle mutated.
-- `EQUAL after [B2]`: the other six indicators, preflight and verify cases.
-- `EQUAL after [B2, B11]`: 13 integrate cases (gate 0 ×4, 1a, 1b unasked, 2, 3, 4 ×2, 5, 6, and the seam-internal error). `EQUAL after [B2, B7, B11]`: gate 1b refused.
-- `DIFFERENT`: integrate's gate 7 read-coverage refusal, gate 8 verification refusal, gate 9 unasked, gate 9 lineage mismatch, and `CANDIDATE`.
-- Gate 3 is reachable, because the package has auto-implemented handwritten files. Cut 2 is not applied.
-- Every exit code agrees. Every integrate case stops at its intended gate and condition on both sides. orig and orig2 agree after the declared patterns. Library parity (rule 6) holds for all four functions.
+| Case | Exit (orig/orig2/moved) | Status (closed-list ids) |
+|---|---|---|
+| indicators-complete | 0/0/0 | [B2] |
+| indicators-pin-mismatch | 1/1/1 | EQUAL |
+| indicators-print-fingerprint | 0/0/0 | EQUAL |
+| preflight-gates-complete | 0/0/0 | [B2] |
+| preflight-gates-stale-manifest | 1/1/1 | [B2] |
+| preflight-clean-clean | 0/0/0 | [B2] |
+| preflight-clean-dirty | 1/1/1 | [B2] |
+| verify-complete | 0/0/0 | [B2] |
+| verify-oracle-mutated | 1/1/1 | EQUAL |
+| integrate-g0-input-missing | 1/1/1 | [B2, B11] |
+| integrate-g0-input-invalid | 1/1/1 | [B2, B11] |
+| integrate-g0-env-missing | 1/1/1 | [B2, B11] |
+| integrate-g0-package-not-integrated | 1/1/1 | [B2, B11] |
+| integrate-g1a-refused | 1/1/1 | [B2, B11] |
+| integrate-g1b-unasked | 1/1/1 | [B2, B11] |
+| integrate-g1b-refused | 1/1/1 | [B2, B7, B11] |
+| integrate-g2-refused | 1/1/1 | [B2, B11] |
+| integrate-g3-handwritten-lost | 1/1/1 | [B2, B11] |
+| integrate-g4-census-unasked | 1/1/1 | [B2, B11] |
+| integrate-g4-census-stale | 1/1/1 | [B2, B11] |
+| integrate-g5-refused | 1/1/1 | [B2, B11] |
+| integrate-g6-manifest-stale | 1/1/1 | [B2, B11] |
+| integrate-g7-read-coverage-refused | 1/1/1 | [B1, B2, B8, B11, B13] |
+| integrate-g8-verification-refused | 1/1/1 | [B1, B2, B8, B11, B13] |
+| integrate-g9-unasked | 1/1/1 | [B1, B2, B8, B11, B13] |
+| integrate-g9-lineage-mismatch | 1/1/1 | [B1, B2, B8, B11, B13] |
+| integrate-seam-internal-error | 2/2/2 | [B2, B11] |
+| integrate-candidate | 0/0/0 | [B1, B2, B8, B11, B13] |
 
-**Measured exclusion list** (spec B13 consequence; `evidence/parity/preloads.json`).
-- In the parity venv, the moved gate-7 driver has imported 25 modules before observation that the original driver has not.
-- 21 are standard library, and each is in the import closure of `sysml_codegen.study.roots` or `zoneinfo`: `_datetime`, `_locale`, `_posixsubprocess`, `_struct`, `_sysconfigdata__x86_64-linux-gnu`, `_zoneinfo`, `collections.abc`, `contextlib`, `datetime`, `fcntl`, `locale`, `select`, `selectors`, `signal`, `struct`, `subprocess`, `sysconfig`, `weakref`, `zoneinfo`, `zoneinfo._common`, `zoneinfo._tzpath`. This is Phase 3's list, with Debian's name for the sysconfig data module.
-- Seven of them (`_datetime`, `_locale`, `_posixsubprocess`, `_struct`, `_zoneinfo`, `fcntl`, `select`) are built in and open no `.pyc`. So the exclusion is 14 `.pyc` paths under `/usr/lib/python3.12`. The gate-7 refusal case excludes 7 of them; the other four route cases exclude all 14.
-- The other four preloaded modules are not standard library: `sysml_codegen`, `sysml_codegen.study`, `sysml_codegen.study.read_coverage` and `sysml_codegen.study.roots`. They are not excluded.
+**The pause, and how it was decided.**
+- *What differed.* In the first run, the five cases whose route runs under read coverage were `DIFFERENT`, and only in receipt entries about the installed `sysml_codegen` package. The moved observer declares the whole package (76 files only it declares), and the two sides record the route's reads of the package differently: orig as runtime bytecode reads, moved as declared source and bytecode, less three modules the moved driver preloads.
+- *Q1, option (a)* [AGENT] (orchestrator, 2026-10-12): three named rules in `parity.py`'s `receipt_view`. (1) Moved-only declarations under the installed package are B8 additions. (2) Reads of the installed package are compared by module, with category free. (3) The preload exclusion also covers the installed-package modules the moved driver preloads. These are measured into `preloads.json` as `installed_package_modules`: `sysml_codegen`, `sysml_codegen.study` and `sysml_codegen.study.roots`. The measurement subtracts the original driver's own tool modules, renamed by rule 3's table, which is why `sysml_codegen.study.read_coverage` is not in the set.
+- *Q2* [AGENT] (orchestrator, 2026-10-12): the first run's harness choices are ratified as listed. They are the orig environment's `SYSML_CODEGEN_PROJECT_ROOT`, the B7 mapping row, the three noise patterns orig against orig2 proves, and the comparison choices.
+- `evidence/parity/README.md` § "Ratified rules beyond Appendix G" records every rule with its reason and evidence. The measured standard-library exclusion is unchanged: 21 modules, 14 `.pyc` paths (B13 consequence).
 
-**Decision needed: the five `DIFFERENT` cases** (surfaced, not resolved: capture-fidelity law 4).
-- **What differs.** All five differ in the same three groups of read-coverage receipt entries, and in nothing else. All three concern the installed `sysml_codegen` package (`TOOL_HOME/sysml_codegen/`):
-  1. *Declarations, moved only: 76 files.* The moved observer declares every `.py` in the installed package, which is B8 as Appendix A writes it (`TOOL_HOME / "sysml_codegen"`). The original declares only the eight files under `scripts/`. Every orig declaration maps onto a moved one.
-  2. *Reads, orig only: six `runtime-observed` `.pyc` reads* of `sysml_codegen`, `sysml_codegen.study`, `common`, `identity`, `manifest` and `roots`. The fixture route imports the moved `identity` in both modes (Appendix G). In orig the installed package is no declared root, so its bytecode reads are runtime reads under `sys.prefix`.
-  3. *Reads, moved only:* `common`, `identity` and `manifest`, each as its `.py` (`declared-source`) and `.pyc` (`bytecode`). The moved run records nothing for `sysml_codegen`, `sysml_codegen.study` or `roots`, because its driver imported them before observation.
-- **Why the committed rules don't cover it.**
-  - Rule 4 compares the entries under each run's own tool root (orig `scripts/`, moved `TOOL_HOME/sysml_codegen/`) as sets after mapping. In this layout orig reads nothing under `scripts/`; it reads the moved package instead. And the moved declared set is the whole package. So the sets cannot be equal.
-  - The brief's exclusion covers standard-library preloads only. `sysml_codegen`, `sysml_codegen.study` and `roots` are preloaded by the same mechanism, but they are not standard library.
-- **What remains under one reading.** Suppose three things: (a) moved-only declarations under `TOOL_HOME/sysml_codegen/` count as B8 additions, the way rule 4 already treats the three B2-added digest files; (b) both runs' reads of the installed package are compared by module, with the category free (B8); and (c) the exclusion also covers the moved driver's three non-standard-library preloads that the route imports. Then all five cases are `EQUAL after closed-list fields`. I checked this against the committed `cases/*/comparison.json`; it is not applied.
-- **Options.**
-  - *Ratify that reading as three named rules.* I recommend this. Every difference follows from B8 and from the moved observer living inside the package the route imports, which B1 and B8 already allow. Nothing outside the installed package differs.
-  - *Change the layout so the orig route imports `scripts.study`*, fusion-tea's form before `routes.sed`. The tool-root reads then compare symmetrically. But the route file's bytes would differ between modes, which needs its own rule. Group 1 still differs. And it contradicts Appendix G's explicit choice.
-  - *Treat it as a defect*, for example by declaring only `sysml_codegen/study/`. That narrows group 1 but leaves groups 2 and 3. It also changes B8's committed reading, and needs the full suite re-run.
-- Not changed while paused: the comparator's rules, `read_coverage`, and the layout.
+**B1 refinement: the project root is pinned before read coverage observes a route (`2e21955`).**
+- *The regression.* Outside `integrate`, with no `SYSML_CODEGEN_PROJECT_ROOT`, a route's `build_sealed` made `roots` run git under observation. The observer refused git's pipe as `unsupported integer-descriptor open: 3`, which names no cause. The original resolved its root from `__file__` and never ran git.
+- *The fix.* `read_coverage.run_route` enters `roots.pinned_project_root(Path(package))` before it constructs the observer. That resolves the root by the command-line rules (override, then the variable, then the package's work tree, with the working-directory conflict check), pins it for the `with` block, and puts the previous pin back on leaving, normally or by an exception.
+- *When no root can be named,* no route code runs. The receipt fails closed: `outcome` is `fail`, and `route_error` is `RootError: ` followed by `roots`' own message.
+- *The API.* `roots.pinned_project_root(anchor: Path) -> Iterator[Path]`, typed and documented. It does **not** join the supported target API: a target's route reaches the root through `identity.build_sealed`, and the docstring says so.
+- *Tests* (each new `run_route` test failed on the regression with the fix reverted):
+  - `test_roots` +4: the pin, the pin put back after a normal exit and after an exception, the command-line rules, and an unresolvable anchor.
+  - `test_read_coverage` +2: a probe route asking for its root gets the package's work tree with no variable set; a package in no work tree fails closed and names the cause.
+  - Teax lane +1: the station route under `run_route`, with no variable, passes gate 7's read coverage.
+- *A fixture follows the seam.* `test_read_coverage`'s `observed_route` now gives its driver `SYSML_CODEGEN_PROJECT_ROOT`, as `seam_env` does. Its packages sit in `tmp_path`, in no work tree, so without the variable they would now fail closed.
+- *Parity is unchanged by it.* Re-reporting the first session's runs (`24cce2c`) under the same rules gives the same table, status for status and count for count. The committed case files changed only in content digests. The orig environment's variable stays, only because the original seam and driver need it.
 
-**Issues / Deviations:**
-- **orig needs `SYSML_CODEGEN_PROJECT_ROOT`.** On the first run, both orig runs refused at gate 7 with `unsupported integer-descriptor open: 3`, while moved returned `CANDIDATE`.
-  - The cause: the fixture route's moved `build_sealed` resolves a project root. The moved seam exports one to its producers (B1, DD2). The original seam does not, so `roots` fell back to running `git`, and the observer refused the child's pipe.
-  - The harness now sets the variable in the orig environment only. No original tool reads it. It is B1's harness side, as the `uv` shim is B3's.
-- **A B7 row in rule 3's table.** Gate 1b's refusal detail names the simkit root where the original named the checkout root, as Phase 3 predicted. The mapping is one exact string, scoped to gate 1b's detail.
-- **Three noise patterns beyond Appendix G's list**, each shown to be noise by orig against orig2: junit `time` and `timestamp` attributes, `write_document`'s `mkstemp` names, and teax's uuid staging directories. Appendix G's token pattern is matched as the run's own token, exactly.
-- **integrate's stderr** is checked, in every run, to equal `human_summary` of that run's return. The returns are then compared.
-- **teax's `out/_work/`** (SQLite stores, package links) is compared by file listing only.
-- **teax's simkit** is importable through a `.pth` file naming its source root, not an editable install, so nothing is built into the teax checkout. Its declared dependencies are installed beside it (`make_venv.sh`).
-- **preflight's stale-manifest case** stales `recorded_provenance`, which is what its `manifest_currency` check reads. integrate's gate-6 case stales the pin, which is what gate 6 reads.
-- **Evidence size.** A receipt is about 800 kB, so `cases/<case>/{orig,moved}.json` summarize each receipt by category counts. `comparison.json` lists every difference in full. The raw runs stay in the scratch directory.
+**Test counts against the baseline:**
+- Full suite: `2677 passed, 9 skipped, 1 failed, 124 deselected`. The item's baseline is 2206 / 9 / 1, and Phase 3 ended at 2671 / 9 / 1 / 123. The six new default-lane tests are `test_roots` +4 and `test_read_coverage` +2. The failure is the known `test_zero_unmarked_self_named_examples_across_all_trees`, with the same single offender.
+- Teax lane: `tests/execution/test_study_*.py` 28 passed (27 after Phase 3, plus the station route with no project-root variable).
+- `ruff check src/` passes. `mypy src/` finds no issues in 84 files.
 
-**For the resumed Phase 4 and for Phase 5:**
-- **A route run under read coverage outside `integrate` needs the project root.** Any route that imports `sysml_codegen.study.identity` and runs under `read_coverage.run_route` needs `SYSML_CODEGEN_PROJECT_ROOT`, or an in-process `use_project_root`. Without it, `roots` runs `git`, and the observer refuses with `unsupported integer-descriptor open: 3`, a message that does not name the cause.
-  - `integrate` sets the variable for its producers, and rehearsal step 8c's driver command sets it.
-  - fusion-tea's tests that run a route under the observer in a subprocess may need it in `step5-tests.patch`: Appendix H3 lists `test_read_coverage.py`, `test_single_point_gate.py` and `test_study_publication_fail_closed.py` for `TEAX_SIMKIT_PATH`.
-  - The runbook's "The tools" section and the integration guide should state it.
-- **Re-running parity** takes about two minutes after `make_venv.sh` (`evidence/parity/README.md`). If a rule is added, `parity.py … report` alone re-compares the existing runs.
+**The fusion-tea drafts (`evidence/fusion-tea/`).**
+- `wrappers/scripts/`: the eight aliases (DD14), laid out as fusion-tea's `scripts/` tree. Each pins `roots.use_project_root` to its repository (`parents[2]`, or `parents[1]` for `scripts/integrate.py`) and never touches `os.environ`. The four tools call `main()` when run as `__main__`; every wrapper imported as a module replaces itself in `sys.modules`. They pass fusion-tea's own ruff configuration.
+- `routes.sed`: rewrites `from scripts.study import` to `from sysml_codegen.study import` at line start, in the **nine** route files it names.
+- `declaration.toml`: Appendix D's table, verbatim, unchanged since `06ff48b`.
+- `step5-tests.patch`: 17 test files. `patch -p1 --dry-run` applies cleanly to a fresh copy of `b06585709`. Its preamble maps each hunk to its Appendix H3 row.
+- `SMOKE.md` and `smoke.sh`: all five checks pass in a copy of the parity layout. (1) Each alias is the installed module. (2) A wrapper run by path from `/tmp` writes the moved run's bytes. (3) `routes.sed` changes only the import. (4) The declaration loads. (5) `integrate` through the wrapper returns `CANDIDATE`, and gate 7's driver run directly with no project-root variable passes.
+
+**Do the three Appendix H3 tests still need `SYSML_CODEGEN_PROJECT_ROOT`?**
+- `test_read_coverage.py`: **yes, for a new reason.** Before the fix it needed the variable to keep git out of the observed window. Now it needs a root because its packages sit in no work tree, and `run_route` refuses there. The patch gives `observed_route` the variable, as the seam does. In a switched copy of the staged tree (wrappers, schemas removed, the patch, the declaration), 32 of the file's 45 tests fail with `RootError: no project root` without that edit, and all 45 pass with it.
+- `test_single_point_gate.py` and `test_study_publication_fail_closed.py`: **no.** They run fusion-tea's runners on its committed packages from its root, so any `run_route` resolves the package's work tree before it observes. They need only `TEAX_SIMKIT_PATH`, per the table. They cannot run here, because the staged copy holds neither the runners nor the packages, so rehearsal run C confirms them.
+- Other patched tests that run without packages pass in the switched copy: `test_common`, `test_generic`, and the three simkit-probe tests (in a venv without simkit installed, which is fusion-tea's shape). The rest need fusion-tea's committed packages.
+
+**Rehearsal helpers (`evidence/rehearsal/`).** `junit-diff.py` applies DD15's comparison. Its exit status is C's pass rule against B: a test that passed in B may not fail, error, skip or go missing in C, and a test failing in both must fail the same way. `selftest/` holds one pair that holds and one broken four ways. `env.sh.example` is the one sourced environment, with `record_env` writing each run's `env.txt`. Cut 1 is not applied.
+
+**Deviations from the plan or design:**
+- **Nine route modules, not eight** (capture-fidelity law 4, surfaced here). `CONSUMER_SURFACE.md:106` lists `exploration/whole_plant_conversion/studies/study_route.py:7: from scripts.study import common, identity`. The design (`design.md:91, :127, :150, :286-287`) and this plan count eight and omit it. DD14's reason (read coverage would see fusion-tea's `scripts/study/` files) applies to every route module, and step 5's own check greps all of them, so `routes.sed` names nine. The design text is not edited here. The orchestrator may want to amend DD14's count, and DD14's "all eight routes call `build_sealed`" is unverified for the ninth: its body is not staged.
+- **Three test edits beyond Appendix H3's table.** Each was found by reading every staged test that names `scripts/`, and each is explained in the patch preamble. (1) `observed_route`'s project root, above. (2) `test_generic`'s schema test reads the installed schemas, because `scripts/study/schemas` is removed. (3) `test_integrate_restore`'s no-mtime test reads `integrate.__file__`, because grepping the wrapper would pass without testing the seam.
+- **Appendix H3's `env.txt` grep matches no `STOP_PARSER_` name.** `'^(STOP_PARSER_|…)='` needs `=` straight after the prefix. `env.sh.example` uses `STOP_PARSER_[A-Z_]*`, and the runbook should carry the corrected pattern.
+- **`env.sh.example` takes only the licence from the companion `.env`.** That file also holds unrelated credentials, which a whole-file `set -a` would export into every run.
+- **The patch's `TEAX_SIMKIT_PATH` session fixture derives the value from `STOP_PARSER_TEAX_ROOT` whenever that is set,** replacing any exported value, so the teax tree the tools declare cannot differ from the one the fixtures import.
+- **`pinned_project_root` applies the working-directory conflict check.** A direct `run_route` call made from inside a different work tree from the package refuses, as every tool's command line does. `integrate` always sets the variable, so its gate 7 never reaches the check.
+- **Smoke checks beyond the plan:** check 5 (`integrate` through the wrapper, and the driver with no variable) and the `--help` runs.
+
+**For Phase 5 (running in parallel) and Phase 6:**
+- **This supersedes the first session's note that a route run under read coverage outside `integrate` needs the project root.** Since `2e21955`, it needs no variable when its package is in a git work tree: the root is that work tree. When the package is in no work tree, the run refuses before observing, and the receipt's `route_error` carries `roots`' message, which names `SYSML_CODEGEN_PROJECT_ROOT` as the remedy. The runbook's "The tools" section and the integration guide should state that rule, not "set the variable".
+- Rehearsal step 8c's driver command (Appendix H3) still sets `SYSML_CODEGEN_PROJECT_ROOT=$FTC`. That is harmless and no longer required (`SMOKE.md` check 5).
+- The fusion-tea runbook's step 5 should list nine route files; `routes.sed`'s comment lists them.
+- `step5-tests.patch` has no `test_integrate_guide_contract.py` hunk yet; Phase 5 adds it and re-runs `patch -p1 --dry-run`.
+- Phase 6's parity re-run check: the parity wheel was built at `2e21955`, and nothing under `src/sysml_codegen/study` changed after it. So the check is `git diff 2e21955 -- src/sysml_codegen/study`.
 
 ### Phase 5 Completion
 **Completed:**

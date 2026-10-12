@@ -1,7 +1,7 @@
 # Spec: Move the study layer to sysml-codegen (WRAP-SPLIT Item 3)
 
 **Status:** Approved for design by the orchestrator, 2026-10-12, after one review round (Revise, applied)
-**Implementation:** In progress. Phase A and Phases 1–3 of the plan are done (2026-10-12). Phase 4 is paused at SC12's stop rule for an orchestrator decision: five parity cases differ in read-coverage receipt entries about the installed package; see `plan.md` Implementation Notes.
+**Implementation:** In progress. Phase A and Phases 1–4 of the plan are done (2026-10-12): SC12's parity passes on all 28 cases under the orchestrator's ratified rules, and the fusion-tea code drafts are written and smoke-tested. Phase 5 is in progress; see `plan.md` Implementation Notes.
 **Owner:** Reid W
 **Created:** 2026-10-12
 **Complexity:** HIGH
