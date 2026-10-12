@@ -1,9 +1,9 @@
 # Audit: Move the study layer to sysml-codegen (WRAP-SPLIT Item 3)
 
-**Verdict:** Needs Work — one Blocker (F1), narrow and with a ruled remedy. SC9 is pending the rehearsal. Once F1's fix lands and a targeted re-check passes, this item reads as **Certify with follow-ups**.
-**Audited:** 2026-10-12, by a fresh session that authored none of the work.
+**Verdict:** **Certify with follow-ups.** This is the final verdict, from the re-audit at `bd70270` (§ Re-audit 2026-10-12, at the end). The first pass, at `ff893fd`, was Needs Work on one Blocker (F1), and the fix pass has closed it. SC9 and SC11 are now met. The follow-ups are named in the re-audit, and some of them must be done at `/_my_close`.
+**Audited:** 2026-10-12, by a fresh session that authored none of the work. First pass at `ff893fd`; re-audit at `bd70270`.
 **Branch:** `study-layer-to-codegen` (base `aa35f06`)
-**Commit:** `ff893fd` (clean tree). `src/` and `pyproject.toml` are unchanged since `f44c991`, the install transcript's commit. `src/sysml_codegen/study/` is unchanged since `aac1290`, the parity run's commit. So the stored evidence applies to HEAD.
+**Commit:** first pass `ff893fd` (clean tree). `src/` and `pyproject.toml` are unchanged since `f44c991`, the install transcript's commit. `src/sysml_codegen/study/` is unchanged since `aac1290`, the parity run's commit. So the stored evidence applies to HEAD.
 
 ---
 
@@ -333,3 +333,165 @@ The F8 text pass can ride with F1's fix and needs no separate re-audit.
 - About 80 of 126 read-through rows were not sampled.
 - The behaviour of symlinked `--package` paths that leave the work tree.
 - Ported-module behaviour outside the 28 parity cases and the suites.
+
+---
+
+## Re-audit 2026-10-12
+
+**Final verdict: Certify with follow-ups**, at HEAD `bd70270`.
+
+- No Blocker remains: F1 is closed.
+- SC9 and SC11 are met, so all twelve criteria are now ticked.
+- The follow-ups are advisory. Some of them must be done at `/_my_close`, because close deletes this folder (§ Do at close, below).
+
+### What was re-run
+
+The orchestrator ran these at HEAD `bd70270`. The outputs are in `.orchestrate-logs/audit-probes/round2/`.
+
+- **Full suite:** 2744 passed, 9 skipped, 1 failed, 124 deselected. That is the first pass's 2741, plus three new tests. The failure is the known self-binding test, which is not this item's.
+- **F1 and F3 tests:** 11 passed.
+- **ruff and mypy:** clean, 85 files.
+- **Teax lane:** 28 passed. That venv runs uv's CPython 3.12.11, so the station still reaches `CANDIDATE` with the build-time zone roots. The fix did not regress the case B13 exists for.
+- **agentic-mbse suite:** 2214 passed, 18 failed (SC11, below).
+- **Parity (SC12):** re-run at sysml-codegen `6ad4c22` and agentic-mbse `70d78d0`, committed in `7205ab1`. 28 of 28 cases pass, status for status.
+  - I read the harness diff (`evidence/parity/parity.py`). The only rule change is what the preload measurement counts.
+  - The excluded set shrank from 21 to 12 standard-library modules and from 14 to 8 `.pyc` paths. The comparison is now stricter, not looser.
+  - Nothing under `src/sysml_codegen/study/` changed after `6ad4c22`; only shipped text and one test did. So parity holds at HEAD.
+
+### Finding status
+
+| Finding | Status | Evidence |
+|---|---|---|
+| **F1** gate 7 fail-open (Blocker) | **Closed** | See "F1, checked by reading" below. |
+| F2 follow-ups only in the item folder | **Mostly closed; two items carried to close** | `deb0b02` and `bd70270` file six backlog items: record resume, point runner, the integrate misreports, verify's missing-store traceback, the mypy debt with each override named, and the product-ledger entry. Not filed: DD12's `study check-record`, and DD19's kept smells, gate 4's `--snapshot` flag among them. The plan says these "remain for `/_my_close`" (`plan.md:1065`). |
+| F3 template fails its own check | **Closed** | `544db6d`: the preamble no longer contains `<`. `test_a_literal_copy_of_the_record_template_passes_the_placeholder_check` (`tests/study/test_run_study_bundle.py`) copies the preamble verbatim, fills the placeholders in §§ 1–17, and runs the runbook's own step-15 command, which must print `0`. |
+| F4 F-DR2's cause | **Closed as a record** | `[STUDY-ROUTE-POINT-RUNNER]` restates the cause correctly. The contract decision stays with the owner or orchestrator. |
+| F5 integrate misreports | **Filed** | `[INTEGRATE-CALLER-ERROR-AS-SEAM-FAULT]`. The fix is deferred, because the behaviour is inherited. |
+| F6 ADR-0015 wider than the code | **Closed** | `53a4261` narrows the invariant to documents a tool writes from its command line, and states the unpinned-library rule and its `..` risk. |
+| F7 DD2 overclaims | **Closed** | `53a4261` records the three cases in the design. The decision stands. |
+| F8 text residue | **Closed** | `7cf5a7c`. Details below. |
+| F9 `Installer.files` outside `installer/v1` | **Closed, per the orchestrator** | agentic-mbse `70d78d0` names it in the surface comment. That commit is outside this worktree, so I did not read it. The parity re-run's wheel was built from it. |
+| F10 merge prep (O5) | **Open, as expected** | `INSTALLER_API_REVISION` and the README move to the agentic-mbse merge SHA. `adr.sh index` runs at the merge with `main`. Pushes are the owner's. |
+
+**F1, checked by reading.**
+
+- *The fix* (`6ad4c22`). `read_coverage.py` now builds `INTERPRETER_ZONE_ROOTS` once at import, from `sysconfig.get_config_var("TZPATH")`. It keeps absolute entries only (`absolute_entries`) and no longer imports `zoneinfo`. No environment variable changes that build-time value.
+- *The spec.* B13 and its receipt-consequence paragraph are amended and graded as audit F1's (`7205ab1`).
+- *The regression test* is `test_pythontzpath_does_not_widen_the_runtime_roots` (`tests/study/test_read_coverage.py`). It runs integrate's own route driver in a subprocess with `PYTHONTZPATH=/`. The route reads `tmp_path/unexpected.csv`, a file that is neither in the package nor declared. The test requires a non-zero exit and exactly one violation, `undeclared dependency read: …/unexpected.csv`.
+  - *On the old code it fails open.* The driver's observer took `zoneinfo.TZPATH == ('/',)` as a runtime root. `classification` checks package reads first (`:135-136` at `01990a5`), then returns `runtime-observed` for anything under `/` (`:137`). So the read passed, the driver exited 0, and the test's assertion fails.
+  - *On the new code it fails closed.* The runtime roots are `sys.prefix`, `sys.base_prefix` and the build-time zone directories. `tmp_path` is under none of them, so `classification` reaches `fail("undeclared dependency read: …")`, as the test requires.
+- *The other zone tests.* They no longer set `PYTHONTZPATH`. They replace `INTERPRETER_ZONE_ROOTS` inside the driver (`ZONE_DRIVER_SOURCE`), which is the only way to point a build-time value at a test directory. The "zone-shaped data elsewhere is still refused" test is kept.
+
+**F8, in detail** (`7cf5a7c`).
+
+- *Labels and wording.*
+  - The policy's unlabelled parentheticals are labelled "in a fusion plant model, for example".
+  - The § 2 [OWNER] rule (SP-7) is kept verbatim, under a new verdict class, "kept verbatim: owner-graded rule". That is the right handling: rewording an owner's rule is the owner's call.
+  - "Oracle-mirrored at 1e-9" is stated generally, with the old wording kept as an example.
+  - "Analyses layer" and "source quarantine" are generalized, and the fill-in line names § 1.
+  - `runbook.md:130` cites the installed goal runbook and gives a fallback.
+  - `runbook.md:259` now gives `--package DIR`.
+  - `teax-completion.md:58` names `sysml-codegen generate`.
+- *The guide's "requirements'" numbering line* becomes moved row IG-43.
+  - Its home is `fusion-tea/text/audit-f8-supplement.patch`, on the fusion-tea branch at `aab9b9ba3`.
+  - The rehearsal's step 3, checked against that tip's files, gives 75 found, 0 missing.
+  - Its ledger row is in agentic-mbse `130a483`, per the orchestrator.
+- *The read-through* now has 132 rows: 75 moved, 46 generalized, 6 kept as general, 4 kept as labelled examples and 1 kept verbatim as an owner-graded rule. Every line the first pass named now has a row.
+
+### SC9: met
+
+SC9 is an evidence criterion. The runbook must be rehearsed on a disposable copy, and each step marked rehearsed, not rehearsable (with the reason), or not run, so that "could not" is distinguishable from "did not". The committed runbook (`evidence/fusion-tea-runbook.md`, `4d6c2ab` and `69393a7`) has an "Observed in the rehearsal" line for every step, each citing its `$R` evidence.
+
+| Step | Mark | What it showed |
+|---|---|---|
+| 1 drift check | Rehearsed; matched | The diff against `origin/main` `c42ed1d8a` was empty. |
+| 2 agentic-mbse pin | Rehearsed; matched | Printed `installer/v1` after the wheel install. fusion-tea's current pin `ac5fb1a` lacks the API, so the real switch needs the agentic-mbse pin move. |
+| 3 no-loss | Rehearsed | 74 found, 1 missing at `699b0a74d`, because IG-43 was added mid-rehearsal. 75 found, 0 missing against `aab9b9ba3`'s files. |
+| 4 pin move | Not rehearsable | It needs `M_CODEGEN`. |
+| 5 switch | Rehearsed; matched after two fixes | The second guide-contract patch was already on O4, and is now dropped. The venv re-sync is explained under "What remains unrehearsed". The corrected test patch fixes two stale fakes in `test_integrate_restore`. Those are test fixtures written against the original `run()` / `assert_environment`, not a code regression. |
+| 6 declare | Rehearsed; matched | `uv lock --check` reported the lock fresh. |
+| 7 re-install | Rehearsed; matched | The policy was preserved. The first-run "Preserved teax-completion" path was not exercised; unit tests cover it. |
+| 8a suite | Rehearsed; pass rule restated after diagnosis | B to C is exactly 21 integrate tests, each refused at gate 2 because the new generator rewrites three named stellarator files. |
+| 8b re-verify | Identity half rehearsed; verify half not rehearsable | The one record whose identity recomputes gives the same digest before and after the switch. No recomputing record has a committed store. |
+| 8c integrate | Rehearsed; matched | B and C both stop at gate 1b with the same class and condition, and differ only in closed-list fields. The gate-7 driver passes with `TMPDIR` set. |
+| 9 consequence | Recorded | The generator moved 214 commits, not about 142. The runbook now says to count them. |
+
+**Is the gate-7 diagnosis convincing that the move did not cause a regression? Yes.**
+
+- *What failed.* The refused read is tempfile's first-use probe of its default directory. The rehearsal traced it to fusion-tea's `study_route.py:241` `mkdtemp`. The probe lands in `/tmp` only because the hand-typed driver command had no `TMPDIR`.
+- *Both seams already guard against it.* They set `TMPDIR` inside the out directory (original `integrate.py:1255`, moved `:1320`), so under `integrate` the probe is admitted as new output.
+- *The comparison isolates the move.* With the interpreter's own effects removed, the original and moved observers fail the same way without `TMPDIR` and pass the same way with it. The moved driver then passed on the real stellarator route, from wheels whose `src/` equals HEAD's.
+- *Nothing the move changed touches `/tmp`.* The move touched the observer only through B8, B13 and the B1 pin. The original's extra `/dev/urandom` refusal on uv's interpreter is exactly the case B13 was written for.
+- *Limit.* The two-by-three diagnosis table's raw evidence is in `$R/diag/`, outside this worktree. I judged it from the summary and the runbook's observed lines, not from the raw files.
+
+**Are the runbook's guards adequate for the owner's adoption? Yes, for every step that writes to fusion-tea's tree.**
+
+- Step 1's drift check stops on any change.
+- Step 2 now says the agentic-mbse pin must move.
+- Step 3's script exits non-zero and names a missing anchor.
+- Step 5 edits nine named route files, then checks that nothing else under `exploration/` changed. That ran in the rehearsal, and nothing else changed.
+- Step 7 warns against `--force`.
+- 8a lists the expected changes, and `junit-diff.py` masks pytest's temp paths.
+- 8c sets `TMPDIR`.
+
+One guard should be sharper (R1, below). In the real adoption, the runbook expects B to C to come out empty, because step 4 puts the new generator under B as well. That expectation is written as "should drop out", not as a stop rule.
+
+**What remains unrehearsed, and whether that is acceptable:**
+
+1. **Step 4, the pin move.** It hand-edits the lock, and it is the riskiest step. It cannot exist before the merge SHA.
+   - It is guarded by a `grep -c` for the old SHA, a `pip list` diff, `uv lock --check` and the provenance test.
+   - Acceptable: it is the owner's step.
+2. **The switched `integrate` past gate 2 on a real fusion-tea package.**
+   - 8c stopped both runs at gate 1b, because the request's expected teax revision `744745f8` is historical and teax HEAD is `8d877460`.
+   - The 21 integrate tests stopped at gate 2, because of the generator move.
+   - So gates 3–9 and `CANDIDATE` under the switched tools never ran on a fusion-tea package. Their coverage comes from SC12's parity on the neutral station (28 cases, `CANDIDATE` included) and from the gate-7 driver passing on the stellarator route.
+   - Acceptable for this item: the move is proven byte-faithful on those gates, and the gate-2 refusal is the pin move's consequence, not the switch's. This is the main residual risk, though (R2).
+3. **8b's verify half.**
+   - Only 1 of 40 fusion-tea records' sealed identities recomputes, and its stores are not committed.
+   - That is a pre-existing fusion-tea fact: the failure is the same before and after step 5, through fusion-tea's own tools.
+   - `verify`'s byte-faithfulness is covered by SC12 (`verify-complete`, `verify-oracle-mutated`). Acceptable. The owner should know the record fact (R3).
+4. **Smaller items, all acceptable:**
+   - The rehearsal venv ran uv's CPython, not `/usr/bin/python3.12`. That caused A's and B's `/dev/urandom` refusals. The kit's new `--python /usr/bin/python3.12` line was not run.
+   - `env.txt` cannot tell A from B.
+   - The first-run teax-completion rule was not exercised.
+   - Round 1 ran on `310dfc6` wheels. The fix pass changed only `read_coverage.py` and shipped text, which steps 1–3, 6 and 9 do not exercise. Round 2 re-ran steps 5, 7, 8a and 8c from wheels whose `src/` equals HEAD's.
+   - The original seam's `uv run` (no `--no-sync`) re-syncs the venv to the lock. In the rehearsal that silently put back the old generator under B. In the real adoption, step 4 moves the lock first, so the re-sync installs `M_CODEGEN`.
+
+### SC11: met
+
+- **sysml-codegen:** 2744 passed, 9 skipped, 1 failed (the known test, not this item's). ruff and mypy are clean.
+- **agentic-mbse:** 2214 passed and 18 failed. Those are the same counts as Phase A's baseline and after-figures, which the plan recorded as missing optional extras (`trafilatura`, `PIL`). The two failures visible in the output are `tests/test_web_backend.py`, consistent with missing `trafilatura`.
+- **Limit.** `agentic-mbse-suite.txt` holds only the last three lines of the run, and it names no revision. So "the same 18" rests on the orchestrator's comparison, not on a list I compared. F9's agentic-mbse change is a comment and cannot change a test outcome.
+
+### New advisory findings from the re-audit
+
+None of these blocks.
+
+- **R1 · Make 8a's real-adoption expectation a stop rule.** The 8a pass rule was restated to fit what the rehearsal saw. The fit is mechanistically explained, and the 21 tests are named. In the real adoption, B to C should be empty. Say so as a rule ("any B-to-C change is a stop"), so the list is not fitted again on the day.
+- **R2 · Re-run past gate 2 after regeneration.** Once the stellarator package is regenerated under `M_CODEGEN`, in its own modeling item, re-run 8a's 21 integrate tests and 8c with a current expected teax revision before calling adoption complete. Until then, gates 3–9 under the switched tools are unproven on fusion-tea's packages. Record this in runbook step 9.
+- **R3 · Tell the owner about fusion-tea's records.** 39 of fusion-tea's 40 records with a results identity no longer recompute their sealed identity. For the named record, the failure is the same before and after the switch, so it predates this move. "Re-verify an existing record" cannot be shown on fusion-tea today. This is not this item's defect, but the owner should see it.
+
+### Do at close
+
+`/_my_close` deletes this folder, so these must land then:
+
+- File DD12's `sysml-codegen study check-record` and DD19's kept smells (gate 4's `--snapshot` flag, argparse `prog`, `write_atomically`, `integrate.py`'s size) in the backlog. This is F2's remainder.
+- Write the product-ledger entry (`[STUDY-LAYER-PRODUCT-ENTRY]`).
+- Move the adoption runbook to agentic-mbse (D10), with R1–R3 folded in.
+- O5: move `INSTALLER_API_REVISION` and the README to the agentic-mbse merge SHA, and run `adr.sh index` at the merge with `main`.
+- Product-lens `audit-F5` (one README sentence naming the five pieces a project writes) is unaddressed. `audit-F6` (whether a non-empty glue ledger is a model-development finding) is the owner's call. File both or put them to the owner.
+
+### Certification (re-audit)
+
+- **Marked in `spec.md`:** SC9 and SC11. All twelve criteria are now ticked.
+- **`CURRENT_WORK.md`:** updated to "certified with follow-ups".
+- **The plan's checkboxes** were already complete.
+- **The epic** lives in agentic-mbse, outside this worktree, and was not edited.
+
+**Not checked in the re-audit:**
+
+- agentic-mbse `70d78d0` and `130a483`, and fusion-tea `aab9b9ba3`, which are outside this worktree. They are taken from the orchestrator's report and the rehearsal's records.
+- The rehearsal's raw evidence under `$R`, which is outside this worktree. I judged it from `rehearsal-summary.md` and the runbook's observed lines.
+- That F1's regression test fails on the old code. I confirmed it by reading, not by running the old code.
+- The 21-test list in 8a, which I did not compare against the junit files.
+- The full list of agentic-mbse's 18 failures.
