@@ -1,8 +1,8 @@
 # Implementation Plan: Move the study layer to sysml-codegen (WRAP-SPLIT Item 3)
 
-**Status:** In Progress (Phase A, Phase 1 and Phase 2 done)
+**Status:** In Progress (Phase A, Phase 1 and Phase 2 done; Phase 3 paused for one decision)
 **Created:** 2026-10-12
-**Last Updated:** 2026-10-12 (Phase 2 implemented)
+**Last Updated:** 2026-10-12 (Phase 3 paused at gate 7)
 **Branch:** `study-layer-to-codegen` in both sysml-codegen and agentic-mbse
 
 ## Source Documents
@@ -360,28 +360,28 @@ def test_a_gate_without_checked_is_invalid(tmp_path):
 
 ### Steps
 
-- [ ] Write `tests/study/test_declarations.py` first. It covers every malformed shape in Appendix A "Validation", including a missing `checked`, an absolute target and a `../` target. Then write `declarations.py` per Appendix A, fully typed.
-- [ ] Add the fixture's integrate-only parts (Appendix E):
+- [x] Write `tests/study/test_declarations.py` first. It covers every malformed shape in Appendix A "Validation", including a missing `checked`, an absolute target and a `../` target. Then write `declarations.py` per Appendix A, fully typed.
+- [x] Add the fixture's integrate-only parts (Appendix E):
   - `census.json`;
   - `gates/check_pins.py` and `gates/check_census.py`;
   - `pyproject.toml` declaring both gates with their own `checked` texts, an empty environment, and `backup-prefix = "station-integration-backup-"`.
 
   If pytest refuses an explicit file that does not start with `test_`, rename the stand-ins `test_*.py` and add `collect_ignore` in `tests/conftest.py`.
-- [ ] Write `tests/study/test_integrate_declared.py` (SC8): the full list in Appendix F, with a stub `simkit` in a `tmp_path` git repository and a dummy license value.
-- [ ] Make the remaining `integrate.py` edits from Appendix A:
+- [x] Write `tests/study/test_integrate_declared.py` (SC8): the full list in Appendix F, with a stub `simkit` in a `tmp_path` git repository and a dummy license value.
+- [x] Make the remaining `integrate.py` edits from Appendix A:
   - `SEAM_PATH`, `TOOL_SOURCE_FILES`, `REQUIRED_ENV`, `seam_env`, `teax_revision`, `toolchain_block` and `assert_environment`;
   - `gate_table` and `SequenceState`, the repo gates, and gate 1b in DD10's order;
   - the launches (B3), the census producers and the backup prefix;
   - `run()`'s root pin and its declaration load;
   - SC5's docstring edits.
-- [ ] Move `test_integrate_preconditions`. Its two simkit-probe tests go to `tests/execution/test_study_integrate.py`. Also move `test_integrate_refusals`' two store-resolution tests.
-- [ ] Add the license-lane test: gate 5 undeclared gives `unasked`. It needs gates 1a–4 to pass on the fixture copy.
+- [x] Move `test_integrate_preconditions`. Its two simkit-probe tests go to `tests/execution/test_study_integrate.py`. Also move `test_integrate_refusals`' two store-resolution tests.
+- [x] Add the license-lane test: gate 5 undeclared gives `unasked`. It needs gates 1a–4 to pass on the fixture copy.
 - [ ] Extend `tests/execution/test_study_integrate.py` (it also needs the license) with:
   - the gate 7 read-coverage refusal and the gate 8 verification refusal;
   - **`CANDIDATE` with exit 0.**
 
   **Cut 2** replaces the `CANDIDATE` test with one that pins the documented `BLOCKER` at the named gate where the fixture stops, and records the deferral.
-- [ ] Add `integrate`, `declarations` and `census` to `test_generic_text.py`'s covered set. Add `integrate` to the literal checks in `test_tool_identity.py`. Add SC8's test that `integrate` names no target test file, no target environment variable and no target-only dependency.
+- [x] Add `integrate`, `declarations` and `census` to `test_generic_text.py`'s covered set. Add `integrate` to the literal checks in `test_tool_identity.py`. Add SC8's test that `integrate` names no target test file, no target environment variable and no target-only dependency.
 - [ ] Commit, naming B3–B7, B10, B12, SC3 and SC8.
 
 ### Validation
@@ -757,9 +757,44 @@ Detailed risks are in `design.md#potential-risks`. These are the phase-specific 
 - The teax-lane tests import `study_route` and `oracle_entry` as top-level modules from `studies/` on `sys.path`, the way `verify` imports the oracle.
 
 ### Phase 3 Completion
-**Completed:**
-**CANDIDATE reached, or cut 2 applied (named gate):**
-**Issues / Deviations:**
+**Completed:** Not yet. Paused 2026-10-12 for one orchestrator decision, below. Everything that does not depend on it is committed: `b461512` (B13), `d57f5c6` (`declarations`), `161a659` (the fixture's integrate-only parts), `5b40bd3` (integrate's edits and their tests).
+
+**CANDIDATE reached, or cut 2 applied (named gate):** Neither yet. Gate 7 refuses the station on this venv's interpreter even with B13. Two tests wait on the decision: `CANDIDATE` with exit 0, and the gate-8 verification refusal, which needs gate 7 to pass first.
+
+**Premise conflict, surfaced, not resolved (capture-fidelity law 4): B13 is not enough for gate 7 on uv's standalone CPython.**
+- B13 rests on the premise that `/dev/urandom` was the only read stopping gate 7. Phase 2 could see only that one, because the observer stops at the first violation.
+- With B13 in place, the station route raises exactly one more violation, and nothing after it: `undeclared dependency read: /usr/share/zoneinfo/Etc/UTC`. A scratch run that recorded every violation instead of stopping found only this one.
+- The cause: simkit imports pandas, and `pandas/_libs/tslibs` calls `dateutil.tz.gettz("UTC")` at import. dateutil opens `/usr/share/zoneinfo/UTC`, which resolves to `Etc/UTC`. That directory heads both dateutil's `TZPATHS` and this interpreter's own `zoneinfo.TZPATH`: `/usr/share/zoneinfo`, `/usr/lib/zoneinfo`, `/usr/share/lib/zoneinfo`, `/etc/zoneinfo`.
+- fusion-tea never sees it. Its interpreter is `/usr/bin/python3.12`, whose `sys.prefix` is `/usr`, so the read is under a runtime root. This venv's `sys.base_prefix` is uv's directory.
+- End to end on a committed station copy, with the real licence and teax `8d87746`, gates 1a to 6 pass and gate 7 refuses with that read.
+- With that one directory permitted in scratch only (a `sitecustomize` on `PYTHONPATH`; nothing committed), the same run returns `CANDIDATE`, exit 0, all ten gates passing.
+- The brief says to keep B13 to its two paths, so the code is unchanged. Phase 4 meets the same wall: its parity venv (`uv venv --python 3.12`) would likely be a uv standalone build, and then the original tools refuse at `/dev/urandom` and the moved ones at the zone file.
+
+**B13 evidence.**
+- `tests/study/test_read_coverage.py`: `test_a_kernel_entropy_device_is_a_runtime_read` (both devices) failed with `undeclared dependency read: <device>` before the change and passes after. `test_any_other_device_is_still_an_undeclared_read` pins `/dev/zero` as still refused.
+- On the station's own path: `tests/execution/test_study_integrate.py::test_a_route_that_reads_outside_its_declared_sources_is_refused_at_gate_7` runs integrate through gate 7's driver. Its route imports `tempfile`, through the study package, before the planted read. With `read_coverage.py` reverted to `c34ae2d`, its violations are `['undeclared dependency read: /dev/urandom', '…/census.json']` and it fails. With B13 they are the census read alone, and it passes.
+- A teax-lane test asserting the station route passes read coverage outright was written and not committed, because the zone-file read fails it. It lands with `CANDIDATE`.
+
+**Test counts against the baseline (so far):**
+- Full suite: `2669 passed, 9 skipped, 1 failed, 120 deselected`. Phase 2 ended at 2571 / 9 / 1 / 117. The failure is the known `test_zero_unmarked_self_named_examples_across_all_trees`, with the same single offender.
+- The 98 new default-lane tests: `test_declarations` 43, `test_integrate_declared` 24 (one in the license lane), `test_integrate_preconditions` 8, `test_integrate_refusals` 2, `test_read_coverage` +4, `test_census` +1, `test_tool_identity` +4, `test_generic_text` +12.
+- Teax lane: `tests/execution/test_study_*.py` 24 passed: station 21, integrate 3.
+- `ruff check src/` passes. `mypy src/` finds no issues in 84 files.
+
+**Deviations from the plan or design (so far):**
+- **Three simkit-probe tests, not two.** fusion-tea has three. "Refuses without the teax root" needs no teax, so it stayed in the default lane, in `test_integrate_preconditions.py`. The other two are in `tests/execution/test_study_integrate.py`.
+- **`IntegrateDeclaration.gates` is a read-only `Mapping`**, not the `dict` Appendix A shows, so a frozen declaration cannot be edited through it. The empty declaration is the constant `declarations.UNDECLARED`. A whitespace-only `target` or `checked` is refused as empty.
+- **`DeclarationError` cites `pyproject.toml` without its absolute path.** The message lands in a return's `detail`, whose bytes must not depend on where the project sits.
+- **integrate reads `TEAX_SIMKIT_PATH` from the seam's environment dictionary** (`teax_simkit_root(env)`), as the original read `STOP_PARSER_TEAX_ROOT` from it, rather than through `roots.teax_simkit_path()`. One snapshot then governs the whole run, and tests pass a doctored dictionary. No `os.environ` read is added, so I13 holds.
+- **Docstrings that B4, B5 and B12 made false went with those edits:** the module docstring's lines on gates 1a and 5 and on the bound producers, `gate_pinned_packages`, `gate_model_family_spine`, the `REQUIRED_ENV` comment and `assert_environment`. This follows Phase 1's `rederived_census` precedent.
+- **teax wording (B7, B9).** Gate 0's three teax details now name `TEAX_SIMKIT_PATH` or "teax's simkit". Gate 1b's refusal names the simkit root where it named the checkout root. Phase 4's parity mapping must cover both.
+- **Test helpers in `tests/study/conftest.py`:** `commit_station_copy`, `commit_stub_simkit`, `git_head`, `integration_request`, `seam_environment` and `run_integrate`. `station_repo` now calls `commit_station_copy`. `seam_environment` sets `TMPDIR`, because every run past gate 0 leaves its package backup behind on purpose.
+- **`test_tool_identity`'s literal check** resolves a `path::node` literal by its file part, for `sysml_codegen/study/census.py::by_entry_type`.
+- **Beyond the plan:** `test_census` checks that `census.json` is current, and `test_tool_identity` holds integrate's return to I4.
+
+**Proposals, not applied** (outside the closed list): `(D8)` at `integrate.py`'s `assert_package_clean` docstring is a fusion-tea design pointer that SC5's edit list does not name, the same class as Phase 1's proposal. `junit_outcome`'s docstring still says "an absent wheel variable"; it is true of fusion-tea's gate and reads as an example elsewhere.
+
+**For Phase 4:** the station declares both gates and reaches gate 7 on any interpreter. Parity can use Appendix D's fusion-tea declaration as is: `toolchain` keeps fusion-tea's key order, and rows 1a and 5 reproduce its strings. Run the parity venv on the interpreter the decision above names. On a uv standalone build, gate 7 refuses on both sides, for different reasons.
 
 ### Phase 4 Completion
 **Completed:**

@@ -4,7 +4,7 @@
 
 ## Active Work
 
-- **study-layer-to-codegen** (agentic-mbse epic WRAP-SPLIT, Item 3): move fusion-tea's `run-study` skill, study tools and `integrate.py` into sysml-codegen with an ownership-aware `install-commands`. Implementing on branch `study-layer-to-codegen`: Phase A (agentic-mbse `0843fe2`), Phase 1 (KB4 holds; package port and root split) and Phase 2 (station fixture; indicators, preflight and verify complete and fail closed; SC6; SC7) are done; Phase 3 is next. Phase 2 found that integrate's gate 7 refuses the station route on this venv's uv-standalone Python (it opens `/dev/urandom`); the orchestrator decides the remedy before Phase 3's `CANDIDATE` work (plan notes, "For Phase 3"). See the [plan](active/study-layer-to-codegen/plan.md).
+- **study-layer-to-codegen** (agentic-mbse epic WRAP-SPLIT, Item 3): move fusion-tea's `run-study` skill, study tools and `integrate.py` into sysml-codegen with an ownership-aware `install-commands`. Implementing on branch `study-layer-to-codegen`: Phase A (agentic-mbse `0843fe2`), Phase 1 (KB4 holds; package port and root split) and Phase 2 (station fixture; indicators, preflight and verify complete and fail closed; SC6; SC7) are done. Phase 3 is paused for one decision. B13 landed, and integrate is target-neutral with SC8 green, but gate 7 still refuses the station on this venv's uv-standalone Python. pandas, imported by simkit, reads `/usr/share/zoneinfo` at import, outside B13's two paths. `CANDIDATE` and the gate-8 refusal test wait on that decision (plan, Phase 3 Completion). See the [plan](active/study-layer-to-codegen/plan.md).
 
 The backlog holds separately scoped capabilities, diagnostics, model work, and assurance limits.
 
