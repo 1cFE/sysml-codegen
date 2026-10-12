@@ -39,7 +39,11 @@ from tests.study.conftest import (
     STATION_MANIFEST,
     STATION_PACKAGE,
     assert_post_move_tool_identity,
+    commit_stub_simkit,
     environment_with_root,
+    integration_request,
+    run_integrate,
+    seam_environment,
 )
 
 PREFIX = "sysml_codegen/study/"
@@ -51,8 +55,9 @@ TOOLS = {
     "indicators": "manifest",
     "preflight": "preflight",
     "verify": "verify",
+    "integrate": "integrate",
 }
-COVERED = ("manifest", "indicators", "preflight", "verify")
+COVERED = ("manifest", "indicators", "preflight", "verify", "integrate")
 
 
 def _source(module: str) -> Path:
@@ -100,7 +105,10 @@ def _tool_literals(module: str) -> set[str]:
 def test_every_tool_path_literal_names_a_file_under_the_tool_home(module: str) -> None:
     literals = _tool_literals(module)
     assert literals, f"{module} carries no tool-path literal"
-    missing = sorted(path for path in literals if not (roots.TOOL_HOME / path).is_file())
+    # A producer may name a node inside its file, as ``census.py::by_entry_type``.
+    missing = sorted(
+        path for path in literals if not (roots.TOOL_HOME / path.split("::")[0]).is_file()
+    )
     assert missing == []
 
 
@@ -157,6 +165,20 @@ def test_a_moved_tools_document_carries_the_installed_identity(
     document = json.loads(out.read_text())
     jsonschema.validate(document, load_schema(schema))
     assert_post_move_tool_identity(document)
+
+
+def test_integrates_return_carries_the_installed_identity(
+    station_repo: Path, tmp_path: Path
+) -> None:
+    """integrate's return has no shipped schema, but its tool block and command follow I4.
+
+    A stub simkit and a dummy licence take the run past gate 0; the identity is the same on
+    every exit path.
+    """
+    stub = commit_stub_simkit(tmp_path / "stub-teax")
+    env = seam_environment(teax=stub, license_key="dummy", tmpdir=tmp_path / "tmp")
+    request = integration_request(station_repo, tmp_path / "out")
+    assert_post_move_tool_identity(run_integrate(station_repo, request, env).document)
 
 
 # ------------------------------------------------------- documents from before the move

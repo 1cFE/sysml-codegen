@@ -5,8 +5,7 @@ that consumer's tool. The identifier classes and closed lists below are the spec
 as literals with their provenance so a reader can check them. Vocabulary is not checked:
 domain words stay legal; identifiers do not, even inside an example.
 
-Covered so far: every study module the root split edits, plus ``identity``, ``roots`` and
-``census``. ``integrate`` and ``declarations`` join with integrate's port, and the installed
+Covered so far: every study module, ``integrate`` and ``declarations`` included. The installed
 skill text joins when it ships.
 
 The last five tests are fusion-tea's ``tests/study/test_generic.py`` agnostic checks at
@@ -26,7 +25,7 @@ from tests.study.conftest import SCHEMAS, SYNTHETIC_MANIFEST
 
 STUDY = roots.TOOL_HOME / "sysml_codegen" / "study"
 COVERED_MODULES = (
-    "census", "common", "identity", "indicators", "manifest",
+    "census", "common", "declarations", "identity", "indicators", "integrate", "manifest",
     "preflight", "read_coverage", "roots", "verify",
 )
 

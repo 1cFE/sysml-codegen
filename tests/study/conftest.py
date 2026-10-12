@@ -285,14 +285,130 @@ _SCRATCH_COMMIT = (
 )
 
 
+def _commit_everything(repo: Path, message: str) -> None:
+    for argv in (["init", "-q"], ["add", "."], [*_SCRATCH_COMMIT, "commit", "-q", "-m", message]):
+        subprocess.run(["git", "-C", str(repo), *argv], check=True, capture_output=True)
+
+
+def commit_station_copy(repo: Path) -> Path:
+    """Copy the station fixture to ``repo``, make it a fresh git repository, and commit it.
+
+    The repository ignores ``__pycache__/``, as this one does, because loading the package
+    writes bytecode beside it.
+    """
+    shutil.copytree(STATION, repo, ignore=shutil.ignore_patterns("__pycache__"))
+    (repo / ".gitignore").write_text("__pycache__/\n")
+    _commit_everything(repo, "station")
+    return repo.resolve()
+
+
 @pytest.fixture
 def station_repo(tmp_path: Path) -> Path:
     """The station fixture copied into a fresh git repository and committed, for tests that
-    mutate it. The repository ignores ``__pycache__/``, as this one does, because loading the
-    package writes bytecode beside it."""
-    repo = tmp_path / "station"
-    shutil.copytree(STATION, repo, ignore=shutil.ignore_patterns("__pycache__"))
-    (repo / ".gitignore").write_text("__pycache__/\n")
-    for argv in (["init", "-q"], ["add", "."], [*_SCRATCH_COMMIT, "commit", "-q", "-m", "station"]):
-        subprocess.run(["git", "-C", str(repo), *argv], check=True, capture_output=True)
+    mutate it, and for every ``integrate`` run."""
+    return commit_station_copy(tmp_path / "station")
+
+
+# --------------------------------------------------------- invoking integrate from a test
+
+
+def commit_stub_simkit(repo: Path) -> Path:
+    """A fresh git repository at ``repo`` holding an empty ``simkit`` package, committed.
+
+    It is a simkit root gate 0 accepts and gate 1b can read a revision from, so integrate's own
+    logic is testable without teax. Only a producer that executes the route needs real teax.
+    """
+    (repo / "simkit").mkdir(parents=True)
+    (repo / "simkit" / "__init__.py").write_text('"""A stand-in for teax\'s simkit."""\n')
+    _commit_everything(repo, "stub simkit")
     return repo.resolve()
+
+
+def git_head(repo: Path) -> str:
+    done = subprocess.run(
+        ["git", "-C", str(repo), "rev-parse", "HEAD"], check=True, capture_output=True, text=True
+    )
+    return done.stdout.strip()
+
+
+def integration_request(repo: Path, out: Path, **overrides: str | None) -> list[str]:
+    """A complete ``integrate`` request against a committed station repository.
+
+    An override replaces the value of one flag, named without its dashes and with
+    underscores (``expected_teax_revision=...``); ``None`` drops the flag.
+    """
+    request: dict[str, str | None] = {
+        "audited_work": "models@HEAD",
+        "models_root": str(repo / "models"),
+        "package": str(repo / "pkg" / "station_study"),
+        "manifest": str(repo / "studies" / "manifest.json"),
+        "groups": str(repo / "studies" / "axes.json"),
+        "census_file": str(repo / "census.json"),
+        "route_sys_path": str(repo / "studies"),
+        "route_module": "study_route",
+        "route_callable": "execute_baseline",
+        "out_dir": str(out),
+    }
+    request.update(overrides)
+    return [
+        token
+        for name, value in request.items()
+        if value is not None
+        for token in ("--" + name.replace("_", "-"), value)
+    ]
+
+
+def seam_environment(
+    *, teax: Path | None, license_key: str | None, tmpdir: Path, **exported: str
+) -> dict[str, str]:
+    """This process's environment, with every setting ``integrate`` reads stated explicitly.
+
+    The project-root variable, ``PYTHONPATH``, ``TEAX_SIMKIT_PATH`` and the licence key are
+    removed first, so neither a developer's shell nor another lane decides a test. Then
+    ``teax`` and ``license_key`` are set when given, and ``exported`` on top. ``TMPDIR`` is
+    ``tmpdir``, because every run that passes gate 0 backs the package up into a new
+    temporary directory and leaves it there for recovery.
+    """
+    removed = {roots.PROJECT_ROOT_ENV, roots.TEAX_SIMKIT_PATH, "PYTHONPATH", "SYSIDE_LICENSE_KEY"}
+    env = {name: value for name, value in os.environ.items() if name not in removed}
+    if teax is not None:
+        env[roots.TEAX_SIMKIT_PATH] = str(teax)
+    if license_key is not None:
+        env["SYSIDE_LICENSE_KEY"] = license_key
+    tmpdir.mkdir(parents=True, exist_ok=True)
+    return {**env, "TMPDIR": str(tmpdir), **exported}
+
+
+@dataclass
+class IntegrateRun:
+    """One ``integrate`` invocation, read back by exit code and return document."""
+
+    returncode: int
+    document: dict[str, Any]
+    stderr: str
+
+    def row(self, gate: str) -> dict[str, Any]:
+        """The return's row for one of the ten gates."""
+        (row,) = (row for row in self.document["gates"] if row["gate"] == gate)
+        found: dict[str, Any] = row
+        return found
+
+
+def run_integrate(repo: Path, argv: list[str], env: dict[str, str]) -> IntegrateRun:
+    """Invoke ``integrate`` from ``repo`` as a caller does: a subprocess.
+
+    The return document is under ``--out-dir`` once gate 0 built the request, and on stdout
+    when it rejected the request first. A run that wrote neither fails the test here.
+    """
+    done = subprocess.run(
+        [sys.executable, "-m", "sysml_codegen.study.integrate", *argv],
+        capture_output=True, text=True, cwd=str(repo), env=env,
+    )
+    out = Path(argv[argv.index("--out-dir") + 1]) if "--out-dir" in argv else None
+    written = out / "integration_return.json" if out is not None else None
+    if written is not None and written.is_file():
+        document: dict[str, Any] = json.loads(written.read_text())
+    else:
+        assert done.stdout, f"no return document (exit {done.returncode})\n{done.stderr}"
+        document = json.loads(done.stdout)
+    return IntegrateRun(done.returncode, document, done.stderr)

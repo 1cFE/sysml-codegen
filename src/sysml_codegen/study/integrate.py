@@ -11,7 +11,7 @@ required to change nothing: regeneration moves zero bytes, the recaptured snapsh
 the tracked one, the manifest's pin recomputes to the recorded value. A candidate exists
 only for a package that is already a fixed point of the whole sequence, so the seam
 refuses model work that has not yet been regenerated and committed — that work belongs to
-the modeling item that made the change (ADR-009).
+the modeling item that made the change.
 
 Ten gates, in the producers' own order, stopping at the first non-pass:
 
@@ -20,7 +20,7 @@ Ten gates, in the producers' own order, stopping at the first non-pass:
   invoked into a condition this sweep could have caught, which is what keeps a missing
   licence key from being reported as a refusal.
 * **1a. pinned-packages** / **1b. teax-revision** — the toolchain the package was
-  generated through. 1a is the repo's own provenance suite; 1b has no producer anywhere,
+  generated through. 1a is the pytest target the project declares; 1b has no producer anywhere,
   so the seam does the ``rev-parse`` comparison itself against a caller-supplied
   expectation, and the absence of a producer is filed rather than absorbed.
 * **2. regeneration** / **3. handwritten-preservation** — generation, in place, required
@@ -28,7 +28,8 @@ Ten gates, in the producers' own order, stopping at the first non-pass:
   reports clean whatever the bytes do inside an ignored tree.
 * **4. census-snapshot** — the snapshot recaptured and the entry-point census re-derived
   from the sealed package, both required to match what is tracked.
-* **5. model-family-spine** — the canonical tree, the twins and the tracked census.
+* **5. model-family-spine** — the project's own check of its model tree, a pytest target it
+  declares.
 * **6. manifest** — the manifest loaded, validated, and its pin recomputed over the live
   package.
 * **7. preflight** / **8. verification** — the stock study gates, invoked with the
@@ -37,7 +38,9 @@ Ten gates, in the producers' own order, stopping at the first non-pass:
 
 Gates 1a and 5 judge the **repository** the package was generated from, not ``--package``:
 their producers accept no package argument and what they check genuinely is a repository
-property. Every gate result declares its ``scope`` so no reader mistakes what a pass
+property. The project declares both producers, and what each checked, in its
+``pyproject.toml`` (``declarations``); a gate it did not declare blocks as a question it never
+answered. Every gate result declares its ``scope`` so no reader mistakes what a pass
 covered.
 
 Two return classes and no third: ``CANDIDATE`` (exit 0) names one package, manifest, pin
@@ -54,8 +57,8 @@ Usage:
                  [--expected-executable-fingerprint HEX] [--expected-teax-revision SHA]
 
 Generic by construction: this module names no package, no key prefix, and no adapter. Two
-of the producers it invokes are bound to this repository by construction; that is a
-property of those producers, recorded per gate, not of the seam.
+of the producers it invokes are bound to the project's repository by construction; that is a
+property of those producers, declared by the project and recorded per gate, not of the seam.
 """
 
 from __future__ import annotations
@@ -69,29 +72,32 @@ import sys
 import tempfile
 import traceback
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from importlib import metadata
 from pathlib import Path
 from xml.etree import ElementTree
 
-from sysml_codegen.study import census, common, indicators, preflight, read_coverage
+from sysml_codegen.study import census, common, declarations, indicators, preflight, read_coverage
 from sysml_codegen.study import manifest as manifest_mod
 from sysml_codegen.study import roots as study_roots
 
 RETURN_SCHEMA_VERSION = "integration-seam-return/v1"
-SEAM_PATH = "scripts/integrate.py"
+SEAM_PATH = "sysml_codegen/study/integrate.py"
 
 #: This tool's own source files, for ``tool-source-digest/v1``. The study modules are in
 #: the set because the seam imports their constants and digests — an edit to one of them
 #: is an edit to what the seam means, exactly as ``preflight.py`` counts its own imports.
 TOOL_SOURCE_FILES = (
-    "scripts/integrate.py",
-    "scripts/study/common.py",
-    "scripts/study/identity.py",
-    "scripts/study/manifest.py",
-    "scripts/study/preflight.py",
-    "scripts/study/indicators.py",
-    "scripts/study/read_coverage.py",
+    "sysml_codegen/study/integrate.py",
+    "sysml_codegen/study/common.py",
+    "sysml_codegen/study/identity.py",
+    "sysml_codegen/study/manifest.py",
+    "sysml_codegen/study/preflight.py",
+    "sysml_codegen/study/indicators.py",
+    "sysml_codegen/study/read_coverage.py",
+    "sysml_codegen/study/roots.py",
+    "sysml_codegen/study/census.py",
+    "sysml_codegen/study/declarations.py",
 )
 
 #: The fourth status, beside ``preflight``'s three. A gate after the stop is *not reached*,
@@ -118,23 +124,13 @@ CANDIDATE_ASSEMBLY = "candidate assembly"
 #: entries: it is the sweep that runs before any producer.
 PRECONDITIONS = "preconditions"
 
-#: Every environment variable a producer downstream of gate 0 reads. All six are swept in
-#: one place so no producer is ever invoked into an absence the seam already knew about.
-#: ``tests/test_dependency_provenance.py`` reads the four wheel variables *in its test
-#: body*, where an absence lands as a junit ``<failure>`` and would otherwise be reported
-#: as a genuine toolchain refusal.
-REQUIRED_ENV = (
-    "SYSIDE_LICENSE_KEY",
-    "STOP_PARSER_WHEEL_TARGET",
-    "STOP_PARSER_AGENTIC_WHEEL",
-    "STOP_PARSER_CODEGEN_WHEEL",
-    "STOP_PARSER_COSTINGFE_WHEEL",
-    "STOP_PARSER_TEAX_ROOT",
-)
-
-#: The teax checkout subdirectory that goes on ``sys.path`` — the sealed-runner contract's
-#: own shape, as ``tests/study/conftest.py`` reaches it.
-TEAX_SIMKIT_SUBPATH = "packages/teax-simkit"
+#: The environment variable every project's producers read: regeneration and the snapshot
+#: recapture need the licence. The project's declared ``environment`` adds the variables its
+#: own producers read, and gate 0 sweeps both in one place so no producer is ever invoked
+#: into an absence the seam already knew about. A repo gate that reads a variable *in its
+#: test body* is why: an absence there lands as a junit ``<failure>`` and would otherwise be
+#: reported as a genuine refusal.
+REQUIRED_ENV = ("SYSIDE_LICENSE_KEY",)
 
 #: The probe gate 0 answers "will ``verify.py`` find teax?" with. A bare ``import simkit``
 #: in a fresh interpreter, which is exactly what ``verify.build_summary`` does.
@@ -181,30 +177,50 @@ class Gate:
     checked: str
 
 
-#: The ten gates, in the order they run. R-B1's eight steps expand to nine rows because
-#: step 1 splits into two producers, plus the seam's own lineage comparison as the tenth.
+#: What rows 1a and 5 state for a repo-scope gate the project did not declare: no producer
+#: ran it, and nothing is claimed about what it would have checked.
+NOT_DECLARED = "not declared"
+
+#: The ten gates, in the order they run. The integration's eight steps expand to nine rows
+#: because step 1 splits into two producers, plus the seam's own lineage comparison as the
+#: tenth. The two repo-scope rows read ``not declared`` here: their producer and what they
+#: checked are the project's to declare, and :func:`gate_table` fills them in.
 GATES = (
-    Gate("pinned-packages", "tests/test_dependency_provenance.py", "repo",
-         "the pinned package revisions and installed wheel artifacts"),
+    Gate("pinned-packages", NOT_DECLARED, "repo", NOT_DECLARED),
     Gate("teax-revision", SEAM_PATH, "request",
          "the teax checkout's revision against the expected one"),
     Gate("regeneration", "sysml-codegen generate", "request",
          "regeneration in place moves no package byte"),
     Gate("handwritten-preservation", "sysml-codegen generate", "request",
          "the handwritten implementations survive regeneration byte for byte"),
-    Gate("census-snapshot", "sysml_codegen.snapshot.capture; the spine census helper",
+    Gate("census-snapshot", "sysml_codegen.snapshot.capture; sysml_codegen/study/census.py",
          "request", "the recaptured snapshot and the re-derived entry-point census"),
-    Gate("model-family-spine", "tests/models/test_model_family_spines.py", "repo",
-         "the canonical tree, the family twins and the tracked census"),
-    Gate("manifest", "scripts/study/manifest.py", "request",
+    Gate("model-family-spine", NOT_DECLARED, "repo", NOT_DECLARED),
+    Gate("manifest", "sysml_codegen/study/manifest.py", "request",
          "the manifest's schema, package identity and recomputed pin"),
-    Gate("preflight", "scripts/study/preflight.py", "request",
+    Gate("preflight", "sysml_codegen/study/preflight.py", "request",
          "the six mechanical gates a study passes"),
-    Gate("verification", "scripts/study/verify.py", "request",
+    Gate("verification", "sysml_codegen/study/verify.py", "request",
          "oracle parity and re-derived verdicts over an executed store"),
     Gate("lineage", SEAM_PATH, "request",
          "the live fingerprints against the lineage the request named"),
 )
+
+
+def gate_table(declaration: declarations.IntegrateDeclaration) -> tuple[Gate, ...]:
+    """The ten gates as this project declared them.
+
+    A declared repo-scope gate's row names the declared target as its producer and states the
+    declared text as what it checked. An undeclared one keeps ``not declared`` for both, so the
+    return never claims a check the project did not declare.
+    """
+    table = []
+    for gate in GATES:
+        declared = declaration.gates.get(gate.name)
+        if declared is not None:
+            gate = replace(gate, producer=declared.target, checked=declared.checked)
+        table.append(gate)
+    return tuple(table)
 
 
 class SeamBlocker(Exception):
@@ -280,21 +296,35 @@ def precondition_blocker(condition: str, detail: str) -> SeamBlocker:
 def seam_env() -> dict[str, str]:
     """The environment every subprocess the seam launches receives.
 
-    Inherited, then made explicit in three places a producer would otherwise be at the
-    mercy of: the repo root and stock teax's ``simkit`` on ``PYTHONPATH`` (``verify.py``
-    does no ``sys.path`` work of its own and imports ``simkit`` from wherever the
-    environment provides it), and ``STUDY_REQUIRE_TEAX=1`` so a teax-dependent producer
-    fails loudly instead of skipping and reporting green.
+    Inherited, then made explicit in four places a producer would otherwise be at the
+    mercy of: the project root and teax's simkit root (``TEAX_SIMKIT_PATH``) on
+    ``PYTHONPATH`` (``verify.py`` does no ``sys.path`` work of its own and imports ``simkit``
+    from wherever the environment provides it), the pinned project root as
+    ``SYSML_CODEGEN_PROJECT_ROOT`` so every producer cites paths against the root the seam
+    judged, and ``STUDY_REQUIRE_TEAX=1`` so a teax-dependent producer fails loudly instead of
+    skipping and reporting green.
     """
     env = study_roots.environment()
-    roots = [str(manifest_mod.repo_root())]
-    teax_root = env.get("STOP_PARSER_TEAX_ROOT")
-    if teax_root:
-        roots.append(str(Path(teax_root) / TEAX_SIMKIT_SUBPATH))
+    project_root = str(manifest_mod.repo_root())
+    roots = [project_root]
+    simkit_root = teax_simkit_root(env)
+    if simkit_root is not None:
+        roots.append(str(simkit_root))
     existing = env.get("PYTHONPATH")
     env["PYTHONPATH"] = os.pathsep.join([*roots, existing] if existing else roots)
+    env[study_roots.PROJECT_ROOT_ENV] = project_root
     env["STUDY_REQUIRE_TEAX"] = "1"
     return env
+
+
+def teax_simkit_root(env: dict[str, str]) -> Path | None:
+    """The simkit root ``TEAX_SIMKIT_PATH`` names in ``env``, or ``None`` when it names none.
+
+    The one place a teax revision is read from: gate 1b compares it and the toolchain block
+    records it, both at this root and nowhere else.
+    """
+    value = env.get(study_roots.TEAX_SIMKIT_PATH)
+    return Path(value) if value else None
 
 
 def simkit_module_path(env: dict[str, str]) -> str | None:
@@ -327,19 +357,22 @@ def installed_version(distribution: str) -> str | None:
         return None
 
 
-def toolchain_block(env: dict[str, str]) -> dict:
-    """The revisions this invocation ran under (R-E4).
+def toolchain_block(env: dict[str, str],
+                    declaration: declarations.IntegrateDeclaration) -> dict[str, str | None]:
+    """The revisions this invocation ran under.
 
     Recorded whatever the return class, because a candidate's meaning depends on them and
     a blocker's diagnosis often does. A fact the environment cannot supply is recorded
-    ``null`` rather than guessed; the gate that needed it is what refuses.
+    ``null`` rather than guessed; the gate that needed it is what refuses. Beside the fixed
+    keys sit the distributions the project declares it wants recorded, in declared order.
     """
-    teax_root = env.get("STOP_PARSER_TEAX_ROOT")
+    simkit_root = teax_simkit_root(env)
     return {
         "agentic_mbse": installed_version("agentic-mbse"),
         "sysml_codegen": installed_version("sysml-codegen"),
-        "costingfe": installed_version("1costingfe"),
-        "teax_revision": teax_revision(Path(teax_root)) if teax_root else None,
+        **{key: installed_version(distribution)
+           for key, distribution in declaration.record_distributions},
+        "teax_revision": teax_revision(simkit_root) if simkit_root is not None else None,
         "teax_module_path": simkit_module_path(env),
     }
 
@@ -411,7 +444,7 @@ REQUIRED_FLAGS = (
 
 
 def parse_audited_work(references: list[str]) -> tuple[tuple[str, str], ...]:
-    """ADR-006's citation form: a repo-relative path and the commit it is cited at."""
+    """The citation form: a repo-relative path and the commit it is cited at."""
     parsed = []
     for reference in references:
         path, separator, commit = reference.rpartition("@")
@@ -425,7 +458,7 @@ def parse_audited_work(references: list[str]) -> tuple[tuple[str, str], ...]:
 
 
 def exactly_one(values: list[str], flag: str) -> str:
-    """R-A3: one invocation resolves to at most one candidate identity, or it refuses."""
+    """One invocation resolves to at most one candidate identity, or it refuses."""
     if len(values) > 1:
         raise precondition_blocker(
             "input-invalid",
@@ -497,40 +530,49 @@ def build_request(args: argparse.Namespace) -> Request:
 # ------------------------------------------------------------------------- gate 0
 
 
-def assert_environment(env: dict[str, str]) -> None:
-    """Gate 0, step 2: every variable a later producer reads, swept in one place.
+def assert_environment(env: dict[str, str],
+                       declaration: declarations.IntegrateDeclaration) -> None:
+    """Gate 0, step 2: every variable a later producer reads, swept in one place, then teax.
 
     This is the only place a missing variable is decided, and it runs before the first
-    producer. Without it the standing wheel-variable ``KeyError`` — raised inside a test
-    body, recorded by pytest as a ``<failure>`` — would be reported as a genuine toolchain
-    refusal, and the seam would tell a caller the toolchain drifted when nothing had.
+    producer. Without it a declared variable a repo gate reads inside a test body — a
+    ``KeyError`` there, recorded by pytest as a ``<failure>`` — would be reported as a
+    genuine refusal, and the seam would tell a caller the toolchain drifted when nothing had.
+
+    teax is the producers' runtime. With ``TEAX_SIMKIT_PATH`` set, it must name a simkit root
+    and the producers' ``import simkit`` must land inside it. Unset, that import must still
+    succeed from wherever the environment provides it.
     """
-    absent = [name for name in REQUIRED_ENV if not env.get(name)]
+    required = tuple(dict.fromkeys((*REQUIRED_ENV, *declaration.environment)))
+    absent = [name for name in required if not env.get(name)]
     if absent:
         raise precondition_blocker(
             "env-missing",
             "the environment does not export: " + ", ".join(absent),
         )
 
-    teax_root = Path(env["STOP_PARSER_TEAX_ROOT"])
-    simkit_dir = teax_root / TEAX_SIMKIT_SUBPATH
-    if not simkit_dir.is_dir():
+    variable = study_roots.TEAX_SIMKIT_PATH
+    simkit_root = teax_simkit_root(env)
+    if simkit_root is not None and not (simkit_root / "simkit" / "__init__.py").is_file():
         raise precondition_blocker(
             "env-missing",
-            f"STOP_PARSER_TEAX_ROOT={teax_root} has no {TEAX_SIMKIT_SUBPATH}",
+            f"{variable}={simkit_root} has no simkit/__init__.py, so it names no teax simkit root",
         )
 
     module_path = simkit_module_path(env)
     if module_path is None:
+        where = (f"from {variable}={simkit_root}" if simkit_root is not None
+                 else f"and {variable} is not set")
         raise precondition_blocker(
             "env-missing",
-            f"simkit does not import under the environment the seam hands its "
-            f"subprocesses, from {simkit_dir}",
+            f"teax's simkit does not import under the environment the seam hands its "
+            f"subprocesses, {where}",
         )
-    if not Path(module_path).resolve().is_relative_to(simkit_dir.resolve()):
+    if simkit_root is not None and not Path(module_path).resolve().is_relative_to(simkit_root.resolve()):
         raise precondition_blocker(
             "env-missing",
-            f"simkit imports from {module_path}, outside the teax checkout at {simkit_dir}",
+            f"simkit imports from {module_path}, outside the teax simkit root "
+            f"{variable}={simkit_root}",
         )
 
 
@@ -547,13 +589,13 @@ def assert_package_clean(request: Request, env: dict[str, str]) -> None:
     """
     out = request.out_dir / "clean.json"
     done = run_producer(
-        [sys.executable, "scripts/study/preflight.py", "clean",
+        [sys.executable, "-m", "sysml_codegen.study.preflight", "clean",
          "--package", str(request.package), "--out", str(out)],
         env,
     )
     if done.returncode != 0:
         raise SeamBlocker(
-            gate=PRECONDITIONS, producer="scripts/study/preflight.py", scope="request",
+            gate=PRECONDITIONS, producer="sysml_codegen/study/preflight.py", scope="request",
             mode=REFUSED, condition="package-not-integrated",
             detail="the package tree is not git-clean, so the identity a candidate would "
                    "carry is not reproducible from what is committed: " + done.stderr.strip(),
@@ -636,8 +678,9 @@ def stopping_gate_result(gate: Gate, blocker: SeamBlocker) -> dict:
     }
 
 
-def gate_rows(results: list[dict], blocker: SeamBlocker | None) -> list[dict]:
-    """The ten-entry invariant: every gate appears, whatever happened.
+def gate_rows(table: tuple[Gate, ...], results: list[dict],
+              blocker: SeamBlocker | None) -> list[dict]:
+    """The ten-entry invariant: every gate in ``table`` appears, whatever happened.
 
     A blocker that names one of the ten gates carries that gate's own row; gate 0's
     refusals and a fault during candidate assembly name no gate in the sequence, so all ten
@@ -650,19 +693,20 @@ def gate_rows(results: list[dict], blocker: SeamBlocker | None) -> list[dict]:
     reader the check never happened when it happened and failed.
     """
     rows = list(results)
-    names = {gate.name for gate in GATES}
+    names = {gate.name for gate in table}
     if blocker is not None and blocker.gate in names:
-        if len(rows) >= len(GATES) or GATES[len(rows)].name != blocker.gate:
+        if len(rows) >= len(table) or table[len(rows)].name != blocker.gate:
             raise RuntimeError(
                 f"the blocker names gate {blocker.gate!r} but the sequence stopped after "
                 f"{len(rows)} gate(s); the gate rows and the blocker disagree"
             )
-        rows.append(stopping_gate_result(GATES[len(rows)], blocker))
-    return [*rows, *(not_reached(gate) for gate in GATES[len(rows):])]
+        rows.append(stopping_gate_result(table[len(rows)], blocker))
+    return [*rows, *(not_reached(gate) for gate in table[len(rows):])]
 
 
 def build_return(*, request: Request | None, args: argparse.Namespace, argv: list[str],
-                 env: dict[str, str], results: list[dict], blocker: SeamBlocker | None,
+                 env: dict[str, str], declaration: declarations.IntegrateDeclaration,
+                 table: tuple[Gate, ...], results: list[dict], blocker: SeamBlocker | None,
                  candidate: dict | None) -> dict:
     """The one document every invocation ends in, whatever it ends in.
 
@@ -671,7 +715,7 @@ def build_return(*, request: Request | None, args: argparse.Namespace, argv: lis
     sequence lost track of its own stop rule, which is a fault in the seam and not a
     verdict about the package — so it raises, and the caller sees exit 2.
     """
-    gates = gate_rows(results, blocker)
+    gates = gate_rows(table, results, blocker)
     if blocker is None and any(gate["status"] != PASS for gate in gates):
         unpassed = [gate["gate"] for gate in gates if gate["status"] != PASS]
         raise RuntimeError(
@@ -691,7 +735,7 @@ def build_return(*, request: Request | None, args: argparse.Namespace, argv: lis
         "candidate": candidate,
         "blocker": blocker.document() if blocker is not None else None,
         "gates": gates,
-        "toolchain": toolchain_block(env),
+        "toolchain": toolchain_block(env, declaration),
     }
 
 
@@ -842,6 +886,9 @@ class BaselineEvidence:
 class SequenceState:
     """What the gates hand each other: the package as it stood at entry, and its backup.
 
+    ``declaration`` is what the project declared, and ``gates`` is the ten-row table built
+    from it, so a repo-scope gate runs the producer its own row names.
+
     ``executing`` names the stage the sequence is in, so an unexpected exception can say
     where it died instead of blaming gate 0. ``baseline`` is filled by gate 7, which is the
     gate that needs it first; gate 8 reads the
@@ -852,6 +899,8 @@ class SequenceState:
 
     entry_digests: dict[str, str]
     backup_dir: Path
+    declaration: declarations.IntegrateDeclaration
+    gates: tuple[Gate, ...]
     baseline: BaselineEvidence | None = None
     executing: str | None = None
 
@@ -934,14 +983,28 @@ def run_pytest_gate(gate: Gate, target: str, condition: str, request: Request,
 # ------------------------------------------------------------------------ the gates
 
 
+def declared_target(gate: Gate, state: SequenceState) -> str:
+    """The pytest target the project declared for a repo-scope gate.
+
+    An undeclared gate is a question the project never answered, so it raises the gate's
+    ``unasked`` blocker naming where the declaration goes.
+    """
+    declared = state.declaration.gates.get(gate.name)
+    if declared is None:
+        raise unasked(
+            gate,
+            "the target declared no producer for this repo-scope gate; declare target and "
+            f"checked under [tool.sysml-codegen.integrate.gates.{gate.name}] in pyproject.toml",
+        )
+    return declared.target
+
+
 def gate_pinned_packages(request: Request, env: dict[str, str],
                          state: SequenceState) -> GateOutcome:
-    """Gate 1a: the toolchain the package was generated through, judged by the repo's own
-    provenance suite. Repo-scoped — the suite reads ``pyproject.toml``, ``uv.lock`` and the
-    installed wheels, and accepts no package argument."""
-    return run_pytest_gate(
-        GATES[0], "tests/test_dependency_provenance.py", "toolchain-drift", request, env
-    )
+    """Gate 1a: the toolchain the package was generated through, judged by the pytest target
+    the project declares for it. Repo-scoped — the target accepts no package argument."""
+    gate = state.gates[0]
+    return run_pytest_gate(gate, declared_target(gate, state), "toolchain-drift", request, env)
 
 
 def gate_teax_revision(request: Request, env: dict[str, str],
@@ -954,12 +1017,18 @@ def gate_teax_revision(request: Request, env: dict[str, str],
     a pin, and a self-recorded value re-records itself on drift and could never refuse.
     """
     expected = request.expected_teax_revision
-    teax_root = Path(env["STOP_PARSER_TEAX_ROOT"])
     if not expected:
         raise unasked(
             GATES[1],
             "--expected-teax-revision was not supplied, and the seam does not mint a pin of "
             "its own; the caller is the one who knows the lineage",
+        )
+    teax_root = teax_simkit_root(env)
+    if teax_root is None:
+        raise producer_could_not_run(
+            GATES[1],
+            f"{study_roots.TEAX_SIMKIT_PATH} is not set, so there is no teax checkout whose "
+            f"revision could be compared with the expected one",
         )
     actual = teax_revision(teax_root)
     if actual is None:
@@ -978,15 +1047,17 @@ def gate_teax_revision(request: Request, env: dict[str, str],
 
 def gate_model_family_spine(request: Request, env: dict[str, str],
                             state: SequenceState) -> GateOutcome:
-    """Gate 5: the canonical tree, the family twins and the tracked census.
+    """Gate 5: the project's own check of its model tree, judged by the pytest target the
+    project declares for it.
 
-    Repo-scoped, and that is a property of the producer rather than a choice: the suite
-    generates from the repository's own ``models/`` tree and compares against the tracked
-    census, and takes no package argument. A refusal here can be about the working tree the
-    operator is standing in rather than about ``--package``; ``scope`` is what says so.
+    Repo-scoped, and that is a property of the producer rather than a choice: it checks the
+    repository's model tree and takes no package argument. A refusal here can be about the
+    working tree the operator is standing in rather than about ``--package``; ``scope`` is
+    what says so.
     """
+    gate = state.gates[5]
     return run_pytest_gate(
-        GATES[5], "tests/models/test_model_family_spines.py", "repo-lineage-broken", request, env
+        gate, declared_target(gate, state), "repo-lineage-broken", request, env
     )
 
 
@@ -1001,7 +1072,7 @@ def gate_regeneration(request: Request, env: dict[str, str],
     """
     package_name = manifest_mod.read_package_name(request.package)
     done = run_producer(
-        ["uv", "run", "sysml-codegen", "generate",
+        [sys.executable, "-m", "sysml_codegen", "generate",
          "--models", str(request.models_root),
          "--output", str(resolve_package(request.package)),
          "--package-name", package_name,
@@ -1152,7 +1223,7 @@ def gate_census_snapshot(request: Request, env: dict[str, str],
     if drifted:
         raise SeamBlocker(
             gate=GATES[4].name,
-            producer="tests/models/test_model_family_spines.py::_by_entry_type",
+            producer="sysml_codegen/study/census.py::by_entry_type",
             scope=GATES[4].scope, mode=REFUSED, condition="census-stale",
             detail="; ".join(drifted),
             evidence=(manifest_mod.repo_relative_posix(request.census),),
@@ -1261,7 +1332,7 @@ def execute_baseline(request: Request, env: dict[str, str]) -> BaselineEvidence:
         detail = "missing or malformed read-coverage receipt"
     if not valid:
         raise SeamBlocker(
-            gate=GATES[7].name, producer="scripts/study/read_coverage.py", scope=GATES[7].scope,
+            gate=GATES[7].name, producer="sysml_codegen/study/read_coverage.py", scope=GATES[7].scope,
             mode=REFUSED, condition="read-coverage-refused", detail=detail,
             evidence=(manifest_mod.repo_relative_posix(receipt_path),) if receipt_path.is_file() else (),
         )
@@ -1295,7 +1366,7 @@ def gate_preflight(request: Request, env: dict[str, str],
     state.baseline = execute_baseline(request, env)
     results = request.out_dir / "preflight_results.json"
     done = run_producer(
-        [sys.executable, "scripts/study/preflight.py", "gates",
+        [sys.executable, "-m", "sysml_codegen.study.preflight", "gates",
          "--package", str(request.package), "--manifest", str(request.manifest),
          "--groups", str(request.groups), "--identity", str(state.baseline.identity),
          "--baseline-result", str(state.baseline.baseline_result), "--out", str(results)],
@@ -1344,7 +1415,7 @@ def gate_verification(request: Request, env: dict[str, str],
     summary = request.out_dir / "verification_summary.json"
     stderr_path = request.out_dir / "verify_stderr.txt"
     done = run_producer(
-        [sys.executable, "scripts/study/verify.py",
+        [sys.executable, "-m", "sysml_codegen.study.verify",
          "--package", str(request.package), "--manifest", str(request.manifest),
          "--identity", str(state.baseline.identity), "--store", str(state.baseline.store),
          "--out", str(summary)],
@@ -1467,7 +1538,7 @@ def run_sequence(request: Request, env: dict[str, str], state: SequenceState,
     means the interesting case is the *partial* one: a blocker propagates out of here and
     the caller still has to report every gate that ran before it.
     """
-    for gate in GATES:
+    for gate in state.gates:
         state.executing = gate.name
         results.append(gate_result(gate, GATE_IMPLEMENTATIONS[gate.name](request, env, state)))
     state.executing = CANDIDATE_ASSEMBLY
@@ -1476,14 +1547,46 @@ def run_sequence(request: Request, env: dict[str, str], state: SequenceState,
 # ------------------------------------------------------------------------- the CLI
 
 
+def load_project_declaration() -> declarations.IntegrateDeclaration:
+    """Gate 0, step 0: what the project declares, read from its root's ``pyproject.toml``.
+
+    A malformed declaration stops the run as ``input-invalid`` before anything is judged,
+    because a gate table built from it would state what the project never validly declared.
+    """
+    try:
+        return declarations.load_declaration(manifest_mod.repo_root())
+    except declarations.DeclarationError as exc:
+        raise precondition_blocker(
+            "input-invalid", f"the project's integrate declaration is malformed: {exc}"
+        ) from exc
+
+
+def project_anchor(args: argparse.Namespace) -> Path:
+    """The path the project root is found from: the single ``--package``.
+
+    When ``--package`` is absent or repeated, gate 0 rejects the request before judging
+    anything, and the working directory anchors only the citations in that rejection.
+    """
+    packages = args.package or []
+    return Path(packages[0]) if len(packages) == 1 else Path.cwd()
+
+
 def run(args: argparse.Namespace, argv: list[str]) -> tuple[dict, Path | None]:
     """One invocation: gate 0, then the sequence. Returns the document and where it goes.
 
     Both failure paths are caught here rather than at the CLI boundary, because both have to
     report the gates that *did* run. A seam-internal error that threw away the partial
     sequence would tell the reader nothing ran when six gates had passed.
+
+    The project root is pinned first, before any return exists: with no root, or one that
+    conflicts with the working directory's, the run exits 2 and writes no document. The
+    project's declaration is then read from that root before anything is judged; until it
+    has loaded, the return carries the undeclared gate table.
     """
+    study_roots.require_project_root("integrate", project_anchor(args))
     env = seam_env()
+    declaration = declarations.UNDECLARED
+    table: tuple[Gate, ...] = GATES
     request = None
     blocker = None
     results: list[dict] = []
@@ -1492,12 +1595,14 @@ def run(args: argparse.Namespace, argv: list[str]) -> tuple[dict, Path | None]:
     broke = False
     state = None
     try:
+        declaration = load_project_declaration()
+        table = gate_table(declaration)
         request = build_request(args)
         out_dir = request.out_dir
-        assert_environment(env)
+        assert_environment(env, declaration)
         out_dir.mkdir(parents=True, exist_ok=True)
         assert_package_clean(request, env)
-        backup_dir = Path(tempfile.mkdtemp(prefix="fusion-tea-integration-backup-")) / "package"
+        backup_dir = Path(tempfile.mkdtemp(prefix=declaration.backup_prefix)) / "package"
         # Keep rollback bytes outside the evidence tree, with an explicit recovery pointer.
         (out_dir / "backup-location.json").write_text(
             json.dumps({"package": str(request.package), "backup": str(backup_dir)}, indent=2) + "\n",
@@ -1506,6 +1611,8 @@ def run(args: argparse.Namespace, argv: list[str]) -> tuple[dict, Path | None]:
         state = SequenceState(
             entry_digests=package_digests(request.package),
             backup_dir=backup(request.package, backup_dir),
+            declaration=declaration,
+            gates=table,
         )
         run_sequence(request, env, state, results)
         candidate = build_candidate(request, state)
@@ -1525,7 +1632,7 @@ def run(args: argparse.Namespace, argv: list[str]) -> tuple[dict, Path | None]:
         )
 
     document = build_return(
-        request=request, args=args, argv=argv, env=env,
+        request=request, args=args, argv=argv, env=env, declaration=declaration, table=table,
         results=results, blocker=blocker, candidate=candidate,
     )
     if broke:

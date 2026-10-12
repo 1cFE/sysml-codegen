@@ -1,8 +1,8 @@
 """Actual Python opens, imports and route-gate refusals; no public-input proxies.
 
 Moved from fusion-tea ``tests/study/test_read_coverage.py`` at ``b06585709``. teax's declared
-sources come from ``TEAX_SIMKIT_PATH``. The check that integrate's tool identity lists
-read coverage moves with integrate's tool-source list.
+sources come from ``TEAX_SIMKIT_PATH``, and integrate's tool identity names the installed
+package's paths.
 """
 import json
 import os
@@ -211,6 +211,11 @@ def test_integration_rejects_invalid_receipt_even_on_zero_exit(observed_route, m
     with pytest.raises(integrate.SeamBlocker) as caught:
         integrate.execute_baseline(observed_route.request, {})
     assert caught.value.condition == 'read-coverage-refused'
+
+
+def test_integration_tool_identity_includes_new_dependencies():
+    identity = integrate.common.tool_source_digest(integrate.TOOL_SOURCE_FILES)
+    assert {'sysml_codegen/study/indicators.py', 'sysml_codegen/study/read_coverage.py'} <= {entry['path'] for entry in identity['files']}
 
 
 def test_static_gate_rejects_unpinned_pipeline_reference(synthetic_copy, tmp_path):
