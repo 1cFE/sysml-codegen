@@ -468,11 +468,15 @@ def in_child(paths: Paths, call: str, *, cwd: Path, env: dict[str, str]) -> Any:
 DRIVER_MODULES = ("import json, sys\n"
                   "from {module} import run_route\n"
                   "print(json.dumps(sorted(sys.modules)))")
-#: The modules that importing one module adds to a fresh interpreter.
+#: The modules that running one statement adds to a fresh interpreter.
 CLOSURE = ("import json, sys\n"
            "before = set(sys.modules)\n"
-           "import {module}\n"
+           "{statement}\n"
            "print(json.dumps(sorted(set(sys.modules) - before)))")
+#: What the moved observer does before observing that the original does not: import ``roots``
+#: (B1), and read the interpreter's build-time ``TZPATH`` at import (B13, since audit F1).
+PRELOAD_SOURCES = ("import sysml_codegen.study.roots",
+                   "import sysconfig\nsysconfig.get_config_var('TZPATH')")
 
 
 def module_files(names: list[str]) -> dict[str, dict[str, Any]]:
@@ -506,7 +510,8 @@ def measure_preloads(paths: Paths) -> dict[str, Any]:
     ``runtime-observed`` and moved does not record it at all:
 
     - The standard-library ``.pyc`` reads (spec B13 consequence), after checking each module
-      is in the import closure of ``sysml_codegen.study.roots`` or ``zoneinfo``.
+      is loaded by one of ``PRELOAD_SOURCES``: importing ``sysml_codegen.study.roots``, or
+      reading the build-time ``TZPATH`` through ``sysconfig``.
     - The installed ``sysml_codegen`` modules (Q1 rule 3, a B1 and B8 consequence): the moved
       observer lives in the package the route imports. The original driver's own tool modules,
       renamed by rule 3's table, are not preloads: the moved driver loading
@@ -521,15 +526,15 @@ def measure_preloads(paths: Paths) -> dict[str, Any]:
     orig_driver = imported("scripts.study.read_coverage")
     preloaded = sorted(imported("sysml_codegen.study.read_coverage") - orig_driver)
     closure: set[str] = set()
-    for module in ("sysml_codegen.study.roots", "zoneinfo"):
-        source = CLOSURE.format(module=module)
+    for statement in PRELOAD_SOURCES:
+        source = CLOSURE.format(statement=statement)
         closure |= set(json.loads(python(paths, source, cwd=paths.scratch, env=env)))
     files = in_child(paths, f"module_files({preloaded!r})", cwd=paths.scratch, env=env)
     stdlib = {name: info["cached"] for name, info in sorted(files.items()) if info["stdlib"]}
     outside = sorted(set(stdlib) - closure)
     if outside:
-        raise SystemExit(f"preloaded standard-library modules outside the roots/zoneinfo "
-                         f"import closure: {outside}")
+        raise SystemExit(f"preloaded standard-library modules outside the roots/sysconfig "
+                         f"closure: {outside}")
     not_stdlib = sorted(set(preloaded) - set(stdlib))
     counterparts = {renamed_tool_module(name) for name in orig_driver}
     package_modules = sorted(set(not_stdlib) - counterparts)
@@ -542,8 +547,8 @@ def measure_preloads(paths: Paths) -> dict[str, Any]:
         "standard_library": stdlib,
         "not_standard_library": not_stdlib,
         "installed_package_modules": package_modules,
-        "closure_check": "every standard-library module is in the import closure of "
-                         "sysml_codegen.study.roots or zoneinfo",
+        "closure_check": "every standard-library module is loaded by importing "
+                         "sysml_codegen.study.roots or by reading sysconfig's build-time TZPATH",
         "installed_package_check": "not_standard_library less the original driver's own tool "
                                    "modules renamed by TOOL_PATHS; every one is in the "
                                    "installed sysml_codegen package",

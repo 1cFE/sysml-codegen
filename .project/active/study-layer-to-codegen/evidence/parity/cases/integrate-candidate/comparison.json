@@ -9,7 +9,7 @@
   "differences": [],
   "closed_list": {
     "B1/B8 preloaded installed-package module": 3,
-    "B13 preloaded standard-library read": 14,
+    "B13 preloaded standard-library read": 8,
     "B2 addition sysml_codegen/study/census.py": 1,
     "B2 addition sysml_codegen/study/declarations.py": 1,
     "B2 addition sysml_codegen/study/roots.py": 4,

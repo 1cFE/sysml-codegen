@@ -70,7 +70,7 @@
       "path": "sysml_codegen/study/integrate.py",
       "source_digest": {
         "recipe": "tool-source-digest/v1",
-        "digest": "6ebe9bede098bca12a8da8b3dbe88ae9e79092092abfeb7435bb5ef0035e3d7c",
+        "digest": "f079f70caf2adb339896c69ef819a17bc800175fcd0942bcb7b43797c7a2431e",
         "files": [
           {
             "path": "sysml_codegen/study/integrate.py",
@@ -98,7 +98,7 @@
           },
           {
             "path": "sysml_codegen/study/read_coverage.py",
-            "sha256": "2279eb9e422e70af5fa7ebd6f858fb2d76b3d84decef0be34d86bbc686758985"
+            "sha256": "fbd48fbbc6a539a8b2a6e2fffbbf8d65caf675d11dfc14ca0452c4007822760f"
           },
           {
             "path": "sysml_codegen/study/roots.py",
@@ -322,11 +322,11 @@
       "Runtime and bytecode hashes identify observed bytes, not a verified installation or source equivalence.",
       "A cooperative audit hook is not a sandbox; execution after deactivation is outside scope."
     ],
-    "dependency_digest": "0067049eb97456639a51de60f0b3021c19b9155ae6380681e2a0f243e31c50cc",
+    "dependency_digest": "a1c47b037d6612b4eb4be013d40f39a87bfac05bc380b1f3f3ae1e16b00dfec1",
     "reads by category": {
       "bytecode": 3,
       "declared-source": 5,
-      "runtime-observed": 17
+      "runtime-observed": 18
     },
     "declarations by category": {
       "declared-dependency-metadata": 6,
