@@ -85,7 +85,7 @@ export ...
 
 A file holding these lines works as well: `uv run --env-file <file> sysml-codegen study integrate ...`.
 
-The seam adds four things to whatever it inherits, for every subprocess it launches: the project root and `$TEAX_SIMKIT_PATH` on `PYTHONPATH`; the project root it judged as `SYSML_CODEGEN_PROJECT_ROOT`, so every producer cites paths against the same root; and `STUDY_REQUIRE_TEAX=1`, so a teax-dependent producer fails loudly instead of skipping and reporting green. If you invoke a producer by hand, do the same.
+The seam adds four things to whatever it inherits, for every subprocess it launches: the project root and `$TEAX_SIMKIT_PATH` on `PYTHONPATH`; the project root it judged as `SYSML_CODEGEN_PROJECT_ROOT`, so every producer cites paths against the same root; and `STUDY_REQUIRE_TEAX=1`, so a teax-dependent producer fails loudly instead of skipping and reporting green. If you invoke a producer by hand, put the same two roots on `PYTHONPATH` and set `STUDY_REQUIRE_TEAX=1`. The project-root variable is needed by hand only where § Where the project root is says so.
 
 **The seam's interpreter is every producer's interpreter.** It launches each producer, and the generator, as `<its own interpreter> -m ...`. Run it with the Python of the environment that holds sysml-codegen and teax's dependencies. A different environment does not run the producers just because it is the one your shell would pick.
 
@@ -129,6 +129,7 @@ Every path in the return is relative to the project root. The root is `SYSML_COD
 - **Refused, exit 2, no document:** the package is in no work tree and the variable is unset; or your working directory is inside a different work tree from the package. Run from inside the project, or from a directory outside every work tree.
 - **Absent or repeated `--package`:** gate 0 rejects the request as usual, and the working directory's work tree anchors only the paths in that rejection.
 - **A monorepo whose top level is not the modeling project:** nothing refuses, but the tools would cite paths from the top level and read its `pyproject.toml`. Set `SYSML_CODEGEN_PROJECT_ROOT` to the modeling project.
+- **The route under read coverage.** Gate 7 runs the route with the root the seam judged. Run outside `integrate`, the read-coverage driver (`sysml_codegen.study.read_coverage.run_route`) resolves the root from the package by the rules above, before it starts observing. A package in a git work tree needs no variable. A package in no work tree, with the variable unset, is refused before any route code runs, and the receipt's `route_error` names `SYSML_CODEGEN_PROJECT_ROOT`.
 
 ## The snapshot rule
 

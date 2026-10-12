@@ -230,7 +230,7 @@ def classify_ref(raw: str, entry_groups: set[str], where: str) -> tuple[str, str
 
     R1 an entry-prefixed ``<group>.<key>`` is a bound input; R2 a bare ref is a
     produced channel; R3 a trailing ``.root`` is stripped (RootModel outputs declare a
-    single field named ``root``, and 65 edges depend on the strip); R4 any other
+    single field named ``root``, and real pipelines depend on the strip); R4 any other
     dotted ref is a hard failure, never guessed at and never silently dropped.
     """
     ref = raw.strip()

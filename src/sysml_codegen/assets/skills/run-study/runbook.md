@@ -245,6 +245,8 @@ A tool refuses with exit 2, and writes nothing, when the package is in no git wo
 
 A route or oracle that imports the tools as a library finds the root the same way, except that rule 2 uses the working directory's work tree. When neither rule applies, the library raises `RootError` (`sysml_codegen.study.roots`).
 
+**A route under read coverage** (gate 7 of `integrate`, or `sysml_codegen.study.read_coverage.run_route` called directly) resolves the root by the command-line rules above, anchored on the package, before it starts observing. So a package in a git work tree needs no variable. A package in no work tree, with the variable unset, is refused before any route code runs: the receipt's `outcome` is `fail`, and its `route_error` is the `RootError` message, which names `SYSML_CODEGEN_PROJECT_ROOT`.
+
 ---
 
 ## What a package annex supplies

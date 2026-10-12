@@ -204,13 +204,13 @@ The orchestrator's Phase 5 brief put Phase 1's and Phase 3's label proposals in 
 | DL-17 | `manifest.py:498` | "(M3)" | dropped | The docstring states the check |
 | DL-18 | `integrate.py:583-584` | "the gitignored test workspace … (D8)" | meaning stated | "Inside a git-ignored directory git has nothing to say, which is why the byte gates run on the seam's own digest instead." |
 | DL-19 | `integrate.py:939` | "an absent wheel variable" | generalized | "an absent environment variable": B4 moved the wheel variables into one project's declaration (Phase 3's proposal) |
-
-Seen and left as it is, because it is a fact and not a label: `indicators.py:233`'s "65 edges depend on the strip" counts edges in one fusion-tea package. Proposal: "and real pipelines depend on the strip", if the orchestrator extends the edit list.
+| DL-20 | `indicators.py:233` | "65 edges depend on the strip" | generalized | "real pipelines depend on the strip": the count was one fusion-tea package's. Phase 5 left it as a fact, not a label; the orchestrator's Phase 6 brief (fix 2) put it in scope, and Phase 6 made the edit |
 
 ## Corrections and additions that are not fusion-specific
 
 These have no fusion-tea home to find, because nothing fusion-specific left with them.
 
+- **Phase 6 (orchestrator's fix 4).** The runbook's "The tools" and the guide's "Where the project root is" state how a route under read coverage finds its root: from the package's work tree with no variable, and a refusal naming `SYSML_CODEGEN_PROJECT_ROOT` when the package is in no work tree. The guide's line on invoking a producer by hand no longer implies the variable is always needed.
 - **Guide.** "one of fourteen stable slugs" (`:159`) said fourteen beside a table of fifteen; it now says fifteen. "Nine inputs. Four of them are optional to `argparse`…" (`:53`) miscounted, and every flag is optional to `argparse`; it now reads "Four inputs are optional to the request but **not** optional to the answer". New sections: "The project's declaration", "Where the project root is", "The snapshot rule", the census file's shape, and "teax at gate 0". The exit-2 row names the two exits that write no document.
 - **Runbook.** New: the "studies directory" paragraph, "The tools", "What a package annex supplies", and the Check lines of steps 14 and 15 (DD12). The Check commands carry no literal `<`, so recording them in `record.md` § 14 leaves the placeholder check true; the design's `grep -c '<' record.md` would fail once recorded.
 - **Record template.** § 14 says the Check commands are recorded there. The history note is new (D7).
@@ -230,4 +230,4 @@ These have no fusion-tea home to find, because nothing fusion-specific left with
 
 Every one of the 74 `moved` anchors was checked mechanically: it greps in its named home on a copy of fusion-tea `b06585709` with the four patches in `fusion-tea/text/` applied, and each "exists at" anchor greps at `b06585709` itself.
 
-Docstring labels: 19 rows — 14 dropped, 3 meaning stated, 1 generalized, 1 kept (defined in place).
+Docstring labels: 20 rows — 14 dropped, 3 meaning stated, 2 generalized, 1 kept (defined in place).
