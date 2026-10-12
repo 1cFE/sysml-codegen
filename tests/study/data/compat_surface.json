@@ -1,0 +1,338 @@
+{
+  "source": "fusion-tea b06585709: scripts/study/*.py and scripts/integrate.py",
+  "captured_by": ".project/active/study-layer-to-codegen/evidence/compat/capture_compat_surface.py",
+  "names": {
+    "common.ToolError": {
+      "kind": "class",
+      "bases": [
+        "builtins.Exception"
+      ]
+    },
+    "common.assert_tree_clean": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "tree",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    },
+    "common.manifest_mod": {
+      "kind": "module",
+      "module": "scripts.study.manifest"
+    },
+    "common.read_json": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "path",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        },
+        {
+          "name": "what",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    },
+    "common.relative_deviation": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "got",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        },
+        {
+          "name": "expected",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    },
+    "common.write_document": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "document",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        },
+        {
+          "name": "path",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    },
+    "identity.build_sealed": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "package_name",
+          "kind": "KEYWORD_ONLY"
+        },
+        {
+          "name": "package_root",
+          "kind": "KEYWORD_ONLY"
+        }
+      ]
+    },
+    "indicators.build_graph": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "parsed",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    },
+    "indicators.predicate_operands": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "entry",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    },
+    "indicators.read_model_contract": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "package_root",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    },
+    "indicators.read_pipelines": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "package_root",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    },
+    "integrate.rederived_census": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "package_root",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    },
+    "manifest.MANIFEST_SCHEMA_VERSION": {
+      "kind": "value",
+      "value": "study-package-manifest/v1"
+    },
+    "manifest.ManifestError": {
+      "kind": "class",
+      "bases": [
+        "builtins.Exception"
+      ]
+    },
+    "manifest.assert_package_identity": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "manifest",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        },
+        {
+          "name": "package_root",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    },
+    "manifest.assert_pin_matches": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "manifest",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        },
+        {
+          "name": "computed",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    },
+    "manifest.indicator_input_fingerprint": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "package_root",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    },
+    "manifest.indicator_input_read_set": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "package_root",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    },
+    "manifest.load": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "path",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    },
+    "manifest.read_executable_fingerprint": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "package_root",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    },
+    "manifest.read_package_name": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "package_root",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    },
+    "manifest.read_semantic_fingerprint": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "package_root",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    },
+    "manifest.repo_relative_posix": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "path",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    },
+    "manifest.validate": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "data",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    },
+    "verify.TOLERANCE": {
+      "kind": "value",
+      "value": 1e-09
+    },
+    "verify.VerifyError": {
+      "kind": "class",
+      "bases": [
+        "scripts.study.common.ToolError"
+      ]
+    },
+    "verify.check_case": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "case",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        },
+        {
+          "name": "evaluate",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        },
+        {
+          "name": "bindings",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        },
+        {
+          "name": "catalog_entries",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        },
+        {
+          "name": "objectives",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        },
+        {
+          "name": "package_inputs",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        },
+        {
+          "name": "identity_digest",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        },
+        {
+          "name": "absolute_tolerances",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "default": "None"
+        }
+      ]
+    },
+    "verify.derive_verdict": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "constraint_id",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        },
+        {
+          "name": "entry",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        },
+        {
+          "name": "bindings",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        },
+        {
+          "name": "case_inputs",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        },
+        {
+          "name": "package_inputs",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        },
+        {
+          "name": "channels",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    },
+    "verify.feature_refs": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "node",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    },
+    "verify.manifest_mod": {
+      "kind": "module",
+      "module": "scripts.study.manifest"
+    },
+    "verify.objective_channels": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "loaded",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    },
+    "verify.package_input_values": {
+      "kind": "function",
+      "parameters": [
+        {
+          "name": "package_root",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ]
+    }
+  }
+}
