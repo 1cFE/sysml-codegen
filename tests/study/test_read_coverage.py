@@ -44,12 +44,12 @@ def observed_route(tmp_path):
             + '    return {}\n'
         )
 
-    def run(body):
+    def run(body, env=None):
         write(body)
         done = subprocess.run([sys.executable, '-c', integrate.ROUTE_DRIVER_SOURCE,
                                str(route), 'probe_route', 'execute', str(out),
                                str(package), str(manifest), 'test-token'],
-                              text=True, capture_output=True)
+                              text=True, capture_output=True, env=env)
         return done, json.loads((out / 'read_coverage.json').read_text())
 
     return SimpleNamespace(package=package, route=route, manifest=manifest, out=out,
@@ -94,6 +94,47 @@ def test_any_other_device_is_still_an_undeclared_read(observed_route):
     done, receipt = observed_route.run('open("/dev/zero", "rb").read(1)')
     assert done.returncode != 0
     assert receipt['violations'] == ['undeclared dependency read: /dev/zero']
+
+
+@pytest.fixture
+def zone_search_path(tmp_path):
+    """A time-zone search path of the test's own, outside every runtime root on any interpreter.
+
+    ``PYTHONTZPATH`` is how an interpreter is told its ``zoneinfo.TZPATH``. A directory beside
+    it holds the same file, so the pair tells "the interpreter's own path" from "zone-shaped".
+    """
+    zones, elsewhere = tmp_path.resolve() / 'zones', tmp_path.resolve() / 'elsewhere'
+    for root in (zones, elsewhere):
+        (root / 'Etc').mkdir(parents=True)
+        (root / 'Etc' / 'UTC').write_bytes(b'TZif2')
+    env = {**os.environ, 'PYTHONTZPATH': str(zones)}
+    return SimpleNamespace(zone=zones / 'Etc' / 'UTC', elsewhere=elsewhere / 'Etc' / 'UTC', env=env)
+
+
+def test_a_read_under_the_interpreters_zone_search_path_is_a_runtime_read(
+        observed_route, zone_search_path):
+    """B13: zone data the interpreter itself looks up is the runtime's, like ``sys.prefix``.
+
+    pandas asks dateutil for UTC at import, and dateutil opens ``/usr/share/zoneinfo/UTC``. Under
+    uv's standalone CPython that directory is outside ``sys.prefix``, so gate 7 refused the
+    station route with ``undeclared dependency read: /usr/share/zoneinfo/Etc/UTC``. Here the
+    interpreter's search path is a test directory, so the refusal reproduces on any interpreter.
+    """
+    done, receipt = observed_route.run(f'open({str(zone_search_path.zone)!r}, "rb").read()',
+                                       env=zone_search_path.env)
+    assert done.returncode == 0, done.stderr
+    assert receipt['violations'] == []
+    assert {'path': str(zone_search_path.zone), 'category': 'runtime-observed',
+            'sha256': coverage.digest(zone_search_path.zone)} in receipt['reads']
+
+
+def test_zone_shaped_data_off_the_interpreters_search_path_is_still_undeclared(
+        observed_route, zone_search_path):
+    """B13 follows ``zoneinfo.TZPATH``; it is no allowance for whatever looks like zone data."""
+    done, receipt = observed_route.run(f'open({str(zone_search_path.elsewhere)!r}, "rb").read()',
+                                       env=zone_search_path.env)
+    assert done.returncode != 0
+    assert receipt['violations'] == [f'undeclared dependency read: {zone_search_path.elsewhere}']
 
 
 def test_symlink_escape(observed_route, tmp_path):

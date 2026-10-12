@@ -8,6 +8,7 @@ import json
 import os
 import sys
 import threading
+import zoneinfo
 from pathlib import Path
 
 from sysml_codegen.study import roots as study_roots
@@ -87,7 +88,10 @@ class Observer:
         self.created = set()
         self.creation_attempts = set()
         self.declared = {}
-        self.runtime = {Path(sys.prefix).resolve(), Path(sys.base_prefix).resolve()}
+        # The interpreter's own time-zone search path is its platform data, as it already is
+        # wherever that path sits under ``sys.prefix``. Read at construction, never hard-coded.
+        self.runtime = {Path(sys.prefix).resolve(), Path(sys.base_prefix).resolve(),
+                        *(Path(entry).resolve() for entry in zoneinfo.TZPATH)}
         contract = self.package / "contracts/package_contract.json"
         for rel, sha in json.loads(contract.read_text())["artifact_hashes"].items():
             path = (self.package / rel).resolve()
