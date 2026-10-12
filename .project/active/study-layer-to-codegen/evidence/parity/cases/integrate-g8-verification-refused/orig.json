@@ -1,7 +1,7 @@
 {
   "exit_code": 1,
   "stdout": "",
-  "stderr": "[integrate] BLOCKER\n  pass         repo     pinned-packages: tests/test_dependency_provenance.py passed\n  pass         request  teax-revision: teax is at 8d877460ac4f6f264561d916e40c1708adb13397, matching the expected 8d877460ac4f6f264561d916e40c1708adb13397\n  pass         request  regeneration: regeneration through station_study rewrote no byte outside handwritten/\n  pass         request  handwritten-preservation: 4 file(s) under handwritten/ are byte-identical\n  pass         request  census-snapshot: the snapshot recaptures byte-identically and 6 entry points re-derive to the census as bound\n  pass         repo     model-family-spine: tests/models/test_model_family_spines.py passed\n  pass         request  manifest: manifest identity, pin 7a5e6ff32b61d3d4522df18105e20be0e9d3433c1ab713fdfdb8f71aba45fe85 and resolved reference coverage pass\n  pass         request  preflight: baseline Python read coverage 759a1e7412d2f8e698012bdcc9773d89ffcdb07363986137dcd8ff84c71b3691 and all six preflight gates pass\n  fail         request  verification: verify.py exited 1: channel off tolerance on case station-baseline-v1:c0000, channel PumpStation__station__pumping__annual_cost: store 192.0, oracle 192.00019199999997, relative deviation 1.000e-06 (tolerance 1e-09); absolute error 1.920e-04 (declared tolerance 0)\n  not reached  request  lineage: the sequence stopped before this gate\n[integrate] refused at verification (scripts/study/verify.py, verification-refused): verify.py exited 1: channel off tolerance on case station-baseline-v1:c0000, channel PumpStation__station__pumping__annual_cost: store 192.0, oracle 192.00019199999997, relative deviation 1.000e-06 (tolerance 1e-09); absolute error 1.920e-04 (declared tolerance 0)\n             evidence: ../out/verify_stderr.txt\n",
+  "stderr": "[integrate] BLOCKER\n  pass         repo     pinned-packages: tests/test_dependency_provenance.py passed\n  pass         request  teax-revision: teax is at 8d877460ac4f6f264561d916e40c1708adb13397, matching the expected 8d877460ac4f6f264561d916e40c1708adb13397\n  pass         request  regeneration: regeneration through station_study rewrote no byte outside handwritten/\n  pass         request  handwritten-preservation: 4 file(s) under handwritten/ are byte-identical\n  pass         request  census-snapshot: the snapshot recaptures byte-identically and 6 entry points re-derive to the census as bound\n  pass         repo     model-family-spine: tests/models/test_model_family_spines.py passed\n  pass         request  manifest: manifest identity, pin 7a5e6ff32b61d3d4522df18105e20be0e9d3433c1ab713fdfdb8f71aba45fe85 and resolved reference coverage pass\n  pass         request  preflight: baseline Python read coverage 3a2c4699ef1caa05bb285647f516dcba829bc62b0736b97ee6c6e038e1be4a1f and all six preflight gates pass\n  fail         request  verification: verify.py exited 1: channel off tolerance on case station-baseline-v1:c0000, channel PumpStation__station__pumping__annual_cost: store 192.0, oracle 192.00019199999997, relative deviation 1.000e-06 (tolerance 1e-09); absolute error 1.920e-04 (declared tolerance 0)\n  not reached  request  lineage: the sequence stopped before this gate\n[integrate] refused at verification (scripts/study/verify.py, verification-refused): verify.py exited 1: channel off tolerance on case station-baseline-v1:c0000, channel PumpStation__station__pumping__annual_cost: store 192.0, oracle 192.00019199999997, relative deviation 1.000e-06 (tolerance 1e-09); absolute error 1.920e-04 (declared tolerance 0)\n             evidence: ../out/verify_stderr.txt\n",
   "_work listing": [
     "_work/artifacts/1b9df1dbe7e862a9635c72908f4cd5290dbd26bece42e4e42cbad8acee79b183.json",
     "_work/station-baseline-v1.db"
@@ -274,7 +274,7 @@
         "scope": "request",
         "status": "pass",
         "checked": "the six mechanical gates a study passes",
-        "detail": "baseline Python read coverage 759a1e7412d2f8e698012bdcc9773d89ffcdb07363986137dcd8ff84c71b3691 and all six preflight gates pass",
+        "detail": "baseline Python read coverage 3a2c4699ef1caa05bb285647f516dcba829bc62b0736b97ee6c6e038e1be4a1f and all six preflight gates pass",
         "evidence": [
           "../out/read_coverage.json",
           "../out/preflight_results.json"
@@ -459,7 +459,7 @@
       "Runtime and bytecode hashes identify observed bytes, not a verified installation or source equivalence.",
       "A cooperative audit hook is not a sandbox; execution after deactivation is outside scope."
     ],
-    "dependency_digest": "759a1e7412d2f8e698012bdcc9773d89ffcdb07363986137dcd8ff84c71b3691",
+    "dependency_digest": "3a2c4699ef1caa05bb285647f516dcba829bc62b0736b97ee6c6e038e1be4a1f",
     "reads by category": {
       "bytecode": 42,
       "declared-dependency-metadata": 1,

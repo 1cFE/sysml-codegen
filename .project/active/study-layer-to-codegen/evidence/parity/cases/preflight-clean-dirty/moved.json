@@ -8,7 +8,7 @@
       "path": "sysml_codegen/study/preflight.py",
       "source_digest": {
         "recipe": "tool-source-digest/v1",
-        "digest": "bd909a5034e284ea14ae18372e4730ea2421ee32ee0e8a8467304da29ee4df2b",
+        "digest": "bc7367007aefd0ea341c303514e0c944eb56d333e657f4c7a664f88c894646da",
         "files": [
           {
             "path": "sysml_codegen/study/common.py",
@@ -28,7 +28,7 @@
           },
           {
             "path": "sysml_codegen/study/roots.py",
-            "sha256": "a6a948d539bee30415fe0dc00f814078228aa8757bc4745fe56b1035af8b737b"
+            "sha256": "6a3a9ac6ed487591f486df43a43a927fb31690f0a12cb8cf38c421d383f5333b"
           },
           {
             "path": "sysml_codegen/study/schemas/baseline_result.v1.schema.json",

@@ -8,7 +8,7 @@
       "path": "sysml_codegen/study/indicators.py",
       "source_digest": {
         "recipe": "tool-source-digest/v1",
-        "digest": "20e8b92a49bb2c9b6b26725a8f9b943f9d565ac7ee21b74f626350240e194005",
+        "digest": "a3ae98af149e27efcc0dd29ccfb3b016a0ef8ce2e1eb86a3194d3aa4b7cbf665",
         "files": [
           {
             "path": "sysml_codegen/study/indicators.py",
@@ -20,7 +20,7 @@
           },
           {
             "path": "sysml_codegen/study/roots.py",
-            "sha256": "a6a948d539bee30415fe0dc00f814078228aa8757bc4745fe56b1035af8b737b"
+            "sha256": "6a3a9ac6ed487591f486df43a43a927fb31690f0a12cb8cf38c421d383f5333b"
           },
           {
             "path": "sysml_codegen/study/schemas/axis_declaration.v1.schema.json",

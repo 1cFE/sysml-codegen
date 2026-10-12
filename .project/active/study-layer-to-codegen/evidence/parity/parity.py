@@ -14,9 +14,13 @@ the report counts each application:
 3. Closed-list values that are determined are mapped from orig to moved by a fixed table
    (``TOOL_PATHS``, ``CENSUS_PRODUCERS``, ``teax_detail_mapping``), only in the fields named.
 4. Closed-list values that are content-derived are masked by token on both sides
-   (``mask_content``), and read-coverage receipts are compared by ``receipt_view``.
+   (``mask_content``), and read-coverage receipts are compared by ``receipt_view``: tool
+   declarations as path sets with moved-only package files as B8 additions, tool reads by
+   module, and the reads of modules only the moved driver preloads excluded as measured.
 5. Everything else must be equal, every ``detail`` string included.
 6. Library parity: four functions agree with the project root pinned (``library``).
+
+README.md lists every rule with the decision that ratified it and its evidence.
 
 Run it with the parity venv's interpreter; README.md gives the commands.
 """
@@ -230,8 +234,9 @@ def environment(paths: Paths, mode: str, unset: tuple[str, ...]) -> dict[str, st
     - orig: ``SYSML_CODEGEN_PROJECT_ROOT``, which no original tool reads. The fixture route
       imports the moved ``identity`` in both modes (design Appendix G), and its
       ``build_sealed`` needs a project root. The moved seam hands that root to its producers
-      (B1, DD2); the original seam predates it. Without it ``roots`` falls back to running
-      ``git``, and read coverage refuses the child process at gate 7.
+      (B1, DD2), and the moved ``run_route`` pins it before observing (B1 refinement). The
+      original seam and driver do neither, so without the variable ``roots`` would run
+      ``git`` under observation and read coverage would refuse the child at gate 7.
     """
     env = {
         "PATH": f"{paths.scratch}/shim:{paths.scratch}/venv/bin:/usr/bin:/bin",
@@ -488,14 +493,24 @@ def module_files(names: list[str]) -> dict[str, dict[str, Any]]:
     return found
 
 
-def measure_preloads(paths: Paths) -> dict[str, Any]:
-    """The B13 consequence, measured: the modules the moved driver imports before observation
-    that the original's does not, split into standard library and not.
+def renamed_tool_module(name: str) -> str:
+    """An original tool module's name after rule 3's ``TOOL_PATHS``; any other name as is."""
+    path = TOOL_PATHS.get(name.replace(".", "/") + ".py")
+    return path.removesuffix(".py").replace("/", ".") if path else name
 
-    Parity excludes the standard-library ``.pyc`` reads among them, only where orig records
-    them as ``runtime-observed`` and moved does not record them at all, and only after
-    checking each module is in the import closure of ``sysml_codegen.study.roots`` or
-    ``zoneinfo`` (spec B13 consequence).
+
+def measure_preloads(paths: Paths) -> dict[str, Any]:
+    """The modules the moved driver imports before observation that the original's does not.
+
+    Parity excludes two groups among them, only where orig records the read as
+    ``runtime-observed`` and moved does not record it at all:
+
+    - The standard-library ``.pyc`` reads (spec B13 consequence), after checking each module
+      is in the import closure of ``sysml_codegen.study.roots`` or ``zoneinfo``.
+    - The installed ``sysml_codegen`` modules (Q1 rule 3, a B1 and B8 consequence): the moved
+      observer lives in the package the route imports. The original driver's own tool modules,
+      renamed by rule 3's table, are not preloads: the moved driver loading
+      ``sysml_codegen.study.read_coverage`` is the original loading ``scripts.study.read_coverage``.
     """
     env = {"PATH": "/usr/bin:/bin", "PYTHONPATH": str(paths.project), "LC_ALL": "C.UTF-8"}
 
@@ -503,8 +518,8 @@ def measure_preloads(paths: Paths) -> dict[str, Any]:
         source = DRIVER_MODULES.format(module=module)
         return set(json.loads(python(paths, source, cwd=paths.project, env=env)))
 
-    preloaded = sorted(imported("sysml_codegen.study.read_coverage")
-                       - imported("scripts.study.read_coverage"))
+    orig_driver = imported("scripts.study.read_coverage")
+    preloaded = sorted(imported("sysml_codegen.study.read_coverage") - orig_driver)
     closure: set[str] = set()
     for module in ("sysml_codegen.study.roots", "zoneinfo"):
         source = CLOSURE.format(module=module)
@@ -515,12 +530,23 @@ def measure_preloads(paths: Paths) -> dict[str, Any]:
     if outside:
         raise SystemExit(f"preloaded standard-library modules outside the roots/zoneinfo "
                          f"import closure: {outside}")
+    not_stdlib = sorted(set(preloaded) - set(stdlib))
+    counterparts = {renamed_tool_module(name) for name in orig_driver}
+    package_modules = sorted(set(not_stdlib) - counterparts)
+    strays = [name for name in package_modules
+              if name != "sysml_codegen" and not name.startswith("sysml_codegen.")]
+    if strays:
+        raise SystemExit(f"preloaded modules outside the installed sysml_codegen package: {strays}")
     return {
         "preloaded_by_the_moved_driver": preloaded,
         "standard_library": stdlib,
-        "not_standard_library": sorted(set(preloaded) - set(stdlib)),
+        "not_standard_library": not_stdlib,
+        "installed_package_modules": package_modules,
         "closure_check": "every standard-library module is in the import closure of "
                          "sysml_codegen.study.roots or zoneinfo",
+        "installed_package_check": "not_standard_library less the original driver's own tool "
+                                   "modules renamed by TOOL_PATHS; every one is in the "
+                                   "installed sysml_codegen package",
     }
 
 
@@ -757,51 +783,107 @@ def mask_content(doc: dict[str, Any], side: str, applied: Counter[str]) -> None:
             applied["B8 gate 7 detail digest"] += 1
 
 
+def module_key(path: Path, site: Path) -> str:
+    """The module a source or bytecode file under ``site`` loads; any other file's path.
+
+    ``sysml_codegen/study/common.py`` and its ``__pycache__/common.cpython-312.pyc`` are both
+    ``sysml_codegen.study.common``, and ``__init__`` names its package.
+    """
+    parts = list(path.relative_to(site).parts)
+    if path.suffix == ".pyc" and len(parts) >= 2 and parts[-2] == "__pycache__":
+        parts[-2:] = [parts[-1].split(".", 1)[0]]
+    elif path.suffix == ".py":
+        parts[-1] = path.stem
+    else:
+        return str(path)
+    if parts[-1] == "__init__":
+        parts.pop()
+    return ".".join(parts)
+
+
 def receipt_view(orig: dict[str, Any], moved: dict[str, Any], paths: Paths,
-                 excluded: frozenset[str], applied: Counter[str]) -> tuple[dict, dict]:
+                 excluded: frozenset[str], package_modules: frozenset[str],
+                 applied: Counter[str]) -> tuple[dict, dict]:
     """Rule 4 on a pair of read-coverage receipts: comparable views of each.
 
+    Tool code is orig's ``$S/project/scripts/``, mapped by rule 3's table, and the installed
+    package ``TOOL_HOME/sysml_codegen/``, which the route imports in both modes.
+
     - ``dependency_digest`` is masked (B8).
-    - Entries under each run's tool root (orig ``$S/project/scripts/``, moved
-      ``TOOL_HOME/sysml_codegen/``) are compared as path sets after mapping the orig paths;
-      their category and sha256 may differ (B8, B2). Each set is a mapping from path to a
-      mask, so a difference names every path on either side.
-    - orig's ``runtime-observed`` reads of the measured preloaded standard-library ``.pyc``
-      files are dropped when moved does not record them (spec B13 consequence).
+    - Declarations of tool code are compared as path sets; category and sha256 are free (B8,
+      B2). Every orig one must be in moved. Moved-only ones under the installed package are B8
+      additions (Q1 rule 1): the original already permitted reads of the installed package, as
+      ``runtime-observed`` under the venv prefix, and the moved observer declares the same files
+      with digests. The permission is the same; the receipt records more.
+    - Reads of tool code are compared by module, category and sha256 free (Q1 rule 2, B8). orig
+      reads the installed package's bytecode as runtime; moved reads its source and bytecode as
+      declared. A file that is no module keeps its sha256.
+    - orig's reads of modules only the moved driver preloads are dropped where moved does not
+      record them: the measured standard-library ``.pyc`` files (spec B13 consequence), and the
+      measured installed-package modules (Q1 rule 3), each only when orig read it as runtime.
     - Every other entry is compared whole: path, category and sha256.
     """
     # The receipts are already normalized, so the roots are named as rule 2 renders them.
     scratch = Path("<S>")
-    orig_root = scratch / paths.project.relative_to(paths.scratch) / "scripts"
-    moved_root = scratch / paths.tool_home.relative_to(paths.scratch) / "sysml_codegen"
+    orig_scripts = scratch / paths.project.relative_to(paths.scratch) / "scripts"
+    site = scratch / paths.tool_home.relative_to(paths.scratch)
+    package = site / "sysml_codegen"
 
-    def mapped(path: str) -> str:
-        # scripts/study/<x> and scripts/<integrate> both land in sysml_codegen/study/.
-        relative = Path(path).relative_to(orig_root).as_posix().removeprefix("study/")
-        return str(moved_root / "study" / relative)
+    def tool_code(path: str, side: str) -> Path | None:
+        candidate = Path(path)
+        if side == "orig" and candidate.is_relative_to(orig_scripts):
+            # scripts/study/<x> and scripts/<integrate> both land in sysml_codegen/study/.
+            relative = candidate.relative_to(orig_scripts).as_posix().removeprefix("study/")
+            return package / "study" / relative
+        return candidate if candidate.is_relative_to(package) else None
 
-    views = []
     moved_reads = {row["path"] for row in moved["reads"]}
-    for side, receipt, root in (("orig", orig, orig_root), ("moved", moved, moved_root)):
+    moved_modules = {module_key(code, site) for row in moved["reads"]
+                     if (code := tool_code(row["path"], "moved")) is not None}
+    sides = {}
+    for side, receipt in (("orig", orig), ("moved", moved)):
         view = {k: v for k, v in receipt.items() if k not in ("reads", "declarations")}
         view["dependency_digest"] = "<B8 dependency digest>"
-        for key in ("reads", "declarations"):
-            tool_paths, other = {}, {}
-            for row in receipt[key]:
-                path = Path(row["path"])
-                if path.is_relative_to(root):
-                    name = mapped(row["path"]) if side == "orig" else row["path"]
-                    tool_paths[name] = "<B8 category, B2 sha256>"
-                elif (side == "orig" and key == "reads" and row["path"] in excluded
-                      and row["category"] == "runtime-observed" and row["path"] not in moved_reads):
-                    applied["B13 preloaded standard-library read"] += 1
-                else:
-                    other[row["path"]] = [row["category"], row["sha256"]]
-            view[f"{key} under the tool root"] = dict(sorted(tool_paths.items()))
-            view[f"{key} elsewhere"] = other
-        views.append(view)
+        declared, declared_elsewhere = set(), {}
+        for row in receipt["declarations"]:
+            code = tool_code(row["path"], side)
+            if code is not None:
+                declared.add(str(code))
+            else:
+                declared_elsewhere[row["path"]] = [row["category"], row["sha256"]]
+        modules: dict[str, str] = {}
+        categories: dict[str, set[str]] = {}
+        read_elsewhere = {}
+        for row in receipt["reads"]:
+            code = tool_code(row["path"], side)
+            if code is not None:
+                key = module_key(code, site)
+                modules[key] = row["sha256"] if key == str(code) else "<B8 category, B2 bytes>"
+                categories.setdefault(key, set()).add(row["category"])
+                applied["B8 installed-package read, by module"] += 1
+            elif (side == "orig" and row["path"] in excluded
+                  and row["category"] == "runtime-observed" and row["path"] not in moved_reads):
+                applied["B13 preloaded standard-library read"] += 1
+            else:
+                read_elsewhere[row["path"]] = [row["category"], row["sha256"]]
+        if side == "orig":
+            for key in sorted((package_modules & set(modules)) - moved_modules):
+                if categories[key] == {"runtime-observed"}:
+                    del modules[key]
+                    applied["B1/B8 preloaded installed-package module"] += 1
+        view["reads elsewhere"] = read_elsewhere
+        view["declarations elsewhere"] = declared_elsewhere
+        sides[side] = (view, declared, modules)
+    orig_view, orig_declared, orig_modules = sides["orig"]
+    moved_view, moved_declared, moved_modules_view = sides["moved"]
+    additions = moved_declared - orig_declared
+    applied["B8 installed-package declaration addition"] += len(additions)
+    orig_view["declarations of tool code"] = sorted(orig_declared)
+    moved_view["declarations of tool code"] = sorted(moved_declared - additions)
+    orig_view["reads of tool code, by module"] = dict(sorted(orig_modules.items()))
+    moved_view["reads of tool code, by module"] = dict(sorted(moved_modules_view.items()))
     applied["B8 receipt"] += 1
-    return views[0], views[1]
+    return orig_view, moved_view
 
 
 def differences(orig: Any, moved: Any, where: str = "") -> list[str]:
@@ -840,7 +922,8 @@ def human_summary_holds(outputs: dict[str, Any]) -> bool:
 # --------------------------------------------------------------------------- comparing
 
 
-def compare_case(paths: Paths, case: str, excluded: frozenset[str]) -> dict[str, Any]:
+def compare_case(paths: Paths, case: str, excluded: frozenset[str],
+                 package_modules: frozenset[str]) -> dict[str, Any]:
     runs = {mode: paths.runs / case / mode for mode in MODES}
     patterns = {mode: Patterns.load(paths, run_token(run)) for mode, run in runs.items()}
     outputs = {mode: read_run(run, patterns[mode]) for mode, run in runs.items()}
@@ -858,7 +941,7 @@ def compare_case(paths: Paths, case: str, excluded: frozenset[str]) -> dict[str,
         if isinstance(orig[name], dict) and isinstance(moved[name], dict):
             if orig[name].get("schema_version") == RECEIPT_SCHEMA:
                 orig[name], moved[name] = receipt_view(orig[name], moved[name], paths,
-                                                       excluded, applied)
+                                                       excluded, package_modules, applied)
                 continue
             map_determined(orig[name], paths, applied)
             mask_content(orig[name], "orig", applied)
@@ -920,12 +1003,13 @@ def report(paths: Paths, cases: dict[str, Case]) -> int:
     state = json.loads((paths.scratch / "setup.json").read_text())
     excluded = frozenset(str(Path(path).resolve())
                          for path in state["preloads"]["standard_library"].values() if path)
+    package_modules = frozenset(state["preloads"]["installed_package_modules"])
     results = []
     for name in cases:
         if not (paths.runs / name).is_dir():
             results.append({"case": name, "status": "NOT RUN"})
             continue
-        result = compare_case(paths, name, excluded)
+        result = compare_case(paths, name, excluded, package_modules)
         results.append(result)
         dest = fresh(EVIDENCE / "cases" / name)
         (dest / "comparison.json").write_text(json.dumps(result, indent=2) + "\n")

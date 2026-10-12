@@ -55,5 +55,11 @@
     "sysml_codegen.study.read_coverage",
     "sysml_codegen.study.roots"
   ],
-  "closure_check": "every standard-library module is in the import closure of sysml_codegen.study.roots or zoneinfo"
+  "installed_package_modules": [
+    "sysml_codegen",
+    "sysml_codegen.study",
+    "sysml_codegen.study.roots"
+  ],
+  "closure_check": "every standard-library module is in the import closure of sysml_codegen.study.roots or zoneinfo",
+  "installed_package_check": "not_standard_library less the original driver's own tool modules renamed by TOOL_PATHS; every one is in the installed sysml_codegen package"
 }

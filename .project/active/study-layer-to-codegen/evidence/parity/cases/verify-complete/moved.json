@@ -8,7 +8,7 @@
       "path": "sysml_codegen/study/verify.py",
       "source_digest": {
         "recipe": "tool-source-digest/v1",
-        "digest": "ab4529d86639bb462dbbda03db74d8c2e1c997395c312c4ee8d394caabed75e5",
+        "digest": "4effa3b3f72354ecb857831d67b9a4ee98817f01b40c0277135d715cb6310694",
         "files": [
           {
             "path": "sysml_codegen/study/common.py",
@@ -24,7 +24,7 @@
           },
           {
             "path": "sysml_codegen/study/roots.py",
-            "sha256": "a6a948d539bee30415fe0dc00f814078228aa8757bc4745fe56b1035af8b737b"
+            "sha256": "6a3a9ac6ed487591f486df43a43a927fb31690f0a12cb8cf38c421d383f5333b"
           },
           {
             "path": "sysml_codegen/study/schemas/package_identity.v1.schema.json",
