@@ -18,7 +18,7 @@ It runs after the owner merges and pushes agentic-mbse `study-layer-to-codegen` 
 - `git status --short` in `$FT` is empty, and `git log --oneline b06585709..HEAD` shows O4's text commit: the policy's § 6 "Execution routes", § 12 and § 13, the integration-guide supplement, the `CLAUDE.md` "Study layer" section and the stellarator annex's line 5 (`$EV/fusion-tea/text/`).
 - The environment file `$EV/rehearsal/env.sh` (copied from `env.sh.example`, its `FTC` line filled in, kept out of git) is sourced: the licence (present, never printed), fusion-tea's `STOP_PARSER_*` values, and `TEAX_SIMKIT_PATH=$STOP_PARSER_TEAX_ROOT/packages/teax-simkit`.
 
-**Observed in the rehearsal:** *(O3 fills this in.)*
+**Observed in the rehearsal:** rehearsed on 2026-10-12, evidence in `$R=/tmp/study-rehearsal-20261012-124407`. `$FTC` was a detached worktree of O4's tip `699b0a74d`, whose base is fusion-tea `origin/main` `c42ed1d8a`, so `git log b06585709..HEAD` listed 11 commits: O4's one text commit and 10 main commits (`$R/setup-log.txt`). The wheels were built from sysml-codegen `310dfc6` and agentic-mbse `db032d6` (`$R/wheels/sources.json`). sysml-codegen moved to `4a9628c` during the rehearsal (the audit fix pass, which changed `src/sysml_codegen/study/read_coverage.py` and five shipped texts), so these observations cover `310dfc6`. `env.sh` was sourced with the licence present, and `uv sync --frozen --extra e2e` installed agentic-mbse `ac5fb1a` and sysml-codegen `8a758e9`. The Bash tool keeps no shell state between calls, so each call re-sourced `$R/session.sh` (Setup's variables plus `env.sh`) in place of one long-lived shell.
 
 ## Step 1: drift check
 
@@ -31,7 +31,7 @@ git diff b06585709 origin/main -- .claude/skills/run-study modeling_project/STUD
 
 **Expected:** it prints nothing. If it prints a change, stop until that change is in sysml-codegen (an ordinary change there) or in its fusion-tea home (`$EV/read-through.md` names each one).
 
-**Rehearsal:** the same, on `$FT`. **Observed in the rehearsal:** *(O3)*
+**Rehearsal:** the same, on `$FT`. **Observed in the rehearsal:** rehearsed; matched. `git fetch origin` exited 0, `origin/main` was `c42ed1d8a`, and the diff printed nothing (`$R/step1-drift.txt`, 0 bytes).
 
 ## Step 2: agentic-mbse pin check
 
@@ -43,7 +43,7 @@ uv run --no-sync python -c "from agentic_mbse.cli.installation import INSTALLER_
 
 **Expected:** `installer/v1`. If it raises or prints anything else, move fusion-tea's agentic-mbse pin to `M_AMBSE` first, as Item 2's runbook moved it (`[tool.uv.sources]` `rev`, the hand-edited `uv.lock`, `uv sync --frozen --extra e2e`, restore removed packages, `uv lock --check`) and set `A_FINAL` in `tests/test_dependency_provenance.py`. If Item 2's pin move has not run yet, pin straight to `M_AMBSE`.
 
-**Rehearsal:** after `uv pip install --python $FTC/.venv/bin/python --no-deps $AMBSE_WHEEL $CODEGEN_WHEEL`, wheels built from the two branch heads; this is run B's state. **Observed in the rehearsal:** *(O3)*
+**Rehearsal:** after `uv pip install --python $FTC/.venv/bin/python --no-deps $AMBSE_WHEEL $CODEGEN_WHEEL`, wheels built from the two branch heads; this is run B's state. **Observed in the rehearsal:** rehearsed; matched, with one deviation. After the wheel install it printed `installer/v1` (`$R/step2.txt`). Before the install, at fusion-tea's current pin `ac5fb1a` (Item 2 moved it from `adbef75`), the same command raised `ImportError: cannot import name 'INSTALLER_API_VERSION'` (`$R/step2-before-extra.txt`), so the real switch does need the pin move to `M_AMBSE`. Deviation: the wheel install did not survive run B. The original seam's gate 2 runs `uv run sysml-codegen generate` without `--no-sync` (O4's `scripts/integrate.py:1006`, closed-list item B3). The first suite test to reach gate 2 therefore re-synced `.venv` to `uv.lock` at 13:48:18, putting back sysml-codegen `8a758e9` and agentic-mbse `ac5fb1a`. Step 5's first check then failed, and the step 2 install command was re-run unchanged before step 5's checks (`$R/step2-reinstall.txt`). In the real switch, step 4 moves the lock, so a re-sync installs `M_CODEGEN`; only the rehearsal's stand-in breaks.
 
 ## Step 3: no-loss check
 
@@ -57,7 +57,7 @@ The script greps all 75 anchors in their homes in the working tree and exits non
 
 **Expected:** `75 anchors found, 0 missing`, exit 0 (74 from O4's text commit, plus IG-43 from `fusion-tea/text/audit-f8-supplement.patch`, which the orchestrator applies on the O4 branch after the audit). If one is missing, the script names it: stop, because the branch's text is incomplete.
 
-**Rehearsal:** on `$FTC` with O4's text commits applied. **Observed in the rehearsal:** *(O3)*
+**Rehearsal:** on `$FTC` with O4's text commits applied. **Observed in the rehearsal:** rehearsed; did not match. It printed `74 anchors found, 1 missing` and exited 1, naming `IG-43: "step numbers of fusion-tea's integration-seam requirements" is not in docs/integration_seam_operator_guide.md` (`$R/step3.txt`). IG-43 and `audit-f8-supplement.patch` were added in sysml-codegen `7cf5a7c` during the rehearsal, after `$FTC` was made at `699b0a74d`. The patch passes `git apply --check` on `$FTC`, and with it applied to a copy of the guide the anchor greps once (`$R/step3-f8-probe/`). The O4 branch has since gained the line as `aab9b9ba3`, so the step should pass at that tip; this rehearsal did not re-run it there.
 
 ## Step 4: move the sysml-codegen pin
 
@@ -112,7 +112,7 @@ git grep -c 'from sysml_codegen.study' -- "${ROUTES[@]}"      # each of the nine
 git status --porcelain --untracked-files=all -- exploration/ | cut -c4- | grep -vxF -f <(printf '%s\n' "${ROUTES[@]}")   # nothing: no other file under exploration/ changed, record copies included
 ```
 
-**Rehearsal:** applied on `$FTC`; `$EV/fusion-tea/SMOKE.md` records the drafts' smoke test in the parity layout. **Observed in the rehearsal:** *(O3)*
+**Rehearsal:** applied on `$FTC`; `$EV/fusion-tea/SMOKE.md` records the drafts' smoke test in the parity layout. **Observed in the rehearsal:** rehearsed; two deviations. (1) `step5-tests.patch` applied to all 17 files with no reject, but `step5-guide-contract.patch` did not apply: patch reported "Reversed (or previously applied) patch detected", skipped both hunks, wrote `tests/study/test_integrate_guide_contract.py.rej` and exited 1 (`$R/step5.txt`). O4's commit `699b0a74d` already holds that change; its file is byte-identical to `b06585709`'s plus the patch, so the file ended in the intended state. (2) The first `m is n` check failed with `ModuleNotFoundError: No module named 'sysml_codegen.study'` (from the wrapper `scripts/study/manifest.py:13`), because the venv had been re-synced to the lock (step 2). After step 2's install was re-run, every check matched: `True`; no `from scripts.study` in the nine routes; one `from sysml_codegen.study` in each of the nine; nothing else changed under `exploration/` (`$R/step5-checks.txt`, `$R/step5-checks-after-reinstall.txt`).
 
 ## Step 6: declare
 
@@ -121,7 +121,7 @@ git status --porcelain --untracked-files=all -- exploration/ | cut -c4- | grep -
 
 **Expected:** `uv lock --check` still reports the lock fresh: a `[tool]` table does not enter it.
 
-**Rehearsal:** applied on `$FTC`. **Observed in the rehearsal:** *(O3)*
+**Rehearsal:** applied on `$FTC`. **Observed in the rehearsal:** rehearsed; matched. The declaration was appended, `.venv/integration.env` was created holding the one `TEAX_SIMKIT_PATH` line, and `uv lock --check` printed `Resolved 179 packages` and exited 0 (`$R/step6.txt`).
 
 ## Step 7: re-install
 
@@ -141,7 +141,7 @@ Both assistants are the default. With no terminal, the installer keeps a differi
 
 fusion-tea's own tests that read the skill text keep passing on the installed copy, as Phase 5 checked against the shipped files: `tests/study/test_annex.py` (the runbook cites only the four annex sections), `tests/study/test_record_template.py` (two full `source_digest` blocks) and `tests/study/test_policy_path.py` (the skill and runbook name `modeling_project/STUDY_POLICY.md`).
 
-**Rehearsal:** the same, on `$FTC`. **Observed in the rehearsal:** *(O3)*
+**Rehearsal:** the same, on `$FTC`. **Observed in the rehearsal:** rehearsed; matched. `install-commands` exited 0 and printed "Preserved modeling_project/STUDY_POLICY.md: it is this project's document; --force replaces it". The five files are under `.agents/skills/run-study/`, `.claude/skills/run-study` reads `../../.agents/skills/run-study`, `.sysml-codegen/install.json` lists the five files, the link and `.claude/commands/teax-completion.md`, and `.agentic-mbse/install.json` names none of them (`$R/install.txt`, `$R/step7-checks.txt`). `teax-completion.md` was Created, not Preserved, because a fresh worktree has no untracked copy, so the first-run rule was not exercised.
 
 ## Step 8: verify
 
@@ -153,7 +153,7 @@ uv run --no-sync pytest tests/study tests/models/test_model_family_spines.py -q 
 
 **Pass rule:** compare run C (after step 7) with run B (dependencies moved, nothing switched) using `$EV/rehearsal/junit-diff.py`. No test fails or skips in C that passed in B, and a test failing in both fails with the same message. B against A (as-is) is recorded and classified for step 9; it is not a gate on the move.
 
-**Rehearsal:** runs A, B and C on `$FTC`, one shell, `env.sh` sourced, each run's `env.txt` written by `record_env <run>` (`python -V`, `uv pip list`, teax HEAD, the licence by presence, and `env | grep -E '^(STOP_PARSER_[A-Z_]*|TEAX_SIMKIT_PATH|SYSML_CODEGEN_PROJECT_ROOT|PYTHONPATH)='`). Design Appendix H3's pattern `'^(STOP_PARSER_|…)='` needs `=` straight after the prefix, so it matches no `STOP_PARSER_` name; `STOP_PARSER_[A-Z_]*` is the corrected form. Compare with `python3 $EV/rehearsal/junit-diff.py <B>/junit.xml <C>/junit.xml`, which exits non-zero when C breaks the pass rule. **Observed in the rehearsal:** *(O3)*
+**Rehearsal:** runs A, B and C on `$FTC`, one shell, `env.sh` sourced, each run's `env.txt` written by `record_env <run>` (`python -V`, `uv pip list`, teax HEAD, the licence by presence, and `env | grep -E '^(STOP_PARSER_[A-Z_]*|TEAX_SIMKIT_PATH|SYSML_CODEGEN_PROJECT_ROOT|PYTHONPATH)='`). Design Appendix H3's pattern `'^(STOP_PARSER_|…)='` needs `=` straight after the prefix, so it matches no `STOP_PARSER_` name; `STOP_PARSER_[A-Z_]*` is the corrected form. Compare with `python3 $EV/rehearsal/junit-diff.py <B>/junit.xml <C>/junit.xml`, which exits non-zero when C breaks the pass rule. **Observed in the rehearsal:** rehearsed as written, but the suite as written runs no test. In A, B and C, pytest stopped at collection with 1 error and exited 2. The cause: `tests/study/test_stellarator_materials_policy.py` imports `exploration/stellarator_materials/oracle_glue.py`, whose `PIN_INPUTS_PATH` (line 85) names `work/active/WI-098_whole-plant-conversion-comparison/evidence/magnet-probe/baseline-inputs.json`, and fusion-tea `421966070` archived that item to `work/completed/20261006_WI-098_…`. That fusion-tea defect is present at `c42ed1d8a` and does not depend on the switch. `junit-diff.py` held for A to B and B to C, comparing one collection error with itself (`$R/A-to-B.txt`, `$R/B-to-C.txt`). For a real comparison, each run was repeated with `--continue-on-collection-errors` (`$R/A-cce/`, `$R/B-cce/`, `$R/C-cce/`). A: 1844 passed, 6 failed, 9 errors, 2 skipped (1 skip, 1 xfail). B: the same. C: 1836 passed, 14 failed, 9 errors, 2 skipped. Three further findings. (1) `junit-diff.py` masks only the absolute pytest temp path, but failure messages carry it relative (`../../pytest-of-reid/pytest-N/`), so it called A to B BROKEN on 11 messages that differ only in N; with that one extra mask (`$R/junit-diff-relmask.py`, which leaves `junit-diff.py` unchanged) A to B holds. (2) After its first integrate test to reach gate 2, B ran on the old generator, because that gate re-synced the venv (step 2). (3) B to C, masked, is BROKEN: 8 tests passed in B and failed in C, and 14 failing in both changed message (`$R/B-to-C-cce-relmask.txt`, `$R/B-to-C-cce-gates.txt`). All but one are gate 2 refusing in C (`package-not-integrated`, 3 files moved) where B, on the old generator, passed gate 2: that is the generator move, not the switch. The one switch regression is `tests/study/test_integrate_restore.py::test_run_retains_external_backup_and_recovery_pointer`. It calls `integrate.run(SimpleNamespace(out_dir=…), [])` (line 125), the moved seam's `project_anchor` reads `args.package` (`sysml_codegen/study/integrate.py:1570`, called at `:1586`), and `step5-tests.patch` does not give that fake a `package`, so it raises `AttributeError`. A and B also share a gate 7 refusal in the integrate tests that predates the switch (`read-coverage-refused`, `undeclared dependency read: /dev/urandom`); C stops at gate 2 before reaching gate 7.
 
 ### 8b. Re-verify one existing record
 
@@ -165,7 +165,7 @@ Use `exploration/stellarator_e2e/studies/20260916-primary-loop-sizing` if its se
 4. `git status --short -- <record directory>` prints nothing: the record's committed files are untouched.
 5. List every committed `package_identity.json` of kind `effective` whose adapter sources name a rewritten route file. None is expected.
 
-**Rehearsal:** on `$FTC`. **Observed in the rehearsal:** *(O3)*
+**Rehearsal:** on `$FTC`. **Observed in the rehearsal:** partly rehearsed. The named record `20260916-primary-loop-sizing` does not recompute: `assert_matches` raises `IdentityError` (declares `f52729e6…`, recomputes `83ea3b6c…`), the same over `pkg/stellarator_tea` and over the record's own package `exploration/stellarator_e2e/generated`, before and after step 5 (`$R/8b-before-primary-loop*`, `$R/8b-after-primary-loop.txt`). Of the 40 records with a results identity, scanned newest first, only `exploration/magnet_materials/studies/20260929-magnet-material-comparison` recomputes (`$R/8b-candidate-scan-full.txt`). Identity half, on that record and its package `exploration/magnet_materials/magnet_materials_tea`: `7075e929…` before and after step 5, `cmp` equal, as expected (`$R/8b-before.txt`, `$R/8b-after.txt`). Verify half: not rehearsable. That record's two stores (`results/native/20260929-magnet-material-comparison.db`, `results/_work/magnet-materials-baseline-point-v1.db`) are not committed, and no record whose store is present recomputes. A diagnostic verify on the primary-loop record showed two more facts (`$R/8b-verify.txt`, `$R/8b-verify-diag.txt`). As written, `sysml-codegen study verify` exits 1 with `No module named 'simkit'`, because the 8b command does not put `$TEAX_SIMKIT_PATH` on `PYTHONPATH` as 8c's driver does. With it set inline, verify refuses on the identity mismatch (exit 1). `git status --short` on both record directories printed nothing. No committed identity of kind `effective` exists, so the last command printed nothing, as expected (`$R/8b-effective.txt`).
 
 ### 8c. `integrate` on a real package (needs teax and the licence)
 
@@ -179,13 +179,13 @@ PYTHONPATH=$FTC:$TEAX_SIMKIT_PATH SYSML_CODEGEN_PROJECT_ROOT=$FTC uv run --no-sy
 
 **Expected:** B and C stop at the same gate with the same class and condition, or both return `CANDIDATE`. Their returns differ only in closed-list fields under SC12's comparator (`$EV/parity/`). The C driver writes `read_coverage.json` with `outcome: pass` and `violations: []`.
 
-**Rehearsal:** the orchestrator runs it on `$FTC`. **Observed in the rehearsal:** *(O3)*
+**Rehearsal:** the orchestrator runs it on `$FTC`. **Observed in the rehearsal:** `integrate` rehearsed and matched; the driver did not match. Both runs used the supplement's full stellarator request with `--groups exploration/stellarator_e2e/studies/axes.supplied_design.json` (`$R/integrate-args.txt`). B and C both returned `BLOCKER` at gate 1b `teax-revision`, mode `refused`, condition `toolchain-drift`, exit 1 (`$R/8c-classes.txt`). The request's `--expected-teax-revision 744745f8…` is a historical value, and teax HEAD is `8d877460…`. Gate 1a passed in both; B ran with the venv re-synced to the lock (step 2), C with the wheels. The returns differ only in closed-list fields: tool path, `command[0]`, source digests and producers (B2), gate 4's census producer (B11), and gate 1b's detail naming the simkit root (B7). The `--out-dir` path and its junit evidence path differ by construction (`$R/8c-return-diff.txt`). Gate 1b stops both runs, so gates 2–9 were not compared. The gate-7 driver wrote `outcome: fail`, `violations: ['undeclared dependency read: /tmp/frcvddch']` and exited 1 (`$R/rc/read_coverage.json`, `$R/rc-driver.txt`); a diagnostic re-run failed the same way on `/tmp/nrz4w10d` (`$R/rc-diag2/`). The read is one random eight-character name directly under `/tmp`, the shape of the probe file `tempfile.gettempdir()` makes on its first call; the caller was not confirmed. The driver ran from the `310dfc6` wheel, before the audit's `read_coverage.py` change.
 
 ## Step 9: consequence note
 
 Moving the sysml-codegen pin also moves the code generator fusion-tea's packages are built with, by about 142 commits at the time of drafting (count `8a758e9..M_CODEGEN`). `integrate`'s regeneration gate requires regeneration to move no byte, so gate 2 may refuse fusion-tea packages, and gate 4's snapshots may drift, until each package is regenerated in its own modeling item. That is the pin move's consequence, not this switch's. Record what B against A (8a) and 8c showed, so the owner decides the pin move with it in view.
 
-**Observed in the rehearsal:** *(O3)*
+**Observed in the rehearsal:** the generator moved 214 commits from `8a758e9` to the wheel's `310dfc6` (225 to sysml-codegen HEAD `4a9628c`), not about 142. A to B (8a) showed nothing, because gate 2's re-sync put the old generator back in B (step 2); no test passed in A and failed in B. Run C, on the new generator, shows the consequence. Gate 2 refuses the stellarator package with `package-not-integrated`, because regeneration rewrites 3 files: `generated/contracts/package_contract.json`, `generated/modules/mfe_fuel_cycle/fuel_inventory.py` and `generated/schemas/fuel_inventory_output.py` (`$R/C-cce/gate2-moved_files.txt`). That refusal accounts for 21 failing or changed integrate tests in C. Gate 4 snapshot drift was not observable, because gate 2 stops first. The model-family spine suite passed 15 of 15 on the new generator. 8c's B run stopped at gate 1b, so it adds nothing here.
 
 ## Commit
 
