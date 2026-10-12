@@ -349,6 +349,18 @@ def test_an_agentic_mbse_without_the_pinned_api_is_refused(
     assert "installer/v1" in err and INSTALLER_API_REVISION in err and repr(upstream) in err
 
 
+def test_the_cli_loads_the_installer_only_inside_install_commands() -> None:
+    """DD5: an agentic-mbse without the API breaks this subcommand alone, never ``generate``."""
+    probe = (
+        "import sys, sysml_codegen.cli; print(sorted(m for m in ('sysml_codegen.cli.install', "
+        "'agentic_mbse.cli', 'agentic_mbse.cli.installation') if m in sys.modules))"
+    )
+    run = subprocess.run(
+        [sys.executable, "-c", probe], capture_output=True, text=True, check=True
+    )
+    assert run.stdout.strip() == "[]"
+
+
 @pytest.mark.parametrize("listing", [False, True], ids=["install", "list"])
 def test_the_handler_checks_the_api_before_it_does_anything(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, listing: bool
