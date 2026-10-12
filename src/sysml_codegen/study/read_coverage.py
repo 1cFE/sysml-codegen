@@ -7,8 +7,8 @@ import importlib.util
 import json
 import os
 import sys
+import sysconfig
 import threading
-import zoneinfo
 from pathlib import Path
 
 from sysml_codegen.study import roots as study_roots
@@ -24,6 +24,20 @@ LIMITATIONS = [
 #: Kernel entropy devices. An interpreter may open one to seed ``random``; no result is derived
 #: from its bytes and no target can declare it, so reading exactly these is a runtime read.
 ENTROPY_DEVICES = frozenset({Path("/dev/urandom"), Path("/dev/random")})
+
+
+def absolute_entries(search_path: str) -> tuple[Path, ...]:
+    """The absolute directories an ``os.pathsep``-joined search path names, in order.
+
+    Empty and relative entries are dropped, as ``zoneinfo`` drops them from the same setting.
+    """
+    return tuple(Path(entry) for entry in search_path.split(os.pathsep) if os.path.isabs(entry))
+
+
+#: The interpreter's time-zone search path as it was built (B13). Unlike ``zoneinfo.TZPATH``,
+#: which ``PYTHONTZPATH`` replaces, no setting of the caller's widens it. An interpreter built
+#: without one has no zone directories.
+INTERPRETER_ZONE_ROOTS = absolute_entries(sysconfig.get_config_var("TZPATH") or "")
 
 
 def digest(path):
@@ -88,10 +102,10 @@ class Observer:
         self.created = set()
         self.creation_attempts = set()
         self.declared = {}
-        # The interpreter's own time-zone search path is its platform data, as it already is
-        # wherever that path sits under ``sys.prefix``. Read at construction, never hard-coded.
+        # The interpreter's built-in time-zone search path is its platform data, as it already
+        # is wherever that path sits under ``sys.prefix``. Never hard-coded.
         self.runtime = {Path(sys.prefix).resolve(), Path(sys.base_prefix).resolve(),
-                        *(Path(entry).resolve() for entry in zoneinfo.TZPATH)}
+                        *(entry.resolve() for entry in INTERPRETER_ZONE_ROOTS)}
         contract = self.package / "contracts/package_contract.json"
         for rel, sha in json.loads(contract.read_text())["artifact_hashes"].items():
             path = (self.package / rel).resolve()

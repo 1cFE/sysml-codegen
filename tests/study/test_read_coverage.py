@@ -53,9 +53,9 @@ def observed_route(tmp_path):
     def with_root():
         return {**os.environ, roots.PROJECT_ROOT_ENV: str(tmp_path)}
 
-    def run(body, env=None, cwd=None):
+    def run(body, env=None, cwd=None, driver=integrate.ROUTE_DRIVER_SOURCE):
         write(body)
-        done = subprocess.run([sys.executable, '-c', integrate.ROUTE_DRIVER_SOURCE,
+        done = subprocess.run([sys.executable, '-c', driver,
                                str(route), 'probe_route', 'execute', str(out),
                                str(package), str(manifest), 'test-token'],
                               text=True, capture_output=True, cwd=cwd,
@@ -106,18 +106,28 @@ def test_any_other_device_is_still_an_undeclared_read(observed_route):
     assert receipt['violations'] == ['undeclared dependency read: /dev/zero']
 
 
-@pytest.fixture
-def zone_search_path(tmp_path):
-    """A time-zone search path of the test's own, outside every runtime root on any interpreter.
+#: integrate's route driver, with the interpreter's built-in time-zone search path replaced by
+#: ``TEST_ZONE_ROOT`` first. That path is fixed when the interpreter is built, so replacing the
+#: value the observer read is the only way to point it at a test directory.
+ZONE_DRIVER_SOURCE = (
+    "import os\nfrom pathlib import Path\nfrom sysml_codegen.study import read_coverage\n"
+    "read_coverage.INTERPRETER_ZONE_ROOTS = (Path(os.environ['TEST_ZONE_ROOT']),)\n"
+    + integrate.ROUTE_DRIVER_SOURCE
+)
 
-    ``PYTHONTZPATH`` is how an interpreter is told its ``zoneinfo.TZPATH``. A directory beside
-    it holds the same file, so the pair tells "the interpreter's own path" from "zone-shaped".
+
+@pytest.fixture
+def zone_search_path(tmp_path, observed_route):
+    """A built-in time-zone search path of the test's own, outside every runtime root.
+
+    A directory beside it holds the same file, so the pair tells "the interpreter's own path"
+    from "zone-shaped".
     """
     zones, elsewhere = tmp_path.resolve() / 'zones', tmp_path.resolve() / 'elsewhere'
     for root in (zones, elsewhere):
         (root / 'Etc').mkdir(parents=True)
         (root / 'Etc' / 'UTC').write_bytes(b'TZif2')
-    env = {**os.environ, roots.PROJECT_ROOT_ENV: str(tmp_path), 'PYTHONTZPATH': str(zones)}
+    env = {**observed_route.env(), 'TEST_ZONE_ROOT': str(zones)}
     return SimpleNamespace(zone=zones / 'Etc' / 'UTC', elsewhere=elsewhere / 'Etc' / 'UTC', env=env)
 
 
@@ -131,7 +141,7 @@ def test_a_read_under_the_interpreters_zone_search_path_is_a_runtime_read(
     interpreter's search path is a test directory, so the refusal reproduces on any interpreter.
     """
     done, receipt = observed_route.run(f'open({str(zone_search_path.zone)!r}, "rb").read()',
-                                       env=zone_search_path.env)
+                                       env=zone_search_path.env, driver=ZONE_DRIVER_SOURCE)
     assert done.returncode == 0, done.stderr
     assert receipt['violations'] == []
     assert {'path': str(zone_search_path.zone), 'category': 'runtime-observed',
@@ -140,11 +150,33 @@ def test_a_read_under_the_interpreters_zone_search_path_is_a_runtime_read(
 
 def test_zone_shaped_data_off_the_interpreters_search_path_is_still_undeclared(
         observed_route, zone_search_path):
-    """B13 follows ``zoneinfo.TZPATH``; it is no allowance for whatever looks like zone data."""
+    """B13 follows the interpreter's own search path; it is no allowance for zone-shaped data."""
     done, receipt = observed_route.run(f'open({str(zone_search_path.elsewhere)!r}, "rb").read()',
-                                       env=zone_search_path.env)
+                                       env=zone_search_path.env, driver=ZONE_DRIVER_SOURCE)
     assert done.returncode != 0
     assert receipt['violations'] == [f'undeclared dependency read: {zone_search_path.elsewhere}']
+
+
+def test_pythontzpath_does_not_widen_the_runtime_roots(observed_route, tmp_path):
+    """Audit F1: the caller's ``PYTHONTZPATH`` must not switch gate 7 off.
+
+    ``zoneinfo.TZPATH`` is ``('/',)`` under ``PYTHONTZPATH=/``. While B13 followed it, every read
+    outside the package counted as runtime, so this undeclared read passed. B13 follows the
+    interpreter's build-time ``TZPATH``, which that variable does not change.
+    """
+    unexpected = tmp_path.resolve() / 'unexpected.csv'
+    unexpected.write_text('project data')
+    done, receipt = observed_route.run(f'Path({str(unexpected)!r}).read_text()',
+                                       env={**observed_route.env(), 'PYTHONTZPATH': '/'})
+    assert done.returncode != 0
+    assert receipt['violations'] == [f'undeclared dependency read: {unexpected}']
+
+
+def test_the_zone_search_path_keeps_only_absolute_entries():
+    """Empty and relative entries name no directory the interpreter could have been built with."""
+    setting = os.pathsep.join(['/usr/share/zoneinfo', '', 'relative/zones', '/etc/zoneinfo', ''])
+    expected = (Path('/usr/share/zoneinfo'), Path('/etc/zoneinfo'))
+    assert coverage.absolute_entries(setting) == expected
 
 
 def test_symlink_escape(observed_route, tmp_path):
