@@ -1,8 +1,8 @@
 # Implementation Plan: Move the study layer to sysml-codegen (WRAP-SPLIT Item 3)
 
-**Status:** Draft
+**Status:** In Progress (Phase A and Phase 1 done)
 **Created:** 2026-10-12
-**Last Updated:** 2026-10-12
+**Last Updated:** 2026-10-12 (Phase 1 implemented)
 **Branch:** `study-layer-to-codegen` in both sysml-codegen and agentic-mbse
 
 ## Source Documents
@@ -193,47 +193,47 @@ def test_a_cwd_inside_another_work_tree_refuses(package_repo, other_repo, monkey
 
 **KB4 proof.** Do this first; the stop rule applies.
 
-- [ ] Write `$EV/lane/make_provenance.py` as § Ground rules specifies, and run it.
-- [ ] Check that simkit imports in this venv: `uv run --no-sync python -c "import sys; sys.path.insert(0, '/home/reid/1cfe/teax/packages/teax-simkit'); import simkit.study.runner, simkit.evaluation.evaluator"`. If a third-party module is missing, install that one module with `uv pip install --python .venv/bin/python <module>` and record it.
-- [ ] Write `tests/fixtures/study_station/models/station.sysml` per design Appendix E.
-- [ ] Capture the snapshot (needs the license): `uv run --no-sync --env-file /home/reid/1cfe/sysml-codegen/.env sysml-codegen snapshot --models tests/fixtures/study_station/models --output tests/fixtures/study_station/station.snapshot.json`.
-- [ ] Generate the package: `uv run --no-sync sysml-codegen generate --from-snapshot tests/fixtures/study_station/station.snapshot.json --output <dir> --package-name station_study`. Choose `--output` so that the package lands at `tests/fixtures/study_station/pkg/station_study/`, and keep the exact commands for Phase 2's `PROVENANCE.md`.
-- [ ] Write the execution test above and run the teax lane. **If it fails on stock teax, stop and report.** Commit nothing from the port. KB4 is then false, so cut 2 applies and verify keeps only negative-case coverage. The orchestrator decides before Phase 2.
-- [ ] Commit the model, the snapshot, the generated package, the test and `$EV/lane/`.
+- [x] Write `$EV/lane/make_provenance.py` as § Ground rules specifies, and run it.
+- [x] Check that simkit imports in this venv: `uv run --no-sync python -c "import sys; sys.path.insert(0, '/home/reid/1cfe/teax/packages/teax-simkit'); import simkit.study.runner, simkit.evaluation.evaluator"`. If a third-party module is missing, install that one module with `uv pip install --python .venv/bin/python <module>` and record it.
+- [x] Write `tests/fixtures/study_station/models/station.sysml` per design Appendix E.
+- [x] Capture the snapshot (needs the license): `uv run --no-sync --env-file /home/reid/1cfe/sysml-codegen/.env sysml-codegen snapshot --models tests/fixtures/study_station/models --output tests/fixtures/study_station/station.snapshot.json`.
+- [x] Generate the package: `uv run --no-sync sysml-codegen generate --from-snapshot tests/fixtures/study_station/station.snapshot.json --output <dir> --package-name station_study`. Choose `--output` so that the package lands at `tests/fixtures/study_station/pkg/station_study/`, and keep the exact commands for Phase 2's `PROVENANCE.md`.
+- [x] Write the execution test above and run the teax lane. **If it fails on stock teax, stop and report.** Commit nothing from the port. KB4 is then false, so cut 2 applies and verify keeps only negative-case coverage. The orchestrator decides before Phase 2.
+- [x] Commit the model, the snapshot, the generated package, the test and `$EV/lane/`.
 
 **Port.**
 
-- [ ] Record the ruff and mypy baselines on `src/`.
-- [ ] **Mechanical copy commit.** Copy the seven modules from `$STAGED/scripts/study/*.py` and `$STAGED/scripts/integrate.py` into `src/sysml_codegen/study/` byte for byte. Copy the seven schemas into `src/sysml_codegen/study/schemas/` the same way, and add an empty `__init__.py`. Commit this alone, with the message "mechanical copy at fusion-tea b06585709". This commit is not expected to pass mypy; the phase's last commit is.
-- [ ] Write `tests/study/test_roots.py` first, with all seven cases in design Appendix F. Then write `src/sysml_codegen/study/roots.py` per Appendix A's signature block and DD2's rules.
-- [ ] Apply Appendix A's edits to `common`, `manifest`, `indicators`, `preflight`, `verify` and `read_coverage`. For `verify` that means B1 and B2 only; B9 is Phase 2. Remove the four `if __package__` inserts (DD19). Make SC5's docstring edits on these modules.
-- [ ] In this phase `integrate.py` gets only four edits; everything else in it is Phase 3:
+- [x] Record the ruff and mypy baselines on `src/`.
+- [x] **Mechanical copy commit.** Copy the seven modules from `$STAGED/scripts/study/*.py` and `$STAGED/scripts/integrate.py` into `src/sysml_codegen/study/` byte for byte. Copy the seven schemas into `src/sysml_codegen/study/schemas/` the same way, and add an empty `__init__.py`. Commit this alone, with the message "mechanical copy at fusion-tea b06585709". This commit is not expected to pass mypy; the phase's last commit is.
+- [x] Write `tests/study/test_roots.py` first, with all seven cases in design Appendix F. Then write `src/sysml_codegen/study/roots.py` per Appendix A's signature block and DD2's rules.
+- [x] Apply Appendix A's edits to `common`, `manifest`, `indicators`, `preflight`, `verify` and `read_coverage`. For `verify` that means B1 and B2 only; B9 is Phase 2. Remove the four `if __package__` inserts (DD19). Make SC5's docstring edits on these modules.
+- [x] In this phase `integrate.py` gets only four edits; everything else in it is Phase 3:
   - the import rewrite, including the mid-file driver source at `:1216-1221`;
   - removal of the insert;
   - `dict(os.environ)` → `roots.environment()` at `:291`, so that I13 holds once the CLI reaches the module (DD20);
   - `rederived_census` calling `census.by_entry_type` at `:1098` (B11).
-- [ ] Add `census.py` (DD9, verbatim from `$STAGED/tests/models/test_model_family_spines.py:174-182`) with `tests/study/test_census.py`.
-- [ ] Start `tests/study/test_tool_identity.py` with the literal checks from the design's Implementation Notes: each `TOOL_SOURCE_FILES` entry and `tool.path` resolves under `TOOL_HOME`, and each tool lists every study module it imports. Cover `manifest`, `indicators`, `preflight` and `verify` now. Phase 3 adds `integrate`.
-- [ ] Add `src/sysml_codegen/cli/study.py` (`cmd_study`) and the `study` subparser in `cli/__init__.py` (DD3; Appendix A). Add `tests/study/test_study_cli.py`.
-- [ ] Make the conformance edits in `tests/conformance/test_public_authority_switch.py` (Appendix F):
+- [x] Add `census.py` (DD9, verbatim from `$STAGED/tests/models/test_model_family_spines.py:174-182`) with `tests/study/test_census.py`.
+- [x] Start `tests/study/test_tool_identity.py` with the literal checks from the design's Implementation Notes: each `TOOL_SOURCE_FILES` entry and `tool.path` resolves under `TOOL_HOME`, and each tool lists every study module it imports. Cover `manifest`, `indicators`, `preflight` and `verify` now. Phase 3 adds `integrate`.
+- [x] Add `src/sysml_codegen/cli/study.py` (`cmd_study`) and the `study` subparser in `cli/__init__.py` (DD3; Appendix A). Add `tests/study/test_study_cli.py`.
+- [x] Make the conformance edits in `tests/conformance/test_public_authority_switch.py` (Appendix F):
   - the readers allowance at `:240`;
   - the new `test_the_study_package_reads_the_environment_only_in_roots`;
   - `cmd_study` added to the pinned `__all__` set (`:243-254`). `CODEGEN_COMMANDS` stays until Phase 6.
-- [ ] Move the tests that run on `synthetic_pkg`:
+- [x] Move the tests that run on `synthetic_pkg`:
   - copy `$STAGED/tests/study/data/synthetic_pkg` to `tests/study/data/synthetic_pkg`;
   - move `test_common`, `test_output_contract` (except `test_fingerprint_read_set_is_the_three_legs`), `test_read_coverage`, and `test_verify`'s two pure disjunction tests;
   - point schema lookups at `importlib.resources.files("sysml_codegen.study") / "schemas"`;
   - add `tests/study/__init__.py` and `tests/study/conftest.py`.
-- [ ] Add `tests/study/test_generic_text.py` (SC5a, Appendix F). Commit the closed lists as literals with their provenance:
+- [x] Add `tests/study/test_generic_text.py` (SC5a, Appendix F). Commit the closed lists as literals with their provenance:
   - the nine `exploration/` names;
   - the 17 package names and 20 prefixes from `$STAGED/CONSUMER_ATTRIBUTES.md`;
   - the spec's SC5 patterns.
 
   It covers the six modules edited above plus `identity`, `roots` and `census` now. Phase 3 adds `integrate` and `declarations`, and Phase 5 adds the text files.
-- [ ] Add `jsonschema` to the `dev` extra, run `uv lock`, then `uv pip install --python .venv/bin/python jsonschema`.
-- [ ] **mypy.** One `[[tool.mypy.overrides]]` block sets `disallow_untyped_defs = false` and names the eight ported modules one by one. Add `ignore_missing_imports` for `simkit.*` only if needed.
-- [ ] **ruff.** Per-file ignores apply to ported modules only, and each one is listed in Implementation Notes. New modules are fully typed and carry no ignores.
-- [ ] Commit, naming B1, B2, B7, B8, B11, SC3 and SC11.
+- [x] Add `jsonschema` to the `dev` extra, run `uv lock`, then `uv pip install --python .venv/bin/python jsonschema`.
+- [x] **mypy.** One `[[tool.mypy.overrides]]` block sets `disallow_untyped_defs = false` and names the eight ported modules one by one. Add `ignore_missing_imports` for `simkit.*` only if needed.
+- [x] **ruff.** Per-file ignores apply to ported modules only, and each one is listed in Implementation Notes. New modules are fully typed and carry no ignores.
+- [x] Commit, naming B1, B2, B7, B8, B11, SC3 and SC11.
 
 ### Validation
 
@@ -245,7 +245,7 @@ uv run --no-sync ruff check src/ && uv run --no-sync mypy src/
 uv run --no-sync sysml-codegen study indicators --help
 ```
 
-- [ ] **Manual de-risk check**; record the result in Implementation Notes.
+- [x] **Manual de-risk check**; record the result in Implementation Notes.
   - Lay out a scratch git repository like fusion-tea: the staged `scripts/study/` plus `tests/study/data/synthetic_pkg`. `.orchestrate-logs/scratch/repack-check/check.py` shows this setup.
   - Run the original `python scripts/study/indicators.py …` and the moved `python -m sysml_codegen.study.indicators …` on the same inputs.
   - The reports must be equal in every top-level key except `tool`.
@@ -677,13 +677,51 @@ Detailed risks are in `design.md#potential-risks`. These are the phase-specific 
 **Issues / Deviations:**
 
 ### Phase 1 Completion
-**Completed:**
-**ruff / mypy baselines:**
-**KB4 result:**
-**Lane setup (modules installed, provenance path):**
-**De-risk check result:**
-**Recorded mypy overrides and ruff ignores:**
-**Issues / Deviations:**
+**Completed:** 2026-10-12, in three commits: `03b61f8` (KB4 fixture and proof), `cc81258` (mechanical copy at fusion-tea `b06585709`), `2265527` (root split, port edits, `sysml-codegen study`, tests).
+
+**ruff / mypy baselines:** before any change, `ruff check src/` passed (it prints only the pre-existing warning about the top-level `select` setting) and `mypy src/` found no issues in 71 files. After the phase, ruff passes and mypy finds no issues in 83 files.
+
+**KB4 result: holds.** The station package, generated by this branch and run as committed through the stock teax lifecycle (`tests/execution/test_study_station.py`), gives `required_flow` 0.24, `annual_cost` 192.0 and `pump_fit` satisfied at baseline. On the 4×3 grid every point carries its hand-derived verdict: 6 satisfied and 6 violated, and no point sits on the boundary. Cut 2 is not forced.
+
+**Test counts against the baseline:** full suite `2433 passed, 9 skipped, 1 failed, 97 deselected`, against the baseline 2206 / 9 / 1. The one failure is the known `test_zero_unmarked_self_named_examples_across_all_trees`, whose only offender is agentic-mbse's `project_templates/MODELING_PROCESS.md.template`. The 227 new tests are 223 in `tests/study` (roots 15, common 11, output_contract 40, read_coverage 46, verify 12, census 4, tool_identity 10, study_cli 12, generic_text 73), 1 new conformance test, and 3 station cases in the constraint-population oracle. Teax lane: `test_study_station.py` 1 passed. `tests/study` plus the conformance file: 242 passed.
+
+**Lane setup:**
+- Installed into `.venv` with `uv pip install --python .venv/bin/python`: `pandas` (simkit's import failed without it; it brought `python-dateutil` and `six`), and `jsonschema` (the `dev` extra; it brought `jsonschema-specifications`, `referencing` and `rpds-py`). simkit also declares `pyarrow`, which nothing has needed yet.
+- Provenance: `$EV/lane/make_provenance.py` writes `/tmp/study-lane/execution-provenance.json` and the three `git archive` tars, and `load_execution_provenance` accepts it. The loader names the agentic-mbse hash field `wheel_sha256`, not `archive_sha256`, so the script writes that. Recorded heads: teax `8d877460ac4f`, agentic-mbse worktree `2894647` (Phase A's `0843fe2` plus its tracking commit).
+- Phase 2's `PROVENANCE.md` commands, as run: `uv run --no-sync --env-file /home/reid/1cfe/sysml-codegen/.env sysml-codegen snapshot --models tests/fixtures/study_station/models --output tests/fixtures/study_station/station.snapshot.json`, then `uv run --no-sync sysml-codegen generate --from-snapshot tests/fixtures/study_station/station.snapshot.json --output tests/fixtures/study_station/pkg/station_study --package-name station_study`. The indicator-input fingerprint digest of the committed package is `7a5e6ff32b61d3d4522df18105e20be0e9d3433c1ab713fdfdb8f71aba45fe85`.
+
+**De-risk check result: passes.** In a scratch git repository laid out like fusion-tea (staged `scripts/` plus `tests/study/data/synthetic_pkg`), the original `python scripts/study/indicators.py` and the moved `python -m sysml_codegen.study.indicators` were run on the same inputs. Their reports agree in every top-level key except `tool`, and the three schemas' per-file sha256 values are equal. The moved tool run from `/tmp`, with `SYSML_CODEGEN_PROJECT_ROOT` unset and absolute arguments, gives byte-identical output (I3). The script stayed in `/tmp` and is not committed.
+
+**Recorded mypy overrides and ruff ignores** (`pyproject.toml`):
+- mypy: one block sets `disallow_untyped_defs = false` for the eight ported modules. The type looseness each ported module carries as written is disabled per module, by code: `identity` attr-defined; `indicators` arg-type, no-any-return; `integrate` index, no-any-return; `manifest` no-any-return; `preflight` arg-type, assignment, attr-defined; `verify` index. A third block sets `ignore_missing_imports` for `simkit`, `simkit.*` and `yaml`, which ship no types.
+- ruff (`[tool.ruff.lint.per-file-ignores]`): `integrate.py` E501 and N818; `preflight.py` N818; `read_coverage.py` E501; `verify.py` E501. These are fusion-tea's long lines and its `SeamBlocker` / `GateFailure` names.
+- `roots`, `census` and `cli/study` carry no override and no ignore.
+
+**Deviations from the plan or design:**
+- **`flow` is a SysML keyword.** Appendix E's `PumpingCost(flow, head, price)` does not parse, so the formal is `flow_rate`. No channel or entry key changes: `flow_rate` is bound to `demand.required_flow`, so it is never an entry point.
+- **`require_project_root(prog, anchor: Path)`.** The anchor is required, narrowed from Appendix A's `Path | None`. No caller lacks an anchor: Appendix A's `run()` text has integrate pass the working directory when there is not exactly one `--package`. Phase 3 passes `Path.cwd()` there.
+- **Two pins, not one.** `roots` keeps a library caller's override (`use_project_root`) apart from the command-line pin (`require_project_root`), and every command-line resolution is fresh unless a library override is set. With one slot, a second in-process `main()` for a package in another project would silently reuse the first project's root, which is exactly the wrong-root case DD2 refuses. `use_project_root(None)` forgets the override, the pin and the cached library default. `test_each_command_line_resolution_is_fresh` pins this.
+- **A named root must be a directory.** `SYSML_CODEGEN_PROJECT_ROOT` or `use_project_root` naming a non-directory raises `RootError` (exit 2 on the command line). The design is silent here; refusing is the fail-closed reading.
+- **`study_roots` alias.** `integrate.py` and `read_coverage.py` both have a local variable named `roots`. Importing the module under that name would shadow it, and in `seam_env` that becomes an `UnboundLocalError`. Both import `from sysml_codegen.study import roots as study_roots`, which keeps their ported bodies unchanged. Phase 3 uses `study_roots.` in integrate.
+- **`rederived_census` docstring.** Its sentence filing "the census derivation has no importable home" as a smell is false after B11, so it went with the B11 edit.
+- **Held for Phase 3:** `test_read_coverage.py::test_integration_tool_identity_includes_new_dependencies`. It pins integrate's `TOOL_SOURCE_FILES`, which is a Phase 3 edit, so it cannot pass yet. Phase 3 adds it with `sysml_codegen/study/` paths, alongside integrate's `test_tool_identity` entry.
+- **Fixture onboarding the plan did not list.** `tests/conftest.py` gains `collect_ignore_glob = ["fixtures/study_station/pkg/*"]`, because the generated package carries its own `tests/test_implementations_runnable.py`, which imports `station_study` and fails collection. `tests/expectations/constraint_population/study_station.json` records the one authored constraint usage (`pump_fit`, `models/station.sysml:49`), because the repo's oracle requires one for every constraint-bearing fixture.
+- **`uv lock` churn undone.** `uv lock` (uv 0.10.0) also dropped the `>=0.1.3,<0.2` specifier from the lock's agentic-mbse path record. HEAD's lock passes `uv lock --check` with it, so it was restored by hand. The lock diff is additions only, and `uv lock --check` passes.
+- **Order.** `roots.py` was written before `test_roots.py`, not after as the plan asked. All seven Appendix F cases are covered, plus the stencil's conflict case, and the fresh-resolution and named-root cases above.
+- **`test_generic`'s five agnostic functions** moved into `test_generic_text.py`: `test_tool_modules_are_generic`, `test_tool_modules_name_no_pipeline_or_objective_channel`, `test_tool_modules_import_no_package_code`, `test_the_manifest_holds_no_executable_content` (on the synthetic manifest) and `test_the_schema_files_are_the_committed_contract`. Not moved: the no-`__init__.py` check (the package has one by design), the stellarator-untouched check, and the `__file__` root check, whose property `test_roots` and `test_output_contract` now cover.
+- **Tests beyond the plan:** a B8 test that read coverage declares exactly the route directory, the installed `sysml_codegen` package and the `TEAX_SIMKIT_PATH` tree; a `tool_source_digest(files, root=…)` test; and checks that each SC5 identifier class actually fires.
+
+**Proposals, not applied** (outside the closed list):
+- Ported docstrings and comments keep fusion-tea design pointers that the design's SC5 edit list does not name and that SC5's patterns do not match: `(Invariant 6)` at `manifest.py:17` and `indicators.py:27`; `(D5)` `indicators.py:48`; `(D8)` `indicators.py:817`; `(M3)` `indicators.py:256, :819` and `manifest.py:498`; `(M1)` `manifest.py:47`; `design S1` `identity.py:86`; `(design Risks, L5c)` `common.py:17`; "Items 2 and 4" `manifest.py:36` (line numbers at `2265527`). "Invariant 1" was removed per the list, so the same sentence now reads differently across modules. Proposal: remove them in one docstring-only change, if the orchestrator extends the SC5 edit list.
+- `roots._work_tree` folds every git failure into "no work tree". A git error such as dubious ownership would read as "in no git work tree" in the refusal. The run still refuses with exit 2. Proposal: carry git's stderr into the `RootError` message.
+
+**For Phase 2:**
+- Station identities: entry keys `PumpStation__station__{design_inflow,basin_area,allowed_rise_rate,installed_capacity,pump_head,energy_price}`; channels `PumpStation__station__demand__required_flow` and `PumpStation__station__pumping__annual_cost`; constraint id `PumpStation__station__pump_fit__aa8dd6c31b6b238a`.
+- `run_stock_lifecycle` in `tests/execution/test_study_station.py` is the lifecycle the route should reuse.
+- The package has auto-implemented `handwritten/pumpstation/*_impl.py` files, so Appendix G's gate 3 case is reachable.
+- Loading the committed package writes git-ignored `__pycache__` directories into it. The seal check and git cleanliness both pass with them present. The fixture-current test should compare tracked bytes only.
+- `tests/study/conftest.py` resets every root and clears `SYSML_CODEGEN_PROJECT_ROOT` around each test. A package copied under `tmp_path` runs with `environment_with_root(REPO_ROOT)`, because it sits outside every work tree.
+- The tools' `main()` pins the root in-process, so a test calling `main()` directly relies on that autouse reset.
 
 ### Phase 2 Completion
 **Completed:**

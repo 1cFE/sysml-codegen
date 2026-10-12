@@ -1,10 +1,10 @@
 # Current Work
 
-**Updated:** 2026-10-11
+**Updated:** 2026-10-12
 
 ## Active Work
 
-- **study-layer-to-codegen** (agentic-mbse epic WRAP-SPLIT, Item 3): move fusion-tea's `run-study` skill, study tools and `integrate.py` into sysml-codegen with an ownership-aware `install-commands`. Spec in progress at [spec](active/study-layer-to-codegen/spec.md), branch `study-layer-to-codegen`.
+- **study-layer-to-codegen** (agentic-mbse epic WRAP-SPLIT, Item 3): move fusion-tea's `run-study` skill, study tools and `integrate.py` into sysml-codegen with an ownership-aware `install-commands`. Implementing on branch `study-layer-to-codegen`: Phase A (agentic-mbse `0843fe2`) and Phase 1 (KB4 holds; package port and root split) are done; Phase 2 is next. See the [plan](active/study-layer-to-codegen/plan.md).
 
 The backlog holds separately scoped capabilities, diagnostics, model work, and assurance limits.
 
