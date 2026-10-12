@@ -277,8 +277,7 @@ def test_the_operand_bindings_digest_is_the_documented_canonicalization(
 def test_a_planted_channel_deviation_fails_naming_case_and_channel(
     grid: Path, oracle: ModuleType, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Fails closed when a sampled point exceeds the tolerance on a named channel
-    (``verify.py`` module docstring, "Named channels agree at rel < 1e-9")."""
+    """Named channels must agree at rel < 1e-9 (``sysml_codegen/study/verify.py:10-11``)."""
     real = oracle.evaluate
 
     def skewed(point: dict[str, float]) -> dict[str, float]:
@@ -295,7 +294,7 @@ def test_a_planted_channel_deviation_fails_naming_case_and_channel(
 def test_a_planted_verdict_mismatch_fails_naming_the_constraint(
     grid: Path, oracle: ModuleType, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Fails closed when a re-derived verdict disagrees with the recorded one.
+    """Every verdict is re-derived, and a disagreement refuses (``verify.py:12-20``).
 
     The plant binds the capacity operand to the pump head (8.0), which covers every grid
     flow, so re-derivation reads satisfied where the store records violated.
@@ -316,7 +315,7 @@ def test_a_planted_verdict_mismatch_fails_naming_the_constraint(
 def test_a_missing_operand_bindings_attribute_fails_closed(
     grid: Path, oracle: ModuleType, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Without published bindings the tool refuses rather than guesses."""
+    """Without published bindings the tool refuses rather than guesses (``verify.py:16-20``)."""
     monkeypatch.delattr(oracle, "operand_bindings")
     with pytest.raises(verify.VerifyError) as exc:
         build_summary(grid)
@@ -326,6 +325,7 @@ def test_a_missing_operand_bindings_attribute_fails_closed(
 def test_an_unresolvable_binding_fails_naming_the_constraint_and_operand(
     grid: Path, oracle: ModuleType, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    """Anything unresolved is a failure naming the constraint and operand (``verify.py:18-19``)."""
     real = oracle.operand_bindings
 
     def broken() -> dict[str, dict[str, dict[str, str]]]:
