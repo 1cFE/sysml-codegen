@@ -362,7 +362,7 @@ The de-risking spike plan is specified authoritatively in the design (see its Ap
 
 ## Appendix D: Evidence Base
 
-- `.project/research/20260710-095634_constraint-execution-and-design-space-exploration.md` — primary constraint-execution research and alternatives.
+- `aa35f06fb6b3bacfd42c7763a07a4ee4fdaafa57:.project/research/20260710-095634_constraint-execution-and-design-space-exploration.md` — primary constraint-execution research and alternatives.
 - `docs/architecture/modeling-assumptions.md` — current codegen modeling contract and explicit non-execution boundary.
 - `../agentic-mbse/docs/patterns/constraints.md` — current authoring semantics and warning UX.
 - `../agentic-mbse/docs/subtype-enumeration-decision-table.md` — subtype and membership limitations.

@@ -9,7 +9,7 @@ resolved facts and resolves by the same referent rules as bindings. A
 node's anchor (occurrence enumeration, never QN string surgery), following
 per-instance chain redefinitions through their aliases — which is exactly the
 Item-10 cross-part collapse family, now impossible by construction. Findings:
-``.project/research/20260807-173125_elaborator-aggregations.md``.
+``aa35f06fb6b3bacfd42c7763a07a4ee4fdaafa57:.project/research/20260807-173125_elaborator-aggregations.md``.
 
 All tests require a live SysIDE license.
 """

@@ -8,7 +8,7 @@ The legacy pipeline loses this edge (the WI-015 unwired pin: usage-level retypes
 are not in the def-keyed type map). In the instance graph the occurrence carries
 its most-specific type, so the leg's implementation is the redefinition-borne
 EXPOSE alias: chain-valued ``:>>`` members enqueue alias facts in tier order.
-Findings: ``.project/research/20260807-170356_elaborator-specialization-retypes.md``.
+Findings: ``aa35f06fb6b3bacfd42c7763a07a4ee4fdaafa57:.project/research/20260807-170356_elaborator-specialization-retypes.md``.
 
 Also pinned here: the def-context remap rule accepts a whole path that IS a
 definition key (a ``:>>`` owned directly by a specialized def) — the expansion

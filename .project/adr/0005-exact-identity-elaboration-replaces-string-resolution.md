@@ -3,8 +3,8 @@ id: 0005
 title: Exact-identity elaboration replaces string resolution, with no compatibility layer
 date: 2026-08-23
 owner: Reid W
-status: active
-amended_by: []
+status: amended
+amended_by: [0011]
 superseded_by: null
 provenance: "[AGENT] (ratified by owner, 2026-08-14)"
 seams: [extraction, elaboration, snapshot]

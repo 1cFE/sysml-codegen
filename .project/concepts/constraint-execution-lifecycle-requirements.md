@@ -705,11 +705,11 @@ those sources.
 - **Authoritative lifecycle design:**
   `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`
 - **Evidence census:**
-  `.project/research/20260719-111228_constraint-execution-lifecycle-evidence-census.md`
+  `aa35f06fb6b3bacfd42c7763a07a4ee4fdaafa57:.project/research/20260719-111228_constraint-execution-lifecycle-evidence-census.md`
 - **Adversarial review:**
-  `.project/research/20260719-125806_constraint-execution-lifecycle-contract-adversarial-review.md`
+  `aa35f06fb6b3bacfd42c7763a07a4ee4fdaafa57:.project/research/20260719-125806_constraint-execution-lifecycle-contract-adversarial-review.md`
 - **Correction re-review:**
-  `.project/research/20260719-134700_constraint-execution-lifecycle-contract-correction-rereview.md`
+  `aa35f06fb6b3bacfd42c7763a07a4ee4fdaafa57:.project/research/20260719-134700_constraint-execution-lifecycle-contract-correction-rereview.md`
 - **Original concepts:**
   `.project/concepts/constraint-execution-and-design-space-studies.md` and
   `.project/concepts/constraint-execution-and-design-space-studies-claude.md`
@@ -719,7 +719,7 @@ those sources.
 - **Superseded remediation history:**
   `.project/backlog/epic_constraint_pr_wave_remediation.md`
 - **Gate B reports:**
-  `.project/research/20260719-103419_gate-b-independent-assessment.md` and
+  `aa35f06fb6b3bacfd42c7763a07a4ee4fdaafa57:.project/research/20260719-103419_gate-b-independent-assessment.md` and
   `../fusion-tea-stellarator-mbse-demo/.project/research/20260719-082509_gate-b-root-cause-constraint-lowering-vs-v11-bridge.md`
 
 ## Next step
