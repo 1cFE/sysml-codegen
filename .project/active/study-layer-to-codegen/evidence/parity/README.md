@@ -2,10 +2,11 @@
 
 This directory is the evidence for spec SC12 (design Appendix G). It runs fusion-tea's original study tools (staged at `b06585709`) and the moved `sysml_codegen.study` tools, installed from a wheel, on the same inputs. It then checks that their exit codes and output documents are equal, except in the fields the closed list B1–B13 names.
 
-**Status (2026-10-12): passes.** All 28 cases are `EQUAL` (3) or `EQUAL after closed-list fields` (25), every exit code agrees, and library parity holds, at sysml-codegen `2e21955` and agentic-mbse `2894647`. `report.md` has the per-case table.
+**Status (2026-10-12): passes.** All 28 cases are `EQUAL` (3) or `EQUAL after closed-list fields` (25), every exit code agrees, and library parity holds, at sysml-codegen `aac1290` and agentic-mbse `db032d6` (Phase 6's re-run; first passed at `2e21955` and `2894647`). `report.md` has the per-case table.
 
 - The first run stopped with five cases `DIFFERENT`: the cases whose route runs under read coverage (gates 7, 8 and 9, and `CANDIDATE`). They differed only in receipt entries about the installed `sysml_codegen` package. The orchestrator ratified three rules for those entries (Q1, below), and all five are now `EQUAL after closed-list fields [B1, B2, B8, B11, B13]`.
 - `2e21955` then moved the project-root resolution in `run_route` ahead of observation (a B1 refinement). Re-reporting the runs made before it (`24cce2c`) under the same rules gives the same table, status for status and count for count. The committed case files changed only in content digests (the B2 source digests and the B8 dependency digest).
+- **Phase 6 re-ran it** at sysml-codegen `aac1290` and agentic-mbse `db032d6`, because Phase 5's docstring commit (`f46a913`) and Phase 6's fix 2 changed five study modules after `2e21955`. agentic-mbse's only new commit is O4's ledger, and its wheel's sha256 is unchanged. The table is the same, status for status. Two counts moved, both explained: each route case now has 77 B8 installed-package declaration additions, not 76, because the wheel gained `sysml_codegen/cli/install.py`; and the `scratch-root` pattern applies 7120 times, not 7115, one more path in each of the five route cases' moved receipts. The case files otherwise changed only in content digests, on both sides, because the original route imports the moved `identity` from the wheel.
 
 ## Run it
 

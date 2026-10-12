@@ -8,15 +8,15 @@
       "path": "sysml_codegen/study/indicators.py",
       "source_digest": {
         "recipe": "tool-source-digest/v1",
-        "digest": "a3ae98af149e27efcc0dd29ccfb3b016a0ef8ce2e1eb86a3194d3aa4b7cbf665",
+        "digest": "3c9d3f31fbb500e95685989fbdc9554bea9961314a57a1e3447d7f5ed8aac134",
         "files": [
           {
             "path": "sysml_codegen/study/indicators.py",
-            "sha256": "38ab88c40068805b1d9e2577033d15283ad891b9c7ec11f8f231041c517b2355"
+            "sha256": "8337baacbfea59b3920aa435ef762b66496e2979a91888e9c445a71d254a7761"
           },
           {
             "path": "sysml_codegen/study/manifest.py",
-            "sha256": "814ce4e7868bc90ec450f15cc2a5d1ec7d3658c3869e83444521bffd3876d569"
+            "sha256": "67164b81d90e71129adf56f3baeb9047a0a3ba34e2c9488049fde0ba42a0c707"
           },
           {
             "path": "sysml_codegen/study/roots.py",

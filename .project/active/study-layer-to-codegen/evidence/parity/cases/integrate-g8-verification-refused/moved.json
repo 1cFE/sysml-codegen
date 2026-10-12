@@ -1,7 +1,7 @@
 {
   "exit_code": 1,
   "stdout": "",
-  "stderr": "[integrate] BLOCKER\n  pass         repo     pinned-packages: tests/test_dependency_provenance.py passed\n  pass         request  teax-revision: teax is at 8d877460ac4f6f264561d916e40c1708adb13397, matching the expected 8d877460ac4f6f264561d916e40c1708adb13397\n  pass         request  regeneration: regeneration through station_study rewrote no byte outside handwritten/\n  pass         request  handwritten-preservation: 4 file(s) under handwritten/ are byte-identical\n  pass         request  census-snapshot: the snapshot recaptures byte-identically and 6 entry points re-derive to the census as bound\n  pass         repo     model-family-spine: tests/models/test_model_family_spines.py passed\n  pass         request  manifest: manifest identity, pin 7a5e6ff32b61d3d4522df18105e20be0e9d3433c1ab713fdfdb8f71aba45fe85 and resolved reference coverage pass\n  pass         request  preflight: baseline Python read coverage 28ad52a5167d44a752ea5820f9d1ced34972e427607cf52fb81fd27a93ac24a8 and all six preflight gates pass\n  fail         request  verification: verify.py exited 1: channel off tolerance on case station-baseline-v1:c0000, channel PumpStation__station__pumping__annual_cost: store 192.0, oracle 192.00019199999997, relative deviation 1.000e-06 (tolerance 1e-09); absolute error 1.920e-04 (declared tolerance 0)\n  not reached  request  lineage: the sequence stopped before this gate\n[integrate] refused at verification (sysml_codegen/study/verify.py, verification-refused): verify.py exited 1: channel off tolerance on case station-baseline-v1:c0000, channel PumpStation__station__pumping__annual_cost: store 192.0, oracle 192.00019199999997, relative deviation 1.000e-06 (tolerance 1e-09); absolute error 1.920e-04 (declared tolerance 0)\n             evidence: ../out/verify_stderr.txt\n",
+  "stderr": "[integrate] BLOCKER\n  pass         repo     pinned-packages: tests/test_dependency_provenance.py passed\n  pass         request  teax-revision: teax is at 8d877460ac4f6f264561d916e40c1708adb13397, matching the expected 8d877460ac4f6f264561d916e40c1708adb13397\n  pass         request  regeneration: regeneration through station_study rewrote no byte outside handwritten/\n  pass         request  handwritten-preservation: 4 file(s) under handwritten/ are byte-identical\n  pass         request  census-snapshot: the snapshot recaptures byte-identically and 6 entry points re-derive to the census as bound\n  pass         repo     model-family-spine: tests/models/test_model_family_spines.py passed\n  pass         request  manifest: manifest identity, pin 7a5e6ff32b61d3d4522df18105e20be0e9d3433c1ab713fdfdb8f71aba45fe85 and resolved reference coverage pass\n  pass         request  preflight: baseline Python read coverage 02ff5eb727c267b603a626ba1e00ca1c431b71a1dfa64d439f2a1dd8503e1c29 and all six preflight gates pass\n  fail         request  verification: verify.py exited 1: channel off tolerance on case station-baseline-v1:c0000, channel PumpStation__station__pumping__annual_cost: store 192.0, oracle 192.00019199999997, relative deviation 1.000e-06 (tolerance 1e-09); absolute error 1.920e-04 (declared tolerance 0)\n  not reached  request  lineage: the sequence stopped before this gate\n[integrate] refused at verification (sysml_codegen/study/verify.py, verification-refused): verify.py exited 1: channel off tolerance on case station-baseline-v1:c0000, channel PumpStation__station__pumping__annual_cost: store 192.0, oracle 192.00019199999997, relative deviation 1.000e-06 (tolerance 1e-09); absolute error 1.920e-04 (declared tolerance 0)\n             evidence: ../out/verify_stderr.txt\n",
   "_work listing": [
     "_work/artifacts/1b9df1dbe7e862a9635c72908f4cd5290dbd26bece42e4e42cbad8acee79b183.json",
     "_work/station-baseline-v1.db"
@@ -41,19 +41,19 @@
       "path": "sysml_codegen/study/preflight.py",
       "source_digest": {
         "recipe": "tool-source-digest/v1",
-        "digest": "bc7367007aefd0ea341c303514e0c944eb56d333e657f4c7a664f88c894646da",
+        "digest": "d5b2c245a08bd5c088c11aa0c7beb426ebea89ad74a9ba2503327a7a6240e55a",
         "files": [
           {
             "path": "sysml_codegen/study/common.py",
-            "sha256": "8edf89ce578dbc7d41dd6db6d20586311de8a064007a3bcfe481f1d132f72a5b"
+            "sha256": "35bc17f0001c1f06d593145de9dee9fb9c6e4aaa51e88bafef23aa9384a8f0c9"
           },
           {
             "path": "sysml_codegen/study/identity.py",
-            "sha256": "2a5490ac029ae582af332719bf3f00dd13341982b6183cee0409749d996c56a2"
+            "sha256": "d04a558e88fb4c2aa62ca771876679cb6687aeddb0728894cc37ad3c7adc89e8"
           },
           {
             "path": "sysml_codegen/study/manifest.py",
-            "sha256": "814ce4e7868bc90ec450f15cc2a5d1ec7d3658c3869e83444521bffd3876d569"
+            "sha256": "67164b81d90e71129adf56f3baeb9047a0a3ba34e2c9488049fde0ba42a0c707"
           },
           {
             "path": "sysml_codegen/study/preflight.py",
@@ -99,23 +99,23 @@
       "path": "sysml_codegen/study/integrate.py",
       "source_digest": {
         "recipe": "tool-source-digest/v1",
-        "digest": "0de94465f8b16f12b2c8718558c204f45f7ced757b18bad71013c9991feed08a",
+        "digest": "6ebe9bede098bca12a8da8b3dbe88ae9e79092092abfeb7435bb5ef0035e3d7c",
         "files": [
           {
             "path": "sysml_codegen/study/integrate.py",
-            "sha256": "17c00a79c550ae24eea2a9648ea5ad74565795cffe815a17fd45a06fda58a039"
+            "sha256": "8252a2e2826c50712cd89c5d575afa3b87002dc9a70a15a5bb029ae3bca3c098"
           },
           {
             "path": "sysml_codegen/study/common.py",
-            "sha256": "8edf89ce578dbc7d41dd6db6d20586311de8a064007a3bcfe481f1d132f72a5b"
+            "sha256": "35bc17f0001c1f06d593145de9dee9fb9c6e4aaa51e88bafef23aa9384a8f0c9"
           },
           {
             "path": "sysml_codegen/study/identity.py",
-            "sha256": "2a5490ac029ae582af332719bf3f00dd13341982b6183cee0409749d996c56a2"
+            "sha256": "d04a558e88fb4c2aa62ca771876679cb6687aeddb0728894cc37ad3c7adc89e8"
           },
           {
             "path": "sysml_codegen/study/manifest.py",
-            "sha256": "814ce4e7868bc90ec450f15cc2a5d1ec7d3658c3869e83444521bffd3876d569"
+            "sha256": "67164b81d90e71129adf56f3baeb9047a0a3ba34e2c9488049fde0ba42a0c707"
           },
           {
             "path": "sysml_codegen/study/preflight.py",
@@ -123,7 +123,7 @@
           },
           {
             "path": "sysml_codegen/study/indicators.py",
-            "sha256": "38ab88c40068805b1d9e2577033d15283ad891b9c7ec11f8f231041c517b2355"
+            "sha256": "8337baacbfea59b3920aa435ef762b66496e2979a91888e9c445a71d254a7761"
           },
           {
             "path": "sysml_codegen/study/read_coverage.py",
@@ -290,7 +290,7 @@
         "scope": "request",
         "status": "pass",
         "checked": "the six mechanical gates a study passes",
-        "detail": "baseline Python read coverage 28ad52a5167d44a752ea5820f9d1ced34972e427607cf52fb81fd27a93ac24a8 and all six preflight gates pass",
+        "detail": "baseline Python read coverage 02ff5eb727c267b603a626ba1e00ca1c431b71a1dfa64d439f2a1dd8503e1c29 and all six preflight gates pass",
         "evidence": [
           "../out/read_coverage.json",
           "../out/preflight_results.json"
@@ -359,19 +359,19 @@
       "path": "sysml_codegen/study/preflight.py",
       "source_digest": {
         "recipe": "tool-source-digest/v1",
-        "digest": "bc7367007aefd0ea341c303514e0c944eb56d333e657f4c7a664f88c894646da",
+        "digest": "d5b2c245a08bd5c088c11aa0c7beb426ebea89ad74a9ba2503327a7a6240e55a",
         "files": [
           {
             "path": "sysml_codegen/study/common.py",
-            "sha256": "8edf89ce578dbc7d41dd6db6d20586311de8a064007a3bcfe481f1d132f72a5b"
+            "sha256": "35bc17f0001c1f06d593145de9dee9fb9c6e4aaa51e88bafef23aa9384a8f0c9"
           },
           {
             "path": "sysml_codegen/study/identity.py",
-            "sha256": "2a5490ac029ae582af332719bf3f00dd13341982b6183cee0409749d996c56a2"
+            "sha256": "d04a558e88fb4c2aa62ca771876679cb6687aeddb0728894cc37ad3c7adc89e8"
           },
           {
             "path": "sysml_codegen/study/manifest.py",
-            "sha256": "814ce4e7868bc90ec450f15cc2a5d1ec7d3658c3869e83444521bffd3876d569"
+            "sha256": "67164b81d90e71129adf56f3baeb9047a0a3ba34e2c9488049fde0ba42a0c707"
           },
           {
             "path": "sysml_codegen/study/preflight.py",
@@ -479,7 +479,7 @@
       "Runtime and bytecode hashes identify observed bytes, not a verified installation or source equivalence.",
       "A cooperative audit hook is not a sandbox; execution after deactivation is outside scope."
     ],
-    "dependency_digest": "28ad52a5167d44a752ea5820f9d1ced34972e427607cf52fb81fd27a93ac24a8",
+    "dependency_digest": "02ff5eb727c267b603a626ba1e00ca1c431b71a1dfa64d439f2a1dd8503e1c29",
     "reads by category": {
       "bytecode": 45,
       "declared-dependency-metadata": 1,
@@ -492,7 +492,7 @@
     },
     "declarations by category": {
       "declared-dependency-metadata": 6,
-      "declared-source": 2385,
+      "declared-source": 2386,
       "manifest": 1,
       "package-contract": 1,
       "package-seal": 27

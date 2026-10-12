@@ -18,7 +18,7 @@
     "B2 tool.path": 3,
     "B2/B11 producer": 7,
     "B8 gate 7 detail digest": 2,
-    "B8 installed-package declaration addition": 76,
+    "B8 installed-package declaration addition": 77,
     "B8 installed-package read, by module": 12,
     "B8 receipt": 1
   },
@@ -44,7 +44,7 @@
       "backup-directory": 1,
       "junit-clock": 6,
       "read-coverage-token": 1,
-      "scratch-root": 613,
+      "scratch-root": 614,
       "teax-staging-directory": 1
     }
   },

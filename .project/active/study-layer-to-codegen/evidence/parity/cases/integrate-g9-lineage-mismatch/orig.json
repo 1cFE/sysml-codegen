@@ -1,7 +1,7 @@
 {
   "exit_code": 1,
   "stdout": "",
-  "stderr": "[integrate] BLOCKER\n  pass         repo     pinned-packages: tests/test_dependency_provenance.py passed\n  pass         request  teax-revision: teax is at 8d877460ac4f6f264561d916e40c1708adb13397, matching the expected 8d877460ac4f6f264561d916e40c1708adb13397\n  pass         request  regeneration: regeneration through station_study rewrote no byte outside handwritten/\n  pass         request  handwritten-preservation: 4 file(s) under handwritten/ are byte-identical\n  pass         request  census-snapshot: the snapshot recaptures byte-identically and 6 entry points re-derive to the census as bound\n  pass         repo     model-family-spine: tests/models/test_model_family_spines.py passed\n  pass         request  manifest: manifest identity, pin 7a5e6ff32b61d3d4522df18105e20be0e9d3433c1ab713fdfdb8f71aba45fe85 and resolved reference coverage pass\n  pass         request  preflight: baseline Python read coverage a4c6bc3bec1d4615618f65d0575adbbead47e9de50a7f9a14c437800af9d7ed0 and all six preflight gates pass\n  pass         request  verification: oracle parity holds and every verdict re-derived\n  fail         request  lineage: the package verifies cleanly but is not the lineage the request named\n[integrate] refused at lineage (scripts/integrate.py, lineage-mismatch): the package verifies cleanly but is not the lineage the request named\n",
+  "stderr": "[integrate] BLOCKER\n  pass         repo     pinned-packages: tests/test_dependency_provenance.py passed\n  pass         request  teax-revision: teax is at 8d877460ac4f6f264561d916e40c1708adb13397, matching the expected 8d877460ac4f6f264561d916e40c1708adb13397\n  pass         request  regeneration: regeneration through station_study rewrote no byte outside handwritten/\n  pass         request  handwritten-preservation: 4 file(s) under handwritten/ are byte-identical\n  pass         request  census-snapshot: the snapshot recaptures byte-identically and 6 entry points re-derive to the census as bound\n  pass         repo     model-family-spine: tests/models/test_model_family_spines.py passed\n  pass         request  manifest: manifest identity, pin 7a5e6ff32b61d3d4522df18105e20be0e9d3433c1ab713fdfdb8f71aba45fe85 and resolved reference coverage pass\n  pass         request  preflight: baseline Python read coverage 345551dbaeb2444c2063851b0fdbe7a5e163860a4f2f20e8ea3f7be248014111 and all six preflight gates pass\n  pass         request  verification: oracle parity holds and every verdict re-derived\n  fail         request  lineage: the package verifies cleanly but is not the lineage the request named\n[integrate] refused at lineage (scripts/integrate.py, lineage-mismatch): the package verifies cleanly but is not the lineage the request named\n",
   "_work listing": [
     "_work/artifacts/1b9df1dbe7e862a9635c72908f4cd5290dbd26bece42e4e42cbad8acee79b183.json",
     "_work/station-baseline-v1.db"
@@ -278,7 +278,7 @@
         "scope": "request",
         "status": "pass",
         "checked": "the six mechanical gates a study passes",
-        "detail": "baseline Python read coverage a4c6bc3bec1d4615618f65d0575adbbead47e9de50a7f9a14c437800af9d7ed0 and all six preflight gates pass",
+        "detail": "baseline Python read coverage 345551dbaeb2444c2063851b0fdbe7a5e163860a4f2f20e8ea3f7be248014111 and all six preflight gates pass",
         "evidence": [
           "../out/read_coverage.json",
           "../out/preflight_results.json"
@@ -464,7 +464,7 @@
       "Runtime and bytecode hashes identify observed bytes, not a verified installation or source equivalence.",
       "A cooperative audit hook is not a sandbox; execution after deactivation is outside scope."
     ],
-    "dependency_digest": "a4c6bc3bec1d4615618f65d0575adbbead47e9de50a7f9a14c437800af9d7ed0",
+    "dependency_digest": "345551dbaeb2444c2063851b0fdbe7a5e163860a4f2f20e8ea3f7be248014111",
     "reads by category": {
       "bytecode": 42,
       "declared-dependency-metadata": 1,

@@ -306,7 +306,7 @@
       "Runtime and bytecode hashes identify observed bytes, not a verified installation or source equivalence.",
       "A cooperative audit hook is not a sandbox; execution after deactivation is outside scope."
     ],
-    "dependency_digest": "211ccb6d4e9d8badfc8d6769cbe3d50f90aa710a5868bd5f86bdbf8de454bda3",
+    "dependency_digest": "686e102d8408b2e1af3ec59df04ca81d78a7d610c1782863c8b0bf7554cd28b4",
     "reads by category": {
       "declared-source": 2,
       "runtime-observed": 30
