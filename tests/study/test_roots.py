@@ -253,6 +253,60 @@ def test_a_missing_package_keeps_its_old_failure_and_exit_code(
     assert roots.PROJECT_ROOT_ENV not in done.stderr
 
 
+# ----------------------------------------- a pin for one block (read coverage's route)
+
+
+def test_a_block_pin_is_the_anchors_work_tree_and_is_put_back_after(
+    package_repo: Path, other_repo: Path, outside: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """``read_coverage.run_route`` pins its package's root and leaves the process as it was."""
+    monkeypatch.chdir(outside)
+    (other_repo / "pkg").mkdir()
+    roots.require_project_root("indicators", other_repo / "pkg")
+    with roots.pinned_project_root(package_repo / "pkg") as root:
+        assert root == package_repo
+        assert roots.project_root() == package_repo
+    assert roots.project_root() == other_repo
+
+
+def test_a_block_pin_is_put_back_when_the_block_raises(
+    package_repo: Path, outside: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(outside)
+    with pytest.raises(ValueError, match="the route failed"):
+        with roots.pinned_project_root(package_repo / "pkg"):
+            raise ValueError("the route failed")
+    # Nothing was pinned before the block, so nothing answers after it.
+    with pytest.raises(roots.RootError):
+        roots.project_root()
+
+
+def test_a_block_pin_follows_the_command_line_rules(
+    package_repo: Path, other_repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(other_repo)
+    with pytest.raises(roots.RootError, match="conflicting project roots"):
+        with roots.pinned_project_root(package_repo / "pkg"):
+            pytest.fail("the block ran with a conflicting root")
+    monkeypatch.setenv(roots.PROJECT_ROOT_ENV, str(other_repo))
+    with roots.pinned_project_root(package_repo / "pkg") as root:
+        assert root == other_repo
+    roots.use_project_root(package_repo)
+    with roots.pinned_project_root(other_repo / "pkg") as root:
+        assert root == package_repo
+
+
+def test_a_block_pin_that_cannot_resolve_raises_and_pins_nothing(
+    outside: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(outside)
+    with pytest.raises(roots.RootError, match="is in no git work tree"):
+        with roots.pinned_project_root(outside / "pkg"):
+            pytest.fail("the block ran without a root")
+    with pytest.raises(roots.RootError):
+        roots.project_root()
+
+
 # ------------------------------------------------------------- side effects
 
 

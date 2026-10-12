@@ -259,12 +259,15 @@ def run_route(route_dir, module_name, callable_name, out_dir, package, manifest,
     error = None
     deposited = None
     try:
-        observer = Observer(package, manifest, route_dir, out, token)
-        sys.addaudithook(observer.hook)
-        observer.active = True
-        sys.path.insert(0, str(route_dir))
-        module = importlib.import_module(module_name)
-        deposited = getattr(module, callable_name)(out, package_dir=Path(package), manifest_path=Path(manifest))
+        # The route's own root lookups read this pin. Resolving can run git, a child process
+        # the observer refuses, so it happens before observation starts (B1).
+        with study_roots.pinned_project_root(Path(package)):
+            observer = Observer(package, manifest, route_dir, out, token)
+            sys.addaudithook(observer.hook)
+            observer.active = True
+            sys.path.insert(0, str(route_dir))
+            module = importlib.import_module(module_name)
+            deposited = getattr(module, callable_name)(out, package_dir=Path(package), manifest_path=Path(manifest))
     except BaseException as exc:
         error = f"{type(exc).__name__}: {exc}"
     finally:

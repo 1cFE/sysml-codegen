@@ -14,12 +14,18 @@ from types import SimpleNamespace
 
 import pytest
 
-from sysml_codegen.study import integrate
+from sysml_codegen.study import integrate, roots
 from sysml_codegen.study import read_coverage as coverage
 
 
 @pytest.fixture
 def observed_route(tmp_path):
+    """A probe route over a one-file package; ``tmp_path`` is its project.
+
+    The driver runs with ``SYSML_CODEGEN_PROJECT_ROOT`` naming that project, as integrate's
+    ``seam_env`` hands it to every producer. ``env`` is that environment for tests that go
+    through ``integrate.execute_baseline``, read when called.
+    """
     package = tmp_path / "package"
     (package / "contracts").mkdir(parents=True)
     value = package / "value.json"
@@ -44,16 +50,20 @@ def observed_route(tmp_path):
             + '    return {}\n'
         )
 
-    def run(body, env=None):
+    def with_root():
+        return {**os.environ, roots.PROJECT_ROOT_ENV: str(tmp_path)}
+
+    def run(body, env=None, cwd=None):
         write(body)
         done = subprocess.run([sys.executable, '-c', integrate.ROUTE_DRIVER_SOURCE,
                                str(route), 'probe_route', 'execute', str(out),
                                str(package), str(manifest), 'test-token'],
-                              text=True, capture_output=True, env=env)
+                              text=True, capture_output=True, cwd=cwd,
+                              env=with_root() if env is None else env)
         return done, json.loads((out / 'read_coverage.json').read_text())
 
     return SimpleNamespace(package=package, route=route, manifest=manifest, out=out,
-                           request=request, run=run, write=write)
+                           request=request, run=run, write=write, env=with_root)
 
 
 def test_declared_package_manifest_and_source_reads(observed_route):
@@ -107,7 +117,7 @@ def zone_search_path(tmp_path):
     for root in (zones, elsewhere):
         (root / 'Etc').mkdir(parents=True)
         (root / 'Etc' / 'UTC').write_bytes(b'TZif2')
-    env = {**os.environ, 'PYTHONTZPATH': str(zones)}
+    env = {**os.environ, roots.PROJECT_ROOT_ENV: str(tmp_path), 'PYTHONTZPATH': str(zones)}
     return SimpleNamespace(zone=zones / 'Etc' / 'UTC', elsewhere=elsewhere / 'Etc' / 'UTC', env=env)
 
 
@@ -223,7 +233,7 @@ def test_caught_violation_still_refuses_integration(observed_route):
 except RuntimeError:
     pass''')
     with pytest.raises(integrate.SeamBlocker) as caught:
-        integrate.execute_baseline(observed_route.request, dict(os.environ))
+        integrate.execute_baseline(observed_route.request, observed_route.env())
     assert caught.value.condition == 'read-coverage-refused'
     receipt = json.loads((observed_route.out / 'read_coverage.json').read_text())
     assert receipt['violations']
@@ -280,7 +290,7 @@ def test_static_gate_rejects_unpinned_pipeline_reference(synthetic_copy, tmp_pat
 def test_route_failure_preserves_earlier_violation(observed_route):
     observed_route.write('try:\n    (package_dir / "unknown.txt").read_text()\nexcept RuntimeError:\n    pass\nraise ValueError("route failed too")')
     with pytest.raises(integrate.SeamBlocker) as caught:
-        integrate.execute_baseline(observed_route.request, dict(os.environ))
+        integrate.execute_baseline(observed_route.request, observed_route.env())
     receipt = json.loads((observed_route.out / 'read_coverage.json').read_text())
     assert receipt['violations']
     assert receipt['route_error'] == 'ValueError: route failed too'
@@ -329,7 +339,7 @@ def test_declared_dependency_metadata_change(observed_route, monkeypatch, tmp_pa
 def test_route_exception_without_coverage_violation_is_could_not_run(observed_route):
     observed_route.write('(package_dir / "value.json").read_text()\nraise ValueError("unsupported physics domain")')
     with pytest.raises(integrate.SeamBlocker) as caught:
-        integrate.execute_baseline(observed_route.request, dict(os.environ))
+        integrate.execute_baseline(observed_route.request, observed_route.env())
     assert caught.value.mode == integrate.COULD_NOT_RUN
     assert caught.value.condition != 'read-coverage-refused'
     receipt = json.loads((observed_route.out / 'read_coverage.json').read_text())
@@ -403,7 +413,7 @@ def test_sqlite_existing_store_refused_by_integration(observed_route):
         db.execute("INSERT INTO old_data VALUES ('old contents')")
     observed_route.write('import sqlite3\nwith sqlite3.connect(out / "old.db") as db:\n    db.execute("SELECT * FROM old_data").fetchall()')
     with pytest.raises(integrate.SeamBlocker) as caught:
-        integrate.execute_baseline(observed_route.request, dict(os.environ))
+        integrate.execute_baseline(observed_route.request, observed_route.env())
     assert caught.value.condition == 'read-coverage-refused'
     receipt = json.loads((observed_route.out / 'read_coverage.json').read_text())
     assert 'SQLite store must be new' in str(receipt['violations'])
@@ -445,8 +455,6 @@ def test_sqlite_preexisting_sidecar_refused(observed_route, suffix):
 def test_declared_sources_are_the_route_the_tool_package_and_declared_teax(
         observed_route, monkeypatch, tmp_path, with_teax):
     """B8: permitted sources are stated by meaning, never by where read_coverage sits."""
-    from sysml_codegen.study import roots
-
     simkit = tmp_path / 'simkit-root'
     (simkit / 'simkit').mkdir(parents=True)
     (simkit / 'simkit' / '__init__.py').write_text('')
@@ -463,3 +471,45 @@ def test_declared_sources_are_the_route_the_tool_package_and_declared_teax(
     assert all(any(path.is_relative_to(root) for root in permitted) for path in sources)
     assert tool_package / 'study' / 'read_coverage.py' in sources
     assert (simkit.resolve() / 'simkit' / '__init__.py' in sources) is with_teax
+
+
+# ------------------------------------------------ the route's project root (B1, observed)
+
+
+def _without_project_root():
+    return {k: v for k, v in os.environ.items() if k != roots.PROJECT_ROOT_ENV}
+
+
+def test_a_route_that_asks_for_its_project_root_gets_the_packages_work_tree(
+        observed_route, tmp_path):
+    """``run_route`` resolves the root before it observes, so the route never starts git.
+
+    Before it did, a route run outside ``integrate`` with no ``SYSML_CODEGEN_PROJECT_ROOT``
+    asked ``roots`` for the root under observation. ``roots`` ran git, and the observer refused
+    git's output pipe as ``unsupported integer-descriptor open: 3``, which names no cause. The
+    original tools found the root from ``__file__`` and never ran git.
+    """
+    subprocess.run(['git', 'init', '-q', str(tmp_path)], check=True)
+    done, receipt = observed_route.run(
+        'from sysml_codegen.study import roots\nreturn {"root": roots.project_root()}',
+        env=_without_project_root(), cwd=tmp_path)
+    assert done.returncode == 0, done.stderr
+    assert receipt['violations'] == []
+    assert coverage.valid_receipt(receipt, 'test-token')
+    assert json.loads(done.stdout) == {'root': str(tmp_path.resolve())}
+
+
+def test_a_package_in_no_work_tree_fails_closed_naming_the_cause(observed_route, tmp_path):
+    """With no root to pin, no route runs, and the receipt says why in ``roots``' own words."""
+    assert subprocess.run(['git', '-C', str(tmp_path), 'rev-parse'],
+                          capture_output=True).returncode != 0, 'tmp_path must be in no work tree'
+    done, receipt = observed_route.run('(out / "ran").write_text("the route ran")',
+                                       env=_without_project_root())
+    assert done.returncode != 0
+    assert receipt['outcome'] == 'fail'
+    assert receipt['route_error'].startswith(
+        f'RootError: no project root: the package {observed_route.package} is in no git work tree')
+    assert receipt['violations'] == [receipt['route_error']]
+    assert receipt['reads'] == [] and receipt['declarations'] == []
+    assert not (observed_route.out / 'ran').exists()
+    assert not coverage.valid_receipt(receipt, 'test-token', allow_route_error=True)

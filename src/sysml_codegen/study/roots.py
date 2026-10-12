@@ -29,10 +29,12 @@ This is the one study module that reads ``os.environ``. Every other module asks 
 
 from __future__ import annotations
 
+import contextlib
 import functools
 import os
 import subprocess
 import sys
+from collections.abc import Iterator
 from pathlib import Path
 
 PROJECT_ROOT_ENV = "SYSML_CODEGEN_PROJECT_ROOT"
@@ -97,6 +99,29 @@ def require_project_root(prog: str, anchor: Path) -> Path:
         raise SystemExit(2) from exc
     _pinned = root
     return root
+
+
+@contextlib.contextmanager
+def pinned_project_root(anchor: Path) -> Iterator[Path]:
+    """Pin the project root anchored on ``anchor`` for the body of a ``with`` block.
+
+    The root resolves now, by the rules a command-line run follows, and :func:`project_root`
+    returns it inside the block. On leaving the block, normally or by an exception, the
+    command-line pin is put back as it was. Resolution may run git, so a caller that must not
+    start a child process inside some window, such as read coverage's observed route, resolves
+    here first. Raises :class:`RootError` when no root can be named; nothing is pinned then.
+
+    The study tools' own mechanism, not part of the supported target API: a target's route
+    reaches the root through ``identity.build_sealed``.
+    """
+    global _pinned
+    root = _command_line_root(anchor)
+    previous = _pinned
+    _pinned = root
+    try:
+        yield root
+    finally:
+        _pinned = previous
 
 
 def environment() -> dict[str, str]:

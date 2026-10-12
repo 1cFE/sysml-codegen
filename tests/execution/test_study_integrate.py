@@ -104,6 +104,34 @@ def test_the_station_route_passes_read_coverage(
     assert read_coverage.valid_receipt(receipt, "lane-token")
 
 
+def test_the_station_route_passes_read_coverage_with_no_project_root_variable(
+    simkit_root: Path, tmp_path: Path
+) -> None:
+    """Run by hand outside ``integrate``, with no ``SYSML_CODEGEN_PROJECT_ROOT``, it still passes.
+
+    The route's ``build_sealed`` asks ``roots`` for the project root. ``run_route`` now pins the
+    package's work tree before it observes (B1). Before it did, ``roots`` ran git under
+    observation, and gate 7's driver refused with ``unsupported integer-descriptor open: 3``.
+    The command is the shape of the adoption rehearsal's direct driver run: the project as the
+    working directory, relative arguments, and only teax's simkit on ``PYTHONPATH``.
+    """
+    repo = commit_station_copy(tmp_path / "station")
+    out = tmp_path / "out"
+    env = {k: v for k, v in os.environ.items() if k not in (roots.PROJECT_ROOT_ENV, "PYTHONPATH")}
+    env.update({"PYTHONPATH": str(simkit_root), roots.TEAX_SIMKIT_PATH: str(simkit_root)})
+    done = subprocess.run(
+        [sys.executable, "-c", integrate.ROUTE_DRIVER_SOURCE, "studies", "study_route",
+         "execute_baseline", str(out), "pkg/station_study", "studies/manifest.json", "lane-token"],
+        capture_output=True, text=True, cwd=str(repo), env=env,
+    )
+    receipt = json.loads((out / "read_coverage.json").read_text())
+
+    assert receipt["violations"] == [], done.stderr
+    assert receipt["route_error"] is None, done.stderr
+    assert done.returncode == 0, done.stderr
+    assert read_coverage.valid_receipt(receipt, "lane-token")
+
+
 # ------------------------------------------------------------- gate 7 refuses (SC3)
 
 #: A route that reads a project file outside its declared sources, then runs the station's.
