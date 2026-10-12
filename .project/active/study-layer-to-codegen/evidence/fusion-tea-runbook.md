@@ -1,10 +1,10 @@
 # fusion-tea switch to the study layer installed from sysml-codegen
 
-This runbook moves fusion-tea from its local study layer to the one sysml-codegen ships: the run-study skill, the study-policy template, and the tools in `sysml_codegen.study`. Its local tools become aliases of the installed modules, its eight route modules import the installed package, it declares its two repo-scope gates for `integrate`, and `sysml-codegen install-commands` replaces its local skill. Every committed study record stays valid as written.
+This runbook moves fusion-tea from its local study layer to the one sysml-codegen ships: the run-study skill, the study-policy template, and the tools in `sysml_codegen.study`. Its local tools become aliases of the installed modules, its nine route modules import the installed package, it declares its two repo-scope gates for `integrate`, and `sysml-codegen install-commands` replaces its local skill. Every committed study record stays valid as written.
 
 It runs after the owner merges and pushes agentic-mbse `study-layer-to-codegen` and then sysml-codegen `study-layer-to-codegen`, in that order (ADR-0008), by the orchestrator or the owner. It runs on the fusion-tea branch that orchestrator step O4 created, which already holds the fusion-tea homes of every line the shipped text dropped. The owner then pushes and merges that branch.
 
-**Sources.** The steps are spec SC9's nine, in its order, with design Appendix H3's actions, rehearsal and expected observations. The drafts cited below live in sysml-codegen `.project/active/study-layer-to-codegen/evidence/` (`$EV`) until close, when this runbook moves to agentic-mbse (D10). Phase 5 wrote this draft while Phase 4 ran in parallel: its citations of Phase 4's files (`$EV/fusion-tea/wrappers/`, `routes.sed`, `declaration.toml`, `step5-tests.patch`, `SMOKE.md`, and `$EV/rehearsal/`) follow the plan's paths, not the files themselves.
+**Sources.** The steps are spec SC9's nine, in its order, with design Appendix H3's actions, rehearsal and expected observations. The drafts cited below live in sysml-codegen `.project/active/study-layer-to-codegen/evidence/` (`$EV`) until close, when this runbook moves to agentic-mbse (D10). Phase 5 wrote this draft while Phase 4 ran in parallel, and Phase 6 checked every citation of Phase 4's files against the files themselves: `$EV/fusion-tea/wrappers/scripts/`, `routes.sed`, `declaration.toml`, `step5-tests.patch`, `SMOKE.md`, and `$EV/rehearsal/{env.sh.example,junit-diff.py}`.
 
 **Names used below.**
 
@@ -16,7 +16,7 @@ It runs after the owner merges and pushes agentic-mbse `study-layer-to-codegen` 
 ## Before you start
 
 - `git status --short` in `$FT` is empty, and `git log --oneline b06585709..HEAD` shows O4's text commit: the policy's § 6 "Execution routes", § 12 and § 13, the integration-guide supplement, the `CLAUDE.md` "Study layer" section and the stellarator annex's line 5 (`$EV/fusion-tea/text/`).
-- The environment file `$EV/rehearsal/env.sh` (from `env.sh.example`) is filled in and sourced: the licence (present, never printed), fusion-tea's `STOP_PARSER_*` values, and `TEAX_SIMKIT_PATH=$STOP_PARSER_TEAX_ROOT/packages/teax-simkit`.
+- The environment file `$EV/rehearsal/env.sh` (copied from `env.sh.example`, its `FTC` line filled in, kept out of git) is sourced: the licence (present, never printed), fusion-tea's `STOP_PARSER_*` values, and `TEAX_SIMKIT_PATH=$STOP_PARSER_TEAX_ROOT/packages/teax-simkit`.
 
 **Observed in the rehearsal:** *(O3 fills this in.)*
 
@@ -82,16 +82,34 @@ So the hand-edited lock holds. If the re-check shows a new runtime dependency or
 
 ## Step 5: switch
 
-1. **Wrappers.** Copy each module alias from `$EV/fusion-tea/wrappers/` over its namesake: `scripts/study/{common,manifest,identity,indicators,preflight,verify,read_coverage}.py` and `scripts/integrate.py`. Each pins fusion-tea's root in-process from its own location, never touches `os.environ`, runs `main()` when executed, and otherwise replaces itself in `sys.modules` (design DD14).
-2. **Route modules.** `sed -i -f $EV/fusion-tea/routes.sed` on the eight `study_route.py` files that import `scripts.study` (`CONSUMER_SURFACE.md:43,50,57,62,67,72,89,97`). They then import `sysml_codegen.study`, which keeps read coverage inside its permitted sources (B8).
+1. **Wrappers.** Copy each module alias over its namesake: `cp $EV/fusion-tea/wrappers/scripts/study/*.py scripts/study/` (the seven `common`, `manifest`, `identity`, `indicators`, `preflight`, `verify` and `read_coverage`) and `cp $EV/fusion-tea/wrappers/scripts/integrate.py scripts/integrate.py`. Each pins fusion-tea's root in-process from its own location, never touches `os.environ`, runs `main()` when executed, and otherwise replaces itself in `sys.modules` (design DD14).
+2. **Route modules.** Rewrite the import in the nine live `study_route.py` files that import `scripts.study` (`CONSUMER_SURFACE.md:43,50,57,62,67,72,89,97,106`). They then import `sysml_codegen.study`, which keeps read coverage inside its permitted sources (B8). Name the nine files; never use a pathspec glob. git's pathspec `*` crosses `/`, so in a git command a pattern such as `exploration/*/studies/study_route.py` also matches the route copies inside committed records (`<record>/results/sources/`, `<record>/preparation/`), which must never change.
+
+   ```bash
+   ROUTES=(
+     exploration/aries_integrated/studies/study_route.py
+     exploration/component_alternatives/studies/study_route.py
+     exploration/costed_loop_brayton/studies/study_route.py
+     exploration/exchanger_architecture/thermal_requirements/studies/study_route.py
+     exploration/ife_e2e/studies/study_route.py
+     exploration/magnet_materials/studies/study_route.py
+     exploration/stellarator_e2e/studies/study_route.py
+     exploration/stellarator_materials/studies/study_route.py
+     exploration/whole_plant_conversion/studies/study_route.py
+   )
+   sed -i -f $EV/fusion-tea/routes.sed "${ROUTES[@]}"
+   ```
+
 3. **Schemas.** `git rm -r scripts/study/schemas`. They ship in `sysml_codegen/study/schemas/`, byte-identical.
-4. **Tests.** `patch -p1 < $EV/fusion-tea/step5-tests.patch`, then `patch -p1 < $EV/fusion-tea/step5-guide-contract.patch`. The first carries design Appendix H3's edits: schema home, tool paths, `TEAX_SIMKIT_PATH`, `REQUIRED_ENV` plus the declared environment, and `tests/models/test_model_family_spines.py` importing `by_entry_type` from `sysml_codegen.study.census`, so gates 4 and 5 share one implementation. The second reduces `tests/study/test_integrate_guide_contract.py` to the supplement's own facts: the sealed-wheel home, `WHEEL_HASHES` and ADR-0009.
+4. **Tests.** Apply the two test patches in this order: `patch -p1 < $EV/fusion-tea/step5-tests.patch` (Phase 4, 17 files), then `patch -p1 < $EV/fusion-tea/step5-guide-contract.patch` (Phase 5, one file). They touch no file in common. Phase 6 checked that both apply cleanly in that order to a fresh copy of `b06585709`, alone and after the four text patches of O4's branch. The first carries design Appendix H3's edits: schema home, tool paths, `TEAX_SIMKIT_PATH`, `REQUIRED_ENV` plus the declared environment, and `tests/models/test_model_family_spines.py` importing `by_entry_type` from `sysml_codegen.study.census`, so gates 4 and 5 share one implementation. The second reduces `tests/study/test_integrate_guide_contract.py` to the supplement's own facts: the sealed-wheel home, `WHEEL_HASHES` and ADR-0009.
 
 **Expected:**
 
 ```bash
 uv run --no-sync python -c "import scripts.study.manifest as m, sysml_codegen.study.manifest as n; print(m is n)"   # True
-git grep -n 'from scripts.study' -- 'exploration/*/studies/study_route.py' 'exploration/*/*/studies/study_route.py'   # nothing
+git grep -n 'from scripts.study' -- "${ROUTES[@]}"            # nothing: no live route imports scripts.study
+git grep -c 'from sysml_codegen.study' -- "${ROUTES[@]}"      # each of the nine files listed
+git status --porcelain --untracked-files=all -- exploration/ | cut -c4- | grep -vxF -f <(printf '%s\n' "${ROUTES[@]}")   # nothing: no other file under exploration/ changed, record copies included
 ```
 
 **Rehearsal:** applied on `$FTC`; `$EV/fusion-tea/SMOKE.md` records the drafts' smoke test in the parity layout. **Observed in the rehearsal:** *(O3)*
@@ -119,7 +137,7 @@ Both assistants are the default. With no terminal, the installer keeps a differi
 - `.claude/skills/run-study` is a link into `.agents/skills/run-study`;
 - the output says "Preserved modeling_project/STUDY_POLICY.md";
 - `.sysml-codegen/install.json` exists and lists the installed files; `.agentic-mbse/install.json` names none of them.
-- If fusion-tea's `.claude/commands/teax-completion.md` differs from the shipped file, the output says "Preserved .claude/commands/teax-completion.md: …" and the file stays. That is the installer's first-run rule (DD6), not a failure.
+- If fusion-tea's `.claude/commands/teax-completion.md` differs from the shipped file, the output says "Preserved .claude/commands/teax-completion.md: …" and the file stays. That is the installer's first-run rule (DD6), not a failure. A copy the old installer left differs, because the shipped file has since lost a machine path. Do not re-run with `--force` to replace it: `--force` also replaces fusion-tea's ratified `modeling_project/STUDY_POLICY.md`. To take the shipped command, delete the file and re-run, or re-run at a terminal and answer `o` for that file alone.
 
 fusion-tea's own tests that read the skill text keep passing on the installed copy, as Phase 5 checked against the shipped files: `tests/study/test_annex.py` (the runbook cites only the four annex sections), `tests/study/test_record_template.py` (two full `source_digest` blocks) and `tests/study/test_policy_path.py` (the skill and runbook name `modeling_project/STUDY_POLICY.md`).
 
@@ -135,7 +153,7 @@ uv run --no-sync pytest tests/study tests/models/test_model_family_spines.py -q 
 
 **Pass rule:** compare run C (after step 7) with run B (dependencies moved, nothing switched) using `$EV/rehearsal/junit-diff.py`. No test fails or skips in C that passed in B, and a test failing in both fails with the same message. B against A (as-is) is recorded and classified for step 9; it is not a gate on the move.
 
-**Rehearsal:** runs A, B and C on `$FTC`, one shell, `env.sh` sourced, each run's `env.txt` recorded (`python -V`, `uv pip list`, teax HEAD, and the `STOP_PARSER_`, `TEAX_SIMKIT_PATH`, `SYSML_CODEGEN_PROJECT_ROOT` and `PYTHONPATH` lines of `env`). **Observed in the rehearsal:** *(O3)*
+**Rehearsal:** runs A, B and C on `$FTC`, one shell, `env.sh` sourced, each run's `env.txt` written by `record_env <run>` (`python -V`, `uv pip list`, teax HEAD, the licence by presence, and `env | grep -E '^(STOP_PARSER_[A-Z_]*|TEAX_SIMKIT_PATH|SYSML_CODEGEN_PROJECT_ROOT|PYTHONPATH)='`). Design Appendix H3's pattern `'^(STOP_PARSER_|…)='` needs `=` straight after the prefix, so it matches no `STOP_PARSER_` name; `STOP_PARSER_[A-Z_]*` is the corrected form. Compare with `python3 $EV/rehearsal/junit-diff.py <B>/junit.xml <C>/junit.xml`, which exits non-zero when C breaks the pass rule. **Observed in the rehearsal:** *(O3)*
 
 ### 8b. Re-verify one existing record
 
@@ -157,6 +175,8 @@ In run B (local tools) and run C (installed), run `integrate` with the supplemen
 PYTHONPATH=$FTC:$TEAX_SIMKIT_PATH SYSML_CODEGEN_PROJECT_ROOT=$FTC uv run --no-sync python -c 'import sys; from sysml_codegen.study.read_coverage import run_route; run_route(*sys.argv[1:])' exploration/stellarator_e2e/studies study_route execute_baseline /tmp/rc exploration/stellarator_e2e/pkg/stellarator_tea exploration/stellarator_e2e/studies/manifest.json rehearsal
 ```
 
+`SYSML_CODEGEN_PROJECT_ROOT` is set to match what the seam hands its producers; the driver does not need it. The package is in `$FTC`'s git work tree, and since sysml-codegen `2e21955` the driver resolves the root from the package before it observes the route. Only a package in no work tree needs the variable, and the driver then refuses with a message naming it.
+
 **Expected:** B and C stop at the same gate with the same class and condition, or both return `CANDIDATE`. Their returns differ only in closed-list fields under SC12's comparator (`$EV/parity/`). The C driver writes `read_coverage.json` with `outcome: pass` and `violations: []`.
 
 **Rehearsal:** the orchestrator runs it on `$FTC`. **Observed in the rehearsal:** *(O3)*
@@ -169,4 +189,4 @@ Moving the sysml-codegen pin also moves the code generator fusion-tea's packages
 
 ## Commit
 
-Stage the paths from `git status --short` by name, never with `git add -A`: the step 2 and step 4 files if those steps ran, `pyproject.toml`, `uv.lock`, `tests/test_dependency_provenance.py`, the eight wrappers, the eight route modules, the removed `scripts/study/schemas/`, the step-5 test files, `.gitignore`, the removed `.claude/skills/run-study` and `.agents/skills/run-study`, the installed `.agents/skills/run-study/` and its `.claude/skills/run-study` link, and `.sysml-codegen/install.json`. `.venv/integration.env` is gitignored and stays out. A subject that fits: "Use the study layer installed from sysml-codegen at M_CODEGEN". Do not push; the owner pushes and merges the branch.
+Stage the paths from `git status --short` by name, never with `git add -A`: the step 2 and step 4 files if those steps ran, `pyproject.toml`, `uv.lock`, `tests/test_dependency_provenance.py`, the eight wrappers, the nine route modules (`"${ROUTES[@]}"`), the removed `scripts/study/schemas/`, the step-5 test files, `.gitignore`, the removed `.claude/skills/run-study` and `.agents/skills/run-study`, the installed `.agents/skills/run-study/`, and `.sysml-codegen/install.json`. The `.claude/skills/run-study` link and `.claude/commands/teax-completion.md` stay untracked: fusion-tea's `.gitignore` ignores `.claude/skills/*` and `.claude/commands/*`, and a link is not matched by a directory whitelist, so this is how Item 2 left `run-goal`'s link. `install-commands` makes them in each checkout. `.venv/integration.env` is gitignored and stays out. A subject that fits: "Use the study layer installed from sysml-codegen at M_CODEGEN". Do not push; the owner pushes and merges the branch.
