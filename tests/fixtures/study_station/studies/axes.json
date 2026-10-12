@@ -1,0 +1,20 @@
+{
+  "schema_version": "study-axis-declaration/v1",
+  "groups": [
+    {
+      "axis": "basin_area",
+      "note": "The basin's area sets how much storage absorbs the inflow, so it moves the required flow: it reaches the pump-fit constraint and the annual cost.",
+      "keys": [{"key": "PumpStation__station__basin_area", "provenance": "fan_out"}]
+    },
+    {
+      "axis": "installed_capacity",
+      "note": "The pump capacity installed. It enters the pump-fit constraint and no cost.",
+      "keys": [{"key": "PumpStation__station__installed_capacity", "provenance": "fan_out"}]
+    },
+    {
+      "axis": "energy_price",
+      "note": "The electricity price. It enters the annual cost and no constraint, so the trace reports no constraint response.",
+      "keys": [{"key": "PumpStation__station__energy_price", "provenance": "fan_out"}]
+    }
+  ]
+}

@@ -26,8 +26,8 @@ from typing import Any
 
 import pytest
 
+from sysml_codegen.study import common, roots
 from sysml_codegen.study import manifest as manifest_mod
-from sysml_codegen.study import roots
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = Path(__file__).parent / "data"
@@ -35,8 +35,16 @@ SYNTHETIC_DIR = DATA_DIR / "synthetic_pkg"
 SYNTHETIC_PACKAGE = SYNTHETIC_DIR / "pkg"
 SYNTHETIC_MANIFEST = SYNTHETIC_DIR / "manifest.json"
 SYNTHETIC_AXES = SYNTHETIC_DIR / "axes.json"
-STATION_PACKAGE = REPO_ROOT / "tests" / "fixtures" / "study_station" / "pkg" / "station_study"
+#: The neutral station fixture: a project of its own, every path in it relative to it.
+STATION = REPO_ROOT / "tests" / "fixtures" / "study_station"
+STATION_PACKAGE = STATION / "pkg" / "station_study"
+STATION_MANIFEST = STATION / "studies" / "manifest.json"
+STATION_AXES = STATION / "studies" / "axes.json"
+STATION_IDENTITY = STATION / "studies" / "baseline" / "package_identity.json"
+STATION_BASELINE = STATION / "studies" / "baseline" / "baseline_result.json"
 SCHEMAS = importlib.resources.files("sysml_codegen.study") / "schemas"
+#: Every post-move tool path starts here (spec D7, design I4).
+TOOL_PREFIX = "sysml_codegen/study/"
 
 
 @pytest.fixture(autouse=True)
@@ -100,6 +108,22 @@ def minimal_manifest_dict() -> dict[str, Any]:
             "sys_path": "some/where",
         },
     }
+
+
+def assert_post_move_tool_identity(document: dict[str, Any]) -> None:
+    """SC7 on one tool document: the installed prefix, ``command[0]``, and a live digest.
+
+    ``tool.path`` and every digested file sit under ``sysml_codegen/study/``; where the schema
+    has a ``command``, its first token is ``tool.path``; and the digest recomputes from the
+    bytes under the tool home.
+    """
+    tool = document["tool"]
+    assert tool["path"].startswith(TOOL_PREFIX), tool["path"]
+    files = [entry["path"] for entry in tool["source_digest"]["files"]]
+    assert files and all(path.startswith(TOOL_PREFIX) for path in files), files
+    if "command" in document:
+        assert document["command"][0] == tool["path"]
+    assert common.tool_source_digest(tuple(files)) == tool["source_digest"]
 
 
 def environment_with_root(root: Path) -> dict[str, str]:
