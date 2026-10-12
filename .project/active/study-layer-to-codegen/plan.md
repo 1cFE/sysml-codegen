@@ -491,36 +491,36 @@ def test_every_annex_section_the_runbook_reads_is_in_the_template():
 
 ### Steps
 
-- [ ] Start each file from its `b06585709` bytes and edit by class, per Appendix I's method:
+- [x] Start each file from its `b06585709` bytes and edit by class, per Appendix I's method:
   - sources: `$STAGED/.claude/skills/run-study/{SKILL,runbook,record-template}.md`, `$STAGED/docs/integration_seam_operator_guide.md` and `$STAGED/modeling_project/STUDY_POLICY.md`;
   - targets: `src/sysml_codegen/assets/skills/run-study/{SKILL,runbook,record-template,annex-template,integration-guide}.md` and `src/sysml_codegen/assets/project_templates/STUDY_POLICY.md.template`;
   - per-file instructions: Appendix I. The policy also follows DD16 and spec Evidence B.
-- [ ] Give the runbook its "The tools" and "What a package annex supplies" sections, and the **Check:** lines in steps 14 and 15 (Appendix I; DD12).
-- [ ] Give the record template its one history note, worded exactly as Appendix I gives it.
-- [ ] Add the tests:
+- [x] Give the runbook its "The tools" and "What a package annex supplies" sections, and the **Check:** lines in steps 14 and 15 (Appendix I; DD12).
+- [x] Give the record template its one history note, worded exactly as Appendix I gives it.
+- [x] Add the tests:
   - extend `test_generic_text.py` to the five bundle files and the template, with the history note as the one exemption;
   - rewrite `tests/study/test_integrate_guide_contract.py` for the shipped guide (Appendix F list);
   - the annex-citation contract test (DD18);
   - check that `SKILL.md`'s frontmatter parses. Phase 6's `--list` reads it through agentic-mbse's `frontmatter`.
-- [ ] Write `$EV/read-through.md` in Appendix I's format:
+- [x] Write `$EV/read-through.md` in Appendix I's format:
   - ids `SK-`, `RB-`, `RT-`, `IG-` and `SP-`;
   - a row for every LCOE instance, and the step-13 era-pin line as `generalized`;
   - every `moved` row names its fusion-tea destination file and section.
-- [ ] Draft the fusion-tea destination texts in `$EV/fusion-tea/text/`, each as a full file or a patch against `$STAGED` that the orchestrator can apply on a fusion-tea branch:
+- [x] Draft the fusion-tea destination texts in `$EV/fusion-tea/text/`, each as a full file or a patch against `$STAGED` that the orchestrator can apply on a fusion-tea branch:
   - the policy additions: § Locations with `exploration/<pkg>/studies/`, § 6's two-route and adapter rules, and step 7's provenance;
   - the annex additions;
   - `docs/integration_seam_operator_guide.md`, rewritten as fusion-tea's supplement;
   - the `CLAUDE.md` lines.
-- [ ] Write `$EV/ledger-rows.md` in Item 2's columns (Text | Was in | New fusion-tea home | Evidence):
+- [x] Write `$EV/ledger-rows.md` in Item 2's columns (Text | Was in | New fusion-tea home | Evidence):
   - group the rows by destination, one row per group of `moved` verdicts;
   - the Evidence column cites the read-through ids and the step-3 anchor;
   - the format is the Item 2 section of `.orchestrate-logs/src/agentic-mbse@main/.project/active/wrap-split-migration-ledger.md`.
-- [ ] Add the `test_integrate_guide_contract.py` hunk to `step5-tests.patch`. It reduces that test to the supplement's own facts: the sealed-wheel home, `WHEEL_HASHES` and ADR-0009. Re-run `patch -p1 --dry-run`.
-- [ ] Write `$EV/fusion-tea-runbook.md` in Item 2's shape:
+- [x] Add the `test_integrate_guide_contract.py` hunk to `step5-tests.patch`. It reduces that test to the supplement's own facts: the sealed-wheel home, `WHEEL_HASHES` and ADR-0009. Re-run `patch -p1 --dry-run`. *(Done as a separate file, `$EV/fusion-tea/step5-guide-contract.patch`, because `step5-tests.patch` is Phase 4's and was written in parallel; see Phase 5 Completion.)*
+- [x] Write `$EV/fusion-tea-runbook.md` in Item 2's shape:
   - the model is `.orchestrate-logs/src/agentic-mbse@main/.project/completed/20261012_goal-layer-port/evidence/fusion-tea-runbook.md`;
   - steps 1–9 are exactly as spec SC9 and design Appendix H3 give them;
   - it cites the `$EV/fusion-tea/` drafts by path, and the read-through anchors for step 3.
-- [ ] Commit, naming SC5, SC9 and SC10.
+- [x] Commit, naming SC5, SC9 and SC10.
 
 ### Validation
 
@@ -812,9 +812,47 @@ Detailed risks are in `design.md#potential-risks`. These are the phase-specific 
 **Issues / Deviations:**
 
 ### Phase 5 Completion
-**Completed:**
-**Read-through counts (kept / generalized / moved):**
+**Completed:** 2026-10-12, on branch `study-layer-text` in the parallel worktree `/home/reid/1cfe/sysml-codegen-study-layer-text`, cut at `24cce2c` (after Phase 3, before Phase 4), in five commits:
+
+- `389a905` — the five texts copied at fusion-tea `b06585709`, one line per paragraph (words unchanged: `str.split()` of source and target are equal);
+- `f0f9351` — the edits by class, the new annex template, and the tests;
+- `f46a913` — the ported docstrings' fusion-tea design labels stated or dropped;
+- `e4f2691` — the read-through, the fusion-tea text drafts, the guide-contract hunk and the ledger rows;
+- `4d2917b` — the adoption runbook draft and its step-3 helper.
+
+**Read-through counts (kept / generalized / moved):** 126 rows over the five files — 6 kept general, 3 kept as labelled examples, 43 generalized, 74 moved (`$EV/read-through.md` § Totals). Every LCOE instance has a row (SK-2, RB-24, RT-3, RT-4, SP-11), and the step-13 era-pin line is RB-19, `generalized`. All 74 moved anchors grep in their homes on a copy of `b06585709` with the four text patches applied (`$EV/fusion-tea/text/check_anchors.py` prints `74 anchors found, 0 missing`). Docstring labels: 19 rows — 14 dropped, 3 meaning stated, 1 generalized, 1 kept because it is defined in place (`R1`–`R4` in `classify_ref`).
+
+**Ledger rows:** 15, in Item 2's columns, grouped by home; each of the 74 moved ids appears exactly once (`$EV/ledger-rows.md`).
+
+**Test counts:**
+- Full suite: `2707 passed, 9 skipped, 1 failed, 123 deselected`. Phase 3 ended at 2671 / 9 / 1 / 123. The failure is the known `test_zero_unmarked_self_named_examples_across_all_trees`, with its same single offender (agentic-mbse's `project_templates/MODELING_PROCESS.md.template`). I ran the suite with that test deselected, then ran it alone.
+- The 36 new default-lane tests: `test_generic_text` +8 (the six shipped files, the history-note exemption, and a check that every file in the bundle and the templates directory is covered), `test_integrate_guide_contract` 17 (rewritten for the shipped guide, Appendix F's list), `test_run_study_bundle` 11 (the annex-citation contract of DD18, `SKILL.md`'s frontmatter through agentic-mbse's `frontmatter`, the runbook's policy citations against the template's headings, the Check lines, and `test_record_template`'s digest-shape half that Phase 2 left for this phase).
+- `tests/study`: 497 passed. `ruff check src/` passes; `mypy src/` finds no issues in 84 files. The teax lane was not run: this phase changed no statement, only text, tests and docstrings.
+- `grep -rn "scripts/study" src/sysml_codegen/assets` prints only the record template's history note.
+
 **Issues / Deviations:**
+- **This worktree's venv was off the lock.** It carried ruff 0.17.0, mypy 2.4.0 and pytest 9.1.1; the lock and the main worktree have 0.14.10, 1.19.1 and 9.0.2. ruff 0.17.0 reports seven `UP042` findings in modules no phase touched. I installed the locked three with `uv pip install --python .venv/bin/python`, as the ground rules allow, and every count above is at the locked versions.
+- **The guide-contract hunk is its own file**, `$EV/fusion-tea/step5-guide-contract.patch`, not a hunk added to `step5-tests.patch`. That file is Phase 4's and was written in parallel, and the brief said not to touch Phase 4's paths. It applies cleanly with `patch -p1` to a fresh copy of `$STAGED`, alone and after the four text patches. The runbook draft applies both at step 5. At merge, the orchestrator can append it to `step5-tests.patch` or keep both.
+- **The runbook draft's citations of Phase 4's files** (`wrappers/`, `routes.sed`, `declaration.toml`, `step5-tests.patch`, `SMOKE.md`, `$EV/rehearsal/`) were written against the plan's paths, not against the files.
+- **The Check lines record cleanly.** Appendix I gives the placeholder check as `grep -c '<' record.md`, and H2 has the agent record each Check command and its output in record.md § 14. Recorded verbatim, that command puts a `<` into the record and makes itself fail, and fusion-tea's `test_records` rejects any `<` in a record. The shipped Check lines are `python3 -c` commands with no literal `<` (`chr(60)` stands for it), with the same meaning and expected output. `test_run_study_bundle` holds them to that, and it caught one such `<` in a comment during this phase. The record template's § 14 now says the Check commands are recorded there.
+- **The policy template's numbering.** It keeps the general rules at their fusion-tea numbers (1–5, 9, 11), so their cross-references stay valid, and fills 6, 7, 8 and 10 with the slots: § 6 Execution routes, § 7 Hypotheses, § 8 Tripwire record (empty) and § 10 Locations. There is no verification section, as DD16 requires. fusion-tea's own Locations becomes its § 12, because its § 10 is Verification. The runbook cites policy sections by name, so both resolve.
+- **Where the moved text lives in fusion-tea.** Besides § 12 Locations, fusion-tea's policy gains a § 6 subsection "Execution routes", for the two-route, adapter, glue and era-pin rules, and a § 13 "Provenance of the installed study text". § 13 holds step 7's provenance, which Appendix I sends to the policy, and the record template's three provenance pointers. No annex is the home of a moved line. The only annex draft re-points the stellarator annex's line 5. fusion-tea's `test_annex` requires that annex to have exactly four `##` headings, so no fusion-tea annex can take the shipped template's "Package-owned pieces" section.
+- **A sentence I did not write.** I had drafted "each package's route module is `exploration/<pkg>/studies/study_route.py`" for fusion-tea's policy. `CONSUMER_SURFACE.md` contradicts it: `whole_plant_conversion` runs through `execute_study.py`, and one studies directory is two levels deep. So the sentence is not there.
+- **Corrections that are not fusion-specific.** The guide said "fourteen stable slugs" beside a table of fifteen, and "Nine inputs" for a different count. Both are fixed and listed in the read-through. Neither changes a tool.
+- `spec.md`'s status line was not touched, because the brief limits edits to this section. `CURRENT_WORK.md` was not touched either; the orchestrator updates it.
+
+**Proposals, not applied:**
+- `indicators.py:233` says "65 edges depend on the strip", a count from one fusion-tea package. It is a fact, not a label, so it stayed. A replacement, if the orchestrator extends the edit list: "and real pipelines depend on the strip".
+- `claude/commands/teax-completion.md`, which Phase 6 moves into `assets/commands/`, carries a `/home/` machine path. SC5 does not cover it, and `test_generic_text` does not either, because its coverage check scopes to the run-study bundle and the templates directory. It ships into every project, though.
+
+**For Phase 6:**
+- **The assets.** The shipped files are `src/sysml_codegen/assets/skills/run-study/{SKILL,runbook,record-template,annex-template,integration-guide}.md` and `src/sysml_codegen/assets/project_templates/STUDY_POLICY.md.template`. There is no `__init__.py` under `assets/`, so `install-commands` and the wheel check decide how they are found and packaged. `SKILL.md` declares `metadata: kind: workflow`, so `--list` can print `run-study (workflow)`.
+- **The policy's install path is pinned.** `test_run_study_bundle` holds `SKILL.md` and `runbook.md` to `modeling_project/STUDY_POLICY.md`, design Appendix D's path. If the installer writes elsewhere, both the text and that test change together.
+- **A new asset file must join the coverage.** A file added to `assets/skills/run-study/` or `assets/project_templates/` must join `SHIPPED_TEXT` in `test_generic_text.py`, or `test_every_shipped_text_file_is_covered` fails. `assets/commands/` is outside that check.
+- **Parity re-run trigger.** The docstring-label commit `f46a913` changes five study modules: `common`, `identity`, `indicators`, `integrate` and `manifest`. Only comments and docstrings change; no statement does. Phase 6's "re-run parity if `git diff <Phase 4 parity commit> -- src/sysml_codegen/study` prints anything" will therefore fire. Their tool-source digests change, and SC12's comparator masks those by token (B2).
+- **Merge with Phase 4.** If Phase 4 fixed port bugs in those five modules, any conflict is textual and limited to the 19 docstring sites the read-through's DL table lists.
+- **README and `CLAUDE.md`.** The integration guide ships in the bundle (DD17). The runbook's "The tools" section already states the CLI forms, `TEAX_SIMKIT_PATH` and the project-root rule, so the docs can point there.
+- **For O3.** I replayed fusion-tea's own skill-text tests on the shipped files, with their logic copied into a scratch script. `test_annex`'s runbook check, `test_record_template`'s digest-shape check and `test_policy_path`'s live-surface check all pass, so run C should not fail them after step 7.
 
 ### Phase 6 Completion
 **Completed:**
