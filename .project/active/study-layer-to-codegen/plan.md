@@ -2,7 +2,7 @@
 
 **Status:** In Progress (Phase A and Phases 1–6 done; orchestrator steps O1–O3 and O5 remain, O4 ran)
 **Created:** 2026-10-12
-**Last Updated:** 2026-10-12 (Phase 6 done: installer, docs and ADRs, the orchestrator's evidence kit, parity re-run, final suites)
+**Last Updated:** 2026-10-12 (audit fix pass: F1, F3, F8, F6/F7 and F2 applied; final suites, teax lane and parity re-run)
 **Branch:** `study-layer-to-codegen` in both sysml-codegen and agentic-mbse
 
 ## Source Documents
@@ -1029,6 +1029,48 @@ Two counts moved, both explained in `evidence/parity/README.md`. Each route case
 
 ### Cuts applied
 None through Phase 6. Cut 2 is not needed: `CANDIDATE` is reached. Cuts 1, 3 and 4 are the orchestrator's choice at O2 and O3; the scripts support each (`--with-manifest`, the brief's cut-3 line, the rehearsal's *(8a)* marks).
+
+### Audit fix pass
+
+**Completed:** 2026-10-12, on the orchestrator's brief `briefs/implement-audit-fixes.md`, against the audit at `01990a5` (verdict Needs Work). Six commits: `6ad4c22`, `7205ab1` (F1), `544db6d` (F3), `7cf5a7c` (F8), `53a4261` (F6, F7), `deb0b02` (F2).
+
+**F1 (blocker): B13 follows the interpreter's build-time `TZPATH`.**
+- *The change* (`6ad4c22`). `read_coverage.py` reads `sysconfig.get_config_var("TZPATH")` once, at import, into `INTERPRETER_ZONE_ROOTS`, through a typed helper `absolute_entries` that keeps only absolute entries. It no longer imports `zoneinfo` and never reads `zoneinfo.TZPATH` or `PYTHONTZPATH`. An interpreter built without a `TZPATH` has no zone roots, as `zoneinfo` itself treats it. On this venv's CPython 3.12.11 and on `/usr/bin/python3.12` the value is the same four directories, and `PYTHONTZPATH=/` leaves it unchanged (checked).
+- *Why at import, not at construction.* The value is fixed for the interpreter's life, and reading it at import puts `_sysconfigdata_*` into what the parity harness measures as preloaded (imports before `run_route`). Read at construction, that module would load before observation yet escape the measurement.
+- *Tests.* The two zone tests no longer set `PYTHONTZPATH`: their driver replaces `read_coverage.INTERPRETER_ZONE_ROOTS` with a test directory before calling `run_route`, the only way to point a build-time setting elsewhere. New: `test_pythontzpath_does_not_widen_the_runtime_roots` runs integrate's own driver under `PYTHONTZPATH=/` and requires an undeclared read outside the package to be refused; on the old code it failed with `assert 0 != 0` (the read passed). New: `test_the_zone_search_path_keeps_only_absolute_entries`. With the zone roots dropped from the observer, the positive zone test fails, so it discriminates too.
+- *Preloads re-measured* (`7205ab1`). The `zoneinfo` group is gone: 12 standard-library modules and 8 `.pyc` paths, down from 21 and 14 (`evidence/parity/preloads.json`). `sysconfig` and `_sysconfigdata__x86_64-linux-gnu` stay, now loaded by the B13 read itself. `parity.py`'s closure check names `PRELOAD_SOURCES`, importing `roots` and reading `sysconfig`'s `TZPATH`, in place of `zoneinfo`. The installed-package preloads are unchanged (3).
+- *Parity*, the README's command with a fresh `$S=/tmp/study-parity-20261012-132723`, at sysml-codegen `6ad4c22`, agentic-mbse `70d78d0` (F9's comment commit), teax `8d87746`, on `/usr/bin/python3.12`: `all` exit 0. 28 cases: 3 `EQUAL`, 25 `EQUAL after closed-list fields`, 0 `DIFFERENT`; every exit code agrees; library parity holds. The table is Phase 6's, status for status. The only moved counts are the B13 preload exclusions: ×8 per route case, down from ×14, and ×6 for gate 7's case, down from ×7. The `zoneinfo` reads now appear on both sides and compare equal. Case files otherwise changed only in content digests.
+- *Teax lane*, with the provenance manifest regenerated at the current heads: `28 passed` (`test_study_integrate` 7, `test_study_station` 21). This runs on uv's CPython 3.12.11, where the station's `/usr/share/zoneinfo` read is outside `sys.prefix`, so gate 7, gate 8 and `CANDIDATE` exercise the new rule on a real zone read.
+- *Spec.* B13 now says "the interpreter's build-time `TZPATH`" and records that audit F1 changed it; its receipt-consequence paragraph names `sysconfig` and the new preload counts.
+- **Residual, surfaced (capture-fidelity law 4).** "No environment variable overrides" the build-time value holds for every documented setting, but CPython's private cross-build hook `_PYTHON_SYSCONFIGDATA_NAME` redirects `sysconfig` to another `_sysconfigdata` module, and a planted module on the import path that sets `TZPATH` to `/` reopens the hole (checked on `/usr/bin/python3.12`). It needs a planted module, and a planted module on the path can equally shadow the observer itself, so it falls under the observer's stated limitation ("A cooperative audit hook is not a sandbox"). Not addressed in this pass; the orchestrator decides whether it needs a record beyond this note.
+
+**F3: the record template passes its own placeholder Check when copied literally** (`544db6d`).
+- The template's design copies everything above END OF RECORD into the record, and step 15's Check counts every `<`. So the cleaner fix was the preamble, not the Check: its four `<` tokens (the record path, `<axis>`, `<...>` twice, `<YYYY-MM-DD>`) are now worded, and the placeholder rule says the preamble holds none.
+- New test `test_a_literal_copy_of_the_record_template_passes_the_placeholder_check`: copies the template as it says, replaces the placeholders in §§ 1–17, runs the runbook's own Check command in that directory and requires `0`. On the old template it printed `6`.
+- Read-through RT-1 quotes the new wording; the corrections list records the change.
+
+**F8: shipped-text residue and the six missing read-through rows** (`7cf5a7c`).
+- Policy template: § 1's inequality and equality examples are labelled ("in a fusion plant model, for example"); § 4's handwritten rung reads "an independent check of the handwritten body", and R3 keeps 1e-9 only inside "(for example, by an oracle that mirrors it to 1e-9)"; "the analyses layer" became "the calculations"; § 11's "source quarantine" became "any rules the project keeps on admissible sources"; the fill-in header names § 1's current-state line.
+- `:29` sits inside § 2's `[OWNER]` axis rule and keeps its words. SP-7 now reads `kept verbatim: owner-graded rule`, a verdict the legend gains.
+- Runbook `:130` names checkpoint and round closure only under the installed goal runbook; `:259` gives `--print-fingerprint` its `--package DIR`. Guide `:200`: "The numbers are the seam's step numbers." `teax-completion.md:58` names `sysml-codegen generate`.
+- New rows RB-27, IG-43 and SP-33 to SP-36. SP-5, SP-14 and SP-18 record their label or generalization. Totals: 132 rows, 6 kept general, 4 kept as labelled examples, 1 kept verbatim, 46 generalized, 75 moved.
+- **One new `moved` row, IG-43.** The supplement on the fusion-tea branch did not carry the gate-numbering fact, so `evidence/fusion-tea/text/audit-f8-supplement.patch` adds "## The gate numbers in fusion-tea" to it. The patch is against the branch tip `699b0a74d`, rebuilt as the staged `b06585709` copy plus `.orchestrate-logs/src/audit/fusion-tea-branch.diff`; the rebuilt supplement equals Phase 5's draft byte for byte, and the patch applies with `patch -p1`. `check_anchors.py` on that tree prints `75 anchors found, 0 missing`. `ledger-rows.md` § Audit F8 addition carries its ledger row.
+- **For the orchestrator:** apply `audit-f8-supplement.patch` on fusion-tea's `study-layer-adoption` branch, and append the one ledger row to agentic-mbse's ledger. The adoption runbook draft's step 3 now expects 75 anchors (`evidence/fusion-tea-runbook.md:56, :58`), a consequence of IG-43.
+
+**F6 and F7: docs wording** (`53a4261`).
+- ADR-0015 now states the rule `roots.py` implements: the command line anchors on the package and refuses a missing or conflicting root; an unpinned library call, such as a route run by hand, uses the working directory's work tree and checks no conflict. Its invariants say so, and its provenance records the narrowing.
+- *Deviation:* `.project/adr/README.md` says a changed decision gets a new entry that amends the old. ADR-0015 is unmerged and unratified, and the decision did not change, only its overstated text, so it was corrected in place. The orchestrator may prefer an amending entry. `adr.sh index` produced no change.
+- The design's amendment section records that DD2's "a missing package still fails as before" holds only inside a work tree, and names the three B1 refusals that come first. DD2 is unchanged.
+
+**F2: follow-ups filed** (`deb0b02`). `.project/backlog/BACKLOG.md` gains "Study Layer (WRAP-SPLIT Item 3 follow-ups)" with five items, each citing this item and the audit at `01990a5`: `[STUDY-RECORD-RESUME]` (F-DR1), `[STUDY-ROUTE-POINT-RUNNER]` (F4, with F-DR2's cause corrected), `[INTEGRATE-CALLER-ERROR-AS-SEAM-FAULT]` (F5), `[STUDY-PORTED-MYPY-OVERRIDES]`, and `[STUDY-LAYER-PRODUCT-ENTRY]`. Audit F2 also lists DD12's `study check-record` and DD19's kept smells, gate 4's `--snapshot` flag among them. The brief named five items, so those two remain for `/_my_close`. The plan's Phase 5 proposals were already applied in Phase 6 (fixes 2 and 3), and F3 is fixed above.
+
+**Not in this pass:** F5's code fix (filed only); F9, done in agentic-mbse as `70d78d0`; F10, the owner's merge prep. `INSTALLER_API_REVISION` stays `0843fe2`. `spec.md`'s status line and `CURRENT_WORK.md` were not touched; the orchestrator updates them.
+
+**Final checks** (at `deb0b02`; `src/sysml_codegen/study` and `pyproject.toml` unchanged since `6ad4c22`, where parity and the teax lane ran):
+- Full suite, `uv run --no-sync --env-file /home/reid/1cfe/sysml-codegen/.env pytest tests/`: `2744 passed, 9 skipped, 1 failed, 124 deselected`. Phase 6 ended at 2741 / 9 / 1 / 124; the 3 new tests are the two read-coverage tests and the template-copy test. The failure is the known `test_zero_unmarked_self_named_examples_across_all_trees`, with its single offender, agentic-mbse's `project_templates/MODELING_PROCESS.md.template`.
+- `ruff check src/`: all checks passed. `mypy src/`: no issues in 85 source files.
+- Teax lane: `28 passed`.
+- Parity: 28 of 28 `EQUAL` or `EQUAL after closed-list fields`, exit 0.
 
 ---
 
