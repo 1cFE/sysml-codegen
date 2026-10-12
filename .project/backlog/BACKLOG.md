@@ -238,6 +238,10 @@ Both paths fail closed, but each says "the seam broke" for a caller's error:
 
 Both are byte-faithful to fusion-tea `b06585709`, so the fix is a behaviour change and was kept out of the move. The audit's proposed mapping: gate 4 `input-invalid` for the census, gate 7 `could_not_run` for the baseline result. The `index` mypy override on `integrate` is what hides them (see the next item). Source: audit F5.
 
+### [VERIFY-MISSING-STORE-TRACEBACK] `verify` crashes on a missing store instead of refusing — unscheduled `[AGENT]`, inherited
+
+Given a `--store` path that does not exist, `verify` lets teax's store open raise an uncaught `sqlite3.OperationalError` rather than refusing with a `ToolError` that names the path. It still fails closed (non-zero exit, no summary written), but the message is a traceback. Found by the Item 3 rehearsal's step 8b (fusion-tea record `20260929-magnet-material-comparison`, whose stores are not committed). Byte-faithful to fusion-tea `b06585709`, so the fix is a behaviour change kept out of the move: check the store path exists before opening it, and refuse naming it.
+
 ### [STUDY-PORTED-MYPY-OVERRIDES] Typing debt in the eight ported study modules — P3 `[AGENT]`
 
 `pyproject.toml`'s `[[tool.mypy.overrides]]` blocks relax checking for the eight modules ported byte-faithfully from fusion-tea (`common`, `identity`, `indicators`, `integrate`, `manifest`, `preflight`, `read_coverage`, `verify`). The audit's strict probe (`--check-untyped-defs --disallow-untyped-defs`, 53 errors in 6 files) found what each hides:
