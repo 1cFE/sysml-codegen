@@ -53,9 +53,9 @@ Before anything local is removed, every ledger destination must be in fusion-tea
 python3 $EV/fusion-tea/text/check_anchors.py $EV/read-through.md .
 ```
 
-The script greps all 74 anchors in their homes in the working tree and exits non-zero naming any it cannot find. By hand, one row: `git grep -nF 'Two routes, and no third.' -- modeling_project/STUDY_POLICY.md`.
+The script greps all 75 anchors in their homes in the working tree and exits non-zero naming any it cannot find. By hand, one row: `git grep -nF 'Two routes, and no third.' -- modeling_project/STUDY_POLICY.md`.
 
-**Expected:** `74 anchors found, 0 missing`, exit 0. If one is missing, the script names it: stop, because O4's text commit is incomplete.
+**Expected:** `75 anchors found, 0 missing`, exit 0 (74 from O4's text commit, plus IG-43 from `fusion-tea/text/audit-f8-supplement.patch`, which the orchestrator applies on the O4 branch after the audit). If one is missing, the script names it: stop, because the branch's text is incomplete.
 
 **Rehearsal:** on `$FTC` with O4's text commits applied. **Observed in the rehearsal:** *(O3)*
 

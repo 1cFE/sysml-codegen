@@ -1,6 +1,6 @@
 # Ledger rows for WRAP-SPLIT Item 3 (SC10)
 
-Drafted for orchestrator step O4, which appends them to agentic-mbse `.project/active/wrap-split-migration-ledger.md` under the heading below. The columns are Item 2's. Each row groups the `moved` verdicts of `read-through.md` (this directory) that share a fusion-tea home. All 74 `moved` rows appear exactly once.
+Drafted for orchestrator step O4, which appends them to agentic-mbse `.project/active/wrap-split-migration-ledger.md` under the heading below. The columns are Item 2's. Each row groups the `moved` verdicts of `read-through.md` (this directory) that share a fusion-tea home. All 75 `moved` rows appear exactly once: 74 in the rows O4 appended, and IG-43 in the one row audit F8 adds (§ Audit F8 addition, below).
 
 Every Evidence cell names the read-through ids and one runbook step-3 anchor: a fixed string that `git -C "$FT" grep -nF '<anchor>' -- <home file>` finds on the fusion-tea branch tip. Each row's other ids have their own anchors in the read-through. "O4 branch" is the fusion-tea branch O4 commits `fusion-tea/text/` to; "branch diff" is that commit's diff, which O4 records.
 
@@ -27,6 +27,14 @@ fusion-tea line numbers are at `b06585709`. Evidence paths are in sysml-codegen 
 | Identifiers and precedents in the general rules' worked examples: the verified asserts, `mfe_plasma_scaling.sysml:24,66`, WI-024, `mfe_viability.sysml`/MR-4, LCOE-eyeballing, the owner's worry, failure class A′, WI-022/CAS72, Stellaris, `mfe_power_balance.sysml`, WI-019, "the likeliest first real case", the relational/DM proposal | `modeling_project/STUDY_POLICY.md:20`, `:29-30`, `:40`, `:43`, `:45`, `:47`, `:53`, `:59`, `:67`, `:73`, `:77`, `:79`, `:93` | Stays: those lines (at `b06585709`) | read-through SP-6, SP-8 to SP-19, SP-21; anchor `mfe_plasma_scaling.sysml:24,66` |
 | § 5's demo scope, "criterion 5", and the named no-fallbacks rule | `modeling_project/STUDY_POLICY.md:97`, `:101`, `:104` | Stays: those lines (at `b06585709`) | read-through SP-22, SP-23, SP-24; anchor `barred in demo studies` |
 | The fusion-only sections: § 6 teax machinery in scope, § 7 the round-1 hypotheses, § 10 Verification (1costingFE, the oracle's retirement), and § 9's concept citation and § 11's owner request | `modeling_project/STUDY_POLICY.md:108-120`, `:124-130`, `:139`, `:152-156`, `:160` | Stays: those sections (at `b06585709`) | read-through SP-25, SP-26, SP-28, SP-30, SP-31; anchor `1costingFE is the validation reference` |
+
+### Audit F8 addition
+
+One row for the orchestrator to append under the same heading. Its home is added by `fusion-tea/text/audit-f8-supplement.patch`, which applies to the O4 branch tip `699b0a74d`.
+
+| Text | Was in (fusion-tea) | New fusion-tea home | Evidence |
+|---|---|---|---|
+| The gate table's numbering is the step numbering of fusion-tea's integration-seam requirements (step 1 splits into two producers) | integration operator guide `:175` | supplement, new § The gate numbers in fusion-tea (O4 branch, `audit-f8-supplement.patch`) | read-through IG-43; anchor `step numbers of fusion-tea's integration-seam requirements`; `fusion-tea/text/audit-f8-supplement.patch` |
 
 **What the branch also carries, which no row needs:** the `CLAUDE.md` "## Study layer" section (`fusion-tea/text/CLAUDE.patch`), which tells fusion-tea's agents where each of the homes above is and that `scripts/study/*.py` are aliases; and the stellarator annex's line 5, re-pointed from "the runbook treats as optional" to the policy's § 6 (`fusion-tea/text/stellarator_e2e-ANNEX.patch`). Neither is the home of a removed line.
 

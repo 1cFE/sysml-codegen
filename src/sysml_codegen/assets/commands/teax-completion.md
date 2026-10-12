@@ -54,8 +54,8 @@ Before starting implementation, verify code generation completed:
 3. Check that `{package}/schemas/*_params.py` files exist
 
 If any missing or inputs contain null values, STOP:
-> "Code generation appears incomplete. Please run the full codegen pipeline
-> including Phase B (`generate_scenario.py --generate-inputs`) before proceeding."
+> "Code generation appears incomplete. Please run `sysml-codegen generate`
+> and give every input in `{package}/inputs/` a value before proceeding."
 
 **Current Stage**:
 1. We have aligned on SysMLv2 models in `models/`

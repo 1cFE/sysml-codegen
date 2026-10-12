@@ -3,7 +3,7 @@
 **Status**: Template, not ratified by this project. `sysml-codegen install-commands` created this file once; it is this project's document now, and a re-install never overwrites it.
 **Snapshot**: The general rules of a study policy first written 2026-08-02 and ratified whole by its owner on 2026-08-21, as they stood on 2026-10-12. Each rule keeps the grade and date it carried there. A grade records where a rule came from, not a ruling by this project's owner: to adopt a rule, record your own ratification beside it.
 **Consumers**: the `run-study` skill (`SKILL.md`, `runbook.md`) cites this file as its rulebook; every study record cites it by this path.
-**This project fills in**: § 6 Execution routes, § 7 Hypotheses, § 8 Tripwire record (append-only) and § 10 Locations. Sections 1–5, 9 and 11 are the general rules.
+**This project fills in**: the current-state line that closes § 1, § 6 Execution routes, § 7 Hypotheses, § 8 Tripwire record (append-only) and § 10 Locations. Sections 1–5, 9 and 11 are the general rules.
 
 **Why this exists.** As studies surface non-physical regions and each finding becomes a new constraint, the feasible region could collapse toward a thin manifold, making N-dimensional exploration useless; separately, deeper physics decomposition in later refinement rounds may create cycles the forward toolchain cannot express. This policy is the containment strategy, plus the tripwire record that would constitute honest evidence if the strategy runs out.
 
@@ -13,8 +13,8 @@
 
 Constraints do two different things to a swept space:
 
-- **Inequality limits** (beta ≤ limit, wall load ≤ limit, TBR ≥ floor, rec_frac ≤ knee) cut away regions but leave the survivor **full-dimensional**. Every feasible point has feasible neighbors. These accumulate safely, indefinitely.
-- **Equality conditions** (a confinement scaling must hold; a balance must close) each drop the feasible set's dimension by one. Equalities asserted **over swept inputs** are what produce the thin-line failure: a grid never lands on the manifold, the verdict column reads ~100% violated, and the sweep carries no information.
+- **Inequality limits** (in a fusion plant model, for example: beta ≤ limit, wall load ≤ limit, TBR ≥ floor, rec_frac ≤ knee) cut away regions but leave the survivor **full-dimensional**. Every feasible point has feasible neighbors. These accumulate safely, indefinitely.
+- **Equality conditions** (for example, a balance must close; in a fusion plant model, a confinement scaling must hold) each drop the feasible set's dimension by one. Equalities asserted **over swept inputs** are what produce the thin-line failure: a grid never lands on the manifold, the verdict column reads ~100% violated, and the sweep carries no information.
 
 The forward-pass architecture has a native home for equalities: **inside the forward computation**. An equality internalized as a calc (the model computes the dependent quantity from the levers) is satisfied at every swept point by construction, and the swept space stays full-dimensional. The failure mode is therefore not "too many constraints" — it is *equalities left standing as asserts over swept axes*.
 
@@ -51,7 +51,7 @@ When a study round (or spot-check) surfaces a non-physical result, classify it a
 
 ## 4. Distributed cycles: the resolution ladder — [AGENT] (ratified by owner 2026-08-21; pressure-tested by the first refinement round that reaches it)
 
-Context: the delivered toolchain accepts a cycle **within** one calc def (routes to the handwritten rung: `manual_required` + `preserve_handwritten` + oracle mirror) and hard-errors on a cycle **across** modules. Deeper physics decomposition (later refinement rounds) is where distributed cycles will appear. Apply the ladder top-down; each rung is cheaper than the one below it.
+Context: the delivered toolchain accepts a cycle **within** one calc def (routes to the handwritten rung: `manual_required` + `preserve_handwritten` + an independent check of the handwritten body) and hard-errors on a cycle **across** modules. Deeper physics decomposition (later refinement rounds) is where distributed cycles will appear. Apply the ladder top-down; each rung is cheaper than the one below it.
 
 ### R1 — Re-examine causality: many "cycles" are a lever plus a margin
 
@@ -75,11 +75,11 @@ Flat, codegen-safe, no rung, no solver.
 
 ### R3 — Merge the cluster: one calc def returns the consistent tuple (embedded solve)
 
-When the coupling is genuinely simultaneous and transcendental, do **not** assign a fake causal direction among the coupled quantities. Redraw the *def* boundary so the whole cluster is one calc def: inputs are the cluster's external levers; outputs are the consistent tuple. The body is a handwritten iteration on the handwritten rung, hash-pinned, oracle-mirrored at 1e-9, with the closure residual exposed as an output for the §3 guard assert.
+When the coupling is genuinely simultaneous and transcendental, do **not** assign a fake causal direction among the coupled quantities. Redraw the *def* boundary so the whole cluster is one calc def: inputs are the cluster's external levers; outputs are the consistent tuple. The body is a handwritten iteration on the handwritten rung, hash-pinned, checked independently at a stated tolerance (for example, by an oracle that mirrors it to 1e-9), with the closure residual exposed as an output for the §3 guard assert.
 
 **Example — confinement ⇄ power balance (ISS04).** ISS04 gives τ_E as a power law in (a, R, n̄, B, ι, **P**) with P-degradation (τ ∝ P^−0.61-class exponent; exact exponents sourced at implementation); the power balance gives τ_E = W/P_loss with stored energy W ∝ n·T·V and P_loss tied to heating and alpha power. Neither def can run first — each needs the other's output. Resolution: `calc def 'Confinement-Consistent Operating Point'` in the plasma-scaling file (or a sibling): **in** — n̄, B, R, a, ι, scaling constants (all levers or sourced constants); **out** — T, τ_E, p_input_required, p_fus, and the closure residual. Scalar Newton in the handwritten rung. The plant part def rewires `p_nrl`/`p_input` from design-instance constants to these outputs; T and p_fus retire as sweepable quantities per §2.3.
 
-Note what the merge does and does not cost: the *structural* decomposition of the model (parts, subsystems, cost attribution) is untouched — parts keep their attributes and the analyses layer already takes inputs from many subsystems. What merges is only the *solve*: the coupled equations live in one def instead of two. Causality stays honest — levers in, consistent physics out — because the blur a cycle creates is entirely among the *dependent* quantities, and the tuple-return absorbs exactly that.
+Note what the merge does and does not cost: the *structural* decomposition of the model (parts, subsystems, cost attribution) is untouched — parts keep their attributes and the calculations already take inputs from many subsystems. What merges is only the *solve*: the coupled equations live in one def instead of two. Causality stays honest — levers in, consistent physics out — because the blur a cycle creates is entirely among the *dependent* quantities, and the tuple-return absorbs exactly that.
 
 ### R4 — Coarse seed + validity band: break the loop with a lever-derived estimate
 
@@ -150,6 +150,6 @@ The procedure that deposits these facts is runbook steps 2–4; this section sta
 
 ## 11. Process sizing — [AGENT] (2026-09-14)
 
-This rule permits brief or skipped stages when their responsibilities are satisfied or inapplicable. Record the reason or reused evidence; preserve this policy's scientific rules, owner rulings, source quarantine, executable gates, frozen record correctness, and runtime contracts. Existing verification can be reused when its revision, scope, and environment are still valid.
+This rule permits brief or skipped stages when their responsibilities are satisfied or inapplicable. Record the reason or reused evidence; preserve this policy's scientific rules, owner rulings, any rules the project keeps on admissible sources, executable gates, frozen record correctness, and runtime contracts. Existing verification can be reused when its revision, scope, and environment are still valid.
 
 Where the goal layer is installed, review follows the installed goal runbook, § Review scope and evidence reuse. Without it, the rest of this paragraph is the review rule. New or reinterpreted equations/sources require a focused independent source/math check against original evidence. Ownership/interface changes and new modeling patterns require focused design review before implementation. Shared definition changes require consumer enumeration and checks, broadened if impact is unknown. Coupled architecture, multiple model families, or failed coverage require substantive independent integration review. Routine studies do not require stacked preflight critics, administrators, disposition critics, and round critics; use applicable evidence once. The main agent may execute directly and delegate scoped research or review with self-contained briefs.

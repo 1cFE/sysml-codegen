@@ -5,7 +5,8 @@ Every fusion-specific line of the five ported files, with one verdict each (desi
 **How to read a row.**
 
 - `kept: general` — the line is general after all, and ships unchanged.
-- `kept: labelled example` — fusion vocabulary inside a labelled example, with no identifier; ships unchanged.
+- `kept: labelled example` — fusion vocabulary inside a labelled example, with no identifier; ships unchanged, or with only its label added (audit F8).
+- `kept verbatim: owner-graded rule` — the line sits inside an `[OWNER]` rule, so it ships in the owner's words; any rewording goes to the owner (audit F8).
 - `generalized` — rewritten in place. No fusion-tea fact left the text: a tool path became its command, LCOE became "objective", a goal-runbook path became "the installed goal runbook".
 - `moved` — a fusion-specific fact left the shipped text. The row names its fusion-tea home, "exists at `b06585709:<line>`" or "added on the O4 branch", and an **anchor**: a fixed string that greps in that home (`git grep -nF '<anchor>' -- <file>`, runbook step 3). When the line itself ships in general form, the row quotes that too.
 
@@ -63,6 +64,7 @@ The policy's existing text is the home of every `SP-` row: fusion-tea keeps its 
 | RB-24 | :251 | "The framing per axis, the LCOE result, …" | objective | generalized | "… the objective result, …" |
 | RB-25 | :287 | "One file per package at `exploration/<pkg>/studies/DISCOVERY_LOG.md`." | path | moved | Ships "One file per package, in its studies directory: `<studies-dir>/DISCOVERY_LOG.md`." Home: Policy § 12, added on the O4 branch; anchor `exploration/<pkg>/studies/DISCOVERY_LOG.md` |
 | RB-26 | :297-298 | "or a joined disposition update, written by a goal round." | goal-layer | generalized | Adds "(the installed goal runbook, § The discovery log) or, in a project without the goal layer, by whoever dispositions the finding." |
+| RB-27 | :190 | "including goal dispositions; … at administration, checkpoint, and round closure" | goal-layer | generalized | "… including a goal round's dispositions where the goal layer is installed; … at administration or, under the installed goal runbook, at its checkpoint and round closure" (audit F8; it named goal-process stages with no citation and no fallback) |
 
 ## `record-template.md` (RT)
 
@@ -133,6 +135,7 @@ The policy's existing text is the home of every `SP-` row: fusion-tea keeps its 
 | IG-40 | :292 | "`tests/study/test_integrate_*.py` — … five real refusals from real producers." | project | moved | Removed: fusion-tea's tests. Home: Supplement § Related; anchor `five real refusals from real producers` |
 | IG-41 | :294 | "## Keep disposable execution files outside the repository" | path | generalized | "… outside the project" |
 | IG-42 | :296 | "For historical reproduction scripts with an `--out` option, … frozen scripts…" | project | moved | The general hygiene ships. Home: Supplement § Historical reproduction scripts; anchor `old archive review` |
+| IG-43 | :175 | "The numbering is the requirements' — step 1 splits into two producers" | pointer | moved | Ships "The numbers are the seam's step numbers." Home: Supplement § The gate numbers in fusion-tea, added by `fusion-tea/text/audit-f8-supplement.patch` against the O4 branch tip `699b0a74d` (audit F8); anchor `step numbers of fusion-tea's integration-seam requirements` |
 
 ## `STUDY_POLICY.md.template`, from `modeling_project/STUDY_POLICY.md` (SP)
 
@@ -144,20 +147,20 @@ Every `moved` row's home is fusion-tea's own policy, which exists at `b06585709`
 | SP-2 | :4 | "**Created**: 2026-08-02" | — | generalized | Folded into the template's "**Snapshot**" line: "first written 2026-08-02 and ratified whole by its owner on 2026-08-21, as they stood on 2026-10-12" |
 | SP-3 | :5 | "Written for the stellarator MBSE demo (`.project/concepts/…`, criteria 5–6…)" | project | moved | Template keeps a general "**Consumers**" line. Home exists at `b06585709:5`; anchor `Written for the stellarator MBSE demo` |
 | SP-4 | :7 | "Owner concern (2026-08-02): … the demo … (`~/1cfe/sysml-codegen/.project/research/02-…`)" | project | moved | Template keeps the concern in general words. Home exists at `b06585709:7`; anchor `relational/DM-decomposition proposal` |
-| SP-5 | :15 | "(beta ≤ limit, wall load ≤ limit, TBR ≥ floor, rec_frac ≤ knee)" | — | kept: labelled example | Unchanged |
+| SP-5 | :15 | "(beta ≤ limit, wall load ≤ limit, TBR ≥ floor, rec_frac ≤ knee)" | — | kept: labelled example | Labelled in place: "(in a fusion plant model, for example: beta ≤ limit, …)" (audit F8; it was unlabelled) |
 | SP-6 | :20 | "Current state (verified 2026-08-02): all five executing asserts (`net_positive`…" | project | moved | Template: a typed slot, "Current state (verified `<YYYY-MM-DD>`): `<the model's executing asserts, and which of them are equalities>`". Home exists at `b06585709:20`; anchor `zero equality pressure in the model today` |
-| SP-7 | :28 | "geometry (R, a, kappa), field, density (or density-limit fraction)…" | — | kept: labelled example | Unchanged |
+| SP-7 | :28 | "geometry (R, a, kappa), field, density (or density-limit fraction)…" | — | kept verbatim: owner-graded rule | Unchanged. It sits inside § 2's `[OWNER]` axis rule and is not labelled as an example; its words stay the owner's (audit F8) |
 | SP-8 | :29 | "(R feeds both `'Plasma Geometry'` and `'MFE Radial Build'`, `mfe_plasma_scaling.sysml:24,66`)" | project | moved | Template: "(for example, a major radius that feeds both a plasma-geometry calculation and a radial-build calculation)". Home exists at `b06585709:29`; anchor `mfe_plasma_scaling.sysml:24,66` |
 | SP-9 | :30 | "…the demo's differentiation evidence … 1costingFE … (precedent: WI-024's p_cryo…)" | project | moved | Template: "… this is the intended direction of travel: each internalization replaces a value a reference tool takes as given (or inverse-solves) with physics the model derives." Home exists at `b06585709:30`; anchor `WI-024` |
 | SP-10 | :40 | "Add an **inequality assert** in `mfe_viability.sysml` style, MR-4-cited." | project | moved | Template: "Add an **inequality assert**, with its bound cited to a source." Home exists at `b06585709:40`; anchor `MR-4-cited` |
 | SP-11 | :43 | "converts today's manual LCOE-eyeballing detection … (no-fallbacks rule)" | objective | moved | Template: "converts manual eyeballing of the objective into verdict data. No unsourced bounds: …". Home exists at `b06585709:43`; anchor `LCOE-eyeballing` |
 | SP-12 | :45 | "the burned points are the collapse the owner is worried about." | project | moved | Template: "… the collapse this policy exists to prevent." Home exists at `b06585709:45`; anchor `the owner is worried about` |
 | SP-13 | :47 | "(failure class A′, `.project/research/20260725-110828_study-failure-classes-…`)" | pointer | moved | Template drops the citation. Home exists at `b06585709:47`; anchor `study-failure-classes-and-mechanisms` |
-| SP-14 | :53 | "the WI-022/CAS72 pattern … (later epic items / refinement rounds)" | pointer | moved | Template: "(routes to the handwritten rung: …)" and "(later refinement rounds)". Home exists at `b06585709:53`; anchor `WI-022/CAS72` |
+| SP-14 | :53 | "the WI-022/CAS72 pattern … (later epic items / refinement rounds)" | pointer | moved | Template: "(routes to the handwritten rung: …)" and "(later refinement rounds)". Home exists at `b06585709:53`; anchor `WI-022/CAS72`. Since audit F8 the rung's "oracle mirror" is stated generally: "+ an independent check of the handwritten body" |
 | SP-15 | :59 | "the field the designer specifies (Stellaris: B₀ = 9.0 T)" | project | moved | Template: "(say, B₀ = 9.0 T)". Home exists at `b06585709:59`; anchor `Stellaris: B` |
 | SP-16 | :67 | "The current balance (`mfe_power_balance.sysml`) has `p_th = …`" | project | moved | Template: "Take a power balance of the form `p_th = …`." Home exists at `b06585709:67`; anchor `mfe_power_balance.sysml` |
 | SP-17 | :73 | "**In-model precedent**: … the WI-019 derivation in its doc comment…" | project | moved | Removed from the template. Home exists at `b06585709:73`; anchor `WI-019 derivation` |
-| SP-18 | :77 | "a handwritten iteration on the WI-022 rung" | pointer | moved | Template: "on the handwritten rung". Home exists at `b06585709:77`; anchor `on the WI-022 rung` |
+| SP-18 | :77 | "a handwritten iteration on the WI-022 rung" | pointer | moved | Template: "on the handwritten rung". Home exists at `b06585709:77`; anchor `on the WI-022 rung`. Since audit F8 "oracle-mirrored at 1e-9" is labelled: "checked independently at a stated tolerance (for example, by an oracle that mirrors it to 1e-9)" |
 | SP-19 | :79 | "(ISS04), the likeliest first real case … `mfe_plasma_scaling.sysml` (or sibling)" | project | moved | Template: "(ISS04)" and "in the plasma-scaling file (or a sibling)". Home exists at `b06585709:79`; anchor `likeliest first real case` |
 | SP-20 | :91 | "### If the ladder runs out — the tripwire (§7)" | — | generalized | "(§8)": the cross-reference corrected (Evidence B) |
 | SP-21 | :93 | "the relational/DM proposal would need anyway; per that report's own bar" | pointer | moved | Template: "… the evidence any heavier solving machinery would need anyway, and such machinery should be adopted on *specific observed demand* …". Home exists at `b06585709:93`; anchor `relational/DM proposal would need anyway` |
@@ -172,6 +175,10 @@ Every `moved` row's home is fusion-tea's own policy, which exists at `b06585709`
 | SP-30 | :152-156 | "## 10. Verification — [OWNER]" (1costingFE reference; the oracle's retirement) | project | moved | No verification section (DD16, spec Non-Goals); the template's § 10 is the Locations slot. Home exists at `b06585709:152`; anchor `1costingFE is the validation reference` |
 | SP-31 | :160 | "The owner's process-simplification request permits brief or skipped stages" | project | moved | Template: "This rule permits brief or skipped stages …". Home exists at `b06585709:160`; anchor `process-simplification request` |
 | SP-32 | :162 | "Review follows `work/orchestration/GOAL_RUNBOOK.md` § Review scope…" | goal-layer | generalized | "Where the goal layer is installed, review follows the installed goal runbook, § Review scope and evidence reuse. Without it, the rest of this paragraph is the review rule." |
+| SP-33 | :16 | "(a confinement scaling must hold; a balance must close)" | — | kept: labelled example | Labelled in place: "(for example, a balance must close; in a fusion plant model, a confinement scaling must hold)" (audit F8) |
+| SP-34 | :79 | "rewires `p_nrl`/`p_input` from design-instance constants" | — | kept: labelled example | Unchanged: inside "**Example — confinement ⇄ power balance (ISS04).**" (audit F8 found no row) |
+| SP-35 | :81 | "the analyses layer already takes inputs from many subsystems" | project | generalized | "the calculations already take inputs from many subsystems" (audit F8) |
+| SP-36 | :160 | "owner rulings, source quarantine, executable gates" | project | generalized | "owner rulings, any rules the project keeps on admissible sources, executable gates": the template has no source-quarantine rule (audit F8) |
 
 ---
 
@@ -215,19 +222,20 @@ These have no fusion-tea home to find, because nothing fusion-specific left with
 - **Runbook.** New: the "studies directory" paragraph, "The tools", "What a package annex supplies", and the Check lines of steps 14 and 15 (DD12). The Check commands carry no literal `<`, so recording them in `record.md` § 14 leaves the placeholder check true; the design's `grep -c '<' record.md` would fail once recorded.
 - **Record template.** § 14 says the Check commands are recorded there. The history note is new (D7). Audit F3: the preamble above § 1 holds no `<`, because the template copies it into every record and step 15's first Check counts every `<`; its `<axis>`, `<...>` and `<YYYY-MM-DD>` tokens are now worded, and the placeholder rule says the preamble holds none (`tests/study/test_run_study_bundle.py::test_a_literal_copy_of_the_record_template_passes_the_placeholder_check`).
 - **Annex template.** New file (DD18).
-- **Policy template.** New header lines "**Snapshot**" and "**This project fills in**"; new slots § 6, § 7 and § 10.
+- **Policy template.** New header lines "**Snapshot**" and "**This project fills in**"; new slots § 6, § 7 and § 10. Audit F8: "**This project fills in**" also names the current-state line that closes § 1.
+- **Audit F8's smaller slips.** The runbook's annex table gives `--print-fingerprint` its required `--package DIR`. The shipped `teax-completion.md` command (outside SC5's five files) named `generate_scenario.py --generate-inputs`, which sysml-codegen does not have; it now says to run `sysml-codegen generate` and give every input a value.
 
 ## Totals
 
-| File | Rows | kept: general | kept: labelled example | generalized | moved |
-|---|---|---|---|---|---|
-| `SKILL.md` | 8 | 1 | 1 | 5 | 1 |
-| `runbook.md` | 26 | 2 | 0 | 12 | 12 |
-| `record-template.md` | 18 | 2 | 0 | 10 | 6 |
-| integration guide | 42 | 0 | 0 | 12 | 30 |
-| policy template | 32 | 1 | 2 | 4 | 25 |
-| **All five** | **126** | **6** | **3** | **43** | **74** |
+| File | Rows | kept: general | kept: labelled example | kept verbatim: owner-graded rule | generalized | moved |
+|---|---|---|---|---|---|---|
+| `SKILL.md` | 8 | 1 | 1 | 0 | 5 | 1 |
+| `runbook.md` | 27 | 2 | 0 | 0 | 13 | 12 |
+| `record-template.md` | 18 | 2 | 0 | 0 | 10 | 6 |
+| integration guide | 43 | 0 | 0 | 0 | 12 | 31 |
+| policy template | 36 | 1 | 3 | 1 | 6 | 25 |
+| **All five** | **132** | **6** | **4** | **1** | **46** | **75** |
 
-Every one of the 74 `moved` anchors was checked mechanically: it greps in its named home on a copy of fusion-tea `b06585709` with the four patches in `fusion-tea/text/` applied, and each "exists at" anchor greps at `b06585709` itself.
+Every one of the 74 `moved` anchors was checked mechanically: it greps in its named home on a copy of fusion-tea `b06585709` with the four patches in `fusion-tea/text/` applied, and each "exists at" anchor greps at `b06585709` itself. Audit F8 added the 75th, IG-43. On the O4 branch tip `699b0a74d` (rebuilt as the staged `b06585709` copy plus the branch diff) with `fusion-tea/text/audit-f8-supplement.patch` applied, `check_anchors.py` prints `75 anchors found, 0 missing`.
 
 Docstring labels: 20 rows — 14 dropped, 3 meaning stated, 2 generalized, 1 kept (defined in place).

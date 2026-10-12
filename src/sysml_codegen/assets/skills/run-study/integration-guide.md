@@ -197,7 +197,7 @@ So the gate that stopped the run always carries its own verdict. Only the gates 
 
 ## The ten gates, in order
 
-The sequence stops at the first gate that is not a pass. The numbering is the requirements' — step 1 splits into two producers, so ten rows carry nine step numbers. `gate` in the return is the slug in the second column.
+The sequence stops at the first gate that is not a pass. The numbers are the seam's step numbers. Step 1 has two producers, so ten rows carry nine step numbers. `gate` in the return is the slug in the second column.
 
 | # | `gate` | `scope` | Who judges it |
 |---|---|---|---|
