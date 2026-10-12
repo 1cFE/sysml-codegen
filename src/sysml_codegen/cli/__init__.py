@@ -20,6 +20,8 @@ from typing import TYPE_CHECKING
 
 import jinja2
 
+from sysml_codegen.cli.study import STUDY_TOOLS, cmd_study
+
 if TYPE_CHECKING:
     from sysml_codegen.core.identifier_types import PythonModulePath
     from sysml_codegen.generation.constraint_plan import ConstraintGenerationPlan
@@ -1144,6 +1146,16 @@ def main() -> None:
     install_parser.add_argument("--force", action="store_true", help="Overwrite existing files")
     install_parser.set_defaults(func=cmd_install_commands)
 
+    # Study subcommand — run one installed study tool; everything after the tool name is its own
+    study_parser = subparsers.add_parser(
+        "study", help="Run a study tool: indicators, preflight, verify or integrate"
+    )
+    study_parser.add_argument("tool", choices=STUDY_TOOLS, help="The study tool to run")
+    study_parser.add_argument(
+        "args", nargs=argparse.REMAINDER, help="Arguments passed unchanged to the tool"
+    )
+    study_parser.set_defaults(func=cmd_study)
+
     args = parser.parse_args()
 
     if not args.command:
@@ -1379,5 +1391,6 @@ __all__ = [
     "GenerationConfig",
     "cmd_generate",
     "cmd_install_commands",
+    "cmd_study",
     "CODEGEN_COMMANDS",
 ]

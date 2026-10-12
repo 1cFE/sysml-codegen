@@ -33,6 +33,7 @@ dev = [
     "pytest-cov>=4.0",
     "mypy>=1.0",
     "ruff>=0.1",
+    "jsonschema>=4.0",
 ]
 
 [project.scripts]
@@ -55,10 +56,67 @@ warn_return_any = true
 warn_unused_ignores = true
 disallow_untyped_defs = true
 
+# The eight study modules ported byte-faithfully from fusion-tea b06585709. Annotating them
+# is a byte change the move keeps out, so their untyped defs are allowed. The new study
+# modules (roots, census, declarations) are fully typed and carry no override.
+[[tool.mypy.overrides]]
+module = [
+    "sysml_codegen.study.common",
+    "sysml_codegen.study.identity",
+    "sysml_codegen.study.indicators",
+    "sysml_codegen.study.integrate",
+    "sysml_codegen.study.manifest",
+    "sysml_codegen.study.preflight",
+    "sysml_codegen.study.read_coverage",
+    "sysml_codegen.study.verify",
+]
+disallow_untyped_defs = false
+
+# The type looseness each ported module carries as written, by error code. Recorded per
+# module, so code later added to one of them is still checked for every other code.
+[[tool.mypy.overrides]]
+module = "sysml_codegen.study.identity"
+disable_error_code = ["attr-defined"]
+
+[[tool.mypy.overrides]]
+module = "sysml_codegen.study.indicators"
+disable_error_code = ["arg-type", "no-any-return"]
+
+[[tool.mypy.overrides]]
+module = "sysml_codegen.study.integrate"
+disable_error_code = ["index", "no-any-return"]
+
+[[tool.mypy.overrides]]
+module = "sysml_codegen.study.manifest"
+disable_error_code = ["no-any-return"]
+
+[[tool.mypy.overrides]]
+module = "sysml_codegen.study.preflight"
+disable_error_code = ["arg-type", "assignment", "attr-defined"]
+
+[[tool.mypy.overrides]]
+module = "sysml_codegen.study.verify"
+disable_error_code = ["index"]
+
+# Third-party modules the study tools import that ship no type information. teax's simkit
+# is an optional runtime, imported lazily.
+[[tool.mypy.overrides]]
+module = ["simkit", "simkit.*", "yaml"]
+ignore_missing_imports = true
+
 [tool.ruff]
 target-version = "py312"
 line-length = 100
 select = ["E", "F", "W", "I", "N", "UP"]
+
+# Ported byte-faithfully from fusion-tea b06585709, which held them to no line length and
+# named two exceptions without an Error suffix. Reformatting is a byte change the move keeps
+# out; the new study modules carry no ignore.
+[tool.ruff.lint.per-file-ignores]
+"src/sysml_codegen/study/integrate.py" = ["E501", "N818"]
+"src/sysml_codegen/study/preflight.py" = ["N818"]
+"src/sysml_codegen/study/read_coverage.py" = ["E501"]
+"src/sysml_codegen/study/verify.py" = ["E501"]
 
 [tool.uv.sources]
 agentic-mbse = { path = "../agentic-mbse", editable = true }

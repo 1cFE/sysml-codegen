@@ -39,10 +39,8 @@ from pathlib import Path
 
 import yaml
 
-if __package__ in (None, ""):  # invoked as a script: put the repo root on sys.path
-    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-
-from scripts.study import manifest as manifest_mod  # noqa: E402
+from sysml_codegen.study import manifest as manifest_mod
+from sysml_codegen.study import roots
 
 REPORT_SCHEMA_VERSION = "study-indicators/v1"
 AXIS_DECLARATION_SCHEMA_VERSION = "study-axis-declaration/v1"
@@ -859,7 +857,7 @@ def build_report(
     return {
         "schema_version": REPORT_SCHEMA_VERSION,
         "tool": {
-            "path": manifest_mod.repo_relative_posix(Path(__file__)),
+            "path": "sysml_codegen/study/indicators.py",
             "source_digest": manifest_mod.tool_source_digest(),
         },
         "package": {
@@ -961,6 +959,7 @@ def main(argv: list[str] | None = None) -> int:
             parser.error("--group is not used with --print-fingerprint")
     elif not args.manifest or not args.groups:
         parser.error("--manifest and --groups are required unless --print-fingerprint is given")
+    roots.require_project_root("indicators", package_root)
 
     try:
         if args.print_fingerprint:

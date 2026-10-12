@@ -30,8 +30,8 @@ Usage:
     verify.py --package DIR --manifest FILE --identity FILE --store FILE...
               [--sample-size N] [--seed HEX] [--out FILE]
 
-Generic by construction: this module names no package, no key prefix, and no adapter
-(Invariant 1). It imports teax and whatever module the manifest names, and nothing
+Generic by construction: this module names no package, no key prefix, and no adapter.
+It imports teax and whatever module the manifest names, and nothing
 else about the package.
 """
 
@@ -46,11 +46,8 @@ import random
 import sys
 from pathlib import Path
 
-if __package__ in (None, ""):  # invoked as a script: put the repo root on sys.path
-    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-
-from scripts.study import common, identity  # noqa: E402
-from scripts.study import manifest as manifest_mod  # noqa: E402
+from sysml_codegen.study import common, identity, roots
+from sysml_codegen.study import manifest as manifest_mod
 
 SUMMARY_SCHEMA_VERSION = "study-verification-summary/v1"
 SAMPLING_SCHEME = "stratified-by-verdict-combination/v1"
@@ -58,12 +55,13 @@ TOLERANCE = 1e-9
 DEFAULT_SAMPLE_SIZE = 12
 
 TOOL_SOURCE_FILES = (
-    "scripts/study/common.py",
-    "scripts/study/identity.py",
-    "scripts/study/manifest.py",
-    "scripts/study/schemas/package_identity.v1.schema.json",
-    "scripts/study/schemas/verification_summary.v1.schema.json",
-    "scripts/study/verify.py",
+    "sysml_codegen/study/common.py",
+    "sysml_codegen/study/identity.py",
+    "sysml_codegen/study/manifest.py",
+    "sysml_codegen/study/roots.py",
+    "sysml_codegen/study/schemas/package_identity.v1.schema.json",
+    "sysml_codegen/study/schemas/verification_summary.v1.schema.json",
+    "sysml_codegen/study/verify.py",
 )
 
 #: Comparison operators an `expression-ir/v1` predicate may use. An operator outside
@@ -514,10 +512,10 @@ def build_summary(package_root: Path, manifest_path: Path, identity_path: Path,
     summary = {
         "schema_version": SUMMARY_SCHEMA_VERSION,
         "tool": {
-            "path": "scripts/study/verify.py",
+            "path": "sysml_codegen/study/verify.py",
             "source_digest": common.tool_source_digest(TOOL_SOURCE_FILES),
         },
-        "command": ["scripts/study/verify.py", *argv],
+        "command": ["sysml_codegen/study/verify.py", *argv],
         "teax": {
             "module_path": manifest_mod.repo_relative_posix(Path(simkit.__file__).parent),
             "revision": getattr(simkit, "__version__", "unrecorded"),
@@ -588,6 +586,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     args = build_parser().parse_args(argv)
+    roots.require_project_root("verify", Path(args.package))
     seed = int(args.seed, 16) if args.seed else None
     try:
         summary = build_summary(

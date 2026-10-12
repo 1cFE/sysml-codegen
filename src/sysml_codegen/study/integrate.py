@@ -74,11 +74,9 @@ from importlib import metadata
 from pathlib import Path
 from xml.etree import ElementTree
 
-if __package__ in (None, ""):  # invoked as a script: put the repo root on sys.path
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-from scripts.study import common, preflight, indicators, read_coverage  # noqa: E402
-from scripts.study import manifest as manifest_mod  # noqa: E402
+from sysml_codegen.study import census, common, indicators, preflight, read_coverage
+from sysml_codegen.study import manifest as manifest_mod
+from sysml_codegen.study import roots as study_roots
 
 RETURN_SCHEMA_VERSION = "integration-seam-return/v1"
 SEAM_PATH = "scripts/integrate.py"
@@ -288,7 +286,7 @@ def seam_env() -> dict[str, str]:
     environment provides it), and ``STUDY_REQUIRE_TEAX=1`` so a teax-dependent producer
     fails loudly instead of skipping and reporting green.
     """
-    env = dict(os.environ)
+    env = study_roots.environment()
     roots = [str(manifest_mod.repo_root())]
     teax_root = env.get("STOP_PARSER_TEAX_ROOT")
     if teax_root:
@@ -1088,22 +1086,18 @@ def recapture_snapshot(request: Request) -> Path:
 
 
 def rederived_census(package_root: Path) -> dict:
-    """The entry-point census, re-derived through the spine suite's own helper.
+    """The entry-point census, re-derived through :func:`census.by_entry_type`.
 
     Imported rather than reimplemented: the classification is the producer's and a second
-    implementation of it is exactly the drift this gate exists to catch. That the helper is
-    private to a test module is a real smell whose cause — the census derivation has no
-    importable home — is filed against that module rather than worked around here.
+    implementation of it is exactly the drift this gate exists to catch.
     """
-    from tests.models.test_model_family_spines import _by_entry_type
-
     contract = common.read_json(
         Path(package_root) / "contracts" / "model_contract.json", "model contract"
     )
     return {
         "entry_points": len(contract["parameters"]),
         "by_entry_type": {
-            key: sorted(value) for key, value in _by_entry_type(Path(package_root)).items()
+            key: sorted(value) for key, value in census.by_entry_type(Path(package_root)).items()
         },
     }
 
@@ -1215,7 +1209,7 @@ def gate_manifest(request: Request, env: dict[str, str],
 #: producer gets.
 ROUTE_DRIVER_SOURCE = """
 import json, sys
-from scripts.study.read_coverage import run_route
+from sysml_codegen.study.read_coverage import run_route
 result = run_route(*sys.argv[1:])
 print(json.dumps({key: str(value) for key, value in result.items()}))
 """

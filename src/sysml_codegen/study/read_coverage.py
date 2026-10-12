@@ -10,6 +10,8 @@ import sys
 import threading
 from pathlib import Path
 
+from sysml_codegen.study import roots as study_roots
+
 SCHEMA = "baseline-read-coverage/v1"
 LIMITATIONS = [
     "One baseline invocation; unexecuted branches and future points are not covered.",
@@ -91,9 +93,9 @@ class Observer:
             self.declared[path] = ("package-seal", sha)
         self.declared[contract] = ("package-contract", digest(contract))
         self.declared[Path(manifest).resolve()] = ("manifest", digest(manifest))
-        roots = [Path(route_dir), Path(__file__).resolve().parents[1]]
-        if os.environ.get("STOP_PARSER_TEAX_ROOT"):
-            teax = Path(os.environ["STOP_PARSER_TEAX_ROOT"]) / "packages/teax-simkit"
+        roots = [Path(route_dir), study_roots.TOOL_HOME / "sysml_codegen"]
+        teax = study_roots.teax_simkit_path()
+        if teax is not None:
             roots.append(teax)
             for metadata_dir in teax.glob("*.egg-info"):
                 for path in metadata_dir.rglob("*"):

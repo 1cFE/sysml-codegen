@@ -27,8 +27,8 @@ A route that bypasses nothing is the degenerate member, not a special case:
 ``kind: "sealed"`` has empty input lists and the sealed fingerprint as its digest,
 so the same gate covers both and deleting a route's adapter changes no gate.
 
-Generic by construction: this module names no package, no key prefix, and no adapter
-(Invariant 1). It imports no teax.
+Generic by construction: this module names no package, no key prefix, and no adapter.
+It imports no teax.
 """
 
 from __future__ import annotations
@@ -37,8 +37,8 @@ import hashlib
 from collections.abc import Sequence
 from pathlib import Path
 
-from scripts.study import common
-from scripts.study import manifest as manifest_mod
+from sysml_codegen.study import common
+from sysml_codegen.study import manifest as manifest_mod
 
 IDENTITY_SCHEMA_VERSION = "study-package-identity/v1"
 EFFECTIVE_RECIPE = "effective-executable-fingerprint/v1"

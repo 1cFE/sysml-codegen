@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "PumpStation::station",
+      "source_file": "models/station.sysml",
+      "source_line": 49,
+      "usage_qualified_name": "PumpStation::station::pump_fit"
+    }
+  ],
+  "fixture": "study_station"
+}

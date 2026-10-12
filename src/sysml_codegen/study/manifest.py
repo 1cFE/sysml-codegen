@@ -26,18 +26,21 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from sysml_codegen.study import roots
+
 MANIFEST_SCHEMA_VERSION = "study-package-manifest/v1"
 INDICATOR_INPUT_RECIPE = "indicator-input-fingerprint/v1"
 TOOL_SOURCE_RECIPE = "tool-source-digest/v1"
 
-#: Files whose bytes make up the tool-source digest (M5). The schema files are in
+#: Files whose bytes make up the tool-source digest. The schema files are in
 #: the set because they are the seam Items 2 and 4 cite — a schema edit is a tool change.
 TOOL_SOURCE_FILES = (
-    "scripts/study/indicators.py",
-    "scripts/study/manifest.py",
-    "scripts/study/schemas/axis_declaration.v1.schema.json",
-    "scripts/study/schemas/indicators.v1.schema.json",
-    "scripts/study/schemas/study_package_manifest.v1.schema.json",
+    "sysml_codegen/study/indicators.py",
+    "sysml_codegen/study/manifest.py",
+    "sysml_codegen/study/roots.py",
+    "sysml_codegen/study/schemas/axis_declaration.v1.schema.json",
+    "sysml_codegen/study/schemas/indicators.v1.schema.json",
+    "sysml_codegen/study/schemas/study_package_manifest.v1.schema.json",
 )
 
 #: YAML-family suffixes that are *not* the globbed ``.yaml``. A pipeline carrying one
@@ -55,12 +58,12 @@ class ManifestError(Exception):
 
 
 def repo_root() -> Path:
-    """The repository root: two levels above ``scripts/study/``."""
-    return Path(__file__).resolve().parents[2]
+    """The project root every cited path is relative to: :func:`roots.project_root`."""
+    return roots.project_root()
 
 
 def repo_relative_posix(path: Path | str) -> str:
-    """A repo-relative POSIX path string (M4).
+    """A repo-relative POSIX path string.
 
     Never absolute, so two agents invoking from different working directories
     produce identical bytes for identical facts. A path outside the repository
@@ -147,8 +150,8 @@ def indicator_input_fingerprint(package_root: Path | str) -> dict:
 
 
 def tool_source_digest() -> dict:
-    """Compute ``tool-source-digest/v1`` over this tool's own source files (M5)."""
-    root = repo_root()
+    """Compute ``tool-source-digest/v1`` over this tool's own source files."""
+    root = roots.TOOL_HOME
     entries = []
     for rel in TOOL_SOURCE_FILES:
         path = root / rel

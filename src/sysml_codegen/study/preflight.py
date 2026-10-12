@@ -41,8 +41,8 @@ Usage:
                        --identity FILE --baseline-result FILE [--out FILE]
     preflight.py clean --package DIR [--out FILE]
 
-Generic by construction: this module names no package, no key prefix, and no adapter
-(Invariant 1). It imports no teax.
+Generic by construction: this module names no package, no key prefix, and no adapter.
+It imports no teax.
 """
 
 from __future__ import annotations
@@ -52,11 +52,8 @@ import json
 import sys
 from pathlib import Path
 
-if __package__ in (None, ""):  # invoked as a script: put the repo root on sys.path
-    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-
-from scripts.study import common, identity  # noqa: E402
-from scripts.study import manifest as manifest_mod  # noqa: E402
+from sysml_codegen.study import common, identity, roots
+from sysml_codegen.study import manifest as manifest_mod
 
 RESULTS_SCHEMA_VERSION = "study-preflight-results/v1"
 TOLERANCE = 1e-9
@@ -64,13 +61,14 @@ TOLERANCE = 1e-9
 #: This tool's own source files, for ``tool-source-digest/v1``. The schema files are
 #: in the set because a schema edit is a tool change.
 TOOL_SOURCE_FILES = (
-    "scripts/study/common.py",
-    "scripts/study/identity.py",
-    "scripts/study/manifest.py",
-    "scripts/study/preflight.py",
-    "scripts/study/schemas/baseline_result.v1.schema.json",
-    "scripts/study/schemas/package_identity.v1.schema.json",
-    "scripts/study/schemas/preflight_results.v1.schema.json",
+    "sysml_codegen/study/common.py",
+    "sysml_codegen/study/identity.py",
+    "sysml_codegen/study/manifest.py",
+    "sysml_codegen/study/preflight.py",
+    "sysml_codegen/study/roots.py",
+    "sysml_codegen/study/schemas/baseline_result.v1.schema.json",
+    "sysml_codegen/study/schemas/package_identity.v1.schema.json",
+    "sysml_codegen/study/schemas/preflight_results.v1.schema.json",
 )
 
 GATES = (
@@ -427,7 +425,7 @@ def run_gates(package_root: Path, manifest_path: Path, groups_path: Path,
     return {
         "schema_version": RESULTS_SCHEMA_VERSION,
         "tool": {
-            "path": "scripts/study/preflight.py",
+            "path": "sysml_codegen/study/preflight.py",
             "source_digest": common.tool_source_digest(TOOL_SOURCE_FILES),
         },
         "subcommand": "gates",
@@ -446,7 +444,7 @@ def run_clean(package_root: Path) -> dict:
     return {
         "schema_version": RESULTS_SCHEMA_VERSION,
         "tool": {
-            "path": "scripts/study/preflight.py",
+            "path": "sysml_codegen/study/preflight.py",
             "source_digest": common.tool_source_digest(TOOL_SOURCE_FILES),
         },
         "subcommand": "clean",
@@ -493,6 +491,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     package_root = Path(args.package)
+    roots.require_project_root("preflight", package_root)
     try:
         if args.subcommand == "gates":
             document = run_gates(

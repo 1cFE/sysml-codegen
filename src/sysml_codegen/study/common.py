@@ -1,4 +1,4 @@
-"""Shared internals for the study gate tools (design D10).
+"""Shared internals for the study gate tools.
 
 Four jobs, and nothing above them:
 
@@ -16,8 +16,8 @@ not one particular list. Every emission carries its ``files`` list in the same
 ``{path, sha256}`` shape ``manifest.tool_source_digest()`` uses, so a record can tell
 whose revision it is reading (design Risks, L5c).
 
-Generic by construction: this module names no package, no key prefix, and no adapter
-(Invariant 1). It imports no teax.
+Generic by construction: this module names no package, no key prefix, and no adapter.
+It imports no teax.
 """
 
 from __future__ import annotations
@@ -29,7 +29,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from scripts.study import manifest as manifest_mod
+from sysml_codegen.study import manifest as manifest_mod
+from sysml_codegen.study import roots
 
 TOOL_SOURCE_RECIPE = manifest_mod.TOOL_SOURCE_RECIPE
 
@@ -38,16 +39,19 @@ class ToolError(Exception):
     """A mechanical failure. Every one exits non-zero; no interpretive fact raises."""
 
 
-def tool_source_digest(files: tuple[str, ...]) -> dict:
-    """``tool-source-digest/v1`` over a named list of repo-relative source files."""
-    root = manifest_mod.repo_root()
+def tool_source_digest(files: tuple[str, ...], root: Path = roots.TOOL_HOME) -> dict:
+    """``tool-source-digest/v1`` over a named list of source files relative to ``root``.
+
+    ``root`` is the tool home for a tool's own sources. A record digesting sources that live
+    in the project, such as its oracle, passes the project root.
+    """
     entries = []
     for rel in files:
         path = root / rel
         if not path.is_file():
             raise ToolError(f"tool source file missing: {rel}")
         entries.append((rel, manifest_mod.sha256_file(path)))
-    # Item 3's canonical-text implementation, not a second copy of it. One recipe id
+    # The manifest module's canonical-text implementation, not a second copy of it. One recipe id
     # must mean one algorithm across all three tools, and two implementations of a
     # digest recipe disagree exactly once, silently, long after anyone is watching.
     return {
