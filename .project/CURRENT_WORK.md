@@ -4,7 +4,9 @@
 
 ## Active Work
 
-No active implementation items. The backlog holds separately scoped capabilities, diagnostics, model work, and assurance limits.
+- **study-layer-to-codegen** (agentic-mbse epic WRAP-SPLIT, Item 3): move fusion-tea's `run-study` skill, study tools and `integrate.py` into sysml-codegen with an ownership-aware `install-commands`. Spec in progress at [spec](active/study-layer-to-codegen/spec.md), branch `study-layer-to-codegen`.
+
+The backlog holds separately scoped capabilities, diagnostics, model work, and assurance limits.
 
 ## Shipped State and Historical Authority
 
