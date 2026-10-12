@@ -4,7 +4,7 @@ CRITICAL CHANGES:
 - Parameterized all hardcoded values
 - Removed CATF-specific references
 - Package name is now a CLI argument
-- Added install-commands subcommand for TEAx completion helper
+- install-commands installs the study layer and the TEAx completion helper
 """
 
 from __future__ import annotations
@@ -50,24 +50,6 @@ def _ensure_package_init_files(
         init_file = current / "__init__.py"
         if not init_file.exists():
             init_file.write_text(docstring)
-
-
-# Commands available for installation
-CODEGEN_COMMANDS = [
-    "teax-completion.md",
-]
-
-
-def get_commands_dir() -> Path:
-    """Get path to bundled commands directory.
-
-    Path calculation:
-    - __file__ = sysml-codegen/src/sysml_codegen/cli/__init__.py
-    - parent.parent.parent.parent = sysml-codegen/
-    - result = sysml-codegen/claude/commands/
-    """
-    package_root = Path(__file__).parent.parent.parent.parent
-    return package_root / "claude" / "commands"
 
 
 @dataclass
@@ -1018,37 +1000,20 @@ def cmd_seal(args: argparse.Namespace) -> int:
 
 
 def cmd_install_commands(args: argparse.Namespace) -> int:
-    """Install teax-completion helper command to a project."""
+    """Install the study layer: the run-study skill, the teax-completion command and the policy."""
+    # Imported here so that only this subcommand needs agentic-mbse's installer API.
+    from sysml_codegen.cli import install
+
+    install.require_installer_api()
     if args.list:
-        print("Available codegen helper commands:")
-        for cmd in CODEGEN_COMMANDS:
-            print(f"  - {cmd}")
+        print("\n".join(install.list_assets()))
         return 0
-
-    target_dir = Path(args.directory).resolve()
-    if not target_dir.is_dir():
-        print(f"Error: {target_dir} is not a directory", file=sys.stderr)
+    target = Path(args.directory).resolve()
+    if not target.is_dir():
+        print(f"Error: {target} is not a directory", file=sys.stderr)
         return 1
-
-    commands_dir = target_dir / ".claude" / "commands"
-    commands_dir.mkdir(parents=True, exist_ok=True)
-
-    source_dir = get_commands_dir()
-    copied = 0
-    for cmd in CODEGEN_COMMANDS:
-        src = source_dir / cmd
-        dst = commands_dir / cmd
-        if dst.exists() and not args.force:
-            print(f"Skipping {cmd} (exists, use --force to overwrite)")
-            continue
-        if src.exists():
-            shutil.copy(src, dst)
-            print(f"Installed {cmd}")
-            copied += 1
-        else:
-            print(f"Warning: {cmd} not found in package", file=sys.stderr)
-
-    print(f"Installed {copied} command(s) to {commands_dir}")
+    actions = install.install_commands(target, assistant=args.assistant, force=args.force)
+    print("\n".join(install.summarize(target, actions)))
     return 0
 
 
@@ -1133,17 +1098,28 @@ def main() -> None:
     seal_parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
     seal_parser.set_defaults(func=cmd_seal)
 
-    # Install-commands subcommand
+    # Install-commands subcommand — the study layer and the teax-completion helper
     install_parser = subparsers.add_parser(
-        "install-commands", help="Install teax-completion helper command"
+        "install-commands",
+        help="Install the run-study skill, the teax-completion command and the study policy",
     )
     install_parser.add_argument(
         "directory", nargs="?", default=".", help="Target directory (default: current directory)"
     )
     install_parser.add_argument(
-        "--list", action="store_true", help="List available commands without installing"
+        "--assistant",
+        choices=("claude", "codex", "both"),
+        default="both",
+        help="Assistants to install for (default: both); teax-completion is Claude's",
     )
-    install_parser.add_argument("--force", action="store_true", help="Overwrite existing files")
+    install_parser.add_argument(
+        "--list", action="store_true", help="List what would be installed, without installing"
+    )
+    install_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Replace edited skill files and the project's STUDY_POLICY.md",
+    )
     install_parser.set_defaults(func=cmd_install_commands)
 
     # Study subcommand — run one installed study tool; everything after the tool name is its own
@@ -1392,5 +1368,4 @@ __all__ = [
     "cmd_generate",
     "cmd_install_commands",
     "cmd_study",
-    "CODEGEN_COMMANDS",
 ]

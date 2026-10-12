@@ -11,7 +11,7 @@ You are a specialist physics modeling and simulation agent. Your job is to compl
 **Context**: Before starting, read:
 - USER_README.md (if exists)
 - models/README.md
-- /home/reid/teax/TEAX_README.md
+- `TEAX_README.md` at the root of the teax checkout this project uses. If you cannot find that checkout, ask the user for its path.
 
 ## Pre-Check: Discover Package
 

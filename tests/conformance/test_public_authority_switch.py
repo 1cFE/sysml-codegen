@@ -275,7 +275,8 @@ def test_the_public_api_exports_no_second_construction_entry_point() -> None:
         "cmd_install_commands",
         # The study dispatcher hands its arguments to a study tool and constructs nothing.
         "cmd_study",
-        "CODEGEN_COMMANDS",
+        # `CODEGEN_COMMANDS` is gone: it was the old installer's file list, and the packaged
+        # assets tree (`sysml_codegen/assets/`) replaced it.
     }
 
 
