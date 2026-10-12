@@ -1,8 +1,8 @@
 # Implementation Plan: Move the study layer to sysml-codegen (WRAP-SPLIT Item 3)
 
-**Status:** In Progress (Phase A and Phases 1–3 done)
+**Status:** In Progress (Phase A and Phases 1–3 done; Phase 4 paused at SC12's stop rule)
 **Created:** 2026-10-12
-**Last Updated:** 2026-10-12 (Phase 3 finished)
+**Last Updated:** 2026-10-12 (Phase 4 paused: five parity cases differ)
 **Branch:** `study-layer-to-codegen` in both sysml-codegen and agentic-mbse
 
 ## Source Documents
@@ -422,19 +422,19 @@ for name, case in CASES.items():                                  # Appendix G's
 
 ### Steps
 
-- [ ] Build both wheels from clean exports, never from a working tree. Run `git archive HEAD` of this worktree and of `/home/reid/1cfe/agentic-mbse-study-layer` into scratch directories, then `uv build --wheel` each. Record both SHAs in `report.md`.
-- [ ] Set up `$S=/tmp/study-parity-<stamp>`:
+- [x] Build both wheels from clean exports, never from a working tree. Run `git archive HEAD` of this worktree and of `/home/reid/1cfe/agentic-mbse-study-layer` into scratch directories, then `uv build --wheel` each. Record both SHAs in `report.md`.
+- [x] Set up `$S=/tmp/study-parity-<stamp>`:
   - `uv venv $S/venv --python /usr/bin/python3.12`. **Recorded change** [AGENT] (orchestrator, 2026-10-12, decision Q2 on the Phase 3 pause): the parity venv runs on fusion-tea's own interpreter, not whichever 3.12 uv picks. There `sys.prefix` is `/usr`, so neither B13 allowance fires on either side. On a uv standalone build the original tools would refuse at gate 7, first at `/dev/urandom` and then at the zone file;
   - install both wheels, `jsonschema` and `pytest`, and teax simkit editable from `/home/reid/1cfe/teax/packages/teax-simkit`;
   - check that `sysml_codegen.__file__` is inside `$S/venv`.
-- [ ] Write `$EV/parity/{parity.py,README.md,patterns.json}` per Appendix G:
+- [x] Write `$EV/parity/{parity.py,README.md,patterns.json}` per Appendix G:
   - the layout;
   - the orig, orig2 and moved runs. The orig environment has the four wheel dummies, `STOP_PARSER_TEAX_ROOT=/home/reid/1cfe/teax` and the `uv` shim;
   - comparison rules 1–6;
   - every case in Appendix G's list. `CANDIDATE` is in unless cut 2 applies. Gate 3 is recorded as unreachable if the package has no handwritten files.
 
   `parity.py` runs as one command, which `README.md` states.
-- [ ] Run it, and write `report.md` and `cases/`.
+- [x] Run it, and write `report.md` and `cases/`.
 - [ ] **Stop rule.** Any `DIFFERENT` case, or noise no reviewed pattern explains, stops the item. Report it to the orchestrator with the diff. Never add a pattern to hide a real difference. If the difference is a port bug, meaning a change outside B1–B13, fix the moved code, re-run the full suite, re-run parity, and record it.
 - [ ] Draft the fusion-tea code in `$EV/fusion-tea/`:
   - **`wrappers/`.** The eight module aliases per DD14. Each pins `roots.use_project_root(Path(__file__).resolve().parents[2])`, or `parents[1]` for `scripts/integrate.py`. None touches `os.environ`. Each calls `main()` when run as `__main__`, and otherwise replaces itself in `sys.modules`.
@@ -806,10 +806,57 @@ Detailed risks are in `design.md#potential-risks`. These are the phase-specific 
   - The choice is the orchestrator's. One option is a reviewed rule naming these modules as B8 and B13 consequences (orig-only `runtime-observed` reads of modules the moved driver preloads). The other is a code change outside the closed list, such as importing them lazily in `roots`; the `zoneinfo` group has no such change available. Neither rule 4 nor the code was changed.
 
 ### Phase 4 Completion
-**Completed:**
-**Wheel SHAs:**
-**Parity result (cases EQUAL / EQUAL after / unreachable):**
+**Completed:** Not yet. Paused 2026-10-12 at SC12's stop rule: 5 of 28 parity cases are `DIFFERENT`. The parity harness and its evidence are committed at `06ff48b`. The fusion-tea drafts are not started, except `evidence/fusion-tea/declaration.toml` (Appendix D verbatim), which the parity layout uses as its `pyproject.toml`.
+
+**Wheel SHAs:** sysml-codegen `24cce2c` (wheel sha256 `95db479eddbc…`), agentic-mbse `2894647` (wheel sha256 `04a69b26134…`), teax `8d87746`. Two separate builds from `git archive HEAD` gave byte-identical wheels. Both are in `evidence/parity/report.md`.
+
+**Parity result: 3 `EQUAL`, 20 `EQUAL after closed-list fields`, 5 `DIFFERENT`, none unreachable** (`evidence/parity/report.md`).
+- `EQUAL`: indicators pin mismatch, indicators `--print-fingerprint`, and verify with the oracle mutated.
+- `EQUAL after [B2]`: the other six indicators, preflight and verify cases.
+- `EQUAL after [B2, B11]`: 13 integrate cases (gate 0 ×4, 1a, 1b unasked, 2, 3, 4 ×2, 5, 6, and the seam-internal error). `EQUAL after [B2, B7, B11]`: gate 1b refused.
+- `DIFFERENT`: integrate's gate 7 read-coverage refusal, gate 8 verification refusal, gate 9 unasked, gate 9 lineage mismatch, and `CANDIDATE`.
+- Gate 3 is reachable, because the package has auto-implemented handwritten files. Cut 2 is not applied.
+- Every exit code agrees. Every integrate case stops at its intended gate and condition on both sides. orig and orig2 agree after the declared patterns. Library parity (rule 6) holds for all four functions.
+
+**Measured exclusion list** (spec B13 consequence; `evidence/parity/preloads.json`).
+- In the parity venv, the moved gate-7 driver has imported 25 modules before observation that the original driver has not.
+- 21 are standard library, and each is in the import closure of `sysml_codegen.study.roots` or `zoneinfo`: `_datetime`, `_locale`, `_posixsubprocess`, `_struct`, `_sysconfigdata__x86_64-linux-gnu`, `_zoneinfo`, `collections.abc`, `contextlib`, `datetime`, `fcntl`, `locale`, `select`, `selectors`, `signal`, `struct`, `subprocess`, `sysconfig`, `weakref`, `zoneinfo`, `zoneinfo._common`, `zoneinfo._tzpath`. This is Phase 3's list, with Debian's name for the sysconfig data module.
+- Seven of them (`_datetime`, `_locale`, `_posixsubprocess`, `_struct`, `_zoneinfo`, `fcntl`, `select`) are built in and open no `.pyc`. So the exclusion is 14 `.pyc` paths under `/usr/lib/python3.12`. The gate-7 refusal case excludes 7 of them; the other four route cases exclude all 14.
+- The other four preloaded modules are not standard library: `sysml_codegen`, `sysml_codegen.study`, `sysml_codegen.study.read_coverage` and `sysml_codegen.study.roots`. They are not excluded.
+
+**Decision needed: the five `DIFFERENT` cases** (surfaced, not resolved: capture-fidelity law 4).
+- **What differs.** All five differ in the same three groups of read-coverage receipt entries, and in nothing else. All three concern the installed `sysml_codegen` package (`TOOL_HOME/sysml_codegen/`):
+  1. *Declarations, moved only: 76 files.* The moved observer declares every `.py` in the installed package, which is B8 as Appendix A writes it (`TOOL_HOME / "sysml_codegen"`). The original declares only the eight files under `scripts/`. Every orig declaration maps onto a moved one.
+  2. *Reads, orig only: six `runtime-observed` `.pyc` reads* of `sysml_codegen`, `sysml_codegen.study`, `common`, `identity`, `manifest` and `roots`. The fixture route imports the moved `identity` in both modes (Appendix G). In orig the installed package is no declared root, so its bytecode reads are runtime reads under `sys.prefix`.
+  3. *Reads, moved only:* `common`, `identity` and `manifest`, each as its `.py` (`declared-source`) and `.pyc` (`bytecode`). The moved run records nothing for `sysml_codegen`, `sysml_codegen.study` or `roots`, because its driver imported them before observation.
+- **Why the committed rules don't cover it.**
+  - Rule 4 compares the entries under each run's own tool root (orig `scripts/`, moved `TOOL_HOME/sysml_codegen/`) as sets after mapping. In this layout orig reads nothing under `scripts/`; it reads the moved package instead. And the moved declared set is the whole package. So the sets cannot be equal.
+  - The brief's exclusion covers standard-library preloads only. `sysml_codegen`, `sysml_codegen.study` and `roots` are preloaded by the same mechanism, but they are not standard library.
+- **What remains under one reading.** Suppose three things: (a) moved-only declarations under `TOOL_HOME/sysml_codegen/` count as B8 additions, the way rule 4 already treats the three B2-added digest files; (b) both runs' reads of the installed package are compared by module, with the category free (B8); and (c) the exclusion also covers the moved driver's three non-standard-library preloads that the route imports. Then all five cases are `EQUAL after closed-list fields`. I checked this against the committed `cases/*/comparison.json`; it is not applied.
+- **Options.**
+  - *Ratify that reading as three named rules.* I recommend this. Every difference follows from B8 and from the moved observer living inside the package the route imports, which B1 and B8 already allow. Nothing outside the installed package differs.
+  - *Change the layout so the orig route imports `scripts.study`*, fusion-tea's form before `routes.sed`. The tool-root reads then compare symmetrically. But the route file's bytes would differ between modes, which needs its own rule. Group 1 still differs. And it contradicts Appendix G's explicit choice.
+  - *Treat it as a defect*, for example by declaring only `sysml_codegen/study/`. That narrows group 1 but leaves groups 2 and 3. It also changes B8's committed reading, and needs the full suite re-run.
+- Not changed while paused: the comparator's rules, `read_coverage`, and the layout.
+
 **Issues / Deviations:**
+- **orig needs `SYSML_CODEGEN_PROJECT_ROOT`.** On the first run, both orig runs refused at gate 7 with `unsupported integer-descriptor open: 3`, while moved returned `CANDIDATE`.
+  - The cause: the fixture route's moved `build_sealed` resolves a project root. The moved seam exports one to its producers (B1, DD2). The original seam does not, so `roots` fell back to running `git`, and the observer refused the child's pipe.
+  - The harness now sets the variable in the orig environment only. No original tool reads it. It is B1's harness side, as the `uv` shim is B3's.
+- **A B7 row in rule 3's table.** Gate 1b's refusal detail names the simkit root where the original named the checkout root, as Phase 3 predicted. The mapping is one exact string, scoped to gate 1b's detail.
+- **Three noise patterns beyond Appendix G's list**, each shown to be noise by orig against orig2: junit `time` and `timestamp` attributes, `write_document`'s `mkstemp` names, and teax's uuid staging directories. Appendix G's token pattern is matched as the run's own token, exactly.
+- **integrate's stderr** is checked, in every run, to equal `human_summary` of that run's return. The returns are then compared.
+- **teax's `out/_work/`** (SQLite stores, package links) is compared by file listing only.
+- **teax's simkit** is importable through a `.pth` file naming its source root, not an editable install, so nothing is built into the teax checkout. Its declared dependencies are installed beside it (`make_venv.sh`).
+- **preflight's stale-manifest case** stales `recorded_provenance`, which is what its `manifest_currency` check reads. integrate's gate-6 case stales the pin, which is what gate 6 reads.
+- **Evidence size.** A receipt is about 800 kB, so `cases/<case>/{orig,moved}.json` summarize each receipt by category counts. `comparison.json` lists every difference in full. The raw runs stay in the scratch directory.
+
+**For the resumed Phase 4 and for Phase 5:**
+- **A route run under read coverage outside `integrate` needs the project root.** Any route that imports `sysml_codegen.study.identity` and runs under `read_coverage.run_route` needs `SYSML_CODEGEN_PROJECT_ROOT`, or an in-process `use_project_root`. Without it, `roots` runs `git`, and the observer refuses with `unsupported integer-descriptor open: 3`, a message that does not name the cause.
+  - `integrate` sets the variable for its producers, and rehearsal step 8c's driver command sets it.
+  - fusion-tea's tests that run a route under the observer in a subprocess may need it in `step5-tests.patch`: Appendix H3 lists `test_read_coverage.py`, `test_single_point_gate.py` and `test_study_publication_fail_closed.py` for `TEAX_SIMKIT_PATH`.
+  - The runbook's "The tools" section and the integration guide should state it.
+- **Re-running parity** takes about two minutes after `make_venv.sh` (`evidence/parity/README.md`). If a rule is added, `parity.py … report` alone re-compares the existing runs.
 
 ### Phase 5 Completion
 **Completed:**

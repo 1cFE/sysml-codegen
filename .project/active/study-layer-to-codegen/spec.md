@@ -1,7 +1,7 @@
 # Spec: Move the study layer to sysml-codegen (WRAP-SPLIT Item 3)
 
 **Status:** Approved for design by the orchestrator, 2026-10-12, after one review round (Revise, applied)
-**Implementation:** In progress. Phase A, Phase 1 and Phase 2 of the plan are done (2026-10-12). Phase 3 is paused at gate 7 for an orchestrator decision; see `plan.md` Implementation Notes.
+**Implementation:** In progress. Phase A and Phases 1–3 of the plan are done (2026-10-12). Phase 4 is paused at SC12's stop rule for an orchestrator decision: five parity cases differ in read-coverage receipt entries about the installed package; see `plan.md` Implementation Notes.
 **Owner:** Reid W
 **Created:** 2026-10-12
 **Complexity:** HIGH
