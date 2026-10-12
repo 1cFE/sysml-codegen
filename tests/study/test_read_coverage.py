@@ -74,6 +74,28 @@ def test_undeclared_actual_data_reads(observed_route, tmp_path, location):
     assert 'undeclared' in str(receipt['violations'])
 
 
+@pytest.mark.parametrize('device', ['/dev/urandom', '/dev/random'])
+def test_a_kernel_entropy_device_is_a_runtime_read(observed_route, device):
+    """B13: reading an entropy device is the runtime's business, like a read under ``sys.prefix``.
+
+    uv's standalone CPython opens ``/dev/urandom`` on the first ``import random``. On the
+    station that import happens inside the observed window, and gate 7 refused the route
+    with ``undeclared dependency read: /dev/urandom``. The route here opens the device itself,
+    so the refusal reproduces on any interpreter.
+    """
+    done, receipt = observed_route.run(f'open({device!r}, "rb").read(1)')
+    assert done.returncode == 0, done.stderr
+    assert receipt['outcome'] == 'pass'
+    assert receipt['violations'] == []
+
+
+def test_any_other_device_is_still_an_undeclared_read(observed_route):
+    """B13 names exactly two paths; it is not an allowance for ``/dev``."""
+    done, receipt = observed_route.run('open("/dev/zero", "rb").read(1)')
+    assert done.returncode != 0
+    assert receipt['violations'] == ['undeclared dependency read: /dev/zero']
+
+
 def test_symlink_escape(observed_route, tmp_path):
     outside = tmp_path / 'external.json'
     outside.write_text('outside')

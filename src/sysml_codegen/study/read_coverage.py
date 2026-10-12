@@ -20,6 +20,9 @@ LIMITATIONS = [
     "Runtime and bytecode hashes identify observed bytes, not a verified installation or source equivalence.",
     "A cooperative audit hook is not a sandbox; execution after deactivation is outside scope.",
 ]
+#: Kernel entropy devices. An interpreter may open one to seed ``random``; no result is derived
+#: from its bytes and no target can declare it, so reading exactly these is a runtime read.
+ENTROPY_DEVICES = frozenset({Path("/dev/urandom"), Path("/dev/random")})
 
 
 def digest(path):
@@ -127,7 +130,7 @@ class Observer:
                 return "bytecode", None
         if path.is_relative_to(self.package):
             self.fail(f"undeclared package read: {path}")
-        if any(path.is_relative_to(root) for root in self.runtime):
+        if path in ENTROPY_DEVICES or any(path.is_relative_to(root) for root in self.runtime):
             return "runtime-observed", None
         if path in self.created:
             return "new-output", None
