@@ -1,8 +1,8 @@
 # Implementation Plan: Move the study layer to sysml-codegen (WRAP-SPLIT Item 3)
 
-**Status:** In Progress (Phase A and Phases 1–4 done; Phase 5 running in parallel)
+**Status:** In Progress (Phase A and Phases 1–6 done; orchestrator steps O1–O3 and O5 remain, O4 ran)
 **Created:** 2026-10-12
-**Last Updated:** 2026-10-12 (Phase 4 done: SC12 parity passes on all 28 cases; fusion-tea code drafts)
+**Last Updated:** 2026-10-12 (Phase 6 done: installer, docs and ADRs, the orchestrator's evidence kit, parity re-run, final suites)
 **Branch:** `study-layer-to-codegen` in both sysml-codegen and agentic-mbse
 
 ## Source Documents
@@ -561,8 +561,8 @@ def test_a_reinstall_keeps_an_edited_skill_file_and_the_policy(tmp_path):
 
 ### Steps
 
-- [ ] **Precondition.** `uv run --no-sync python -c "from agentic_mbse.cli.installation import INSTALLER_API_VERSION as v; print(v)"` prints `installer/v1`, and the agentic-mbse worktree's HEAD is Phase A's commit. Otherwise stop.
-- [ ] Write `tests/unit/test_install_commands.py` first (SC1, SC2, DD6, and the design's Validation rows for SC1 and SC2). It covers:
+- [x] **Precondition.** `uv run --no-sync python -c "from agentic_mbse.cli.installation import INSTALLER_API_VERSION as v; print(v)"` prints `installer/v1`, and the agentic-mbse worktree's HEAD is Phase A's commit. Otherwise stop.
+- [x] Write `tests/unit/test_install_commands.py` first (SC1, SC2, DD6, and the design's Validation rows for SC1 and SC2). It covers:
   - the on-disk layout in Appendix D, and the three `--list` groups;
   - an unmodified file refreshed; an edited file preserved (noninteractive `skip`); the prompt hook when interactive;
   - the policy kept on re-install, and replaced under `--force`;
@@ -571,29 +571,29 @@ def test_a_reinstall_keeps_an_edited_skill_file_and_the_policy(tmp_path):
   - coexistence with agentic-mbse's `init`, in both orders;
   - no asset name that collides with agentic-mbse's shipped skill and command names, read from the installed distribution;
   - `require_installer_api()` exiting 1 when the constant is missing or different.
-- [ ] Move the command and remove the old installer:
+- [x] Move the command and remove the old installer:
   - `git mv claude/commands/teax-completion.md src/sysml_codegen/assets/commands/teax-completion.md`;
   - delete `CODEGEN_COMMANDS` (`cli/__init__.py:54`) and `get_commands_dir()` (`:59`);
   - replace `cmd_install_commands` (`:1018-1050`) and its parser (`:1135-1145`) with the DD4 and DD6 surface. The handler imports `cli/install.py` lazily.
-- [ ] Add `src/sysml_codegen/cli/install.py`, fully typed, with `install_commands`, `list_assets`, `prompt_decision` and `require_installer_api` (Component Overview; DD4–DD6; Appendix D).
-- [ ] Add `_upstream_pins.INSTALLER_API_VERSION = "installer/v1"` to the module and its `__all__`. `tests/conformance/test_upstream_pins.py` compares it with agentic-mbse's value.
-- [ ] In the conformance test, drop `CODEGEN_COMMANDS` from the pinned `__all__` set, with Appendix F's comment.
-- [ ] Update `README.md` and the `CLAUDE.md` overview. They cover:
+- [x] Add `src/sysml_codegen/cli/install.py`, fully typed, with `install_commands`, `list_assets`, `prompt_decision` and `require_installer_api` (Component Overview; DD4–DD6; Appendix D).
+- [x] Add `_upstream_pins.INSTALLER_API_VERSION = "installer/v1"` to the module and its `__all__`. `tests/conformance/test_upstream_pins.py` compares it with agentic-mbse's value.
+- [x] In the conformance test, drop `CODEGEN_COMMANDS` from the pinned `__all__` set, with Appendix F's comment.
+- [x] Update `README.md` and the `CLAUDE.md` overview. They cover:
   - the study layer, `install-commands` and `sysml-codegen study`;
   - the project-root rule (`SYSML_CODEGEN_PROJECT_ROOT`) and `TEAX_SIMKIT_PATH`;
   - the minimum agentic-mbse revision beside `installer/v1`. Write Phase A's commit now; O5 swaps in the merge SHA.
-- [ ] Create three builder-register ADRs with `.project/scripts/adr.sh new <slug>`, one per candidate in the design's Next-Stage Handoff.
-- [ ] Write the orchestrator's evidence kit:
+- [x] Create three builder-register ADRs with `.project/scripts/adr.sh new <slug>`, one per candidate in the design's Next-Stage Handoff.
+- [x] Write the orchestrator's evidence kit:
   - **`$EV/install/run_install.sh`.** Design H1 steps 1–6 as one script. It takes the two wheel paths as arguments and writes `$EV/install-transcript.md`.
   - **`$EV/dry-run/setup_target.sh`.** H2 step 1. Its `--with-manifest` flag implements cut 3.
   - **`$EV/dry-run/brief.md`.** H2 step 3's text verbatim, plus the § 17 stop rule.
   - **`$EV/dry-run/administrator-brief.md`.** H2 step 5. Cut 4 skips it.
   - **`$EV/dry-run/check_record.py`.** DD12: the step-14 join and the four step-15 conditions. It exits non-zero and names each failure. Self-test it against a small good record and a small bad record in `$EV/dry-run/selftest/`.
   - **`$EV/rehearsal/README.md`.** Appendix H3's steps as runnable commands, with expected observations. It marks step 8a as cut 1.
-- [ ] Re-run parity if `git diff <Phase 4 parity commit> -- src/sysml_codegen/study` prints anything, and update `report.md`.
-- [ ] Commit, naming SC1, SC2 and SC11.
-- [ ] **Wheel check, after the commit.** Run `git archive HEAD` into a scratch directory, then `uv build --wheel`. `unzip -l` on the wheel must list all seven `sysml_codegen/assets/…` files and the seven `sysml_codegen/study/schemas/…` files. If it does not, fix and commit again.
-- [ ] Run the final suites and record the counts in Implementation Notes: the sysml-codegen full suite, the teax lane, ruff and mypy, and the agentic-mbse full suite at its HEAD (SC11).
+- [x] Re-run parity if `git diff <Phase 4 parity commit> -- src/sysml_codegen/study` prints anything, and update `report.md`.
+- [x] Commit, naming SC1, SC2 and SC11.
+- [x] **Wheel check, after the commit.** Run `git archive HEAD` into a scratch directory, then `uv build --wheel`. `unzip -l` on the wheel must list all seven `sysml_codegen/assets/…` files and the seven `sysml_codegen/study/schemas/…` files. If it does not, fix and commit again.
+- [x] Run the final suites and record the counts in Implementation Notes: the sysml-codegen full suite, the teax lane, ruff and mypy, and the agentic-mbse full suite at its HEAD (SC11).
 
 ### Validation
 
@@ -941,12 +941,94 @@ Detailed risks are in `design.md#potential-risks`. These are the phase-specific 
 - **For O3.** I replayed fusion-tea's own skill-text tests on the shipped files, with their logic copied into a scratch script. `test_annex`'s runbook check, `test_record_template`'s digest-shape check and `test_policy_path`'s live-surface check all pass, so run C should not fail them after step 7.
 
 ### Phase 6 Completion
-**Completed:**
-**Final suite counts (sysml-codegen, teax lane, agentic-mbse):**
-**Issues / Deviations:**
+**Completed:** 2026-10-12, in seven commits plus this plan update:
+
+- `ff81e3b` — the installer (`cli/install.py`), the new `install-commands` handler and parser, `_upstream_pins.INSTALLER_API_VERSION`, `teax-completion.md` moved into `assets/commands/`, the conformance edits, `README.md`, and `tests/unit/test_install_commands.py`;
+- `7fbb4bc` — fixes 2 and 4: the read-coverage root rule in the shipped runbook and guide, and `indicators.py`'s edge count;
+- `aac1290` — `CLAUDE.md` and ADRs 0015–0017;
+- `473f6f2` — the parity re-run (fix 6);
+- `3e70f4c` — the adoption runbook draft and `routes.sed` (fix 5);
+- `8e52b8c` — the orchestrator's evidence kit;
+- `4ee6752` — a test pinning that the CLI loads the installer only inside `install-commands`.
+
+**Precondition.** `INSTALLER_API_VERSION` prints `installer/v1` from this venv. The agentic-mbse worktree's HEAD is `db032d6`, not the brief's `2894647`: O4 committed the ledger rows on top. That commit touches only `.project/active/wrap-split-migration-ledger.md`, and the agentic-mbse wheel built at `db032d6` has the same sha256 as Phase 4's (`04a69b26…`). Phase A's code commit is still `0843fe2`.
+
+**Final suite counts:**
+
+- **sysml-codegen full suite**, `uv run --no-sync --env-file /home/reid/1cfe/sysml-codegen/.env pytest tests/` at `4ee6752`: `2741 passed, 9 skipped, 1 failed, 124 deselected`. The merged baseline before Phase 6 was 2713 / 9 / 1. The 28 new tests are `test_install_commands` 27 and `test_upstream_pins` +1 (the `INSTALLER_API_VERSION` case). The 9 skips are the parity-golden skips in `test_calc_compat_parity.py`; none is a licence skip. The failure is the known `test_zero_unmarked_self_named_examples_across_all_trees`, with its single offender, agentic-mbse's `project_templates/MODELING_PROCESS.md.template`.
+- **Licence lane** (`requires_license`): in the default lane, 3 passed, run by name with the key: `test_study_fixture_current.py` (2) and the gate-5 unasked test in `test_integrate_declared.py`. In the execution lane, 3 more (gates 7 and 8, and `CANDIDATE`), counted in the teax lane below.
+- **Teax lane**, `pytest -m execution tests/execution/test_study_*.py` with the key, `TEAX_SIMKIT_PATH` and a provenance manifest regenerated at the current heads by `$EV/lane/make_provenance.py`: `28 passed` (`test_study_integrate` 7, `test_study_station` 21), the same as Phase 4.
+- **ruff** `check src/`: all checks passed. **mypy** `src/`: no issues in 85 source files.
+- **agentic-mbse full suite** at `db032d6`, `uv run --env-file /home/reid/1cfe/agentic-mbse/.env pytest tests/`: `2214 passed, 18 failed, 1 skipped, 1 xfailed`, the same as Phase A's after-figures. The 18 failures are its optional extras (`trafilatura`, `PIL`). Without the key, the run stops at collection: 7 modules import syside.
+- **Wheel check** at `8e52b8c`, built from `git archive HEAD`: `unzip` lists all seven `sysml_codegen/assets/…` files and all seven `sysml_codegen/study/schemas/…` files. The parity wheel at `aac1290` lists the same, and `cli/install.py`.
+- The plan's Validation commands ran as written: `--list` printed the three groups, and the install into `/tmp/ic-check` wrote the nine entries of Appendix D's layout.
+
+**The orchestrator's six carried fixes:**
+
+1. **`link_mode`.** `cli/install.py` passes `LINK_MODE = "symlink"`, a constant, because the CLI has no link-mode flag (Appendix D). The comment says `install_bundle` takes "symlink" or "copy".
+2. **"65 edges".** `indicators.py:233` now reads "real pipelines depend on the strip". Docstring only; read-through row DL-20.
+3. **The `/home/` path in `teax-completion.md`.** It now says to read `TEAX_README.md` at the root of the teax checkout the project uses, and to ask the user for that path if it cannot be found. A new test, `test_no_shipped_asset_names_a_machine_path`, holds every file under `assets/` to no `/home/` or `/Users/` path, because `test_generic_text` does not cover `assets/commands/`.
+4. **The root rule under read coverage.** The runbook's "The tools" gains a paragraph, and the guide's "Where the project root is" gains a bullet: a route under read coverage resolves the root from the package before observing, so a package in a git work tree needs no variable; a package in no work tree is refused before any route code runs, and `route_error` names `SYSML_CODEGEN_PROJECT_ROOT`. The guide's "If you invoke a producer by hand, do the same" implied the variable was always needed; it now says the variable is needed only where the root section says so.
+5. **The adoption runbook draft.** Step 5 defines `ROUTES` with the nine live route files and uses it in the `sed`, the checks and the commit list, with no pathspec glob; `routes.sed`'s comment does the same. A new check confirms nothing else under `exploration/` changed, matched by whole path, so a record's copy of a route cannot hide behind a live route's path. The env grep is `STOP_PARSER_[A-Z_]*`. Both step-5 patches are listed in order: they touch no file in common, and both apply cleanly in that order to a fresh copy of `b06585709`, alone and after O4's four text patches (checked with real `patch -p1`, no rejects). Every citation of Phase 4's drafts was checked against the files: the wrappers sit under `wrappers/scripts/`, so step 5.1 now gives the `cp` commands.
+6. **Parity re-run.** The trigger fired: `git diff 2e21955 -- src/sysml_codegen/study` lists five modules (Phase 5's docstring commit and fix 2). The re-run is at sysml-codegen `aac1290` and agentic-mbse `db032d6`, teax `8d87746`, on `/usr/bin/python3.12`. Result: 28 cases, 3 `EQUAL`, 25 `EQUAL after closed-list fields`, 0 `DIFFERENT`; every exit code agrees and library parity holds. The table is Phase 4's, status for status:
+
+| Case | Exit (orig/orig2/moved) | Status (closed-list ids) |
+|---|---|---|
+| indicators-complete | 0/0/0 | [B2] |
+| indicators-pin-mismatch | 1/1/1 | EQUAL |
+| indicators-print-fingerprint | 0/0/0 | EQUAL |
+| preflight-gates-complete | 0/0/0 | [B2] |
+| preflight-gates-stale-manifest | 1/1/1 | [B2] |
+| preflight-clean-clean | 0/0/0 | [B2] |
+| preflight-clean-dirty | 1/1/1 | [B2] |
+| verify-complete | 0/0/0 | [B2] |
+| verify-oracle-mutated | 1/1/1 | EQUAL |
+| integrate-g0-input-missing | 1/1/1 | [B2, B11] |
+| integrate-g0-input-invalid | 1/1/1 | [B2, B11] |
+| integrate-g0-env-missing | 1/1/1 | [B2, B11] |
+| integrate-g0-package-not-integrated | 1/1/1 | [B2, B11] |
+| integrate-g1a-refused | 1/1/1 | [B2, B11] |
+| integrate-g1b-unasked | 1/1/1 | [B2, B11] |
+| integrate-g1b-refused | 1/1/1 | [B2, B7, B11] |
+| integrate-g2-refused | 1/1/1 | [B2, B11] |
+| integrate-g3-handwritten-lost | 1/1/1 | [B2, B11] |
+| integrate-g4-census-unasked | 1/1/1 | [B2, B11] |
+| integrate-g4-census-stale | 1/1/1 | [B2, B11] |
+| integrate-g5-refused | 1/1/1 | [B2, B11] |
+| integrate-g6-manifest-stale | 1/1/1 | [B2, B11] |
+| integrate-g7-read-coverage-refused | 1/1/1 | [B1, B2, B8, B11, B13] |
+| integrate-g8-verification-refused | 1/1/1 | [B1, B2, B8, B11, B13] |
+| integrate-g9-unasked | 1/1/1 | [B1, B2, B8, B11, B13] |
+| integrate-g9-lineage-mismatch | 1/1/1 | [B1, B2, B8, B11, B13] |
+| integrate-seam-internal-error | 2/2/2 | [B2, B11] |
+| integrate-candidate | 0/0/0 | [B1, B2, B8, B11, B13] |
+
+Two counts moved, both explained in `evidence/parity/README.md`. Each route case has 77 B8 installed-package declaration additions, not 76, because the wheel gained `sysml_codegen/cli/install.py` (checked in the `CANDIDATE` receipt). The `scratch-root` pattern applies 7120 times, not 7115: one more path in each of the five route cases' moved receipts. The case files otherwise changed only in content digests, on both sides, because the original route imports the moved `identity` from the wheel.
+
+**Deviations from the plan or design:**
+
+- **`prompt_decision(relative, *, managed)`**, not `prompt_decision(relative)`. DD6's message for an unmanaged file ("is not in the install manifest") needs to know whether the manifest records the file. `install_commands` passes `relative in installer.files`. **`Installer.files` is not in the surface `installer/v1`'s comment lists.** If agentic-mbse changes it, the message could name the wrong reason; the behavior, skip, would not change. Proposal: name `files` in that comment at agentic-mbse's next API revision, or have `cli/install.py` read its own manifest file instead.
+- **Helpers beyond the four named functions.** `skill_bundles()` finds the bundles itself, and `list_assets()` reads `metadata.kind` through `frontmatter`. agentic-mbse's `skill_bundles` and `bundle_kind` are not covered by `installer/v1`, so they are not called. `summarize()` formats the report the handler prints. `install_commands` returns the installer's `actions`, and a preserved project document is listed under `skipped`.
+- **"Updated" includes unchanged files.** agentic-mbse's installer rewrites every managed file it may write and reports each as updated, changed or not, and it re-reports the Claude link as symlinked on every run. The summary heading says "Updated, rewritten with the shipped bytes". Three test expectations were corrected to this behavior.
+- **The minimum revision lives in two places.** `cli/install.py`'s `INSTALLER_API_REVISION = "0843fe2"` is the revision the refusal names, and `README.md` names the same one; `test_the_readme_names_the_revision_the_refusal_names` holds them equal. **O5 must change both** to the merge SHA.
+- **ADR ids 0015–0017.** `main` gained ADRs 0011–0014 after this branch forked (`245f999`). `adr.sh new` ran with main's four entries copied in temporarily, so it allocated past them; the copies were then removed and `adr.sh index` rebuilt this branch's index. At the merge with `main`, `INDEX.md` conflicts; resolve it with `adr.sh index`. Provenance is `[AGENT]`, approved by the orchestrator; the owner has not ratified them.
+- **`run_install.sh` takes the two wheel paths, as planned, and also requires `sources.json` beside them**, written by the new `build_wheels.sh`. A wheel install records no VCS revision, so the build commit is the only record of which revision was installed. The script refuses a wheel whose sha256 `sources.json` does not record.
+- **`setup_target.sh` reuses `parity/make_venv.sh`** for the venv: both wheels, simkit's dependencies, and simkit through a `.pth` naming the teax checkout. The dry-run agent's read list will therefore include teax files under `TEAX_SIMKIT_PATH`; `brief.md` lists them as expected (teax is the route's runtime). The target gets a `.gitignore` holding `__pycache__/`, named as ready-made, because loading the package writes bytecode and preflight's clean gate would otherwise see a dirty tree.
+- **Two corrections to the adoption runbook draft beyond fix 5.** Step 7 suggested `--force` to replace a preserved `teax-completion.md`; `--force` also replaces fusion-tea's ratified `STUDY_POLICY.md`, so it now says to delete the file and re-run, or answer `o` at a terminal. A copy the old installer left will now differ, because fix 3 changed the shipped file. The commit step staged the `.claude/skills/run-study` link; fusion-tea's `.gitignore` ignores `.claude/skills/*`, and its directory whitelist does not match a link, so the link stays untracked, as Item 2 left `run-goal`'s.
+- **A test beyond the plan:** `test_the_cli_loads_the_installer_only_inside_install_commands` pins DD5's laziness in a fresh process. A top-level import of `cli.install` makes it fail (checked).
+- **Committing the rename.** `git add -- claude/commands/teax-completion.md` fails once `git mv` has staged the rename, so `ff81e3b` was made with `git add` of the other paths and a plain `git commit`, after checking that the index held exactly those paths and the rename.
+- `spec.md`'s status and `CURRENT_WORK.md` were not touched; the orchestrator updates them, as after Phase 5.
+
+**For O1–O5:**
+
+- **O1.** `bash $EV/install/build_wheels.sh <out> <sysml-codegen worktree> <agentic-mbse worktree>`, then `bash $EV/install/run_install.sh <out>/sysml_codegen-*.whl <out>/agentic_mbse-*.whl`. It writes `$EV/install-transcript.md` and exits 0 when all 25 checks pass. Run once here on the parity wheels (`aac1290` / `db032d6`): 25 of 25 passed. That transcript was deleted so O1 writes the real one at the final heads.
+- **O2.** `bash $EV/dry-run/setup_target.sh [--with-manifest] /tmp/study-dry-run-<stamp> <sysml-codegen worktree> <agentic-mbse worktree> /home/reid/1cfe/teax`, then `brief.md`, then `python3 $EV/dry-run/check_record.py <target>/studies/<study-id>`, then `administrator-brief.md` (cut 4 skips it). Setup ran once here: the installed tools ran in the target, and `--print-fingerprint` printed the fixture manifest's pin `7a5e6ff3…`. `python3 $EV/dry-run/selftest/run_selftest.py` shows the shipped Check lines and `check_record.py` agree on a good and a bad record.
+- **O3.** `$EV/rehearsal/README.md`. It needs the fusion-tea repository and O4's branch tip (the agentic-mbse ledger commit names `study-layer-adoption 699b0a74d`). 8b's `verify` re-run needs the store the record cites, which lies under teax's uncommitted `_work/` area; if it is absent, that half is not rehearsable for that record. The record's verify command names `exploration/stellarator_e2e/generated`, which `pkg/stellarator_tea` links to.
+- **O4** already ran. Phase 6 added read-through row DL-20 and a note on fix 4's text; no `moved` row or anchor changed, so the ledger rows stand.
+- **O5.** Change `README.md`'s `0843fe2` and `cli/install.py`'s `INSTALLER_API_REVISION` together to the agentic-mbse merge SHA. Regenerate `.project/adr/INDEX.md` with `adr.sh index` when merging `main`.
 
 ### Cuts applied
-[None yet.]
+None through Phase 6. Cut 2 is not needed: `CANDIDATE` is reached. Cuts 1, 3 and 4 are the orchestrator's choice at O2 and O3; the scripts support each (`--with-manifest`, the brief's cut-3 line, the rehearsal's *(8a)* marks).
 
 ---
 
