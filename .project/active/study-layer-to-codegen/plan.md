@@ -1,13 +1,13 @@
 # Implementation Plan: Move the study layer to sysml-codegen (WRAP-SPLIT Item 3)
 
-**Status:** In Progress (Phase A, Phase 1 and Phase 2 done; Phase 3 paused for one decision)
+**Status:** In Progress (Phase A and Phases 1–3 done)
 **Created:** 2026-10-12
-**Last Updated:** 2026-10-12 (Phase 3 paused at gate 7)
+**Last Updated:** 2026-10-12 (Phase 3 finished)
 **Branch:** `study-layer-to-codegen` in both sysml-codegen and agentic-mbse
 
 ## Source Documents
 
-- **Spec:** `.project/active/study-layer-to-codegen/spec.md` (amended at `4960d6b`). It holds SC1–SC12, the closed list B1–B12, and the cut order.
+- **Spec:** `.project/active/study-layer-to-codegen/spec.md` (amended at `4ca8cb3`). It holds SC1–SC12, the closed list B1–B13, and the cut order.
 - **Design:** `.project/active/study-layer-to-codegen/design.md` (approved at `5ef62d6`). This is the contract. Every component, signature, format, test list and appendix lives there. This plan links to it and does not restate it.
 - **Staged sources** (gitignored, read-only): `.orchestrate-logs/src/fusion-tea@b06585709/` (called `$STAGED` below) and `.orchestrate-logs/src/agentic-mbse@main/`. The repackaging check is at `.orchestrate-logs/scratch/repack-check/`.
 
@@ -18,7 +18,7 @@ A modeling project that uses sysml-codegen and teax must get the whole study cap
 - [OWNER] (epic header, 2026-10-06): the study layer ships from sysml-codegen. [OWNER-VERBATIM] "ported and generalized … installed like everything else".
 - [AGENT] (orchestrator, uncontested): the bar is a working capability in a fresh target, not copied files.
 - [NEED] fusion-tea loses no information. Every fusion-specific line removed from the shipped text has a fusion-tea home before the removal merges.
-- [INFERRED] The move is byte-faithful except for the closed list B1–B12, which is ADR-0007's lesson. SC12's parity script proves it.
+- [INFERRED] The move is byte-faithful except for the closed list B1–B13, which is ADR-0007's lesson. SC12's parity script proves it.
 - It serves P-001: "the study layer owns exploration and decisions" over the generated package.
 
 ## Strategy
@@ -99,7 +99,7 @@ uv run --no-sync --env-file /home/reid/1cfe/sysml-codegen/.env pytest -m executi
 - Any test that calls `roots.use_project_root` resets it in a fixture in `tests/study/conftest.py`.
 - A test that needs "no teax" runs the tool as a subprocess with `PYTHONPATH` unset. A simkit put on `sys.path` by another lane then cannot leak in.
 - Nothing in the study package except `roots.py` may mention `os.environ`, `getenv` or `getenv(`, comments included. The conformance pin greps source text.
-- **Stop rule.** If a design instruction cannot work as written, or SC5's grep forces a change to a string that reaches a document and B1–B12 do not cover it, stop. Record it in Implementation Notes and in the final message. Do not redesign (capture-fidelity law 4).
+- **Stop rule.** If a design instruction cannot work as written, or SC5's grep forces a change to a string that reaches a document and B1–B13 do not cover it, stop. Record it in Implementation Notes and in the final message. Do not redesign (capture-fidelity law 4).
 
 ---
 
@@ -376,13 +376,13 @@ def test_a_gate_without_checked_is_invalid(tmp_path):
   - SC5's docstring edits.
 - [x] Move `test_integrate_preconditions`. Its two simkit-probe tests go to `tests/execution/test_study_integrate.py`. Also move `test_integrate_refusals`' two store-resolution tests.
 - [x] Add the license-lane test: gate 5 undeclared gives `unasked`. It needs gates 1a–4 to pass on the fixture copy.
-- [ ] Extend `tests/execution/test_study_integrate.py` (it also needs the license) with:
+- [x] Extend `tests/execution/test_study_integrate.py` (it also needs the license) with:
   - the gate 7 read-coverage refusal and the gate 8 verification refusal;
   - **`CANDIDATE` with exit 0.**
 
   **Cut 2** replaces the `CANDIDATE` test with one that pins the documented `BLOCKER` at the named gate where the fixture stops, and records the deferral.
 - [x] Add `integrate`, `declarations` and `census` to `test_generic_text.py`'s covered set. Add `integrate` to the literal checks in `test_tool_identity.py`. Add SC8's test that `integrate` names no target test file, no target environment variable and no target-only dependency.
-- [ ] Commit, naming B3–B7, B10, B12, SC3 and SC8.
+- [x] Commit, naming B3–B7, B10, B12, SC3 and SC8.
 
 ### Validation
 
@@ -406,7 +406,7 @@ Run design Appendix G's parity script over every case, with no case `DIFFERENT`.
 
 ### Assumption Under Test
 
-- **KB3 and I1.** Outside B1–B12, the moved tools are byte-faithful.
+- **KB3 and I1.** Outside B1–B13, the moved tools are byte-faithful.
 - **KB5, partly.** Module aliases give fusion-tea's consumers the very same modules.
 
 ### Test Stencil (write first)
@@ -424,7 +424,7 @@ for name, case in CASES.items():                                  # Appendix G's
 
 - [ ] Build both wheels from clean exports, never from a working tree. Run `git archive HEAD` of this worktree and of `/home/reid/1cfe/agentic-mbse-study-layer` into scratch directories, then `uv build --wheel` each. Record both SHAs in `report.md`.
 - [ ] Set up `$S=/tmp/study-parity-<stamp>`:
-  - `uv venv $S/venv --python 3.12`;
+  - `uv venv $S/venv --python /usr/bin/python3.12`. **Recorded change** [AGENT] (orchestrator, 2026-10-12, decision Q2 on the Phase 3 pause): the parity venv runs on fusion-tea's own interpreter, not whichever 3.12 uv picks. There `sys.prefix` is `/usr`, so neither B13 allowance fires on either side. On a uv standalone build the original tools would refuse at gate 7, first at `/dev/urandom` and then at the zone file;
   - install both wheels, `jsonschema` and `pytest`, and teax simkit editable from `/home/reid/1cfe/teax/packages/teax-simkit`;
   - check that `sysml_codegen.__file__` is inside `$S/venv`.
 - [ ] Write `$EV/parity/{parity.py,README.md,patterns.json}` per Appendix G:
@@ -435,7 +435,7 @@ for name, case in CASES.items():                                  # Appendix G's
 
   `parity.py` runs as one command, which `README.md` states.
 - [ ] Run it, and write `report.md` and `cases/`.
-- [ ] **Stop rule.** Any `DIFFERENT` case, or noise no reviewed pattern explains, stops the item. Report it to the orchestrator with the diff. Never add a pattern to hide a real difference. If the difference is a port bug, meaning a change outside B1–B12, fix the moved code, re-run the full suite, re-run parity, and record it.
+- [ ] **Stop rule.** Any `DIFFERENT` case, or noise no reviewed pattern explains, stops the item. Report it to the orchestrator with the diff. Never add a pattern to hide a real difference. If the difference is a port bug, meaning a change outside B1–B13, fix the moved code, re-run the full suite, re-run parity, and record it.
 - [ ] Draft the fusion-tea code in `$EV/fusion-tea/`:
   - **`wrappers/`.** The eight module aliases per DD14. Each pins `roots.use_project_root(Path(__file__).resolve().parents[2])`, or `parents[1]` for `scripts/integrate.py`. None touches `os.environ`. Each calls `main()` when run as `__main__`, and otherwise replaces itself in `sys.modules`.
   - **`routes.sed`.** It rewrites `scripts.study` to `sysml_codegen.study` in the eight `study_route.py` imports at `$STAGED/CONSUMER_SURFACE.md:43,50,57,62,67,72,89,97`.
@@ -750,38 +750,36 @@ Detailed risks are in `design.md#potential-risks`. These are the phase-specific 
 - **`test_record_template`'s schema check** became `test_the_summary_schema_requires_the_full_digest_shape` in `test_tool_identity`. Its template-shape half needs the shipped template (Phase 5).
 
 **For Phase 3:**
-- **Premise conflict, surfaced, not resolved: gate 7 refuses the station route on this worktree's interpreter.** Run under `read_coverage.run_route`, the route fails with `undeclared dependency read: /dev/urandom`. The cause is the first `import random`, through `tempfile` in `sysml_codegen.study.common` and through numpy, which happens after the observer starts. This venv's interpreter is uv's standalone CPython 3.12.11, and it opens `/dev/urandom` to seed `random`, both inside and outside the sandbox. fusion-tea's `.venv/bin/python` is `/usr/bin/python3.12` (3.12.3), which does not; its committed record `20260916-primary-loop-sizing` shows gate 7 passing on this machine at teax `8d87746`. So integrate's gate 7, and with it `CANDIDATE` on the station, will refuse in this venv. Phase 4's parity venv (`uv venv --python 3.12`) would hit the same if uv picks a standalone build. The ways out are the orchestrator's call: run integrate's lanes on a system-Python venv as fusion-tea does; have the observer treat `/dev/urandom` as not a dependency, which changes `read_coverage` outside B1–B12; or seed `random` before the observer starts, which changes `ROUTE_DRIVER_SOURCE`, also outside the list. Nothing in Phase 2 depends on it.
+- **Premise conflict, surfaced (resolved by spec B13 at `4ca8cb3`; see Phase 3): gate 7 refuses the station route on this worktree's interpreter.** Run under `read_coverage.run_route`, the route fails with `undeclared dependency read: /dev/urandom`. The cause is the first `import random`, through `tempfile` in `sysml_codegen.study.common` and through numpy, which happens after the observer starts. This venv's interpreter is uv's standalone CPython 3.12.11, and it opens `/dev/urandom` to seed `random`, both inside and outside the sandbox. fusion-tea's `.venv/bin/python` is `/usr/bin/python3.12` (3.12.3), which does not; its committed record `20260916-primary-loop-sizing` shows gate 7 passing on this machine at teax `8d87746`. So integrate's gate 7, and with it `CANDIDATE` on the station, will refuse in this venv. Phase 4's parity venv (`uv venv --python 3.12`) would hit the same if uv picks a standalone build. The ways out are the orchestrator's call: run integrate's lanes on a system-Python venv as fusion-tea does; have the observer treat `/dev/urandom` as not a dependency, which changes `read_coverage` outside B1–B12; or seed `random` before the observer starts, which changes `ROUTE_DRIVER_SOURCE`, also outside the list. Nothing in Phase 2 depends on it.
 - **The route's contract.** `execute_baseline(out, *, package_dir, manifest_path)` returns `{"identity": Path, "baseline_result": Path}` and writes its store at `<out>/_work/station-baseline-v1.db`. It also writes teax's `_work/link/`, `_work/artifacts/` and `_work/staging/`. `run_grid(out, *, package_dir)` returns the grid store's path.
 - **`station_repo`** in `tests/study/conftest.py` copies the fixture into a fresh git repository with a `.gitignore` holding `__pycache__/`, and commits. Loading the package writes bytecode beside it, so a repository without that rule turns dirty after the first load.
 - **Still missing from the fixture:** `census.json`, `gates/` and `pyproject.toml` (Appendix E's integrate-only parts). `PROVENANCE.md` should gain them, and integrate's return can reuse `assert_post_move_tool_identity`, since it has a `command`.
 - The teax-lane tests import `study_route` and `oracle_entry` as top-level modules from `studies/` on `sys.path`, the way `verify` imports the oracle.
 
 ### Phase 3 Completion
-**Completed:** Not yet. Paused 2026-10-12 for one orchestrator decision, below. Everything that does not depend on it is committed: `b461512` (B13), `d57f5c6` (`declarations`), `161a659` (the fixture's integrate-only parts), `5b40bd3` (integrate's edits and their tests).
+**Completed:** 2026-10-12, in seven commits: `b461512` (B13, the entropy devices), `d57f5c6` (`declarations`), `161a659` (the fixture's integrate-only parts), `5b40bd3` (integrate's edits and their tests). Then, after the orchestrator's decision on the gate-7 pause: `051e289` (B13, the interpreter's `zoneinfo.TZPATH`) `565585c` (the route, gate-8 and `CANDIDATE` teax-lane tests) and `cb415dc` (a docstring correction to the gate-8 test).
 
-**CANDIDATE reached, or cut 2 applied (named gate):** Neither yet. Gate 7 refuses the station on this venv's interpreter even with B13. Two tests wait on the decision: `CANDIDATE` with exit 0, and the gate-8 verification refusal, which needs gate 7 to pass first.
+**CANDIDATE reached, or cut 2 applied (named gate):** `CANDIDATE` reached; cut 2 is not applied. On a committed station copy with real teax `8d87746` and the licence, `integrate` returns `CANDIDATE` with exit 0 and all ten gates passing (`tests/execution/test_study_integrate.py:204`).
 
-**Premise conflict, surfaced, not resolved (capture-fidelity law 4): B13 is not enough for gate 7 on uv's standalone CPython.**
-- B13 rests on the premise that `/dev/urandom` was the only read stopping gate 7. Phase 2 could see only that one, because the observer stops at the first violation.
-- With B13 in place, the station route raises exactly one more violation, and nothing after it: `undeclared dependency read: /usr/share/zoneinfo/Etc/UTC`. A scratch run that recorded every violation instead of stopping found only this one.
-- The cause: simkit imports pandas, and `pandas/_libs/tslibs` calls `dateutil.tz.gettz("UTC")` at import. dateutil opens `/usr/share/zoneinfo/UTC`, which resolves to `Etc/UTC`. That directory heads both dateutil's `TZPATHS` and this interpreter's own `zoneinfo.TZPATH`: `/usr/share/zoneinfo`, `/usr/lib/zoneinfo`, `/usr/share/lib/zoneinfo`, `/etc/zoneinfo`.
-- fusion-tea never sees it. Its interpreter is `/usr/bin/python3.12`, whose `sys.prefix` is `/usr`, so the read is under a runtime root. This venv's `sys.base_prefix` is uv's directory.
-- End to end on a committed station copy, with the real licence and teax `8d87746`, gates 1a to 6 pass and gate 7 refuses with that read.
-- With that one directory permitted in scratch only (a `sitecustomize` on `PYTHONPATH`; nothing committed), the same run returns `CANDIDATE`, exit 0, all ten gates passing.
-- The brief says to keep B13 to its two paths, so the code is unchanged. Phase 4 meets the same wall: its parity venv (`uv venv --python 3.12`) would likely be a uv standalone build, and then the original tools refuse at `/dev/urandom` and the moved ones at the zone file.
+**The gate-7 pause, resolved.**
+- The pause: with B13's two device paths in place, gate 7 still refused the station under this venv's uv standalone CPython 3.12.11, with `undeclared dependency read: /usr/share/zoneinfo/Etc/UTC`. pandas asks dateutil for UTC at import, and that directory is outside `sys.prefix` on this interpreter. fusion-tea's `/usr/bin/python3.12` never hits it, because its `sys.prefix` is `/usr`.
+- The decision: the orchestrator amended B13 (spec `4ca8cb3`) to cover the interpreter's platform data, which includes files under its own `zoneinfo.TZPATH`.
+- The change: `read_coverage.Observer` reads `zoneinfo.TZPATH` at construction and adds each entry, resolved, to its runtime roots beside `sys.prefix` and `sys.base_prefix` (`read_coverage.py:91-94`). No path is hard-coded. No further violation followed on the station.
 
 **B13 evidence.**
-- `tests/study/test_read_coverage.py`: `test_a_kernel_entropy_device_is_a_runtime_read` (both devices) failed with `undeclared dependency read: <device>` before the change and passes after. `test_any_other_device_is_still_an_undeclared_read` pins `/dev/zero` as still refused.
-- On the station's own path: `tests/execution/test_study_integrate.py::test_a_route_that_reads_outside_its_declared_sources_is_refused_at_gate_7` runs integrate through gate 7's driver. Its route imports `tempfile`, through the study package, before the planted read. With `read_coverage.py` reverted to `c34ae2d`, its violations are `['undeclared dependency read: /dev/urandom', '…/census.json']` and it fails. With B13 they are the census read alone, and it passes.
-- A teax-lane test asserting the station route passes read coverage outright was written and not committed, because the zone-file read fails it. It lands with `CANDIDATE`.
+- Entropy devices: `tests/study/test_read_coverage.py`'s `test_a_kernel_entropy_device_is_a_runtime_read` (both devices) failed with `undeclared dependency read: <device>` before `b461512` and passes after. `test_any_other_device_is_still_an_undeclared_read` pins `/dev/zero` as still refused. The gate-7 refusal test (`test_study_integrate.py:131`) failed on `/dev/urandom` with `read_coverage.py` reverted to `c34ae2d`.
+- Zone search path: `test_a_read_under_the_interpreters_zone_search_path_is_a_runtime_read` points the interpreter's search path at a test directory through `PYTHONTZPATH`, so the refusal reproduces on any interpreter. Before `051e289` it failed with `undeclared dependency read: <tmp>/zones/Etc/UTC`. After it, it passes and the read is recorded as `runtime-observed`. `test_zone_shaped_data_off_the_interpreters_search_path_is_still_undeclared` pins that a sibling directory holding the same file is still refused.
+- On the station: before `051e289`, `test_the_station_route_passes_read_coverage` and the `CANDIDATE` test both failed on the zone read (the `CANDIDATE` run passed gates 1a–6 and was refused at gate 7), and the gate-8 test stopped at gate 7 on the same read. After it, all three pass.
 
-**Test counts against the baseline (so far):**
-- Full suite: `2669 passed, 9 skipped, 1 failed, 120 deselected`. Phase 2 ended at 2571 / 9 / 1 / 117. The failure is the known `test_zero_unmarked_self_named_examples_across_all_trees`, with the same single offender.
-- The 98 new default-lane tests: `test_declarations` 43, `test_integrate_declared` 24 (one in the license lane), `test_integrate_preconditions` 8, `test_integrate_refusals` 2, `test_read_coverage` +4, `test_census` +1, `test_tool_identity` +4, `test_generic_text` +12.
-- Teax lane: `tests/execution/test_study_*.py` 24 passed: station 21, integrate 3.
+**Gate 8 refusal.** `test_an_oracle_that_disagrees_with_the_store_is_refused_at_gate_8` (`test_study_integrate.py:163`) skews the station oracle's annual cost by one part in a million, against `verify.py:10-11`'s rel < 1e-9. Gates 1a–7 pass. Gate 8 returns `refused` / `verification-refused` from `sysml_codegen/study/verify.py`, its detail names the channel and the relative deviation, its evidence is `../out/verify_stderr.txt`, and no verification summary is written.
+
+**Test counts against the baseline:**
+- Full suite: `2671 passed, 9 skipped, 1 failed, 123 deselected`. The item's baseline is 2206 / 9 / 1, and Phase 2 ended at 2571 / 9 / 1 / 117. The failure is the known `test_zero_unmarked_self_named_examples_across_all_trees`, with the same single offender.
+- The 100 new default-lane tests: `test_declarations` 43, `test_integrate_declared` 24 (one in the license lane), `test_integrate_preconditions` 8, `test_integrate_refusals` 2, `test_read_coverage` +6, `test_census` +1, `test_tool_identity` +4, `test_generic_text` +12.
+- Teax lane: `tests/execution/test_study_*.py` 27 passed: station 21, integrate 6 (two simkit probes, the route's read coverage, gate 7, gate 8, `CANDIDATE`). The 6 integrate tests account for the 117 → 123 deselected.
 - `ruff check src/` passes. `mypy src/` finds no issues in 84 files.
 
-**Deviations from the plan or design (so far):**
+**Deviations from the plan or design:**
 - **Three simkit-probe tests, not two.** fusion-tea has three. "Refuses without the teax root" needs no teax, so it stayed in the default lane, in `test_integrate_preconditions.py`. The other two are in `tests/execution/test_study_integrate.py`.
 - **`IntegrateDeclaration.gates` is a read-only `Mapping`**, not the `dict` Appendix A shows, so a frozen declaration cannot be edited through it. The empty declaration is the constant `declarations.UNDECLARED`. A whitespace-only `target` or `checked` is refused as empty.
 - **`DeclarationError` cites `pyproject.toml` without its absolute path.** The message lands in a return's `detail`, whose bytes must not depend on where the project sits.
@@ -790,11 +788,22 @@ Detailed risks are in `design.md#potential-risks`. These are the phase-specific 
 - **teax wording (B7, B9).** Gate 0's three teax details now name `TEAX_SIMKIT_PATH` or "teax's simkit". Gate 1b's refusal names the simkit root where it named the checkout root. Phase 4's parity mapping must cover both.
 - **Test helpers in `tests/study/conftest.py`:** `commit_station_copy`, `commit_stub_simkit`, `git_head`, `integration_request`, `seam_environment` and `run_integrate`. `station_repo` now calls `commit_station_copy`. `seam_environment` sets `TMPDIR`, because every run past gate 0 leaves its package backup behind on purpose.
 - **`test_tool_identity`'s literal check** resolves a `path::node` literal by its file part, for `sysml_codegen/study/census.py::by_entry_type`.
-- **Beyond the plan:** `test_census` checks that `census.json` is current, and `test_tool_identity` holds integrate's return to I4.
+- **The gate-8 plant is the oracle, not the store.** No gate before 8 judges the oracle's arithmetic, so skewing `studies/oracle_entry.py` isolates gate 8. The edit is left uncommitted, like gate 7's leaky route, because no gate checks cleanliness outside the package tree.
+- **Beyond the plan:** `test_census` checks that `census.json` is current; `test_tool_identity` holds integrate's return to I4, and so does the `CANDIDATE` test; and `test_the_station_route_passes_read_coverage` runs gate 7's driver on the station without the licence, in the environment and scratch directory `integrate.execute_baseline` gives it.
 
 **Proposals, not applied** (outside the closed list): `(D8)` at `integrate.py`'s `assert_package_clean` docstring is a fusion-tea design pointer that SC5's edit list does not name, the same class as Phase 1's proposal. `junit_outcome`'s docstring still says "an absent wheel variable"; it is true of fusion-tea's gate and reads as an example elsewhere.
 
-**For Phase 4:** the station declares both gates and reaches gate 7 on any interpreter. Parity can use Appendix D's fusion-tea declaration as is: `toolchain` keeps fusion-tea's key order, and rows 1a and 5 reproduce its strings. Run the parity venv on the interpreter the decision above names. On a uv standalone build, gate 7 refuses on both sides, for different reasons.
+**For Phase 4:**
+- The station declares both gates and reaches `CANDIDATE`. Parity can use Appendix D's fusion-tea declaration as is: `toolchain` keeps fusion-tea's key order, and rows 1a and 5 reproduce its strings.
+- The parity venv runs on `/usr/bin/python3.12`, recorded in Phase 4's steps.
+- **Premise conflict, surfaced, not resolved (capture-fidelity law 4): the moved route driver observes fewer standard-library imports than the original, so Appendix G rule 4's "all other entries must be equal" will not hold for read-coverage receipts.**
+  - A receipt records every read in the observed window, standard-library `.pyc` files included. On the station that is 671 reads, almost all `runtime-observed`.
+  - A module the driver imports before `run_route` activates the observer is never recorded, even when the route imports it later.
+  - The moved `read_coverage` imports standard-library modules before observation that the original does not. Measured as the `sys.modules` difference after importing each driver's `read_coverage` in this venv:
+    - since Phase 1, through `roots`: `subprocess`, `_posixsubprocess`, `selectors`, `select`, `signal`, `fcntl`, `locale`, `_locale`, `contextlib`, `collections.abc` (10);
+    - since `051e289`, through `zoneinfo`: `zoneinfo`, `zoneinfo._common`, `zoneinfo._tzpath`, `_zoneinfo`, `datetime`, `_datetime`, `sysconfig`, `_sysconfigdata__linux_x86_64-linux-gnu`, `struct`, `_struct`, `weakref` (11). Reading `zoneinfo.TZPATH` at construction, as the decision asks, needs this import before observation. No import-free way to read it exists.
+  - The station route imports both groups during the observed window. teax pulls in pandas, which imports `zoneinfo`. The parity layout's orig route imports `sysml_codegen.study.identity`, which pulls in `roots`. So orig receipts carry these `.pyc` reads and moved receipts do not. They sit outside both tool roots, so rule 4 compares them for equality, and every gate-7 receipt case (read-coverage refused, verification refused, `CANDIDATE`) would come out `DIFFERENT`.
+  - The choice is the orchestrator's. One option is a reviewed rule naming these modules as B8 and B13 consequences (orig-only `runtime-observed` reads of modules the moved driver preloads). The other is a code change outside the closed list, such as importing them lazily in `roots`; the `zoneinfo` group has no such change available. Neither rule 4 nor the code was changed.
 
 ### Phase 4 Completion
 **Completed:**
