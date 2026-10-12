@@ -5,8 +5,9 @@ that consumer's tool. The identifier classes and closed lists below are the spec
 as literals with their provenance so a reader can check them. Vocabulary is not checked:
 domain words stay legal; identifiers do not, even inside an example.
 
-Covered so far: every study module, ``integrate`` and ``declarations`` included. The installed
-skill text joins when it ships.
+Covered: every study module, the five files of the installed ``run-study`` bundle and the
+study-policy template. The one exemption is the record template's labelled history note, which
+names the pre-move tool paths for readers of older records (spec D7).
 
 The last five tests are fusion-tea's ``tests/study/test_generic.py`` agnostic checks at
 ``b06585709``, moved and re-pointed at the installed package.
@@ -24,6 +25,26 @@ from sysml_codegen.study import roots
 from tests.study.conftest import SCHEMAS, SYNTHETIC_MANIFEST
 
 STUDY = roots.TOOL_HOME / "sysml_codegen" / "study"
+ASSETS = roots.TOOL_HOME / "sysml_codegen" / "assets"
+RUN_STUDY = ASSETS / "skills" / "run-study"
+POLICY_TEMPLATE = ASSETS / "project_templates" / "STUDY_POLICY.md.template"
+#: The shipped instruction text: the run-study bundle and the policy template (spec SC5 (a)).
+SHIPPED_TEXT = (
+    RUN_STUDY / "SKILL.md",
+    RUN_STUDY / "runbook.md",
+    RUN_STUDY / "record-template.md",
+    RUN_STUDY / "annex-template.md",
+    RUN_STUDY / "integration-guide.md",
+    POLICY_TEMPLATE,
+)
+#: The record template's one labelled history note, worded as design Appendix I gives it.
+HISTORY_NOTE = (
+    "**History: tool paths in older records.** Records written before the study tools shipped in "
+    "sysml-codegen name each tool `scripts/study/<tool>.py`, and the integration seam "
+    "`scripts/integrate.py`, in `tools[].path` and `source_digest.files[].path`. Those records "
+    "stay valid as written: read the prefix as the tool's era, never as a file to open. Digests "
+    "from the two eras never compare, because the path is part of the digested text."
+)
 COVERED_MODULES = (
     "census", "common", "declarations", "identity", "indicators", "integrate", "manifest",
     "preflight", "read_coverage", "roots", "verify",
@@ -83,9 +104,35 @@ def _module(name: str) -> Path:
     return STUDY / f"{name}.py"
 
 
+def _outside_the_history_note(path: Path) -> str:
+    """The file's text, less the record template's one history note."""
+    text = path.read_text()
+    if path.name == "record-template.md":
+        assert text.count(HISTORY_NOTE) == 1, "the history note is missing or reworded"
+        text = text.replace(HISTORY_NOTE, "")
+    return text
+
+
 @pytest.mark.parametrize("name", COVERED_MODULES)
 def test_a_study_module_carries_no_consumer_identifier(name: str) -> None:
     assert _identifier_hits(_module(name).read_text()) == []
+
+
+@pytest.mark.parametrize("path", SHIPPED_TEXT, ids=lambda path: path.name)
+def test_shipped_text_carries_no_consumer_identifier(path: Path) -> None:
+    assert _identifier_hits(_outside_the_history_note(path)) == []
+
+
+def test_the_history_note_is_the_one_place_the_pre_move_paths_appear() -> None:
+    """The exemption is exactly the two pre-move prefixes, and nothing else rides in with them."""
+    assert sorted(set(_identifier_hits(HISTORY_NOTE))) == ["scripts/integrate", "scripts/study"]
+
+
+def test_every_shipped_text_file_is_covered() -> None:
+    """A file added to the bundle or the templates must join the check, not slip past it."""
+    shipped = {path for path in RUN_STUDY.iterdir() if path.is_file()}
+    shipped |= {path for path in POLICY_TEMPLATE.parent.iterdir() if path.is_file()}
+    assert shipped == set(SHIPPED_TEXT)
 
 
 @pytest.mark.parametrize(

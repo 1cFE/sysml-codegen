@@ -1,12 +1,12 @@
 # Record template
 
-Copy this file to `exploration/<pkg>/studies/<study-id>/record.md` and fill it in. Everything below the line marked **END OF RECORD** is template guidance and is not copied into the record.
+Copy this file to `<studies-dir>/<study-id>/record.md` and fill it in. Everything below the line marked **END OF RECORD** is template guidance and is not copied into the record.
 
 **The values/arguments split.** A study record is two files. `snapshot.json` holds resolved values and digests — things a checker parses and a human skims past. `record.md` holds arguments and judgments — things a human must read and no checker can validate. Neither restates the other. The worked example is the sweep window: its bounds and its `engineered | sourced` provenance are values and live in `snapshot.json` under `arms[].window`; *how the window was chosen* is an argument and lives here in §11. When a fact feels like both, ask which half a checker could evaluate — that half is the value, the rest is the argument.
 
 **Fixed headings.** All seventeen headings below appear in every record, verbatim and in order. A missing fact is then a visibly missing heading rather than a judgement call. Addendum headings may follow §17.
 
-**The explicit-nil rule.** Every conditional obligation is discharged by content or by a stated nil that names the condition — "not applicable: `<axis>` is sensitivity-framed", "glue ledger: none — no adapter on this route", "single fingerprint, no cross-arm correlation needed". Silence discharges nothing.
+**The explicit-nil rule.** Every conditional obligation is discharged by content or by a stated nil that names the condition — "not applicable: `<axis>` is sensitivity-framed", "glue ledger: none — nothing on this route is harness-supplied", "single fingerprint, no cross-arm correlation needed". Silence discharges nothing.
 
 **Weight.** Sections are short and adaptive. Presence is what is mandatory, not length.
 
@@ -37,8 +37,8 @@ The owner's goal and scope, in their own words, verbatim.
 
 ## 3. Objective and result
 
-- **LCOE objective channel(s):** `<qualified channel name(s)>`
-- **LCOE result:** `<value with units, and what point or region it belongs to>`
+- **Objective channel(s):** `<qualified channel name(s)>`
+- **Objective result:** `<value with units, and what point or region it belongs to>`
 
 `<one or two sentences: what the objective did over the studied space>`
 
@@ -118,14 +118,14 @@ Every mechanical gate that ran, with its outcome. The identity and baseline gate
 
 ## 10. Execution route and why
 
-- **Route:** `<teax-study CLI \| study-local direct-API>`
+- **Route:** `<the execution route the study policy names>`
 - **Why this route:** `<what about this study forced or allowed it>`
 
 The rationale is recorded after the route was first exercised and gated, so it accounts for a route already known to load rather than predicting one.
 
 **Glue disclosure.** What the harness supplies that the model does not, and what that means for the claims. The ledger's entries are values and live in `snapshot.json` under `glue_ledger`; this is the argument about them.
 
-`<per rung: what it supplies, why the model cannot, and which claims it scopes — or: glue ledger: none. No adapter on this route, so nothing is harness-supplied.>`
+`<per rung: what it supplies, why the model cannot, and which claims it scopes — or: glue ledger: none. Nothing on this route is harness-supplied.>`
 
 ## 11. Study definition and window provenance
 
@@ -145,7 +145,7 @@ The rationale is recorded after the route was first exercised and gated, so it a
 
 ## 14. Review outcomes
 
-Each applicable lens, its verdict, and its disposition. Preserve this section when no additional review is needed: record the coordinator check, the reason, and any reused evidence with its revision/scope/environment validity. Label independent review honestly; a separate pre-execution critique is needed only when triggered.
+Each applicable lens, its verdict, and its disposition. Preserve this section when no additional review is needed: record the coordinator check, the reason, and any reused evidence with its revision/scope/environment validity. Label independent review honestly; a separate pre-execution critique is needed only when triggered. The Check commands runbook steps 14 and 15 name are recorded here too, each with what it printed.
 
 | Lens | Verdict | Disposition |
 |---|---|---|
@@ -183,11 +183,11 @@ No snapshot content is restated here.
 
 ### Appendix: `snapshot.json` shape
 
-`snapshot.json` sits beside `record.md` in the record directory and holds resolved values only. It is written once, at record commit, from values resolved at execution time — never by citing a live file. Deleting or editing the manifest, the adapter, or the package cannot change what a committed snapshot says.
+`snapshot.json` sits beside `record.md` in the record directory and holds resolved values only. It is written once, at record commit, from values resolved at execution time — never by citing a live file. Deleting or editing the manifest, the route, or the package cannot change what a committed snapshot says.
 
 **Scoping rule.** Any field that can differ between arms is arm-scoped, under `arms[]`. Only genuinely study-wide facts stay top-level. A single-arm study is the one-element case of this shape, not a different shape. A store's compatibility tuple is stated once in `stores[]` and referenced by `store_id`, so two arms sharing a store cannot drift.
 
-Field names marked **(Item 3)** are copied from `.project/completed/20260821_run-study-indicators/design.md` and are not this contract's to rename.
+Field names marked **(fixed by the tool's schema)** are the study tools' own document fields, fixed by the schemas that ship with the tools, and are not this contract's to rename.
 
 ```jsonc
 {
@@ -195,8 +195,8 @@ Field names marked **(Item 3)** are copied from `.project/completed/20260821_run
   "study_id": "<YYYYMMDD>-<goal-slug>",
 
   "package": {
-    "path": "<repo-relative POSIX>",          // (Item 3) manifest package.path
-    "package_name": "<contracts/package_contract.json package_name>",   // (Item 3)
+    "path": "<repo-relative POSIX>",          // (fixed by the tool's schema) manifest package.path
+    "package_name": "<contracts/package_contract.json package_name>",   // (fixed by the tool's schema)
     "repo_commit": "<sha at execution>",
     "git_clean": true                          // the package cleanliness gate's result
   },
@@ -204,22 +204,22 @@ Field names marked **(Item 3)** are copied from `.project/completed/20260821_run
   // Every fingerprint the manifest declares, keyed by the dotted path that names it
   // inside the manifest's `fingerprints` block. The set is open above the floor.
   "fingerprints": {
-    "indicator_inputs": {                      // (Item 3) fingerprints.indicator_inputs
-      "recipe": "indicator-input-fingerprint/v1",                       // (Item 3)
+    "indicator_inputs": {                      // (fixed by the tool's schema) fingerprints.indicator_inputs
+      "recipe": "indicator-input-fingerprint/v1",                       // (fixed by the tool's schema)
       "digest": "<sha256>",
       // `files` uses the REPORT's {path, sha256} object shape (study-indicators/v1),
       // copied here under the manifest's dotted name — the manifest itself stores files
       // as a flat path list; the snapshot keeps the richer per-file digest shape.
       "files": [ { "path": "<repo-relative POSIX>", "sha256": "<sha256>" } ]
     },
-    "recorded_provenance.executable_fingerprint": "<sealed>",           // (Item 3)
-    "recorded_provenance.semantic_fingerprint": "<model contract>"      // (Item 3)
+    "recorded_provenance.executable_fingerprint": "<sealed>",           // (fixed by the tool's schema)
+    "recorded_provenance.semantic_fingerprint": "<model contract>"      // (fixed by the tool's schema)
   },
 
   "manifest": {
-    "path": "<repo-relative POSIX>",           // (Item 3) report manifest.path
-    "schema_version": "study-package-manifest/v1",                      // (Item 3)
-    "digest": "<sha256 of manifest bytes>",    // (Item 3) report manifest.digest
+    "path": "<repo-relative POSIX>",           // (fixed by the tool's schema) report manifest.path
+    "schema_version": "study-package-manifest/v1",                      // (fixed by the tool's schema)
+    "digest": "<sha256 of manifest bytes>",    // (fixed by the tool's schema) report manifest.digest
 
     // The manifest content actually used, copied in. Nothing here is resolved by
     // reading the live manifest at read time.
@@ -227,22 +227,23 @@ Field names marked **(Item 3)** are copied from `.project/completed/20260821_run
       "fingerprint_names": [ "indicator_inputs",
                              "recorded_provenance.executable_fingerprint",
                              "recorded_provenance.semantic_fingerprint" ],
-      "ties": [ { "key": "<qualified key>",                             // (Item 3)
+      "ties": [ { "key": "<qualified key>",                             // (fixed by the tool's schema)
                   "rides_with": [ "<qualified key>" ],
                   "note": "<who declared the physical identity, and on what grounds>" } ],
-      "objective_catalog": [ { "name": "<objective name>",              // (Item 3)
+      "objective_catalog": [ { "name": "<objective name>",              // (fixed by the tool's schema)
                                "channel": "<qualified channel>",
                                "note": "<...>" } ],
-      "baseline": { "point": { "<qualified key>": 0 },                  // (Item 3)
+      "baseline": { "point": { "<qualified key>": 0 },                  // (fixed by the tool's schema)
                     "headline": { "channel": "<qualified channel>", "value": 0 },
                     "verdicts": [ { "source_local_identity": "<local identity>",
                                     "expected": "<satisfied | violated>" } ] },
-      "oracle": { "kind": "python_callable",                            // (Item 3)
+      "oracle": { "kind": "python_callable",                            // (fixed by the tool's schema)
                   "module": "<module>", "callable": "<callable>",
                   "note": "<how it is parameterized>",
                   // Resolved at snapshot time over the oracle's own source files, the
-                  // same recipe as tools[]. Names WHICH oracle verified this study;
-                  // the manifest carries no digest (gap G1, run-study-cold-pickup).
+                  // same recipe as tools[]: sysml_codegen.study.common
+                  // .tool_source_digest(files, root=<project root>). Names WHICH oracle
+                  // verified this study; the manifest carries no digest.
                   // `files` is part of the shape: the digest is over a named list,
                   // and the list is what says which sources it covers.
                   "source_digest": { "recipe": "tool-source-digest/v1",
@@ -305,21 +306,21 @@ Field names marked **(Item 3)** are copied from `.project/completed/20260821_run
   ],
 
   "tools": [
-    { "path": "scripts/study/<tool>.py",       // (Item 3) report tool.path
-      "source_digest": { "recipe": "tool-source-digest/v1",             // (Item 3) name
+    { "path": "sysml_codegen/study/<tool>.py",  // (fixed by the tool's schema) report tool.path
+      "source_digest": { "recipe": "tool-source-digest/v1",             // (fixed by the tool's schema) name
                          "digest": "<sha256>",
                          "files": [ { "path": "<repo-relative POSIX>",
                                       "sha256": "<sha256>" } ] } }
   ],
 
   "teax": { "revision": "<revision as run>",
-            "era_pin": "<the era pin and its worktree path, or null when none>" },
+            "era_pin": "<null, or the teax revision the route needs beyond the environment's>" },
 
   "indicators": {
     "path": "indicators.json",                 // inside the record directory
     "sha256": "<sha256>",
-    "output_schema_version": "study-indicators/v1",                     // (Item 3)
-    "axis_declaration": { "path": "<repo-relative POSIX>",              // (Item 3)
+    "output_schema_version": "study-indicators/v1",                     // (fixed by the tool's schema)
+    "axis_declaration": { "path": "<repo-relative POSIX>",              // (fixed by the tool's schema)
                           "schema_version": "study-axis-declaration/v1",
                           "digest": "<sha256 of file bytes>",
                           "groups_declared": [ "<axis>" ],
@@ -328,11 +329,13 @@ Field names marked **(Item 3)** are copied from `.project/completed/20260821_run
 }
 ```
 
+**History: tool paths in older records.** Records written before the study tools shipped in sysml-codegen name each tool `scripts/study/<tool>.py`, and the integration seam `scripts/integrate.py`, in `tools[].path` and `source_digest.files[].path`. Those records stay valid as written: read the prefix as the tool's era, never as a file to open. Digests from the two eras never compare, because the path is part of the digested text.
+
 #### The rules that govern it
 
 **1. Fingerprint completeness is checkable from inside the record.** `manifest.content_used.fingerprint_names` lists the fingerprint names the manifest declared, and the rule is internal: *every name listed there appears as a key under `fingerprints`*. An administrator audits completeness without opening the live manifest — which it may not do.
 
-The names are **derived at snapshot time** by flattening the manifest's `fingerprints` block to dotted paths, one name per fingerprint value. For the schema as Item 3 accepts it that is exactly three: `indicator_inputs`, `recorded_provenance.executable_fingerprint`, and `recorded_provenance.semantic_fingerprint`. The `fingerprints` map above is keyed by those same dotted paths, so the check is a set comparison. The manifest itself carries no flat names list and needs no change to support this. (Settled by orchestrator ruling 2026-08-19; the plan raised it as an open seam.)
+The names are **derived at snapshot time** by flattening the manifest's `fingerprints` block to dotted paths, one name per fingerprint value. For the manifest schema the tools ship with, that is exactly three: `indicator_inputs`, `recorded_provenance.executable_fingerprint`, and `recorded_provenance.semantic_fingerprint`. The `fingerprints` map above is keyed by those same dotted paths, so the check is a set comparison. The manifest itself carries no flat names list and needs no change to support this.
 
 **The floor holds independently of what the manifest declares.** Three fingerprints are present in every snapshot:
 
@@ -352,4 +355,4 @@ The set stays open above that floor: a manifest that grows a fourth fingerprint 
 
 **5. The glue ledger is arm-scoped, and an arm with no glue states it.** `glue_ledger` is a list; an arm with no glue carries `[]` together with a `glue_ledger_none: true` sibling, because an empty list and a forgotten field look identical in JSON. Glue is arm-scoped rather than study-wide because a sealed-versus-adapter A/B differs in exactly this field, and that difference is what the comparison is about. The interpretive half — what each rung means for the claims — lives in `record.md` §10.
 
-**6. `indicators.axis_declaration.subset` is `false` in any record-feeding run.** Item 3 sets `subset: true` when the indicator run was narrowed with `--group`, which is a debugging aid. A snapshot carrying `subset: true` is a defective record: the study declared axes the indicator run did not trace.
+**6. `indicators.axis_declaration.subset` is `false` in any record-feeding run.** The indicators tool sets `subset: true` when the indicator run was narrowed with `--group`, which is a debugging aid. A snapshot carrying `subset: true` is a defective record: the study declared axes the indicator run did not trace.

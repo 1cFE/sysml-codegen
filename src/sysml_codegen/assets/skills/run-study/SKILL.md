@@ -6,12 +6,14 @@ description: >
   to test how an objective or a constraint responds to a parameter; to find where a
   feasible region ends; or to pick up someone else's finished study and say what it
   found. Triggers: "run a study", "sweep R and a", "design search", "explore the design
-  space", "how sensitive is LCOE to", "where does the constraint bind", "find the
+  space", "how sensitive is the objective to", "where does the constraint bind", "find the
   feasible region", "study whatever you can find in this package", "what did this study
-  find", "synthesize this study", "pick up the results in exploration/.../studies/",
+  find", "synthesize this study", "pick up the results in a studies directory",
   "administer this record", any request to sweep a model or interpret a study record.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep
 user-invocable: true
+metadata:
+  kind: workflow
 ---
 
 # Run Study
@@ -26,7 +28,7 @@ This file is the entry point and nothing else. It captures intake, picks the mod
 - **Executor** — works through the applicable runbook obligations and commits the record. May write an executor synthesis grounded only in the committed record; label its authorship honestly.
 - **Administrator** — optional separate reader of a committed record, used when the owner requests a cold-record reading or independent coverage needs it. Reads only the record directory and reports missing facts instead of recovering them elsewhere.
 
-The main agent may execute and synthesize directly. A separate administrator is not an automatic step. A claimed independent reading requires a fresh non-author session with no inherited conversation. Both kinds of synthesis cite only the committed record and preserve its evidence. Review scope follows `work/orchestration/GOAL_RUNBOOK.md` § Review scope and evidence reuse: original evidence, bounded briefs, and no duplicate assurance.
+The main agent may execute and synthesize directly. A separate administrator is not an automatic step. A claimed independent reading requires a fresh non-author session with no inherited conversation. Both kinds of synthesis cite only the committed record and preserve its evidence. Review scope follows the installed goal runbook, § Review scope and evidence reuse: original evidence, bounded briefs, and no duplicate assurance. A project without the goal layer applies the study policy's § Process sizing instead.
 
 ## Pick the mode
 
@@ -43,12 +45,14 @@ Intake is collaborative and flexible. "Study whatever you can find in this packa
 
 ## Name the record path
 
-- **execute** — the record path is `exploration/<pkg>/studies/<study-id>/`. Mint the `<study-id>` here, before the runbook starts, using the convention in `runbook.md § Naming`, and tell the user where the record will land.
+- **execute** — the record path is `<studies-dir>/<study-id>/`, where `<studies-dir>` is the package's studies directory, named in the study policy's § Locations. Mint the `<study-id>` here, before the runbook starts, using the convention in `runbook.md § Naming`, and tell the user where the record will land.
 - **administer** — the user gives you the record path. Confirm it is a record directory before reading it as one.
 
 ## Then go here
 
 - **`runbook.md`** — the ordered obligations, what each deposits in the record, and the administer sequence. Both modes continue there.
 - **`record-template.md`** — the record contract: the seventeen sections, the values/arguments split, and the `snapshot.json` field list.
+- **`annex-template.md`** — the starting shape of a package annex: the sections the runbook reads and the package-owned pieces a project supplies.
+- **`integration-guide.md`** — how to run `sysml-codegen study integrate`, which proves a package is study-ready before a study cites it.
 - **`modeling_project/STUDY_POLICY.md`** — the rulebook. It says what a legitimate axis is and what a study may claim; this skill does not restate it.
-- **`scripts/study/`** — the tools. Runbook steps call them; this skill never does.
+- **`sysml-codegen study`** — the tools. Runbook steps call them; this skill never does.
