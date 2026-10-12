@@ -1,8 +1,8 @@
 # Implementation Plan: Move the study layer to sysml-codegen (WRAP-SPLIT Item 3)
 
-**Status:** In Progress (Phase A and Phase 1 done)
+**Status:** In Progress (Phase A, Phase 1 and Phase 2 done)
 **Created:** 2026-10-12
-**Last Updated:** 2026-10-12 (Phase 1 implemented)
+**Last Updated:** 2026-10-12 (Phase 2 implemented)
 **Branch:** `study-layer-to-codegen` in both sysml-codegen and agentic-mbse
 
 ## Source Documents
@@ -283,41 +283,41 @@ def test_verify_without_teax_names_teax_and_writes_nothing(station, tmp_path):
 
 ### Steps
 
-- [ ] Write the remaining fixture files per Appendix E:
+- [x] Write the remaining fixture files per Appendix E:
   - `PROVENANCE.md`: the regeneration commands as Phase 1 actually ran them, gate 4's snapshot rule, and "written for this item";
   - `studies/manifest.json`, pinned with `sysml-codegen study indicators --package … --print-fingerprint`;
   - `studies/axes.json` and `studies/oracle_entry.py`;
   - `studies/study_route.py`, with `execute_baseline` and `run_grid` on stock teax only, reusing Phase 1's lifecycle and importing `sysml_codegen.study.identity`;
   - `studies/baseline/{package_identity,baseline_result}.json`, produced by running the route in the teax lane.
-- [ ] Extend `tests/execution/test_study_station.py` with:
+- [x] Extend `tests/execution/test_study_station.py` with:
   - the route reproducing `studies/baseline/`;
   - `verify` completing with `verdicts_rederived: true` and validating against `verification_summary.v1`;
   - `test_verify`'s neutral-plus-teax set;
   - `test_stock_route`'s two sealed-identity tests.
-- [ ] B9: replace `verify.py:484` with `_import_simkit()`, which raises a `VerifyError` naming teax. Add `tests/study/test_verify_without_teax.py`, which runs `verify` as a subprocess with `PYTHONPATH` unset.
-- [ ] Move these tests to the default lane, pointed at the fixture: `test_preflight_gates`, `test_preflight_negatives`, `test_identity`, `test_mechanical_failures`, and `test_predicate_operands.py`. The last one combines 3 tests from `test_breeding_predicate`, 4 from `test_indicator_operands`, and all of `test_verify_operands` except the IFE test.
+- [x] B9: replace `verify.py:484` with `_import_simkit()`, which raises a `VerifyError` naming teax. Add `tests/study/test_verify_without_teax.py`, which runs `verify` as a subprocess with `PYTHONPATH` unset.
+- [x] Move these tests to the default lane, pointed at the fixture: `test_preflight_gates`, `test_preflight_negatives`, `test_identity`, `test_mechanical_failures`, and `test_predicate_operands.py`. The last one combines 3 tests from `test_breeding_predicate`, 4 from `test_indicator_operands`, and all of `test_verify_operands` except the IFE test.
   - Read-only tests use the fixture in place with `SYSML_CODEGEN_PROJECT_ROOT` set.
   - Tests that mutate it copy it into a fresh git repository under `tmp_path` and commit.
   - Each tool gets at least one fail-closed case taken from its module docstring or from the runbook's "Fails closed when" lines. The test docstring cites that source line.
-- [ ] Add the license-lane test `tests/study/test_study_fixture_current.py` (`requires_license`). Recapture and live generation must equal the committed bytes, and the failure message names `PROVENANCE.md`'s commands.
-- [ ] **SC6.**
+- [x] Add the license-lane test `tests/study/test_study_fixture_current.py` (`requires_license`). Recapture and live generation must equal the committed bytes, and the failure message names `PROVENANCE.md`'s commands.
+- [x] **SC6.**
   - Write `$EV/compat/capture_compat_surface.py`. It runs once against the staged modules and records each name's kind and its parameters, bases, value or module identity, without annotations.
   - Its output is `tests/study/data/compat_surface.json`.
   - `tests/study/test_compat_surface.py` checks the moved modules against that table (Appendix C list).
-- [ ] **SC7: the pre-move documents.** Copy byte for byte into `tests/study/data/premove/`, from `$STAGED/exploration/stellarator_e2e/studies/20260916-primary-loop-sizing/`:
+- [x] **SC7: the pre-move documents.** Copy byte for byte into `tests/study/data/premove/`, from `$STAGED/exploration/stellarator_e2e/studies/20260916-primary-loop-sizing/`:
   - `indicators.json`;
   - `results/preflight_results.json`;
   - `results/verification_summary.json`;
   - `preparation/integration-return.json`.
 
   Add a `PROVENANCE.md` naming fusion-tea `b06585709` and each source path.
-- [ ] **SC7: extend `test_tool_identity.py`.**
+- [x] **SC7: extend `test_tool_identity.py`.**
   - Each moved tool's output on the fixture validates, carries the `sysml_codegen/study/` prefix, and has `command[0] == tool.path` where the schema has a command.
   - Digests recompute from the bytes under `TOOL_HOME`.
   - The pre-move documents validate against the unchanged schemas and carry the `scripts/study/` prefix. `integration-return.json` gets the prefix check only.
   - The seven schema sha256 values are pinned (I2).
   - Include `test_record_template`'s schema check.
-- [ ] Commit, naming B9, SC3, SC6 and SC7.
+- [x] Commit, naming B9, SC3, SC6 and SC7.
 
 ### Validation
 
@@ -724,9 +724,37 @@ Detailed risks are in `design.md#potential-risks`. These are the phase-specific 
 - The tools' `main()` pins the root in-process, so a test calling `main()` directly relies on that autouse reset.
 
 ### Phase 2 Completion
-**Completed:**
+**Completed:** 2026-10-12, in seven commits: `1e3a2ae` (B1 refinement: git's own message), `5c4a855` (the fixture's study inputs and the teax lane), `939c542` (B9), `fdc875e` (the moved default-lane tests and the license-lane fixture test), `b984a78` (SC6), `057ac43` (SC7), `ba61c24` (docstring citations in the teax lane).
+
 **Fail-closed cases and their source lines:**
-**Issues / Deviations:**
+- `indicators`: 19 cases in `tests/study/test_mechanical_failures.py`, from the reader contract at `sysml_codegen/study/indicators.py:6-11`.
+- `preflight gates` and `preflight clean`: 10 cases in `tests/study/test_preflight_negatives.py`. Each test names its line in `preflight.py:11-34`, for example `:23-24` for the headline and `:25-27` for a dirty tree.
+- `verify`: `tests/study/test_verify_without_teax.py` (spec B9, design I9), plus six refusals in `tests/execution/test_study_station.py` citing `verify.py:10-20`: a channel deviation, a verdict mismatch, missing bindings, an unresolvable binding, a store bound to another identity, and an empty result.
+
+**Test counts against the baseline:**
+- Full suite: `2571 passed, 9 skipped, 1 failed, 117 deselected`. Phase 1 ended at 2433 / 9 / 1 / 97, and the item's baseline is 2206 / 9 / 1. The one failure is the known `test_zero_unmarked_self_named_examples_across_all_trees`, with the same single offender.
+- The 138 new default-lane tests: `test_roots` +2, `test_verify_without_teax` 1, `test_preflight_gates` 9, `test_preflight_negatives` 10, `test_identity` 22, `test_mechanical_failures` 19, `test_predicate_operands` 27, `test_study_fixture_current` 2, `test_compat_surface` 33, `test_tool_identity` +13. The two fixture-current tests need the license; without the key they skip, like the repo's other license-gated tests.
+- Teax lane: `tests/execution/test_study_station.py` 21 passed (1 after Phase 1). The 20 new execution tests account for the 97 → 117 deselected.
+- `ruff check src/` passes; `mypy src/` finds no issues in 83 files. `diff -r` of the staged and moved schema directories prints nothing.
+
+**Deviations from the plan or design:**
+- **B1 refinement (orchestrator decision, 2026-10-12).** `roots._work_tree` reports "no work tree" only when git says "not a git repository". Any other git failure raises `RootError` carrying git's own message, so the tool still exits 2 but names git's remedy. git runs under `LC_ALL=C`, because a translated message would otherwise turn a working directory outside every work tree into a refusal. Two tests pin it: dubious ownership (git's own `GIT_TEST_ASSUME_DIFFERENT_OWNER=1` switch) and a working directory inside `.git`.
+- **The route owns the KB4 lifecycle.** The plan says the route reuses Phase 1's lifecycle. The route must run in a target with no `tests/` tree, because SC4 copies it into one. So the lifecycle moved into `study_route.run_points`, and Phase 1's KB4 test now calls it, keeping its hand-derived expectations. The route calls teax's `ProvisionalPackageLoader` directly instead of `tests/execution/real_teax.package_loader`.
+- **The route records `store_id` as the store's file name** (`station-baseline-v1.db`). That keeps `studies/baseline/` byte-identical from any output directory, and integrate's `resolve_store` resolves a bare name under `<out>/_work/`. It is one of the two forms `resolve_store` accepts.
+- **The route refuses a reused store and resolves `package_dir`.** teax's loader links the package directory into place by name, so a relative path dangled. Running `PROVENANCE.md`'s step 4 exactly as written found it.
+- **Package-only mutations use no git repository.** The plan says mutating tests copy the fixture into a fresh git repository and commit. `test_mechanical_failures` and `test_identity` mutate only a package copy and call nothing that reads git, so they reuse Phase 1's `PackageCopy` under `tmp_path`. The one test that needs git, the dirty tree, uses the new `station_repo` fixture.
+- **Two `test_verify` refusals needed a station-shaped plant.** "A store bound to another identity" read fusion-tea's committed pre-capability store; here it builds a valid effective identity whose digest differs from the store's sealed fingerprint. "A planted verdict mismatch" flipped a package input; both station operands are swept or computed, so the plant rebinds the capacity operand to the pump head. Each reaches the same refusal in `verify.check_case`.
+- **`test_predicate_operands` builds its shapes.** The station has one plain comparison, so the conjunction and the product are built from `pump_fit`'s own generated feature nodes. Kept from `test_breeding_predicate`: conjunction and negation, false first branch, malformed conjunction. Kept from `test_indicator_operands`: nested products, other nested operators, product arity, unknown nested kind.
+- **SC6 covers all 32 consumer names**, not only Appendix C's 30 compatibility names. `identity.build_sealed` and `common.write_document` are the supported route API, and fusion-tea's consumers use them too. The capture script imports the test's own `describe()`, so the table and the check share one recipe.
+- **verify's SC7 identity check runs in the teax lane**, in `test_verify_completes_and_rederives_every_verdict`, because verify cannot run in the default lane. `test_tool_identity` covers `indicators`, `preflight gates` and `preflight clean`. The shared check is `assert_post_move_tool_identity` in `tests/study/conftest.py`.
+- **`test_record_template`'s schema check** became `test_the_summary_schema_requires_the_full_digest_shape` in `test_tool_identity`. Its template-shape half needs the shipped template (Phase 5).
+
+**For Phase 3:**
+- **Premise conflict, surfaced, not resolved: gate 7 refuses the station route on this worktree's interpreter.** Run under `read_coverage.run_route`, the route fails with `undeclared dependency read: /dev/urandom`. The cause is the first `import random`, through `tempfile` in `sysml_codegen.study.common` and through numpy, which happens after the observer starts. This venv's interpreter is uv's standalone CPython 3.12.11, and it opens `/dev/urandom` to seed `random`, both inside and outside the sandbox. fusion-tea's `.venv/bin/python` is `/usr/bin/python3.12` (3.12.3), which does not; its committed record `20260916-primary-loop-sizing` shows gate 7 passing on this machine at teax `8d87746`. So integrate's gate 7, and with it `CANDIDATE` on the station, will refuse in this venv. Phase 4's parity venv (`uv venv --python 3.12`) would hit the same if uv picks a standalone build. The ways out are the orchestrator's call: run integrate's lanes on a system-Python venv as fusion-tea does; have the observer treat `/dev/urandom` as not a dependency, which changes `read_coverage` outside B1–B12; or seed `random` before the observer starts, which changes `ROUTE_DRIVER_SOURCE`, also outside the list. Nothing in Phase 2 depends on it.
+- **The route's contract.** `execute_baseline(out, *, package_dir, manifest_path)` returns `{"identity": Path, "baseline_result": Path}` and writes its store at `<out>/_work/station-baseline-v1.db`. It also writes teax's `_work/link/`, `_work/artifacts/` and `_work/staging/`. `run_grid(out, *, package_dir)` returns the grid store's path.
+- **`station_repo`** in `tests/study/conftest.py` copies the fixture into a fresh git repository with a `.gitignore` holding `__pycache__/`, and commits. Loading the package writes bytecode beside it, so a repository without that rule turns dirty after the first load.
+- **Still missing from the fixture:** `census.json`, `gates/` and `pyproject.toml` (Appendix E's integrate-only parts). `PROVENANCE.md` should gain them, and integrate's return can reuse `assert_post_move_tool_identity`, since it has a `command`.
+- The teax-lane tests import `study_route` and `oracle_entry` as top-level modules from `studies/` on `sys.path`, the way `verify` imports the oracle.
 
 ### Phase 3 Completion
 **Completed:**
