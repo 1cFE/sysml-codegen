@@ -1,0 +1,25 @@
+{
+  "case": "integrate-g0-env-missing",
+  "exit_codes": {
+    "orig": 1,
+    "orig2": 1,
+    "moved": 1
+  },
+  "noise": [],
+  "differences": [],
+  "closed_list": {
+    "B2 addition sysml_codegen/study/census.py": 1,
+    "B2 addition sysml_codegen/study/declarations.py": 1,
+    "B2 addition sysml_codegen/study/roots.py": 1,
+    "B2 command[0]": 1,
+    "B2 source digest": 2,
+    "B2 tool.path": 1,
+    "B2/B11 producer": 7
+  },
+  "patterns": {
+    "orig": {},
+    "orig2": {},
+    "moved": {}
+  },
+  "status": "EQUAL after closed-list fields [B2, B11]"
+}

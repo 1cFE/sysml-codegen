@@ -1,0 +1,40 @@
+{
+  "case": "integrate-g5-refused",
+  "exit_codes": {
+    "orig": 1,
+    "orig2": 1,
+    "moved": 1
+  },
+  "noise": [],
+  "differences": [],
+  "closed_list": {
+    "B2 addition sysml_codegen/study/census.py": 1,
+    "B2 addition sysml_codegen/study/declarations.py": 1,
+    "B2 addition sysml_codegen/study/roots.py": 2,
+    "B2 command[0]": 1,
+    "B2 source digest": 4,
+    "B2 tool.path": 2,
+    "B2/B11 producer": 6
+  },
+  "patterns": {
+    "orig": {
+      "backup-directory": 1,
+      "junit-clock": 6,
+      "pytest-timing": 4,
+      "scratch-root": 2
+    },
+    "orig2": {
+      "backup-directory": 1,
+      "junit-clock": 6,
+      "pytest-timing": 4,
+      "scratch-root": 2
+    },
+    "moved": {
+      "backup-directory": 1,
+      "junit-clock": 6,
+      "pytest-timing": 4,
+      "scratch-root": 2
+    }
+  },
+  "status": "EQUAL after closed-list fields [B2, B11]"
+}

@@ -1,0 +1,146 @@
+{
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "[verify] 1 store(s), 12 sampled rows, 2 channels at rel < 1e-09, worst 0.00e+00, 1 verdicts re-derived\n",
+  "verification_summary.json": {
+    "schema_version": "study-verification-summary/v1",
+    "tool": {
+      "path": "scripts/study/verify.py",
+      "source_digest": {
+        "recipe": "tool-source-digest/v1",
+        "digest": "f733a8c2c236082aea48853c2da7e060c727bd1bb11d2515c8fce25657329831",
+        "files": [
+          {
+            "path": "scripts/study/common.py",
+            "sha256": "ae5fbca7be87d2fa1783affe4773332c9a898a265f70215aec9ad1489c8df521"
+          },
+          {
+            "path": "scripts/study/identity.py",
+            "sha256": "a6871eaaba1078a524b27c998744c6778ac6b5304d39d6eb083b9be4533dc01e"
+          },
+          {
+            "path": "scripts/study/manifest.py",
+            "sha256": "3c1bd8043b1f4ab0424ea9a77cc243e03bc10b3766e7ac634b9e93c25eb749ee"
+          },
+          {
+            "path": "scripts/study/schemas/package_identity.v1.schema.json",
+            "sha256": "d312ac300f1f639bccad3300e5c617658fe307594eaf9deadea66d6162008ad9"
+          },
+          {
+            "path": "scripts/study/schemas/verification_summary.v1.schema.json",
+            "sha256": "7afe14d745ac7241116096f0a93af35f675d3570c96e5b0e080fac427a17fc87"
+          },
+          {
+            "path": "scripts/study/verify.py",
+            "sha256": "34ee38ed9ae38f448199f0e968a13cd2448ec97098bef601995031d1c3fbc8ba"
+          }
+        ]
+      }
+    },
+    "command": [
+      "scripts/study/verify.py",
+      "--package",
+      "pkg/station_study",
+      "--manifest",
+      "studies/manifest.json",
+      "--identity",
+      "studies/baseline/package_identity.json",
+      "--store",
+      "../inputs/_work/station-grid-v1.db",
+      "--out",
+      "../out/verification_summary.json"
+    ],
+    "teax": {
+      "module_path": "../../../home/reid/1cfe/teax/packages/teax-simkit/simkit",
+      "revision": "unrecorded"
+    },
+    "package": {
+      "path": "pkg/station_study",
+      "package_name": "station_study",
+      "git_clean": true
+    },
+    "identity": {
+      "kind": "sealed",
+      "digest": "75c3cc58959e064834c27f0babce156dc042d099bba4b286fe8fefb385b78c00",
+      "matches_preflight": true
+    },
+    "manifest": {
+      "path": "studies/manifest.json",
+      "schema_version": "study-package-manifest/v1",
+      "digest": "d470e7e4c582c4bdea67dcfe1b483cb24905ea14c555c0015ccd075c9a1464a9"
+    },
+    "oracle": {
+      "kind": "python_callable",
+      "sys_path": "studies",
+      "module": "oracle_entry",
+      "callable": "evaluate",
+      "operand_bindings_digest": "be64c1ba03dc52d14e707ff86d95e5609925a1c4d1bfd92b8dc5137aff7120b8"
+    },
+    "stores": [
+      {
+        "path": "../inputs/_work/station-grid-v1.db",
+        "study_id": "station-grid-v1",
+        "compatibility": {
+          "digest": "e12d078f1756d8f3ea16bc194eed4b4697c901a6756e80cf470871eafba6c5e4",
+          "evidence_schema_version": "v3",
+          "executable_fingerprint": "75c3cc58959e064834c27f0babce156dc042d099bba4b286fe8fefb385b78c00",
+          "input_schema_version": "v1",
+          "model_contract_fingerprint": "e2240e55292fa104eabc342b53453b5f7e1ee9d41153917c70065967bcb1cf6f",
+          "strategy_config": "0369748b46abbbbbcf6a358fea6b14a7d08d0b42758fa6bdf3b3e23bac83ce36",
+          "strategy_identity": "prepared-list/v1",
+          "study_definition_fingerprint": "0369748b46abbbbbcf6a358fea6b14a7d08d0b42758fa6bdf3b3e23bac83ce36",
+          "study_id": "station-grid-v1"
+        },
+        "cases_total": 12,
+        "cases_completed": 12,
+        "sampling": {
+          "scheme": "stratified-by-verdict-combination/v1",
+          "seed": "e232a00b10968dbe",
+          "seed_source": "derived",
+          "sample_size_requested": 12,
+          "strata_observed": 2,
+          "sampled_rows": 12,
+          "sampled_case_ids": [
+            "station-grid-v1:c0009",
+            "station-grid-v1:c0007",
+            "station-grid-v1:c0005",
+            "station-grid-v1:c0008",
+            "station-grid-v1:c0001",
+            "station-grid-v1:c0006",
+            "station-grid-v1:c0011",
+            "station-grid-v1:c0003",
+            "station-grid-v1:c0000",
+            "station-grid-v1:c0004",
+            "station-grid-v1:c0002",
+            "station-grid-v1:c0010"
+          ]
+        },
+        "worst_channel_rel_dev": 0.0,
+        "worst_at": null
+      }
+    ],
+    "tolerance": 1e-09,
+    "channels_checked": [
+      {
+        "channel": "PumpStation__station__demand__required_flow",
+        "objective": null
+      },
+      {
+        "channel": "PumpStation__station__pumping__annual_cost",
+        "objective": "annual_cost"
+      }
+    ],
+    "verdicts_rederived": true,
+    "constraints_rederived": [
+      {
+        "constraint_id": "PumpStation__station__pump_fit__aa8dd6c31b6b238a",
+        "source_local_identity": "pump_fit",
+        "operands_resolved": 2
+      }
+    ],
+    "verdict_mismatches": [],
+    "not_independently_verified": [],
+    "worst_channel_rel_dev": 0.0,
+    "outcome": "pass"
+  }
+}

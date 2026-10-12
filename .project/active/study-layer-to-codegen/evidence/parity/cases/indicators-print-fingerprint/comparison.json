@@ -1,0 +1,17 @@
+{
+  "case": "indicators-print-fingerprint",
+  "exit_codes": {
+    "orig": 0,
+    "orig2": 0,
+    "moved": 0
+  },
+  "noise": [],
+  "differences": [],
+  "closed_list": {},
+  "patterns": {
+    "orig": {},
+    "orig2": {},
+    "moved": {}
+  },
+  "status": "EQUAL"
+}

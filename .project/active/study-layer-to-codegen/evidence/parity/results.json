@@ -1,0 +1,1555 @@
+{
+  "setup": {
+    "base": "3a45a8f486cf75deaf439a3ad46a745b0755349b",
+    "environment": {
+      "python": "3.12.3",
+      "sys.prefix": "/tmp/study-parity-20261012-112213/venv",
+      "sys.base_prefix": "/usr",
+      "sysml_codegen": "/tmp/study-parity-20261012-112213/venv/lib/python3.12/site-packages/sysml_codegen/__init__.py",
+      "agentic_mbse": "/tmp/study-parity-20261012-112213/venv/lib/python3.12/site-packages/agentic_mbse/__init__.py",
+      "simkit": "/home/reid/1cfe/teax/packages/teax-simkit/simkit/__init__.py",
+      "SYSIDE_LICENSE_KEY": "set"
+    },
+    "preloads": {
+      "preloaded_by_the_moved_driver": [
+        "_datetime",
+        "_locale",
+        "_posixsubprocess",
+        "_struct",
+        "_sysconfigdata__x86_64-linux-gnu",
+        "_zoneinfo",
+        "collections.abc",
+        "contextlib",
+        "datetime",
+        "fcntl",
+        "locale",
+        "select",
+        "selectors",
+        "signal",
+        "struct",
+        "subprocess",
+        "sysconfig",
+        "sysml_codegen",
+        "sysml_codegen.study",
+        "sysml_codegen.study.read_coverage",
+        "sysml_codegen.study.roots",
+        "weakref",
+        "zoneinfo",
+        "zoneinfo._common",
+        "zoneinfo._tzpath"
+      ],
+      "standard_library": {
+        "_datetime": null,
+        "_locale": null,
+        "_posixsubprocess": null,
+        "_struct": null,
+        "_sysconfigdata__x86_64-linux-gnu": "/usr/lib/python3.12/__pycache__/_sysconfigdata__x86_64-linux-gnu.cpython-312.pyc",
+        "_zoneinfo": null,
+        "collections.abc": "/usr/lib/python3.12/collections/__pycache__/abc.cpython-312.pyc",
+        "contextlib": "/usr/lib/python3.12/__pycache__/contextlib.cpython-312.pyc",
+        "datetime": "/usr/lib/python3.12/__pycache__/datetime.cpython-312.pyc",
+        "fcntl": null,
+        "locale": "/usr/lib/python3.12/__pycache__/locale.cpython-312.pyc",
+        "select": null,
+        "selectors": "/usr/lib/python3.12/__pycache__/selectors.cpython-312.pyc",
+        "signal": "/usr/lib/python3.12/__pycache__/signal.cpython-312.pyc",
+        "struct": "/usr/lib/python3.12/__pycache__/struct.cpython-312.pyc",
+        "subprocess": "/usr/lib/python3.12/__pycache__/subprocess.cpython-312.pyc",
+        "sysconfig": "/usr/lib/python3.12/__pycache__/sysconfig.cpython-312.pyc",
+        "weakref": "/usr/lib/python3.12/__pycache__/weakref.cpython-312.pyc",
+        "zoneinfo": "/usr/lib/python3.12/zoneinfo/__pycache__/__init__.cpython-312.pyc",
+        "zoneinfo._common": "/usr/lib/python3.12/zoneinfo/__pycache__/_common.cpython-312.pyc",
+        "zoneinfo._tzpath": "/usr/lib/python3.12/zoneinfo/__pycache__/_tzpath.cpython-312.pyc"
+      },
+      "not_standard_library": [
+        "sysml_codegen",
+        "sysml_codegen.study",
+        "sysml_codegen.study.read_coverage",
+        "sysml_codegen.study.roots"
+      ],
+      "closure_check": "every standard-library module is in the import closure of sysml_codegen.study.roots or zoneinfo"
+    },
+    "library": {
+      "indicator_input_fingerprint": {
+        "equal": true,
+        "orig": {
+          "recipe": "indicator-input-fingerprint/v1",
+          "digest": "7a5e6ff32b61d3d4522df18105e20be0e9d3433c1ab713fdfdb8f71aba45fe85",
+          "files": [
+            {
+              "path": "contracts/model_contract.json",
+              "sha256": "728f3c6a9403ea52c094970ba62b5e2c0298037d645570833ea0d95f6e8cdfbf"
+            },
+            {
+              "path": "inputs/station_params.json",
+              "sha256": "68a10e1e2222b96f84157b0733049e9ee3c96671ec94752247a665162ad51142"
+            },
+            {
+              "path": "pipelines/pipeline.yaml",
+              "sha256": "e32b4faacd46b1cda0b0e7d2a672a1ef6ad08ff18d38ffe7146421c4c7875fe4"
+            }
+          ]
+        },
+        "moved": {
+          "recipe": "indicator-input-fingerprint/v1",
+          "digest": "7a5e6ff32b61d3d4522df18105e20be0e9d3433c1ab713fdfdb8f71aba45fe85",
+          "files": [
+            {
+              "path": "contracts/model_contract.json",
+              "sha256": "728f3c6a9403ea52c094970ba62b5e2c0298037d645570833ea0d95f6e8cdfbf"
+            },
+            {
+              "path": "inputs/station_params.json",
+              "sha256": "68a10e1e2222b96f84157b0733049e9ee3c96671ec94752247a665162ad51142"
+            },
+            {
+              "path": "pipelines/pipeline.yaml",
+              "sha256": "e32b4faacd46b1cda0b0e7d2a672a1ef6ad08ff18d38ffe7146421c4c7875fe4"
+            }
+          ]
+        }
+      },
+      "build_sealed": {
+        "equal": true,
+        "orig": {
+          "schema_version": "study-package-identity/v1",
+          "package": {
+            "name": "station_study",
+            "path": "pkg/station_study"
+          },
+          "identity": {
+            "kind": "sealed",
+            "recipe": "effective-executable-fingerprint/v1",
+            "sealed_executable_fingerprint": "75c3cc58959e064834c27f0babce156dc042d099bba4b286fe8fefb385b78c00",
+            "allowed_modified_files": [],
+            "adapter_sources": [],
+            "adapter_source_digest": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+            "digest": "75c3cc58959e064834c27f0babce156dc042d099bba4b286fe8fefb385b78c00"
+          },
+          "glue_ledger": []
+        },
+        "moved": {
+          "schema_version": "study-package-identity/v1",
+          "package": {
+            "name": "station_study",
+            "path": "pkg/station_study"
+          },
+          "identity": {
+            "kind": "sealed",
+            "recipe": "effective-executable-fingerprint/v1",
+            "sealed_executable_fingerprint": "75c3cc58959e064834c27f0babce156dc042d099bba4b286fe8fefb385b78c00",
+            "allowed_modified_files": [],
+            "adapter_sources": [],
+            "adapter_source_digest": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+            "digest": "75c3cc58959e064834c27f0babce156dc042d099bba4b286fe8fefb385b78c00"
+          },
+          "glue_ledger": []
+        }
+      },
+      "repo_relative_posix": {
+        "equal": true,
+        "orig": [
+          ".",
+          "pkg/station_study",
+          "pkg/station_study/contracts/model_contract.json",
+          "../out/indicators.json"
+        ],
+        "moved": [
+          ".",
+          "pkg/station_study",
+          "pkg/station_study/contracts/model_contract.json",
+          "../out/indicators.json"
+        ]
+      },
+      "rederived_census": {
+        "equal": true,
+        "orig": {
+          "entry_points": 6,
+          "by_entry_type": {
+            "design_attribute": [
+              "PumpStation__station__allowed_rise_rate",
+              "PumpStation__station__basin_area",
+              "PumpStation__station__design_inflow",
+              "PumpStation__station__energy_price",
+              "PumpStation__station__installed_capacity",
+              "PumpStation__station__pump_head"
+            ]
+          }
+        },
+        "moved": {
+          "entry_points": 6,
+          "by_entry_type": {
+            "design_attribute": [
+              "PumpStation__station__allowed_rise_rate",
+              "PumpStation__station__basin_area",
+              "PumpStation__station__design_inflow",
+              "PumpStation__station__energy_price",
+              "PumpStation__station__installed_capacity",
+              "PumpStation__station__pump_head"
+            ]
+          }
+        }
+      }
+    },
+    "sources": {
+      "sysml_codegen": {
+        "commit": "24cce2c4270cce9cb7a14a689723b633e572873d",
+        "wheel": "sysml_codegen-0.1.1-py3-none-any.whl",
+        "sha256": "95db479eddbc399bcecebb1e24c841e7abed71becafc857b51ef7bb0364f887c"
+      },
+      "agentic_mbse": {
+        "commit": "2894647d7ffe0fc6711b3c407738c85cc5a8bc6b",
+        "wheel": "agentic_mbse-0.1.3-py3-none-any.whl",
+        "sha256": "04a69b26134523073fc8d06a138cb9ebae8d9309fce61c369822c65fc601e6a8"
+      },
+      "teax": {
+        "commit": "8d877460ac4f6f264561d916e40c1708adb13397",
+        "simkit_root": "/home/reid/1cfe/teax/packages/teax-simkit"
+      }
+    }
+  },
+  "library_parity_holds": true,
+  "cases": [
+    {
+      "case": "indicators-complete",
+      "exit_codes": {
+        "orig": 0,
+        "orig2": 0,
+        "moved": 0
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {
+        "B2 addition sysml_codegen/study/roots.py": 1,
+        "B2 source digest": 2,
+        "B2 tool.path": 1
+      },
+      "patterns": {
+        "orig": {},
+        "orig2": {},
+        "moved": {}
+      },
+      "status": "EQUAL after closed-list fields [B2]"
+    },
+    {
+      "case": "indicators-pin-mismatch",
+      "exit_codes": {
+        "orig": 1,
+        "orig2": 1,
+        "moved": 1
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {},
+      "patterns": {
+        "orig": {},
+        "orig2": {},
+        "moved": {}
+      },
+      "status": "EQUAL"
+    },
+    {
+      "case": "indicators-print-fingerprint",
+      "exit_codes": {
+        "orig": 0,
+        "orig2": 0,
+        "moved": 0
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {},
+      "patterns": {
+        "orig": {},
+        "orig2": {},
+        "moved": {}
+      },
+      "status": "EQUAL"
+    },
+    {
+      "case": "preflight-gates-complete",
+      "exit_codes": {
+        "orig": 0,
+        "orig2": 0,
+        "moved": 0
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {
+        "B2 addition sysml_codegen/study/roots.py": 1,
+        "B2 source digest": 2,
+        "B2 tool.path": 1
+      },
+      "patterns": {
+        "orig": {},
+        "orig2": {},
+        "moved": {}
+      },
+      "status": "EQUAL after closed-list fields [B2]"
+    },
+    {
+      "case": "preflight-gates-stale-manifest",
+      "exit_codes": {
+        "orig": 1,
+        "orig2": 1,
+        "moved": 1
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {
+        "B2 addition sysml_codegen/study/roots.py": 1,
+        "B2 source digest": 2,
+        "B2 tool.path": 1
+      },
+      "patterns": {
+        "orig": {},
+        "orig2": {},
+        "moved": {}
+      },
+      "status": "EQUAL after closed-list fields [B2]"
+    },
+    {
+      "case": "preflight-clean-clean",
+      "exit_codes": {
+        "orig": 0,
+        "orig2": 0,
+        "moved": 0
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {
+        "B2 addition sysml_codegen/study/roots.py": 1,
+        "B2 source digest": 2,
+        "B2 tool.path": 1
+      },
+      "patterns": {
+        "orig": {},
+        "orig2": {},
+        "moved": {}
+      },
+      "status": "EQUAL after closed-list fields [B2]"
+    },
+    {
+      "case": "preflight-clean-dirty",
+      "exit_codes": {
+        "orig": 1,
+        "orig2": 1,
+        "moved": 1
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {
+        "B2 addition sysml_codegen/study/roots.py": 1,
+        "B2 source digest": 2,
+        "B2 tool.path": 1
+      },
+      "patterns": {
+        "orig": {},
+        "orig2": {},
+        "moved": {}
+      },
+      "status": "EQUAL after closed-list fields [B2]"
+    },
+    {
+      "case": "verify-complete",
+      "exit_codes": {
+        "orig": 0,
+        "orig2": 0,
+        "moved": 0
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {
+        "B2 addition sysml_codegen/study/roots.py": 1,
+        "B2 command[0]": 1,
+        "B2 source digest": 2,
+        "B2 tool.path": 1
+      },
+      "patterns": {
+        "orig": {},
+        "orig2": {},
+        "moved": {}
+      },
+      "status": "EQUAL after closed-list fields [B2]"
+    },
+    {
+      "case": "verify-oracle-mutated",
+      "exit_codes": {
+        "orig": 1,
+        "orig2": 1,
+        "moved": 1
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {},
+      "patterns": {
+        "orig": {},
+        "orig2": {},
+        "moved": {}
+      },
+      "status": "EQUAL"
+    },
+    {
+      "case": "integrate-g0-input-missing",
+      "exit_codes": {
+        "orig": 1,
+        "orig2": 1,
+        "moved": 1
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {
+        "B2 addition sysml_codegen/study/census.py": 1,
+        "B2 addition sysml_codegen/study/declarations.py": 1,
+        "B2 addition sysml_codegen/study/roots.py": 1,
+        "B2 command[0]": 1,
+        "B2 source digest": 2,
+        "B2 tool.path": 1,
+        "B2/B11 producer": 7
+      },
+      "patterns": {
+        "orig": {},
+        "orig2": {},
+        "moved": {}
+      },
+      "status": "EQUAL after closed-list fields [B2, B11]"
+    },
+    {
+      "case": "integrate-g0-input-invalid",
+      "exit_codes": {
+        "orig": 1,
+        "orig2": 1,
+        "moved": 1
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {
+        "B2 addition sysml_codegen/study/census.py": 1,
+        "B2 addition sysml_codegen/study/declarations.py": 1,
+        "B2 addition sysml_codegen/study/roots.py": 1,
+        "B2 command[0]": 1,
+        "B2 source digest": 2,
+        "B2 tool.path": 1,
+        "B2/B11 producer": 7
+      },
+      "patterns": {
+        "orig": {},
+        "orig2": {},
+        "moved": {}
+      },
+      "status": "EQUAL after closed-list fields [B2, B11]"
+    },
+    {
+      "case": "integrate-g0-env-missing",
+      "exit_codes": {
+        "orig": 1,
+        "orig2": 1,
+        "moved": 1
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {
+        "B2 addition sysml_codegen/study/census.py": 1,
+        "B2 addition sysml_codegen/study/declarations.py": 1,
+        "B2 addition sysml_codegen/study/roots.py": 1,
+        "B2 command[0]": 1,
+        "B2 source digest": 2,
+        "B2 tool.path": 1,
+        "B2/B11 producer": 7
+      },
+      "patterns": {
+        "orig": {},
+        "orig2": {},
+        "moved": {}
+      },
+      "status": "EQUAL after closed-list fields [B2, B11]"
+    },
+    {
+      "case": "integrate-g0-package-not-integrated",
+      "exit_codes": {
+        "orig": 1,
+        "orig2": 1,
+        "moved": 1
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {
+        "B2 addition sysml_codegen/study/census.py": 1,
+        "B2 addition sysml_codegen/study/declarations.py": 1,
+        "B2 addition sysml_codegen/study/roots.py": 2,
+        "B2 command[0]": 1,
+        "B2 source digest": 4,
+        "B2 tool.path": 2,
+        "B2/B11 producer": 7
+      },
+      "patterns": {
+        "orig": {},
+        "orig2": {},
+        "moved": {}
+      },
+      "status": "EQUAL after closed-list fields [B2, B11]"
+    },
+    {
+      "case": "integrate-g1a-refused",
+      "exit_codes": {
+        "orig": 1,
+        "orig2": 1,
+        "moved": 1
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {
+        "B2 addition sysml_codegen/study/census.py": 1,
+        "B2 addition sysml_codegen/study/declarations.py": 1,
+        "B2 addition sysml_codegen/study/roots.py": 2,
+        "B2 command[0]": 1,
+        "B2 source digest": 4,
+        "B2 tool.path": 2,
+        "B2/B11 producer": 6
+      },
+      "patterns": {
+        "orig": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "pytest-timing": 4,
+          "scratch-root": 2
+        },
+        "orig2": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "pytest-timing": 4,
+          "scratch-root": 2
+        },
+        "moved": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "pytest-timing": 4,
+          "scratch-root": 2
+        }
+      },
+      "status": "EQUAL after closed-list fields [B2, B11]"
+    },
+    {
+      "case": "integrate-g1b-unasked",
+      "exit_codes": {
+        "orig": 1,
+        "orig2": 1,
+        "moved": 1
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {
+        "B2 addition sysml_codegen/study/census.py": 1,
+        "B2 addition sysml_codegen/study/declarations.py": 1,
+        "B2 addition sysml_codegen/study/roots.py": 2,
+        "B2 command[0]": 1,
+        "B2 source digest": 4,
+        "B2 tool.path": 2,
+        "B2/B11 producer": 7
+      },
+      "patterns": {
+        "orig": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "scratch-root": 2
+        },
+        "orig2": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "scratch-root": 2
+        },
+        "moved": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "scratch-root": 2
+        }
+      },
+      "status": "EQUAL after closed-list fields [B2, B11]"
+    },
+    {
+      "case": "integrate-g1b-refused",
+      "exit_codes": {
+        "orig": 1,
+        "orig2": 1,
+        "moved": 1
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {
+        "B2 addition sysml_codegen/study/census.py": 1,
+        "B2 addition sysml_codegen/study/declarations.py": 1,
+        "B2 addition sysml_codegen/study/roots.py": 2,
+        "B2 command[0]": 1,
+        "B2 source digest": 4,
+        "B2 tool.path": 2,
+        "B2/B11 producer": 7,
+        "B7 gate 1b teax root": 2
+      },
+      "patterns": {
+        "orig": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "scratch-root": 2
+        },
+        "orig2": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "scratch-root": 2
+        },
+        "moved": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "scratch-root": 2
+        }
+      },
+      "status": "EQUAL after closed-list fields [B2, B7, B11]"
+    },
+    {
+      "case": "integrate-g2-refused",
+      "exit_codes": {
+        "orig": 1,
+        "orig2": 1,
+        "moved": 1
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {
+        "B2 addition sysml_codegen/study/census.py": 1,
+        "B2 addition sysml_codegen/study/declarations.py": 1,
+        "B2 addition sysml_codegen/study/roots.py": 2,
+        "B2 command[0]": 1,
+        "B2 source digest": 4,
+        "B2 tool.path": 2,
+        "B2/B11 producer": 6
+      },
+      "patterns": {
+        "orig": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "scratch-root": 2
+        },
+        "orig2": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "scratch-root": 2
+        },
+        "moved": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "scratch-root": 2
+        }
+      },
+      "status": "EQUAL after closed-list fields [B2, B11]"
+    },
+    {
+      "case": "integrate-g3-handwritten-lost",
+      "exit_codes": {
+        "orig": 1,
+        "orig2": 1,
+        "moved": 1
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {
+        "B2 addition sysml_codegen/study/census.py": 1,
+        "B2 addition sysml_codegen/study/declarations.py": 1,
+        "B2 addition sysml_codegen/study/roots.py": 2,
+        "B2 command[0]": 1,
+        "B2 source digest": 4,
+        "B2 tool.path": 2,
+        "B2/B11 producer": 6
+      },
+      "patterns": {
+        "orig": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "scratch-root": 2
+        },
+        "orig2": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "scratch-root": 2
+        },
+        "moved": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "scratch-root": 2
+        }
+      },
+      "status": "EQUAL after closed-list fields [B2, B11]"
+    },
+    {
+      "case": "integrate-g4-census-unasked",
+      "exit_codes": {
+        "orig": 1,
+        "orig2": 1,
+        "moved": 1
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {
+        "B2 addition sysml_codegen/study/census.py": 1,
+        "B2 addition sysml_codegen/study/declarations.py": 1,
+        "B2 addition sysml_codegen/study/roots.py": 2,
+        "B2 command[0]": 1,
+        "B2 source digest": 4,
+        "B2 tool.path": 2,
+        "B2/B11 producer": 7
+      },
+      "patterns": {
+        "orig": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "scratch-root": 2
+        },
+        "orig2": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "scratch-root": 2
+        },
+        "moved": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "scratch-root": 2
+        }
+      },
+      "status": "EQUAL after closed-list fields [B2, B11]"
+    },
+    {
+      "case": "integrate-g4-census-stale",
+      "exit_codes": {
+        "orig": 1,
+        "orig2": 1,
+        "moved": 1
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {
+        "B2 addition sysml_codegen/study/census.py": 1,
+        "B2 addition sysml_codegen/study/declarations.py": 1,
+        "B2 addition sysml_codegen/study/roots.py": 2,
+        "B2 command[0]": 1,
+        "B2 source digest": 4,
+        "B2 tool.path": 2,
+        "B2/B11 producer": 7
+      },
+      "patterns": {
+        "orig": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "scratch-root": 2
+        },
+        "orig2": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "scratch-root": 2
+        },
+        "moved": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "scratch-root": 2
+        }
+      },
+      "status": "EQUAL after closed-list fields [B2, B11]"
+    },
+    {
+      "case": "integrate-g5-refused",
+      "exit_codes": {
+        "orig": 1,
+        "orig2": 1,
+        "moved": 1
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {
+        "B2 addition sysml_codegen/study/census.py": 1,
+        "B2 addition sysml_codegen/study/declarations.py": 1,
+        "B2 addition sysml_codegen/study/roots.py": 2,
+        "B2 command[0]": 1,
+        "B2 source digest": 4,
+        "B2 tool.path": 2,
+        "B2/B11 producer": 6
+      },
+      "patterns": {
+        "orig": {
+          "backup-directory": 1,
+          "junit-clock": 6,
+          "pytest-timing": 4,
+          "scratch-root": 2
+        },
+        "orig2": {
+          "backup-directory": 1,
+          "junit-clock": 6,
+          "pytest-timing": 4,
+          "scratch-root": 2
+        },
+        "moved": {
+          "backup-directory": 1,
+          "junit-clock": 6,
+          "pytest-timing": 4,
+          "scratch-root": 2
+        }
+      },
+      "status": "EQUAL after closed-list fields [B2, B11]"
+    },
+    {
+      "case": "integrate-g6-manifest-stale",
+      "exit_codes": {
+        "orig": 1,
+        "orig2": 1,
+        "moved": 1
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {
+        "B2 addition sysml_codegen/study/census.py": 1,
+        "B2 addition sysml_codegen/study/declarations.py": 1,
+        "B2 addition sysml_codegen/study/roots.py": 2,
+        "B2 command[0]": 1,
+        "B2 source digest": 4,
+        "B2 tool.path": 2,
+        "B2/B11 producer": 7
+      },
+      "patterns": {
+        "orig": {
+          "backup-directory": 1,
+          "junit-clock": 6,
+          "scratch-root": 2
+        },
+        "orig2": {
+          "backup-directory": 1,
+          "junit-clock": 6,
+          "scratch-root": 2
+        },
+        "moved": {
+          "backup-directory": 1,
+          "junit-clock": 6,
+          "scratch-root": 2
+        }
+      },
+      "status": "EQUAL after closed-list fields [B2, B11]"
+    },
+    {
+      "case": "integrate-g7-read-coverage-refused",
+      "exit_codes": {
+        "orig": 1,
+        "orig2": 1,
+        "moved": 1
+      },
+      "noise": [],
+      "differences": [
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/__main__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/_upstream_pins.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/analysis/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/analysis/source_referent.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/cli/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/cli/study.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/manifest.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/model_contract.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/models.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/seal.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/serialize.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/verify.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/versions.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/errors.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/identifier_types.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/models.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/qualified_names.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/type_mapping.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/diagnostics.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/display.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/elaborate.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/expression_evidence.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/extraction_screen.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/graph.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/identity.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/occurrence.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/project.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/binding_evidence.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/binding_source.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/calc_compat_renderer.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/data_models.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/errors.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/expression_compiler.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/expression_utils.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/extractor.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/modeled_defaults.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/source_evidence.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/source_manifest.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/unit_annotation.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/constraint_catalog.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/constraint_name_safety.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/constraint_plan.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/coverage.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/entry_point.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/errors.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/initialization.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/modules.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/pipeline.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/predicate_compiler.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/preservation.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/registry.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/schemas.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/stencils.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/test_gen.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/type_mapping.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/orchestration/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/orchestration/elaborated_pipeline.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/orchestration/exact_pipeline_context.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/orchestration/pipeline_context.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/resolution/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/resolution/models.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/snapshot/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/snapshot/capture.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/snapshot/envelope.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/snapshot/instance_graph.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/census.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/declarations.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/roots.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/templates/__init__.py: only in moved",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/__pycache__/__init__.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/__init__.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/common.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/identity.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/manifest.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/roots.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/common.cpython-312.pyc: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/identity.cpython-312.pyc: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/manifest.cpython-312.pyc: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/common.py: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/identity.py: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/manifest.py: only in moved"
+      ],
+      "closed_list": {
+        "B13 preloaded standard-library read": 7,
+        "B2 addition sysml_codegen/study/census.py": 1,
+        "B2 addition sysml_codegen/study/declarations.py": 1,
+        "B2 addition sysml_codegen/study/roots.py": 2,
+        "B2 command[0]": 1,
+        "B2 source digest": 4,
+        "B2 tool.path": 2,
+        "B2/B11 producer": 7,
+        "B8 receipt": 1
+      },
+      "patterns": {
+        "orig": {
+          "backup-directory": 1,
+          "junit-clock": 6,
+          "read-coverage-token": 1,
+          "scratch-root": 59
+        },
+        "orig2": {
+          "backup-directory": 1,
+          "junit-clock": 6,
+          "read-coverage-token": 1,
+          "scratch-root": 59
+        },
+        "moved": {
+          "backup-directory": 1,
+          "junit-clock": 6,
+          "read-coverage-token": 1,
+          "scratch-root": 135
+        }
+      },
+      "status": "DIFFERENT"
+    },
+    {
+      "case": "integrate-g8-verification-refused",
+      "exit_codes": {
+        "orig": 1,
+        "orig2": 1,
+        "moved": 1
+      },
+      "noise": [],
+      "differences": [
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/__main__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/_upstream_pins.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/analysis/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/analysis/source_referent.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/cli/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/cli/study.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/manifest.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/model_contract.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/models.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/seal.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/serialize.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/verify.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/versions.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/errors.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/identifier_types.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/models.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/qualified_names.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/type_mapping.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/diagnostics.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/display.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/elaborate.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/expression_evidence.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/extraction_screen.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/graph.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/identity.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/occurrence.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/project.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/binding_evidence.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/binding_source.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/calc_compat_renderer.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/data_models.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/errors.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/expression_compiler.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/expression_utils.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/extractor.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/modeled_defaults.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/source_evidence.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/source_manifest.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/unit_annotation.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/constraint_catalog.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/constraint_name_safety.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/constraint_plan.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/coverage.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/entry_point.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/errors.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/initialization.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/modules.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/pipeline.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/predicate_compiler.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/preservation.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/registry.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/schemas.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/stencils.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/test_gen.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/type_mapping.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/orchestration/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/orchestration/elaborated_pipeline.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/orchestration/exact_pipeline_context.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/orchestration/pipeline_context.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/resolution/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/resolution/models.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/snapshot/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/snapshot/capture.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/snapshot/envelope.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/snapshot/instance_graph.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/census.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/declarations.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/roots.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/templates/__init__.py: only in moved",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/__pycache__/__init__.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/__init__.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/common.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/identity.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/manifest.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/roots.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/common.cpython-312.pyc: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/identity.cpython-312.pyc: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/manifest.cpython-312.pyc: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/common.py: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/identity.py: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/manifest.py: only in moved"
+      ],
+      "closed_list": {
+        "B13 preloaded standard-library read": 14,
+        "B2 addition sysml_codegen/study/census.py": 1,
+        "B2 addition sysml_codegen/study/declarations.py": 1,
+        "B2 addition sysml_codegen/study/roots.py": 3,
+        "B2 command[0]": 1,
+        "B2 source digest": 6,
+        "B2 tool.path": 3,
+        "B2/B11 producer": 7,
+        "B8 gate 7 detail digest": 2,
+        "B8 receipt": 1
+      },
+      "patterns": {
+        "orig": {
+          "atomic-write-temp": 2,
+          "backup-directory": 1,
+          "junit-clock": 6,
+          "read-coverage-token": 1,
+          "scratch-root": 537,
+          "teax-staging-directory": 1
+        },
+        "orig2": {
+          "atomic-write-temp": 2,
+          "backup-directory": 1,
+          "junit-clock": 6,
+          "read-coverage-token": 1,
+          "scratch-root": 537,
+          "teax-staging-directory": 1
+        },
+        "moved": {
+          "atomic-write-temp": 2,
+          "backup-directory": 1,
+          "junit-clock": 6,
+          "read-coverage-token": 1,
+          "scratch-root": 613,
+          "teax-staging-directory": 1
+        }
+      },
+      "status": "DIFFERENT"
+    },
+    {
+      "case": "integrate-g9-unasked",
+      "exit_codes": {
+        "orig": 1,
+        "orig2": 1,
+        "moved": 1
+      },
+      "noise": [],
+      "differences": [
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/__main__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/_upstream_pins.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/analysis/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/analysis/source_referent.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/cli/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/cli/study.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/manifest.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/model_contract.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/models.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/seal.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/serialize.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/verify.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/versions.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/errors.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/identifier_types.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/models.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/qualified_names.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/type_mapping.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/diagnostics.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/display.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/elaborate.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/expression_evidence.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/extraction_screen.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/graph.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/identity.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/occurrence.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/project.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/binding_evidence.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/binding_source.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/calc_compat_renderer.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/data_models.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/errors.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/expression_compiler.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/expression_utils.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/extractor.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/modeled_defaults.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/source_evidence.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/source_manifest.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/unit_annotation.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/constraint_catalog.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/constraint_name_safety.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/constraint_plan.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/coverage.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/entry_point.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/errors.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/initialization.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/modules.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/pipeline.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/predicate_compiler.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/preservation.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/registry.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/schemas.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/stencils.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/test_gen.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/type_mapping.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/orchestration/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/orchestration/elaborated_pipeline.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/orchestration/exact_pipeline_context.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/orchestration/pipeline_context.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/resolution/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/resolution/models.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/snapshot/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/snapshot/capture.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/snapshot/envelope.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/snapshot/instance_graph.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/census.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/declarations.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/roots.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/templates/__init__.py: only in moved",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/__pycache__/__init__.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/__init__.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/common.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/identity.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/manifest.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/roots.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/common.cpython-312.pyc: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/identity.cpython-312.pyc: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/manifest.cpython-312.pyc: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/common.py: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/identity.py: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/manifest.py: only in moved"
+      ],
+      "closed_list": {
+        "B13 preloaded standard-library read": 14,
+        "B2 addition sysml_codegen/study/census.py": 1,
+        "B2 addition sysml_codegen/study/declarations.py": 1,
+        "B2 addition sysml_codegen/study/roots.py": 4,
+        "B2 command[0]": 2,
+        "B2 source digest": 8,
+        "B2 tool.path": 4,
+        "B2/B11 producer": 7,
+        "B8 gate 7 detail digest": 2,
+        "B8 receipt": 1
+      },
+      "patterns": {
+        "orig": {
+          "atomic-write-temp": 2,
+          "backup-directory": 1,
+          "junit-clock": 6,
+          "read-coverage-token": 1,
+          "scratch-root": 542,
+          "teax-staging-directory": 1
+        },
+        "orig2": {
+          "atomic-write-temp": 2,
+          "backup-directory": 1,
+          "junit-clock": 6,
+          "read-coverage-token": 1,
+          "scratch-root": 542,
+          "teax-staging-directory": 1
+        },
+        "moved": {
+          "atomic-write-temp": 2,
+          "backup-directory": 1,
+          "junit-clock": 6,
+          "read-coverage-token": 1,
+          "scratch-root": 618,
+          "teax-staging-directory": 1
+        }
+      },
+      "status": "DIFFERENT"
+    },
+    {
+      "case": "integrate-g9-lineage-mismatch",
+      "exit_codes": {
+        "orig": 1,
+        "orig2": 1,
+        "moved": 1
+      },
+      "noise": [],
+      "differences": [
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/__main__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/_upstream_pins.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/analysis/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/analysis/source_referent.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/cli/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/cli/study.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/manifest.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/model_contract.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/models.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/seal.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/serialize.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/verify.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/versions.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/errors.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/identifier_types.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/models.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/qualified_names.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/type_mapping.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/diagnostics.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/display.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/elaborate.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/expression_evidence.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/extraction_screen.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/graph.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/identity.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/occurrence.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/project.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/binding_evidence.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/binding_source.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/calc_compat_renderer.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/data_models.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/errors.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/expression_compiler.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/expression_utils.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/extractor.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/modeled_defaults.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/source_evidence.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/source_manifest.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/unit_annotation.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/constraint_catalog.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/constraint_name_safety.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/constraint_plan.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/coverage.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/entry_point.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/errors.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/initialization.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/modules.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/pipeline.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/predicate_compiler.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/preservation.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/registry.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/schemas.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/stencils.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/test_gen.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/type_mapping.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/orchestration/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/orchestration/elaborated_pipeline.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/orchestration/exact_pipeline_context.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/orchestration/pipeline_context.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/resolution/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/resolution/models.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/snapshot/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/snapshot/capture.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/snapshot/envelope.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/snapshot/instance_graph.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/census.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/declarations.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/roots.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/templates/__init__.py: only in moved",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/__pycache__/__init__.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/__init__.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/common.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/identity.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/manifest.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/roots.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/common.cpython-312.pyc: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/identity.cpython-312.pyc: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/manifest.cpython-312.pyc: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/common.py: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/identity.py: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/manifest.py: only in moved"
+      ],
+      "closed_list": {
+        "B13 preloaded standard-library read": 14,
+        "B2 addition sysml_codegen/study/census.py": 1,
+        "B2 addition sysml_codegen/study/declarations.py": 1,
+        "B2 addition sysml_codegen/study/roots.py": 4,
+        "B2 command[0]": 2,
+        "B2 source digest": 8,
+        "B2 tool.path": 4,
+        "B2/B11 producer": 7,
+        "B8 gate 7 detail digest": 2,
+        "B8 receipt": 1
+      },
+      "patterns": {
+        "orig": {
+          "atomic-write-temp": 2,
+          "backup-directory": 1,
+          "junit-clock": 6,
+          "read-coverage-token": 1,
+          "scratch-root": 542,
+          "teax-staging-directory": 1
+        },
+        "orig2": {
+          "atomic-write-temp": 2,
+          "backup-directory": 1,
+          "junit-clock": 6,
+          "read-coverage-token": 1,
+          "scratch-root": 542,
+          "teax-staging-directory": 1
+        },
+        "moved": {
+          "atomic-write-temp": 2,
+          "backup-directory": 1,
+          "junit-clock": 6,
+          "read-coverage-token": 1,
+          "scratch-root": 618,
+          "teax-staging-directory": 1
+        }
+      },
+      "status": "DIFFERENT"
+    },
+    {
+      "case": "integrate-seam-internal-error",
+      "exit_codes": {
+        "orig": 2,
+        "orig2": 2,
+        "moved": 2
+      },
+      "noise": [],
+      "differences": [],
+      "closed_list": {
+        "B2 addition sysml_codegen/study/census.py": 1,
+        "B2 addition sysml_codegen/study/declarations.py": 1,
+        "B2 addition sysml_codegen/study/roots.py": 2,
+        "B2 command[0]": 1,
+        "B2 source digest": 4,
+        "B2 tool.path": 2,
+        "B2/B11 producer": 7
+      },
+      "patterns": {
+        "orig": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "scratch-root": 5,
+          "traceback-location": 3
+        },
+        "orig2": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "scratch-root": 5,
+          "traceback-location": 3
+        },
+        "moved": {
+          "backup-directory": 1,
+          "junit-clock": 3,
+          "scratch-root": 5,
+          "traceback-location": 3
+        }
+      },
+      "status": "EQUAL after closed-list fields [B2, B11]"
+    },
+    {
+      "case": "integrate-candidate",
+      "exit_codes": {
+        "orig": 0,
+        "orig2": 0,
+        "moved": 0
+      },
+      "noise": [],
+      "differences": [
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/__main__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/_upstream_pins.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/analysis/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/analysis/source_referent.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/cli/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/cli/study.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/manifest.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/model_contract.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/models.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/seal.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/serialize.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/verify.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/contracts/versions.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/errors.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/identifier_types.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/models.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/qualified_names.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/core/type_mapping.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/diagnostics.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/display.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/elaborate.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/expression_evidence.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/extraction_screen.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/graph.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/identity.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/occurrence.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/elaboration/project.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/binding_evidence.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/binding_source.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/calc_compat_renderer.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/data_models.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/errors.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/expression_compiler.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/expression_utils.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/extractor.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/modeled_defaults.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/source_evidence.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/source_manifest.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/extraction/unit_annotation.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/constraint_catalog.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/constraint_name_safety.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/constraint_plan.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/coverage.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/entry_point.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/errors.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/initialization.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/modules.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/pipeline.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/predicate_compiler.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/preservation.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/registry.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/schemas.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/stencils.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/test_gen.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/generation/type_mapping.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/orchestration/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/orchestration/elaborated_pipeline.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/orchestration/exact_pipeline_context.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/orchestration/pipeline_context.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/resolution/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/resolution/models.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/snapshot/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/snapshot/capture.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/snapshot/envelope.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/snapshot/instance_graph.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__init__.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/census.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/declarations.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/roots.py: only in moved",
+        "/read_coverage.json/declarations under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/templates/__init__.py: only in moved",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/__pycache__/__init__.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/__init__.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/common.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/identity.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/manifest.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads elsewhere/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/roots.cpython-312.pyc: only in orig",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/common.cpython-312.pyc: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/identity.cpython-312.pyc: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/__pycache__/manifest.cpython-312.pyc: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/common.py: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/identity.py: only in moved",
+        "/read_coverage.json/reads under the tool root/<S>/venv/lib/python3.12/site-packages/sysml_codegen/study/manifest.py: only in moved"
+      ],
+      "closed_list": {
+        "B13 preloaded standard-library read": 14,
+        "B2 addition sysml_codegen/study/census.py": 1,
+        "B2 addition sysml_codegen/study/declarations.py": 1,
+        "B2 addition sysml_codegen/study/roots.py": 4,
+        "B2 command[0]": 2,
+        "B2 source digest": 8,
+        "B2 tool.path": 4,
+        "B2/B11 producer": 6,
+        "B8 gate 7 detail digest": 2,
+        "B8 receipt": 1
+      },
+      "patterns": {
+        "orig": {
+          "atomic-write-temp": 2,
+          "backup-directory": 1,
+          "junit-clock": 6,
+          "read-coverage-token": 1,
+          "scratch-root": 542,
+          "teax-staging-directory": 1
+        },
+        "orig2": {
+          "atomic-write-temp": 2,
+          "backup-directory": 1,
+          "junit-clock": 6,
+          "read-coverage-token": 1,
+          "scratch-root": 542,
+          "teax-staging-directory": 1
+        },
+        "moved": {
+          "atomic-write-temp": 2,
+          "backup-directory": 1,
+          "junit-clock": 6,
+          "read-coverage-token": 1,
+          "scratch-root": 618,
+          "teax-staging-directory": 1
+        }
+      },
+      "status": "DIFFERENT"
+    }
+  ]
+}

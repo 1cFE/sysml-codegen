@@ -1,0 +1,21 @@
+{
+  "case": "preflight-clean-dirty",
+  "exit_codes": {
+    "orig": 1,
+    "orig2": 1,
+    "moved": 1
+  },
+  "noise": [],
+  "differences": [],
+  "closed_list": {
+    "B2 addition sysml_codegen/study/roots.py": 1,
+    "B2 source digest": 2,
+    "B2 tool.path": 1
+  },
+  "patterns": {
+    "orig": {},
+    "orig2": {},
+    "moved": {}
+  },
+  "status": "EQUAL after closed-list fields [B2]"
+}

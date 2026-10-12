@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout": "",
+  "stderr": "channel off tolerance on case station-grid-v1:c0009, channel PumpStation__station__pumping__annual_cost: store 176.0, oracle 176.00017599999998, relative deviation 1.000e-06 (tolerance 1e-09); absolute error 1.760e-04 (declared tolerance 0)\n"
+}
