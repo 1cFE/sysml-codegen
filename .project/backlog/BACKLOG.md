@@ -1,6 +1,6 @@
 # Product Backlog
 
-**Updated:** 2026-10-11
+**Updated:** 2026-10-12
 
 Current work and independently justified follow-ons. Owner-originated rulings retain their source authority; agent proposals remain challengeable. Historical closed work is available through Git and durable registers.
 
@@ -216,6 +216,46 @@ Of those 32, the 23 in the three named families (EPC 8, GA 8, LVP 9, minus REQ-E
 - **[INLINE-PREDICATE-MARKER-DROP] `@inapplicable:` markers on inline-predicate constraints never reach the domain — P3 `[AGENT]`, unowned.** SysIDE drops a `doc` comment inside an inline-predicate constraint body (`constraint X { doc /* … */ <predicate> }`), so an `@inapplicable:` marker written on that shape is silently discarded. Measured in CONSTRAINT-SEMANTICS Item 5 Phase 1 on the CATF derivative's five part-definition guards: **5 markers written in source, 0 carried on the domain**, with the markers in the exact form and first-line placement the Item 2 fixtures pin. Every Item 2 fixture that carries a working marker is bindings-form, so the gap was never exercised. Already named as rule 3 of `tests/conformance/test_constraint_population_oracle.py`, which fails loudly when it happens — this entry is for closing the gap, not for detecting it. Until it closes, an inapplicability disposition on an inline-predicate usage has to be recorded in PROVENANCE instead of in source. **Closing this defect is what fires the B1–B5 marker migration** — move the five `@inapplicable:` markers out of `tests/fixtures/catf_mfe_gated/PROVENANCE.md` §3b and into source, and retire the workaround. Epic Item 9 ran on 2026-08-13 with that criterion recorded as a conditional that did not fire, precisely because this entry is still open; it is not Item 9 that retires the workaround.
 
 - **[CATF-ACCEPTANCE-LANE-MANUAL] The CATF end-to-end feasibility-rejection lane is a reproduced run, not a committed test — P3 `[AGENT]`, unowned.** Item 5's SC-5 has two halves. The coverage half is durably gated (population oracle by scan; `tests/unit/data/expected-coverage.md` drives `tests/unit/test_coverage_ledger_agreement.py`). The feasibility half — the authored CATF design point reaching `reject` through generate → seal → load → execute → policy → durable record — is recorded evidence reproducible from `probes/acceptance_run.py` in the archived item home, and nothing fails if it regresses. Deliberate at the time (the lane needs the TEAx checkout on `constraint-semantics-item3`, which is unmerged). Fix direction: mark the lane as intentionally manual in a named place, or file it as a licensed/marked test once the TEAx branch lands.
+
+## Study Layer (WRAP-SPLIT Item 3 follow-ups)
+
+Filed by the audit fix pass of WRAP-SPLIT Item 3 (study-layer-to-codegen, branch `study-layer-to-codegen`), 2026-10-12, on the orchestrator's brief, because the item folder is deleted at close (audit F2). The audit is `01990a5:.project/active/study-layer-to-codegen/audit.md`; `evidence/` paths below are in that commit's item folder.
+
+### [STUDY-RECORD-RESUME] A resume path for a study record stopped at § 17 — unscheduled `[AGENT]`
+
+The shipped runbook (`src/sysml_codegen/assets/skills/run-study/runbook.md`) has a § 17 stop rule but does not say how a stopped record resumes. Item 3's dry run hit it: the agent obeyed record immutability and started a new study id, which is defensible but costly (dry-run finding F-DR1, `evidence/dry-run/run-20261012/RESULT.md:36`). The text came over unchanged from fusion-tea's runbook, and changing the record lifecycle was outside Item 3's closed list. Source: audit F2 and its F-DR1 disposition.
+
+### [STUDY-ROUTE-POINT-RUNNER] The route contract leaves the point runner open — unscheduled, the owner's or orchestrator's call `[AGENT]`
+
+The shipped contract for a package's route names `execute_baseline` and then "whatever runs the study's points" (`runbook.md:261`). A route that fixes its grid in code therefore satisfies the contract and still defeats step 7's rule that the window is chosen after the oracle scan (`runbook.md:83`). Requiring the point runner to take step 7's window would change study semantics, so the decision is not an implementer's. This restates dry-run finding F-DR2, whose recorded cause was wrong: the neutral fixture's route already has a points entry, `run_points` (`tests/fixtures/study_station/studies/study_route.py:44`); the dry run fixed its grid because its brief named only `execute_baseline` and `run_grid` (`evidence/dry-run/brief.md:29`). Source: audit F4.
+
+### [INTEGRATE-CALLER-ERROR-AS-SEAM-FAULT] `integrate` reports two caller mistakes as `seam-internal-error` — unscheduled `[AGENT]`, inherited
+
+Both paths fail closed, but each says "the seam broke" for a caller's error:
+
+- A `--census-file` that is valid JSON of the wrong shape, or lacks `derived_against_semantic_fingerprint`, raises `KeyError` or `TypeError` in gate 4 (`src/sysml_codegen/study/integrate.py:1206-1221`). The catch-all at `:1621` returns `seam-internal-error`, exit 2.
+- A baseline result without `executed_under.store_id` raises `KeyError` at `:1298`, which escapes the `ToolError`-only handler at `:1350`, also exit 2.
+
+Both are byte-faithful to fusion-tea `b06585709`, so the fix is a behaviour change and was kept out of the move. The audit's proposed mapping: gate 4 `input-invalid` for the census, gate 7 `could_not_run` for the baseline result. The `index` mypy override on `integrate` is what hides them (see the next item). Source: audit F5.
+
+### [STUDY-PORTED-MYPY-OVERRIDES] Typing debt in the eight ported study modules — P3 `[AGENT]`
+
+`pyproject.toml`'s `[[tool.mypy.overrides]]` blocks relax checking for the eight modules ported byte-faithfully from fusion-tea (`common`, `identity`, `indicators`, `integrate`, `manifest`, `preflight`, `read_coverage`, `verify`). The audit's strict probe (`--check-untyped-defs --disallow-untyped-defs`, 53 errors in 6 files) found what each hides:
+
+- `disallow_untyped_defs = false` (all eight): 29 untyped defs (read_coverage 12, verify 12, preflight 3, integrate 2). Looseness only; checking their bodies found nothing beyond the codes below.
+- `identity` `attr-defined`: `.get` on `object` at `:262`, unreachable because the contract is validated first.
+- `indicators` `arg-type`, `no-any-return`: `arg-type` at `:617` (a `None` key, guarded at `:618`) and `:903`; `no-any-return` at `:134`. Looseness.
+- `integrate` `index`, `no-any-return`: `:1210-1221` and `:1298` hide the two real misreports in [INTEGRATE-CALLER-ERROR-AS-SEAM-FAULT]; `:1169` and `:1388-1389` are looseness over validated documents.
+- `manifest` `no-any-return`: `:402`, over a schema-validated manifest.
+- `preflight` `arg-type`, `assignment`, `attr-defined`: seven guarded `arg-type` sites at `:383-417`, `assignment` at `:313`, and `attr-defined` at `:126` and `:136`. The last two are real but cosmetic: a non-object `model_contract.json` gives an `AttributeError` traceback, still exit 1 with no document.
+- `verify` `index`: `:507`, after the contract is asserted at `:500`.
+- `ignore_missing_imports` for `simkit` and `yaml`: no stubs.
+
+Typing the modules is a byte change, so it belongs after fusion-tea adopts the moved layer. The `no-any-return` sites were not re-probed by the audit; their list rests on Item 3's Phase 1 mypy run. Source: audit § Code integrity, "The mypy overrides, named".
+
+### [STUDY-LAYER-PRODUCT-ENTRY] Product-ledger entry for the study layer — due at Item 3's close `[AGENT]`
+
+The spec and design promise that, at close, `.project/product/` gains an entry for the study layer citing the owner's 2026-10-06 decision that it ships from sysml-codegen (`01990a5:.project/active/study-layer-to-codegen/spec.md:239`, `design.md:457`). Without it, P-004's parse-walk-emit definition (`.project/product/0004-product-identity-parse-walk-emit.md`) reads as excluding a layer `README.md` now claims; P-001 already gives the layer its role. Add it with `.project/scripts/product.sh` at `/_my_close`. Source: audit F2.
 
 ## Historical Scope Question
 
