@@ -1,18 +1,18 @@
 # Record template
 
-Copy this file to `<studies-dir>/<study-id>/record.md` and fill it in. Everything below the line marked **END OF RECORD** is template guidance and is not copied into the record.
+Copy this file into the study's record directory, the folder named for the study id in the package's studies directory, as `record.md`, and fill it in. Everything below the line marked **END OF RECORD** is template guidance and is not copied into the record.
 
 **The values/arguments split.** A study record is two files. `snapshot.json` holds resolved values and digests — things a checker parses and a human skims past. `record.md` holds arguments and judgments — things a human must read and no checker can validate. Neither restates the other. The worked example is the sweep window: its bounds and its `engineered | sourced` provenance are values and live in `snapshot.json` under `arms[].window`; *how the window was chosen* is an argument and lives here in §11. When a fact feels like both, ask which half a checker could evaluate — that half is the value, the rest is the argument.
 
 **Fixed headings.** All seventeen headings below appear in every record, verbatim and in order. A missing fact is then a visibly missing heading rather than a judgement call. Addendum headings may follow §17.
 
-**The explicit-nil rule.** Every conditional obligation is discharged by content or by a stated nil that names the condition — "not applicable: `<axis>` is sensitivity-framed", "glue ledger: none — nothing on this route is harness-supplied", "single fingerprint, no cross-arm correlation needed". Silence discharges nothing.
+**The explicit-nil rule.** Every conditional obligation is discharged by content or by a stated nil that names the condition — "not applicable: this axis is sensitivity-framed", "glue ledger: none — nothing on this route is harness-supplied", "single fingerprint, no cross-arm correlation needed". Silence discharges nothing.
 
 **Weight.** Sections are short and adaptive. Presence is what is mandatory, not length.
 
-**Placeholders.** Every `<...>` token is typed, not an example value. An unreplaced `<...>` in a committed record is a commit-blocking defect.
+**Placeholders.** Every placeholder below, a word or phrase in angle brackets, is typed, not an example value. An unreplaced placeholder in a committed record is a commit-blocking defect. This preamble holds none, so it is copied as it stands and step 15's placeholder check still prints 0.
 
-**Immutability.** Once committed, this file is corrected by appending `## Addendum <YYYY-MM-DD>` at the end, never by editing prior text. An addendum may correct this record's *statement* of a fact; it may never alter `snapshot.json`, `indicators.json`, or anything under `results/`. A changed snapshot value is a different study and gets a new study id.
+**Immutability.** Once committed, this file is corrected by appending an `## Addendum` heading, followed by the date as YYYY-MM-DD, at the end, never by editing prior text. An addendum may correct this record's *statement* of a fact; it may never alter `snapshot.json`, `indicators.json`, or anything under `results/`. A changed snapshot value is a different study and gets a new study id.
 
 ---
 

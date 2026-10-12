@@ -68,7 +68,7 @@ The policy's existing text is the home of every `SP-` row: fusion-tea keeps its 
 
 | Id | fusion-tea line(s) | Text (quoted, ≤ 12 words) | Class | Verdict | New text, or destination |
 |---|---|---|---|---|---|
-| RT-1 | :3 | "Copy this file to `exploration/<pkg>/studies/<study-id>/record.md`" | path | moved | Ships "`<studies-dir>/<study-id>/record.md`". Home: Policy § 12, added on the O4 branch; anchor `exploration/<pkg>/studies/<study-id>/` |
+| RT-1 | :3 | "Copy this file to `exploration/<pkg>/studies/<study-id>/record.md`" | path | moved | Ships "the study's record directory, the folder named for the study id in the package's studies directory" (worded without `<` since audit F3). Home: Policy § 12, added on the O4 branch; anchor `exploration/<pkg>/studies/<study-id>/` |
 | RT-2 | :22 | "glue ledger: none — no adapter on this route" | adapter | generalized | "glue ledger: none — nothing on this route is harness-supplied" |
 | RT-3 | :61 | "**LCOE objective channel(s):**" | objective | generalized | "**Objective channel(s):**" |
 | RT-4 | :62 | "**LCOE result:**" | objective | generalized | "**Objective result:**" |
@@ -213,7 +213,7 @@ These have no fusion-tea home to find, because nothing fusion-specific left with
 - **Phase 6 (orchestrator's fix 4).** The runbook's "The tools" and the guide's "Where the project root is" state how a route under read coverage finds its root: from the package's work tree with no variable, and a refusal naming `SYSML_CODEGEN_PROJECT_ROOT` when the package is in no work tree. The guide's line on invoking a producer by hand no longer implies the variable is always needed.
 - **Guide.** "one of fourteen stable slugs" (`:159`) said fourteen beside a table of fifteen; it now says fifteen. "Nine inputs. Four of them are optional to `argparse`…" (`:53`) miscounted, and every flag is optional to `argparse`; it now reads "Four inputs are optional to the request but **not** optional to the answer". New sections: "The project's declaration", "Where the project root is", "The snapshot rule", the census file's shape, and "teax at gate 0". The exit-2 row names the two exits that write no document.
 - **Runbook.** New: the "studies directory" paragraph, "The tools", "What a package annex supplies", and the Check lines of steps 14 and 15 (DD12). The Check commands carry no literal `<`, so recording them in `record.md` § 14 leaves the placeholder check true; the design's `grep -c '<' record.md` would fail once recorded.
-- **Record template.** § 14 says the Check commands are recorded there. The history note is new (D7).
+- **Record template.** § 14 says the Check commands are recorded there. The history note is new (D7). Audit F3: the preamble above § 1 holds no `<`, because the template copies it into every record and step 15's first Check counts every `<`; its `<axis>`, `<...>` and `<YYYY-MM-DD>` tokens are now worded, and the placeholder rule says the preamble holds none (`tests/study/test_run_study_bundle.py::test_a_literal_copy_of_the_record_template_passes_the_placeholder_check`).
 - **Annex template.** New file (DD18).
 - **Policy template.** New header lines "**Snapshot**" and "**This project fills in**"; new slots § 6, § 7 and § 10.
 

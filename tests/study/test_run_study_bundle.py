@@ -10,6 +10,8 @@ skill's frontmatter, and the digest shape the record template shows.
 from __future__ import annotations
 
 import re
+import subprocess
+from pathlib import Path
 
 from agentic_mbse.cli.installation import frontmatter
 
@@ -118,6 +120,31 @@ def test_steps_14_and_15_carry_their_check_lines() -> None:
         commands = check.split("```bash\n", 1)[1].split("```", 1)[0]
         recorded = commands.replace("<study-id>", "")
         assert "<" not in recorded, "a recorded command must not add a '<'"
+
+
+def test_a_literal_copy_of_the_record_template_passes_the_placeholder_check(
+    tmp_path: Path,
+) -> None:
+    """An executor who copies the template exactly passes step 15's placeholder Check (audit F3).
+
+    The template says to copy everything above **END OF RECORD**. Its placeholders sit in
+    §§ 1–17; the text above § 1 is copied as it stands. With every placeholder replaced, the
+    shipped Check, run as the runbook gives it, must print 0. The copied preamble used to hold
+    four '<'.
+    """
+    lines = RECORD_TEMPLATE.read_text().splitlines(keepends=True)
+    end = lines.index("**END OF RECORD**\n")
+    first = next(i for i, line in enumerate(lines) if line.startswith("## 1."))
+    placeholder = re.compile(r"<[^<>\n]+>")
+    filled = lines[:first] + [placeholder.sub("filled", line) for line in lines[first:end]]
+    (tmp_path / "record.md").write_text("".join(filled))
+
+    step15 = RUNBOOK.read_text().split("### 15.", 1)[1].split("\n---\n", 1)[0]
+    commands = step15.split("```bash\n", 1)[1].split("```", 1)[0].splitlines()
+    label = next(i for i, line in enumerate(commands) if line.startswith("# 0: no unreplaced"))
+    done = subprocess.run(["bash", "-c", commands[label + 1]], cwd=tmp_path,
+                          capture_output=True, text=True, check=True)
+    assert done.stdout == "0\n"
 
 
 def _source_digest_blocks(text: str) -> list[str]:
