@@ -6,7 +6,7 @@ owner: Reid W
 status: active
 amended_by: []
 superseded_by: null
-provenance: "[AGENT] (design DD2, approved for planning by the orchestrator, 2026-10-12)"
+provenance: "[AGENT] (design DD2, approved for planning by the orchestrator, 2026-10-12; narrowed to the root rule roots.py implements, audit F6, 2026-10-12)"
 seams: [study, fusion-tea]
 supersedes: null
 promoted_to: null
@@ -14,7 +14,7 @@ promoted_to: null
 
 ## Decision
 
-The study tools (`sysml_codegen.study`) cite every path relative to a project root that `study/roots.py` names. The first rule that applies wins: an in-process override (`roots.use_project_root`, for library callers such as fusion-tea's module aliases), then `SYSML_CODEGEN_PROJECT_ROOT`, then the git work tree that contains the package the tool was given. A tool refuses with exit 2 and writes nothing when the package is in no work tree and neither override is set, or when the working directory is inside a different work tree from the package.
+The study tools (`sysml_codegen.study`) cite every path relative to a project root that `study/roots.py` names. The first rule that applies wins: an in-process override (`roots.use_project_root`, for library callers such as fusion-tea's module aliases), then `SYSML_CODEGEN_PROJECT_ROOT`, then a git work tree. On a tool's command line, that work tree is the one containing the package the tool was given, and the tool refuses with exit 2 and writes nothing when the package is in no work tree and neither override is set, or when the working directory is inside a different work tree from the package. A library call uses the working directory's work tree instead and checks no conflict, unless something has pinned the root: `integrate` exports it to every producer, and read coverage pins it from the package before it observes a route.
 
 ## Why
 
@@ -25,7 +25,8 @@ The study tools (`sysml_codegen.study`) cite every path relative to a project ro
 
 ## Invariants established
 
-- A document's paths are relative to the project root and are the same from any working directory. No root, or a conflicting one, is exit 2 with no document (design I3).
+- A document a tool writes from its command line has paths relative to the project root, the same from any working directory. No root, or a conflicting one, is exit 2 with no document (design I3).
+- A library call that nothing has pinned, such as a route that calls `identity.build_sealed` when run by hand, resolves the root from the working directory. Run from inside another repository, it cites paths with `..` segments and nothing compares them. The runbook's "The tools" states this rule.
 - `integrate` hands the root it judged to every producer as `SYSML_CODEGEN_PROJECT_ROOT`. Read coverage resolves and pins the root before it observes a route, so a route in a git work tree needs no variable.
 
 ## Rejected alternatives
