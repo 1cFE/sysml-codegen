@@ -12,3 +12,6 @@
 - 0008 · Cross-repo merges use explicit merge commits, never squash or rebase · seams: git-workflow, fusion-tea
 - 0009 · Compute identifiers once, look up thereafter · seams: extraction, elaboration, generation
 - 0010 · Coverage truth and headline semantics · seams: generation, teax, reporting
+- 0015 · Study tools anchor the project root to the package's git work tree, with an explicit override · seams: study, fusion-tea
+- 0016 · Reuse agentic-mbse's installer through an API version pin, not a package-version bound · seams: installer, agentic-mbse, fusion-tea
+- 0017 · Study location settings are the one environment read reachable from the CLI · seams: study, cli, conformance
