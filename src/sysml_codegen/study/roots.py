@@ -16,8 +16,10 @@ site-packages, so each former ``__file__`` question is answered here by the root
   document: the anchor is in no work tree, or the working directory is inside a different
   work tree from the anchor. A working directory outside every work tree is not a conflict,
   so a tool run from a scratch directory cites the same paths as one run from the project.
-  When an override applies, no work-tree check runs, and a package outside the root renders
-  with leading ``..`` segments.
+  When git fails for any reason other than "not a git repository", such as a repository it
+  refuses for dubious ownership, the tool is refused the same way and the message carries
+  git's own. When an override applies, no work-tree check runs, and a package outside the
+  root renders with leading ``..`` segments.
 - **The tool home** anchors tool identity: ``tool.path`` and every tool-source digest. It is
   the directory that holds the installed ``sysml_codegen`` package.
 - **The teax root** is ``TEAX_SIMKIT_PATH``, a simkit root, and nothing else.
@@ -38,6 +40,9 @@ TEAX_SIMKIT_PATH = "TEAX_SIMKIT_PATH"
 
 #: The directory holding ``sysml_codegen/``. The one place where ``__file__`` is the answer.
 TOOL_HOME: Path = Path(__file__).resolve().parents[2]
+
+#: git's wording, under ``LC_ALL=C``, when a directory is in no repository at all.
+_NOT_A_REPOSITORY = "not a git repository"
 
 #: Set only by :func:`use_project_root`: a library caller's explicit project root.
 _override: Path | None = None
@@ -106,15 +111,27 @@ def teax_simkit_path() -> Path | None:
 
 
 def _work_tree(start: Path) -> Path | None:
-    """The top of the git work tree containing the directory ``start``, or ``None``."""
+    """The top of the git work tree containing the directory ``start``, or ``None`` if none does.
+
+    Any other git failure raises :class:`RootError` carrying git's own message. A repository
+    git refuses, for example for dubious ownership, is not the absence of a work tree, and
+    git's message names the remedy.
+    """
     done = subprocess.run(
         ["git", "-C", str(start), "rev-parse", "--show-toplevel"],
         capture_output=True,
         text=True,
+        # The "not a git repository" test below reads git's message, so it must be untranslated.
+        env={**os.environ, "LC_ALL": "C"},
     )
-    if done.returncode != 0:
+    if done.returncode == 0:
+        return Path(done.stdout.strip()).resolve()
+    if _NOT_A_REPOSITORY in done.stderr:
         return None
-    return Path(done.stdout.strip()).resolve()
+    raise RootError(
+        f"cannot tell which git work tree contains {start}: git says: {done.stderr.strip()}; "
+        f"resolve that, or set {PROJECT_ROOT_ENV} to the project root"
+    )
 
 
 def _named_root(value: str, source: str) -> Path:

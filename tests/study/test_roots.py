@@ -170,6 +170,40 @@ def test_a_cwd_inside_another_work_tree_refuses(
     assert str(other_repo) in err and str(package_repo) in err
 
 
+def test_a_repository_git_refuses_is_refused_with_gits_message(
+    package_repo: Path,
+    outside: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Dubious ownership is not "no work tree": the refusal carries git's own remedy.
+
+    ``GIT_TEST_ASSUME_DIFFERENT_OWNER`` is git's own switch for producing this failure
+    without a second user account.
+    """
+    monkeypatch.chdir(outside)
+    monkeypatch.setenv("GIT_TEST_ASSUME_DIFFERENT_OWNER", "1")
+    with pytest.raises(SystemExit) as exit_:
+        roots.require_project_root("verify", package_repo / "pkg")
+    err = capsys.readouterr().err
+    assert exit_.value.code == 2
+    assert "detected dubious ownership" in err and "safe.directory" in err
+    assert "in no git work tree" not in err
+    assert roots.PROJECT_ROOT_ENV in err
+
+
+def test_a_git_failure_in_the_working_directory_is_not_read_as_outside(
+    package_repo: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Inside ``.git`` there is no work tree to compare, and git says so; that refuses too."""
+    monkeypatch.chdir(package_repo / ".git")
+    with pytest.raises(SystemExit) as exit_:
+        roots.require_project_root("indicators", package_repo / "pkg")
+    err = capsys.readouterr().err
+    assert exit_.value.code == 2
+    assert "must be run in a work tree" in err
+
+
 def test_a_refused_tool_writes_no_document(
     synthetic_project: Path, other_repo: Path, tmp_path: Path
 ) -> None:
