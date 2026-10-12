@@ -1,0 +1,42 @@
+{
+  "artifact_hashes": {
+    "IMPLEMENTATION_BACKLOG.md": "d9cddb875b3fedd92a6af60484a23a4be71828d8fd0b4c1b87f7f91799df1dbc",
+    "__init__.py": "e884bd85aa7270619ae46eba8094a019da36b479e001563eb4811e98b951794b",
+    "contracts/generation_manifest.json": "5389450f074e425b1db47e62198380273a0111578a336d1572e4b52a1a8083e5",
+    "contracts/model_contract.json": "728f3c6a9403ea52c094970ba62b5e2c0298037d645570833ea0d95f6e8cdfbf",
+    "contracts/verify.py": "ad0a855af17d18af5f3e8c36b1a6c500f492d88ec777b40f307c646306c67284",
+    "handwritten/__init__.py": "fdb87b916dfcceb58c446d8769dc3583722ec7cbc0206ceec05ecd830cbe440c",
+    "handwritten/pumpstation/__init__.py": "200b1c90d646c8c58c2644945ee551dddc12adcfdab30b7ae4197891284a70c8",
+    "handwritten/pumpstation/pumpingcost_impl.py": "e1213a7a60de9d5b92c89c82fa7be5c30583d0d19f4487684c61880558aa40be",
+    "handwritten/pumpstation/requiredflow_impl.py": "4bd1a6b0f56dc412068895a9412d8ece5352e2068f0a77cbfc04775683200209",
+    "inputs/__init__.py": "fdb87b916dfcceb58c446d8769dc3583722ec7cbc0206ceec05ecd830cbe440c",
+    "inputs/station_params.json": "68a10e1e2222b96f84157b0733049e9ee3c96671ec94752247a665162ad51142",
+    "modules/__init__.py": "fdb87b916dfcceb58c446d8769dc3583722ec7cbc0206ceec05ecd830cbe440c",
+    "modules/constraints/__init__.py": "0fc3fea2d8e92bff93b86e656a302cf2800727bd2c3f9ff8d264930dcc73c8e1",
+    "modules/constraints/constraintreportaggregatormodule.py": "bc35569fc2a56ad65e1bd9f9ab34eb6c1095a6a7420e2b3273b7098579ae9896",
+    "modules/constraints/predicates.py": "54647888141d5898d6937d4dad98a0d5c6ba0120d8eea44c3e6c0d14b88c0e36",
+    "modules/pumpstation/__init__.py": "0fc3fea2d8e92bff93b86e656a302cf2800727bd2c3f9ff8d264930dcc73c8e1",
+    "modules/pumpstation/pumpingcost.py": "7de4a8fa29be561501aca83af1716d71ac5609b060d3683f09a7a0fb8ad6792c",
+    "modules/pumpstation/requiredflow.py": "505f65f8cd5149a8be2dc68f15c974d25f030f02f4f7cc1725cd72a80bb72afc",
+    "modules/pumpstation/stationpumpfitconstraintmodule.py": "62d267e01cad0a32cbc8fda5f430b7f694dd683aeb4188440a13783bf6b1d46a",
+    "pipelines/__init__.py": "fdb87b916dfcceb58c446d8769dc3583722ec7cbc0206ceec05ecd830cbe440c",
+    "pipelines/pipeline.yaml": "e32b4faacd46b1cda0b0e7d2a672a1ef6ad08ff18d38ffe7146421c4c7875fe4",
+    "primitives.py": "1bc6be58e5290b102d762227c33f138ecc4f9feaa00fa2f4cfd02f87f5f71998",
+    "schemas/__init__.py": "fdb87b916dfcceb58c446d8769dc3583722ec7cbc0206ceec05ecd830cbe440c",
+    "schemas/constraint_types.py": "c7910f974bd106e6d58f61bd0ae5ce28a2f63135bf841327a6b76a7a1d21cc49",
+    "schemas/station_params.py": "28d29b7f5218edbd08dea7c099faaf3ce317937420b9c2a12185447383a5895b",
+    "tests/__init__.py": "fdb87b916dfcceb58c446d8769dc3583722ec7cbc0206ceec05ecd830cbe440c",
+    "tests/test_implementations_runnable.py": "fccfbf8bba1441a144a7692aea31358c213b304c22df5fb6fb7a91f9a663a760"
+  },
+  "coverage_policy": {
+    "exclude_globs": [
+      "contracts/package_contract.json",
+      "**/__pycache__/**"
+    ],
+    "runtime_output_globs": []
+  },
+  "executable_fingerprint": "75c3cc58959e064834c27f0babce156dc042d099bba4b286fe8fefb385b78c00",
+  "generator_version": "0.1.1",
+  "package_name": "station_study",
+  "runtime_contract_version": "2.0.0"
+}

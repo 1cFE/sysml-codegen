@@ -1,0 +1,8 @@
+{
+  "PumpStation__station__allowed_rise_rate": 0.005,
+  "PumpStation__station__basin_area": 12.0,
+  "PumpStation__station__design_inflow": 0.3,
+  "PumpStation__station__energy_price": 0.1,
+  "PumpStation__station__installed_capacity": 0.25,
+  "PumpStation__station__pump_head": 8.0
+}

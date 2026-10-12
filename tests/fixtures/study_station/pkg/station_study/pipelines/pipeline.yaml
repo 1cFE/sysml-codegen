@@ -1,0 +1,63 @@
+# Generated Pipeline Configuration for station_study
+#
+# Auto-generated from SysML calc def dependency analysis
+# DO NOT EDIT - Regenerate using code generator
+
+metadata:
+  run_description: "Generated pipeline for station_study"
+  output_folder: "station_study_results"
+
+modules:
+  # Entry point - load inputs from JSON
+  entry_fusion:
+    module_type: EntryPoint
+    inputs:
+      station_params: StationParams ../inputs/station_params.json
+
+
+  # pumpstation.RequiredFlowModule
+  pumpstation__station__demand:
+    module_type: pumpstation.RequiredFlowModule
+    inputs:
+      rise_rate: float station_params.PumpStation__station__allowed_rise_rate
+      inflow: float station_params.PumpStation__station__design_inflow
+      area: float station_params.PumpStation__station__basin_area
+    outputs:
+      root: RootModel[float] PumpStation__station__demand__required_flow
+
+  # pumpstation.PumpingCostModule
+  pumpstation__station__pumping:
+    module_type: pumpstation.PumpingCostModule
+    inputs:
+      head: float station_params.PumpStation__station__pump_head
+      price: float station_params.PumpStation__station__energy_price
+      flow_rate: float PumpStation__station__demand__required_flow.root
+    outputs:
+      root: RootModel[float] PumpStation__station__pumping__annual_cost
+
+  # pumpstation.StationPumpFitConstraintModule
+  pumpstation__station__pump_fit__aa8dd6c31b6b238a:
+    module_type: pumpstation.StationPumpFitConstraintModule
+    inputs:
+      capacity: float station_params.PumpStation__station__installed_capacity
+      demand_flow: float PumpStation__station__demand__required_flow.root
+    outputs:
+      evaluation: ConstraintEvaluation PumpStation__station__pump_fit__aa8dd6c31b6b238a__evaluation
+
+  # constraints.ConstraintReportAggregatorModule
+  constraint_report_aggregator:
+    module_type: constraints.ConstraintReportAggregatorModule
+    inputs:
+      PumpStation_station_pump_fit_aa8dd6c31b6b238a: ConstraintEvaluation PumpStation__station__pump_fit__aa8dd6c31b6b238a__evaluation
+    outputs:
+      constraint_report: ConstraintReport constraint_report
+
+
+  # Exit point - capture all results
+  exit_point:
+    module_type: ExitPoint
+    outputs:
+      PumpStation__station__demand__required_flow: RootModel[float] PumpStation__station__demand__required_flow.json
+      PumpStation__station__pumping__annual_cost: RootModel[float] PumpStation__station__pumping__annual_cost.json
+      PumpStation__station__pump_fit__aa8dd6c31b6b238a__evaluation: ConstraintEvaluation PumpStation__station__pump_fit__aa8dd6c31b6b238a__evaluation.json
+      constraint_report: ConstraintReport constraint_report.json
