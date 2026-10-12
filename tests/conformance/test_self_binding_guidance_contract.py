@@ -6,10 +6,10 @@ published teaching falsifiable instead of trusted (D3):
 
 * every fenced example carrying a ``@pinned`` provenance marker is compared with the
   sysml-codegen fixture it cites — content drift on either side fails here;
-* exactly one document across all four instruction trees carries the authoritative
+* exactly one document across all five instruction trees carries the authoritative
   marker, and the summary surfaces point at it;
-* the self-named worked-example sweep returns nothing unmarked across ``claude/``,
-  ``.claude/``, ``docs/patterns/`` and ``project_templates/`` — a refused shape may
+* the self-named worked-example sweep returns nothing unmarked across ``agents/``,
+  ``skills/``, ``.claude/``, ``docs/patterns/`` and ``project_templates/`` — a refused shape may
   appear only inside an explicitly marked block or as prose (no trailing ``;``);
 * the reviewed owner-qualified inventory is pinned file by file, with the two template
   sites recorded as rewritten to D-5 (owner ruling D11) and the three deliberate
@@ -52,8 +52,8 @@ ANY_BINDING = re.compile(r"\bin\s+[\w']+\s*=")
 
 OWNER_CLASSES = {"usage", "definition", "n/a"}
 
-#: The four instruction trees the sweep covers (relative to the agentic checkout root).
-INSTRUCTION_TREES = ("claude", ".claude", "docs/patterns", "project_templates")
+#: The five instruction trees the sweep covers (relative to the agentic checkout root).
+INSTRUCTION_TREES = ("agents", "skills", ".claude", "docs/patterns", "project_templates")
 
 #: The reviewed owner-qualified inventory (design D11). Keys are files relative to the
 #: agentic root; values are the expected positive-site counts after the review. The two
@@ -78,7 +78,7 @@ QUALIFIED_NEGATIVE_FILES = (
 
 #: Surfaces that carry the short rule plus a pointer to the authoritative copy (D2).
 POINTER_SURFACES = (
-    "claude/skills/sysml-conventions/SKILL.md",
+    "skills/sysml-conventions/SKILL.md",
     "project_templates/MODELING_PROCESS.md.template",
     "project_templates/MODELING_GUIDE.md.template",
 )
@@ -249,7 +249,7 @@ def test_dot_claude_tree_still_has_no_binding_instruction_surface() -> None:
     """The plan-time inventory found no calculation-binding instruction under the
     tracked .claude tree, so no duplicate pointer was created there. This records
     that zero-edit result: a future binding surface in .claude becomes visible
-    here and must either point at the authoritative copy or move to claude/."""
+    here and must either point at the authoritative copy or move to agents/ or skills/."""
     root = agentic_root()
     offenders = [
         str(path.relative_to(root))

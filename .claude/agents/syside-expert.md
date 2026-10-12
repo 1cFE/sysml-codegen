@@ -1,1 +1,1 @@
-/home/reid/1cfe/agentic-mbse/claude/agents/syside-expert.md
+/home/reid/1cfe/agentic-mbse/agents/syside-expert.md
