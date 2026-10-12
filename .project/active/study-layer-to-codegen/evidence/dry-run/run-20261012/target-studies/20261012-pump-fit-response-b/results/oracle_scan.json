@@ -1,0 +1,126 @@
+{
+  "scanned_with": "studies/oracle_entry.py evaluate",
+  "grid_source": "studies/study_route.py GRID",
+  "rows": [
+    {
+      "point": {
+        "PumpStation__station__basin_area": 4.0,
+        "PumpStation__station__installed_capacity": 0.2
+      },
+      "required_flow": 0.27999999999999997,
+      "annual_cost": 223.99999999999997,
+      "margin": -0.07999999999999996,
+      "pump_fit": "violated"
+    },
+    {
+      "point": {
+        "PumpStation__station__basin_area": 4.0,
+        "PumpStation__station__installed_capacity": 0.25
+      },
+      "required_flow": 0.27999999999999997,
+      "annual_cost": 223.99999999999997,
+      "margin": -0.02999999999999997,
+      "pump_fit": "violated"
+    },
+    {
+      "point": {
+        "PumpStation__station__basin_area": 4.0,
+        "PumpStation__station__installed_capacity": 0.3
+      },
+      "required_flow": 0.27999999999999997,
+      "annual_cost": 223.99999999999997,
+      "margin": 0.020000000000000018,
+      "pump_fit": "satisfied"
+    },
+    {
+      "point": {
+        "PumpStation__station__basin_area": 8.0,
+        "PumpStation__station__installed_capacity": 0.2
+      },
+      "required_flow": 0.26,
+      "annual_cost": 208.00000000000003,
+      "margin": -0.06,
+      "pump_fit": "violated"
+    },
+    {
+      "point": {
+        "PumpStation__station__basin_area": 8.0,
+        "PumpStation__station__installed_capacity": 0.25
+      },
+      "required_flow": 0.26,
+      "annual_cost": 208.00000000000003,
+      "margin": -0.010000000000000009,
+      "pump_fit": "violated"
+    },
+    {
+      "point": {
+        "PumpStation__station__basin_area": 8.0,
+        "PumpStation__station__installed_capacity": 0.3
+      },
+      "required_flow": 0.26,
+      "annual_cost": 208.00000000000003,
+      "margin": 0.03999999999999998,
+      "pump_fit": "satisfied"
+    },
+    {
+      "point": {
+        "PumpStation__station__basin_area": 12.0,
+        "PumpStation__station__installed_capacity": 0.2
+      },
+      "required_flow": 0.24,
+      "annual_cost": 192.0,
+      "margin": -0.03999999999999998,
+      "pump_fit": "violated"
+    },
+    {
+      "point": {
+        "PumpStation__station__basin_area": 12.0,
+        "PumpStation__station__installed_capacity": 0.25
+      },
+      "required_flow": 0.24,
+      "annual_cost": 192.0,
+      "margin": 0.010000000000000009,
+      "pump_fit": "satisfied"
+    },
+    {
+      "point": {
+        "PumpStation__station__basin_area": 12.0,
+        "PumpStation__station__installed_capacity": 0.3
+      },
+      "required_flow": 0.24,
+      "annual_cost": 192.0,
+      "margin": 0.06,
+      "pump_fit": "satisfied"
+    },
+    {
+      "point": {
+        "PumpStation__station__basin_area": 16.0,
+        "PumpStation__station__installed_capacity": 0.2
+      },
+      "required_flow": 0.21999999999999997,
+      "annual_cost": 176.0,
+      "margin": -0.019999999999999962,
+      "pump_fit": "violated"
+    },
+    {
+      "point": {
+        "PumpStation__station__basin_area": 16.0,
+        "PumpStation__station__installed_capacity": 0.25
+      },
+      "required_flow": 0.21999999999999997,
+      "annual_cost": 176.0,
+      "margin": 0.030000000000000027,
+      "pump_fit": "satisfied"
+    },
+    {
+      "point": {
+        "PumpStation__station__basin_area": 16.0,
+        "PumpStation__station__installed_capacity": 0.3
+      },
+      "required_flow": 0.21999999999999997,
+      "annual_cost": 176.0,
+      "margin": 0.08000000000000002,
+      "pump_fit": "satisfied"
+    }
+  ]
+}

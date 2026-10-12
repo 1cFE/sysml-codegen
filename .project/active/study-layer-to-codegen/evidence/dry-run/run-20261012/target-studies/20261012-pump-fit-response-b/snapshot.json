@@ -1,0 +1,400 @@
+{
+  "snapshot_schema_version": "1",
+  "study_id": "20261012-pump-fit-response-b",
+  "package": {
+    "path": "pkg/station_study",
+    "package_name": "station_study",
+    "repo_commit": "5eb5dbb1599ba04e5cb8aaf0f77454444ab0c442",
+    "git_clean": true
+  },
+  "fingerprints": {
+    "indicator_inputs": {
+      "recipe": "indicator-input-fingerprint/v1",
+      "digest": "7a5e6ff32b61d3d4522df18105e20be0e9d3433c1ab713fdfdb8f71aba45fe85",
+      "files": [
+        {
+          "path": "contracts/model_contract.json",
+          "sha256": "728f3c6a9403ea52c094970ba62b5e2c0298037d645570833ea0d95f6e8cdfbf"
+        },
+        {
+          "path": "inputs/station_params.json",
+          "sha256": "68a10e1e2222b96f84157b0733049e9ee3c96671ec94752247a665162ad51142"
+        },
+        {
+          "path": "pipelines/pipeline.yaml",
+          "sha256": "e32b4faacd46b1cda0b0e7d2a672a1ef6ad08ff18d38ffe7146421c4c7875fe4"
+        }
+      ]
+    },
+    "recorded_provenance.executable_fingerprint": "75c3cc58959e064834c27f0babce156dc042d099bba4b286fe8fefb385b78c00",
+    "recorded_provenance.semantic_fingerprint": "e2240e55292fa104eabc342b53453b5f7e1ee9d41153917c70065967bcb1cf6f"
+  },
+  "manifest": {
+    "path": "studies/manifest.json",
+    "schema_version": "study-package-manifest/v1",
+    "digest": "036a7bb4dda14d553338031c0d2957c2769674f7372fae9bf0945cde6804bd41",
+    "content_used": {
+      "fingerprint_names": [
+        "indicator_inputs",
+        "recorded_provenance.executable_fingerprint",
+        "recorded_provenance.semantic_fingerprint"
+      ],
+      "ties": [],
+      "objective_catalog": [
+        {
+          "name": "annual_pumping_cost",
+          "channel": "PumpStation__station__pumping__annual_cost",
+          "note": "PumpingCost.annual_cost = flow_rate * head * price * 1000.0 (models/station.sysml). The model's only cost-like output."
+        },
+        {
+          "name": "required_flow",
+          "channel": "PumpStation__station__demand__required_flow",
+          "note": "RequiredFlow.required_flow = inflow - rise_rate * area (models/station.sysml). The pump-fit constraint's demand operand."
+        }
+      ],
+      "baseline": {
+        "point": {
+          "PumpStation__station__design_inflow": 0.3,
+          "PumpStation__station__basin_area": 12.0,
+          "PumpStation__station__allowed_rise_rate": 0.005,
+          "PumpStation__station__installed_capacity": 0.25,
+          "PumpStation__station__pump_head": 8.0,
+          "PumpStation__station__energy_price": 0.1
+        },
+        "headline": {
+          "channel": "PumpStation__station__pumping__annual_cost",
+          "value": 192.0
+        },
+        "verdicts": [
+          {
+            "source_local_identity": "pump_fit",
+            "expected": "satisfied"
+          }
+        ]
+      },
+      "oracle": {
+        "kind": "python_callable",
+        "module": "oracle_entry",
+        "callable": "evaluate",
+        "sys_path": "studies",
+        "note": "Takes a point (entry key to value) overriding the model's design values; returns required_flow and annual_cost. operand_bindings() binds pump_fit's capacity to the installed_capacity input and demand_flow to the required_flow channel.",
+        "source_digest": {
+          "recipe": "tool-source-digest/v1",
+          "digest": "c5a9a86363fb9037f9b632b96c92ffbc7729e0730a4a9f070327e99343cb9513",
+          "files": [
+            {
+              "path": "studies/oracle_entry.py",
+              "sha256": "5e47e0956b106be3ecaff102b14647a374926677a0b325892c85cd0af9300c53"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "stores": [
+    {
+      "store_id": "station-grid-v1",
+      "path": "studies/20261012-pump-fit-response-b/results/_work/station-grid-v1.db",
+      "compatibility_tuple": {
+        "study_id": "station-grid-v1",
+        "executable_fingerprint": "75c3cc58959e064834c27f0babce156dc042d099bba4b286fe8fefb385b78c00",
+        "model_contract_fingerprint": "e2240e55292fa104eabc342b53453b5f7e1ee9d41153917c70065967bcb1cf6f",
+        "study_definition_fingerprint": "0369748b46abbbbbcf6a358fea6b14a7d08d0b42758fa6bdf3b3e23bac83ce36",
+        "input_schema_version": "v1",
+        "evidence_schema_version": "v3",
+        "strategy_identity": "prepared-list/v1",
+        "strategy_config": "0369748b46abbbbbcf6a358fea6b14a7d08d0b42758fa6bdf3b3e23bac83ce36"
+      }
+    },
+    {
+      "store_id": "station-baseline-v1",
+      "path": "studies/20261012-pump-fit-response-b/results/_work/station-baseline-v1.db",
+      "role": "pinned baseline point (runbook step 5), read by the preflight baseline gate; not an arm store",
+      "compatibility_tuple": {
+        "study_id": "station-baseline-v1",
+        "executable_fingerprint": "75c3cc58959e064834c27f0babce156dc042d099bba4b286fe8fefb385b78c00",
+        "model_contract_fingerprint": "e2240e55292fa104eabc342b53453b5f7e1ee9d41153917c70065967bcb1cf6f",
+        "study_definition_fingerprint": "79feb00585f4e92e38ac673c10351ea394b8a28830d6c0e165cd19fcf31cd161",
+        "input_schema_version": "v1",
+        "evidence_schema_version": "v3",
+        "strategy_identity": "prepared-list/v1",
+        "strategy_config": "79feb00585f4e92e38ac673c10351ea394b8a28830d6c0e165cd19fcf31cd161"
+      }
+    }
+  ],
+  "arms": [
+    {
+      "arm_id": "arm-main",
+      "store_id": "station-grid-v1",
+      "effective_executable_fingerprint": {
+        "value": "75c3cc58959e064834c27f0babce156dc042d099bba4b286fe8fefb385b78c00",
+        "inputs": null,
+        "no_adapter": true,
+        "note": "no adapter exists; the sealed fingerprint is the identity"
+      },
+      "entry_models": {
+        "station_params": "station_study.schemas.station_params.StationParams"
+      },
+      "strategy": "prepared-list/v1 (strategy_config 0369748b46abbbbbcf6a358fea6b14a7d08d0b42758fa6bdf3b3e23bac83ce36)",
+      "window": {
+        "bounds": {
+          "basin_area": {
+            "values": [
+              4.0,
+              8.0,
+              12.0,
+              16.0
+            ]
+          },
+          "installed_capacity": {
+            "values": [
+              0.2,
+              0.25,
+              0.3
+            ]
+          },
+          "held_fixed": {
+            "PumpStation__station__design_inflow": 0.3,
+            "PumpStation__station__allowed_rise_rate": 0.005,
+            "PumpStation__station__pump_head": 8.0,
+            "PumpStation__station__energy_price": 0.1
+          },
+          "grid": "full factorial, 12 points; studies/study_route.py GRID as of commit 5eb5dbb"
+        },
+        "provenance": "engineered"
+      },
+      "verification": {
+        "command": "sysml-codegen study verify --package pkg/station_study --manifest studies/manifest.json --identity studies/20261012-pump-fit-response-b/results/package_identity.json --store studies/20261012-pump-fit-response-b/results/_work/station-grid-v1.db --sample-size 12 --out studies/20261012-pump-fit-response-b/results/verification_summary.json",
+        "tool_revision": "46dcd7b7e275342034faf54aa1b8423af5d57cf55e4cbbd3887df393e161f4b0",
+        "sampling_scheme": "stratified-by-verdict-combination/v1; sample_size 12 of 12; seed e232a00b10968dbe (derived)",
+        "tolerance": "relative 1e-09 on PumpStation__station__demand__required_flow and PumpStation__station__pumping__annual_cost; verdicts re-derived from oracle operands",
+        "summary_sha256": "ad51152362bd39b58284b8417a9cfe2869d984c5af5a60e4411abe5bc792d4b1"
+      },
+      "glue_ledger": [],
+      "glue_ledger_none": true,
+      "artifacts": [
+        {
+          "path": "results/_work/artifacts/12918ba8bae8aa76c68dc16ce3ecb4474b96722f4f4a86abce67b2ad104a90c3.json",
+          "sha256": "12918ba8bae8aa76c68dc16ce3ecb4474b96722f4f4a86abce67b2ad104a90c3"
+        },
+        {
+          "path": "results/_work/artifacts/1b9df1dbe7e862a9635c72908f4cd5290dbd26bece42e4e42cbad8acee79b183.json",
+          "sha256": "1b9df1dbe7e862a9635c72908f4cd5290dbd26bece42e4e42cbad8acee79b183"
+        },
+        {
+          "path": "results/_work/artifacts/4400e33fc0ba30977d0c8f16aa458e56a8c068420c8e4d6364b30c59c63bbba3.json",
+          "sha256": "4400e33fc0ba30977d0c8f16aa458e56a8c068420c8e4d6364b30c59c63bbba3"
+        },
+        {
+          "path": "results/_work/artifacts/460557ca852ab840b9fcd8f16c5aa0f1e516f93a5c3150f095765d500f6a2681.json",
+          "sha256": "460557ca852ab840b9fcd8f16c5aa0f1e516f93a5c3150f095765d500f6a2681"
+        },
+        {
+          "path": "results/_work/artifacts/4dd2de82cbda738bb7cbf64b0a4410b16fa94f7647fe702b279aa3b3a95dd1c8.json",
+          "sha256": "4dd2de82cbda738bb7cbf64b0a4410b16fa94f7647fe702b279aa3b3a95dd1c8"
+        },
+        {
+          "path": "results/_work/artifacts/5858603b40f6775fb0f764233fe991e105a81951892ac3faf7472dcce8ca1dff.json",
+          "sha256": "5858603b40f6775fb0f764233fe991e105a81951892ac3faf7472dcce8ca1dff"
+        },
+        {
+          "path": "results/_work/artifacts/63912beb33b03bd7dbef6b5ff8a85d03758dfec16369a035a0c52edb421204af.json",
+          "sha256": "63912beb33b03bd7dbef6b5ff8a85d03758dfec16369a035a0c52edb421204af"
+        },
+        {
+          "path": "results/_work/artifacts/65fb6379b99c8822c4c66290c808ba082cb23df0c5dc8b755a6a1ffa0c943dba.json",
+          "sha256": "65fb6379b99c8822c4c66290c808ba082cb23df0c5dc8b755a6a1ffa0c943dba"
+        },
+        {
+          "path": "results/_work/artifacts/68036d219b4359b8c62f81747c30cc6b5d839e91b5fd47c82598451fdd1c485b.json",
+          "sha256": "68036d219b4359b8c62f81747c30cc6b5d839e91b5fd47c82598451fdd1c485b"
+        },
+        {
+          "path": "results/_work/artifacts/cd07f4f2139ef4ac7980c9d43463d45ce2314bd2c438bbe9ffe23e9750a67144.json",
+          "sha256": "cd07f4f2139ef4ac7980c9d43463d45ce2314bd2c438bbe9ffe23e9750a67144"
+        },
+        {
+          "path": "results/_work/artifacts/e7c02f4c83b4377167aea612a3022cee050741fda84c0ffc0daa2a456d55a5c5.json",
+          "sha256": "e7c02f4c83b4377167aea612a3022cee050741fda84c0ffc0daa2a456d55a5c5"
+        },
+        {
+          "path": "results/_work/artifacts/f7e5911101630da45e2a2fa0ca8fceef345d3f11a55e2f281bac87b376bc2dfe.json",
+          "sha256": "f7e5911101630da45e2a2fa0ca8fceef345d3f11a55e2f281bac87b376bc2dfe"
+        },
+        {
+          "path": "results/_work/station-baseline-v1.db",
+          "sha256": "2a3647ed9d9ed2c106da749690ba31dfbbe84a9944a8e08a987a334afe009d12"
+        },
+        {
+          "path": "results/_work/station-grid-v1.db",
+          "sha256": "046569e42953ff856688a68b40363e789863ce678f559b4b2d83d9a306f73d3c"
+        },
+        {
+          "path": "results/baseline_result.json",
+          "sha256": "5ff7a46346f8712919fec42b6b49e051ae76e0418db243722c07182f5dc725d6"
+        },
+        {
+          "path": "results/grid_cases.json",
+          "sha256": "227b05f95a153070b4f16df4937e3c44e7648dd12dd3b084936da9aeb25d2e1b"
+        },
+        {
+          "path": "results/oracle_scan.json",
+          "sha256": "4a2d7d918fa2812ca71685ab5a876c6dd7bea7f1b0c74d9b72edd3a7a5e331fd"
+        },
+        {
+          "path": "results/package_identity.json",
+          "sha256": "fda1bd4dc4a3a12415f4daeafb4335330fd516d9f9e2c679fedbd50655c9ce75"
+        },
+        {
+          "path": "results/postrun_clean.json",
+          "sha256": "e1928ce86bcf7c7c6ac5a3cfaf0d2f20447fbb15c6ea73c3d44d00bc8cbf8612"
+        },
+        {
+          "path": "results/preflight_results.json",
+          "sha256": "5be8105b77eafd4998a2bcd9767d0088eb73090e1d087fb5729ce48c450dc1c9"
+        },
+        {
+          "path": "results/report.md",
+          "sha256": "3fe2409f87ec3ebcbebdadea8bfc2ec8885f35127fc2464eb214b34a06778436"
+        },
+        {
+          "path": "results/verification_summary.json",
+          "sha256": "ad51152362bd39b58284b8417a9cfe2869d984c5af5a60e4411abe5bc792d4b1"
+        }
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "path": "sysml_codegen/study/indicators.py",
+      "source_digest": {
+        "recipe": "tool-source-digest/v1",
+        "digest": "3c9d3f31fbb500e95685989fbdc9554bea9961314a57a1e3447d7f5ed8aac134",
+        "files": [
+          {
+            "path": "sysml_codegen/study/indicators.py",
+            "sha256": "8337baacbfea59b3920aa435ef762b66496e2979a91888e9c445a71d254a7761"
+          },
+          {
+            "path": "sysml_codegen/study/manifest.py",
+            "sha256": "67164b81d90e71129adf56f3baeb9047a0a3ba34e2c9488049fde0ba42a0c707"
+          },
+          {
+            "path": "sysml_codegen/study/roots.py",
+            "sha256": "6a3a9ac6ed487591f486df43a43a927fb31690f0a12cb8cf38c421d383f5333b"
+          },
+          {
+            "path": "sysml_codegen/study/schemas/axis_declaration.v1.schema.json",
+            "sha256": "cffa3d8adc0eae833245091b529ecfb5ad784ad6fea2c3714c460c6d3061eb2b"
+          },
+          {
+            "path": "sysml_codegen/study/schemas/indicators.v1.schema.json",
+            "sha256": "96390664ce8eb5938bfe19eb435603e107892bd5082edf8a03514d588a081996"
+          },
+          {
+            "path": "sysml_codegen/study/schemas/study_package_manifest.v1.schema.json",
+            "sha256": "7e70dfa1db56e91e1e628174b7383a8ff96200c55ef7c8fd634afaef7556f1f8"
+          }
+        ]
+      }
+    },
+    {
+      "path": "sysml_codegen/study/preflight.py",
+      "source_digest": {
+        "recipe": "tool-source-digest/v1",
+        "digest": "d5b2c245a08bd5c088c11aa0c7beb426ebea89ad74a9ba2503327a7a6240e55a",
+        "files": [
+          {
+            "path": "sysml_codegen/study/common.py",
+            "sha256": "35bc17f0001c1f06d593145de9dee9fb9c6e4aaa51e88bafef23aa9384a8f0c9"
+          },
+          {
+            "path": "sysml_codegen/study/identity.py",
+            "sha256": "d04a558e88fb4c2aa62ca771876679cb6687aeddb0728894cc37ad3c7adc89e8"
+          },
+          {
+            "path": "sysml_codegen/study/manifest.py",
+            "sha256": "67164b81d90e71129adf56f3baeb9047a0a3ba34e2c9488049fde0ba42a0c707"
+          },
+          {
+            "path": "sysml_codegen/study/preflight.py",
+            "sha256": "00005aeb6a07fd2f5d51ac3e0482161d7ee3d4465cd4a91789eac3d49de910a2"
+          },
+          {
+            "path": "sysml_codegen/study/roots.py",
+            "sha256": "6a3a9ac6ed487591f486df43a43a927fb31690f0a12cb8cf38c421d383f5333b"
+          },
+          {
+            "path": "sysml_codegen/study/schemas/baseline_result.v1.schema.json",
+            "sha256": "103cf640a5c9d4a2d7b7fbe13efa887fd8471ffe79a11cc0a7fc4f71ff86e53b"
+          },
+          {
+            "path": "sysml_codegen/study/schemas/package_identity.v1.schema.json",
+            "sha256": "d312ac300f1f639bccad3300e5c617658fe307594eaf9deadea66d6162008ad9"
+          },
+          {
+            "path": "sysml_codegen/study/schemas/preflight_results.v1.schema.json",
+            "sha256": "c6d25e857e533a4f92666533b31f3cd86641521c159e6cc300fb85e62dda27be"
+          }
+        ]
+      }
+    },
+    {
+      "path": "sysml_codegen/study/verify.py",
+      "source_digest": {
+        "recipe": "tool-source-digest/v1",
+        "digest": "46dcd7b7e275342034faf54aa1b8423af5d57cf55e4cbbd3887df393e161f4b0",
+        "files": [
+          {
+            "path": "sysml_codegen/study/common.py",
+            "sha256": "35bc17f0001c1f06d593145de9dee9fb9c6e4aaa51e88bafef23aa9384a8f0c9"
+          },
+          {
+            "path": "sysml_codegen/study/identity.py",
+            "sha256": "d04a558e88fb4c2aa62ca771876679cb6687aeddb0728894cc37ad3c7adc89e8"
+          },
+          {
+            "path": "sysml_codegen/study/manifest.py",
+            "sha256": "67164b81d90e71129adf56f3baeb9047a0a3ba34e2c9488049fde0ba42a0c707"
+          },
+          {
+            "path": "sysml_codegen/study/roots.py",
+            "sha256": "6a3a9ac6ed487591f486df43a43a927fb31690f0a12cb8cf38c421d383f5333b"
+          },
+          {
+            "path": "sysml_codegen/study/schemas/package_identity.v1.schema.json",
+            "sha256": "d312ac300f1f639bccad3300e5c617658fe307594eaf9deadea66d6162008ad9"
+          },
+          {
+            "path": "sysml_codegen/study/schemas/verification_summary.v1.schema.json",
+            "sha256": "7afe14d745ac7241116096f0a93af35f675d3570c96e5b0e080fac427a17fc87"
+          },
+          {
+            "path": "sysml_codegen/study/verify.py",
+            "sha256": "f2a8875e80272c333c3fb0d1ae9b1239c562cf09c6981e47f854d5d42f7a0920"
+          }
+        ]
+      }
+    }
+  ],
+  "teax": {
+    "revision": "8d877460ac4f6f264561d916e40c1708adb13397",
+    "era_pin": null
+  },
+  "indicators": {
+    "path": "indicators.json",
+    "sha256": "743b52db8ba3a2cc2cb7c18224a999f19927d6945aec1d9d76bf9a3d0eeab725",
+    "output_schema_version": "study-indicators/v1",
+    "axis_declaration": {
+      "path": "studies/20261012-pump-fit-response-b/axes.json",
+      "schema_version": "study-axis-declaration/v1",
+      "digest": "df5d7001dfb7a411138e1c58faee78616fccce41d88f019075bec04b20f78e17",
+      "groups_declared": [
+        "basin_area",
+        "energy_price",
+        "installed_capacity"
+      ],
+      "subset": false
+    }
+  }
+}
