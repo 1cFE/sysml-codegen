@@ -6,4 +6,5 @@
 <testcase classname="tests.study.test_a" name="test_vanishes" time="0.1"/>
 <testcase classname="tests.study.test_a" name="test_skipped" time="0.1"/>
 <testcase classname="tests.study.test_a" name="test_new" time="0.1"/>
+<testcase classname="tests.study.test_a" name="test_fails_relative" time="0.1"><failure message="assert 1 == 0; evidence: ../../pytest-of-reid/pytest-99/integration-success0/out/read_coverage.json">tb</failure></testcase>
 </testsuite></testsuites>

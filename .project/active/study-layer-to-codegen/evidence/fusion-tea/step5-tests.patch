@@ -2,7 +2,8 @@ Adoption runbook step 5: fusion-tea's test edits for the switch to the installed
 
 Made against fusion-tea b06585709's tests/, per design Appendix H3's table. Apply from fusion-tea's
 root with `patch -p1 < step5-tests.patch`, after the wrappers and `git rm -r scripts/study/schemas`.
-Phase 5 adds the test_integrate_guide_contract.py hunk. patch(1) skips this preamble.
+test_integrate_guide_contract.py is not here: its reduction is already in fusion-tea's O4 commit
+699b0a74d. patch(1) skips this preamble.
 
 By Appendix H3 row:
 - schema home (DD1): conftest.py SCHEMA_DIR is the installed package's schemas/; test_absolute_tolerances,
@@ -27,6 +28,12 @@ Beyond the table, each found by reading every test that names scripts/ after the
 - test_generic's schema-contract test reads the installed schemas/: scripts/study/schemas is removed.
 - test_integrate_restore's no-mtime test reads integrate's own source through integrate.__file__:
   scripts/integrate.py is now a wrapper, and grepping it would pass without testing the seam.
+- test_integrate_restore's backup test fakes two things the installed seam calls differently.
+  integrate.run gets a request carrying package, as a list, the way argparse's --package
+  (action=append) does: the seam finds the project root from that single --package before
+  anything else (integrate.project_anchor), and the old fake, with only out_dir, raised
+  AttributeError there. assert_environment's fake takes (env, declaration), the installed
+  signature; the one-argument fake raised TypeError, which the seam reports as exit 2.
 
 diff -ruN a/tests/models/test_model_family_spines.py b/tests/models/test_model_family_spines.py
 --- a/tests/models/test_model_family_spines.py	2026-10-11 21:35:34.000000000 -0700
@@ -319,6 +326,24 @@ diff -ruN a/tests/study/test_integrate_restore.py b/tests/study/test_integrate_r
      assert "st_mtime" not in source
      assert "getmtime" not in source
  
+@@ -107,7 +107,7 @@
+     request = SimpleNamespace(package=package, out_dir=out)
+     monkeypatch.setattr(integrate, 'build_request', lambda args: request)
+     monkeypatch.setattr(integrate, 'seam_env', lambda: {})
+-    monkeypatch.setattr(integrate, 'assert_environment', lambda env: None)
++    monkeypatch.setattr(integrate, 'assert_environment', lambda env, declaration: None)
+     monkeypatch.setattr(integrate, 'assert_package_clean', lambda request, env: None)
+ 
+     def sequence(request, env, state, results):
+@@ -122,7 +122,7 @@
+     monkeypatch.setattr(integrate, 'run_sequence', sequence)
+     monkeypatch.setattr(integrate, 'build_candidate', lambda request, state: {})
+     monkeypatch.setattr(integrate, 'build_return', lambda **kwargs: {'exit_code': 2 if kwargs['blocker'] else 0})
+-    document, _ = integrate.run(SimpleNamespace(out_dir=str(out)), [])
++    document, _ = integrate.run(SimpleNamespace(package=[str(package)], out_dir=str(out)), [])
+     assert document['exit_code'] == 0
+     backup = Path(json.loads((out / 'backup-location.json').read_text())['backup'])
+     assert (backup / CONTRACT).is_file()
 diff -ruN a/tests/study/test_output_contract.py b/tests/study/test_output_contract.py
 --- a/tests/study/test_output_contract.py	2026-10-11 21:35:34.000000000 -0700
 +++ b/tests/study/test_output_contract.py	2026-10-12 11:54:12.802234206 -0700

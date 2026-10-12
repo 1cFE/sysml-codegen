@@ -11,10 +11,13 @@ Adoption rehearsal step 8a (design Appendix H3, DD15). Run it twice:
 The output lists every changed outcome, every message difference among tests failing in both,
 the tests only one side has, and the skip counts per side. Failure messages are compared after
 masking pytest's per-run temporary directory and object addresses, the only parts of a message
-that differ between two runs of one unchanged test.
+that differ between two runs of one unchanged test. The directory is masked in both of the
+forms messages carry it: absolute (``/tmp/pytest-of-USER/pytest-N/``) and relative to the
+working directory (``../../pytest-of-USER/pytest-N/``), as integrate's evidence paths are.
 
 Self-test: ``selftest/before.xml`` against ``selftest/after-holds.xml`` holds (exit 0), and
-against ``selftest/after-broken.xml`` is broken four ways (exit 1).
+against ``selftest/after-broken.xml`` is broken four ways (exit 1). In both, ``test_fails_relative``
+fails with a message that differs only in pytest's relative temporary path, and is not reported.
 """
 
 from __future__ import annotations
@@ -31,9 +34,11 @@ from pathlib import Path
 REGRESSED = ("failed", "error", "skipped", "missing")
 #: Outcomes that count as failing; a test failing in both runs must fail the same way.
 FAILING = ("failed", "error")
-#: The per-run parts of a failure message: pytest's base temporary directory, object addresses.
+#: The per-run parts of a failure message: pytest's base temporary directory, absolute or
+#: relative, and object addresses.
 RUN_TOKENS = (
     (re.compile(r"/tmp/pytest-of-[^/\s]+/pytest-\d+/"), "<pytest-tmp>/"),
+    (re.compile(r"(?:\.\./)+pytest-of-[^/\s]+/pytest-\d+/"), "<pytest-tmp>/"),
     (re.compile(r"\b0x[0-9a-f]{6,}\b"), "0x<address>"),
 )
 

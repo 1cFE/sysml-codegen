@@ -11,8 +11,10 @@ Mark every step **rehearsed**, **not rehearsable** (with the reason), or **not r
 The suite and `integrate` run three times on the one copy `$FTC`, in this order:
 
 - **A, as-is**: fusion-tea at O4's branch tip, its own environment, nothing changed.
-- **B, dependencies moved**: the two branch wheels installed into `$FTC/.venv` (step 2), nothing switched yet.
+- **B, dependencies moved**: the two branch wheels installed into `$FTC/.venv` (step 2), nothing switched yet. Its integrate tests fall back to the old generator part-way (step 2 says why).
 - **C, switched**: after steps 5, 6 and 7.
+
+Each run passes `--continue-on-collection-errors`. fusion-tea's suite has one collection error that is not this item's: `tests/study/test_stellarator_materials_policy.py` imports `exploration/stellarator_materials/oracle_glue.py`, whose `PIN_INPUTS_PATH` (line 85) names `work/active/WI-098_whole-plant-conversion-comparison/…`, and fusion-tea `421966070` archived that item to `work/completed/20261006_WI-098_…`. Without the flag, pytest stops there and runs no test.
 
 ## Setup
 
@@ -27,7 +29,7 @@ FTC=$R/ftc
 mkdir -p "$R"
 
 git -C "$FT_REPO" worktree add --detach "$FTC" "$O4"
-git -C "$FTC" log --oneline b06585709..HEAD           # O4's text commits, and nothing else
+git -C "$FTC" log --oneline b06585709..HEAD           # O4's text commits, and main's since b06585709 if O4's base is newer
 
 bash "$EV/install/build_wheels.sh" "$R/wheels" "$CG" "$AM"
 AMBSE_WHEEL=$(ls "$R"/wheels/agentic_mbse-*.whl)
@@ -37,8 +39,10 @@ cp "$EV/rehearsal/env.sh.example" "$R/env.sh"
 sed -i "s|^export FTC=.*|export FTC=\"$FTC\"|" "$R/env.sh"
 . "$R/env.sh"                                         # the licence, STOP_PARSER_*, TEAX_SIMKIT_PATH
 
-cd "$FTC" && uv sync --frozen --extra e2e            # fusion-tea's own environment, as pinned
+cd "$FTC" && uv sync --frozen --extra e2e --python /usr/bin/python3.12   # fusion-tea's own environment and interpreter
 ```
+
+The venv is built on `/usr/bin/python3.12` because fusion-tea's own `.venv` runs on it, as parity's decision Q2 found (`../parity/README.md`). uv's managed CPython has no `getrandom`, so `import random` opens `/dev/urandom`, and its zone data lies outside `sys.base_prefix`. The original observer refuses both reads, so on that interpreter runs A and B fail gate 7 on the interpreter, not the package.
 
 Run every later command from `$FTC`, in this shell. `env.sh` unsets `PYTHONPATH` and `SYSML_CODEGEN_PROJECT_ROOT`; nothing else may set them.
 
@@ -55,7 +59,7 @@ git -C "$FT_REPO" diff b06585709 origin/main -- .claude/skills/run-study modelin
 
 ```bash
 record_env "$R/A"
-uv run --no-sync pytest tests/study tests/models/test_model_family_spines.py -q -rs --junitxml="$R/A/junit.xml" > "$R/A/pytest.txt" 2>&1; echo "exit $?" >> "$R/A/pytest.txt"
+uv run --no-sync pytest tests/study tests/models/test_model_family_spines.py -q -rs --continue-on-collection-errors --junitxml="$R/A/junit.xml" > "$R/A/pytest.txt" 2>&1; echo "exit $?" >> "$R/A/pytest.txt"
 ```
 
 ## Step 2: agentic-mbse pin check (this makes run B's state)
@@ -67,13 +71,15 @@ uv run --no-sync python -c "from agentic_mbse.cli.installation import INSTALLER_
 
 **Expected:** `installer/v1`.
 
+Run B does not keep this state. The original seam's gate 2 runs `uv run sysml-codegen generate` without `--no-sync` (`scripts/integrate.py:1006`, closed-list item B3), so the first suite test that reaches gate 2 re-syncs `.venv` to `uv.lock`, the old pins. From then on, B's integrate tests run the old generator. Step 5 therefore re-runs this install first. In the real adoption, step 4 moves the lock, so a re-sync installs the moved revision and the problem does not arise.
+
 ## Step 3: no-loss check
 
 ```bash
 python3 "$EV/fusion-tea/text/check_anchors.py" "$EV/read-through.md" .
 ```
 
-**Expected:** `74 anchors found, 0 missing`, exit 0.
+**Expected:** `75 anchors found, 0 missing`, exit 0, at O4's tip `aab9b9ba3` or later: 74 from O4's text commit `699b0a74d`, plus IG-43 from `aab9b9ba3`. At `699b0a74d` alone it prints `74 anchors found, 1 missing`.
 
 ## Step 4: move the sysml-codegen pin
 
@@ -83,16 +89,17 @@ python3 "$EV/fusion-tea/text/check_anchors.py" "$EV/read-through.md" .
 
 ```bash
 record_env "$R/B"                                                                     # (8a)
-uv run --no-sync pytest tests/study tests/models/test_model_family_spines.py -q -rs --junitxml="$R/B/junit.xml" > "$R/B/pytest.txt" 2>&1; echo "exit $?" >> "$R/B/pytest.txt"   # (8a)
+uv run --no-sync pytest tests/study tests/models/test_model_family_spines.py -q -rs --continue-on-collection-errors --junitxml="$R/B/junit.xml" > "$R/B/pytest.txt" 2>&1; echo "exit $?" >> "$R/B/pytest.txt"   # (8a)
 python3 "$EV/rehearsal/junit-diff.py" "$R/A/junit.xml" "$R/B/junit.xml" > "$R/A-to-B.txt"   # (8a) recorded for step 9, not a gate
 ```
 
-**8b, before step 5.** The chosen record is `20260916-primary-loop-sizing` if its sealed identity recomputes, otherwise the newest sealed-identity record that does.
+**8b, before step 5.** The chosen record is `exploration/magnet_materials/studies/20260929-magnet-material-comparison`. Of the 40 records with a results identity at `699b0a74d`, it is the only one whose sealed identity recomputes. The runbook's first choice, `20260916-primary-loop-sizing`, does not: its document declares `f52729e6…`, but its package, `exploration/stellarator_e2e/generated`, has had 10 commits since the record sealed it (`69653c9dd`), and it now recomputes to `83ea3b6c…`.
 
 ```bash
-REC=exploration/stellarator_e2e/studies/20260916-primary-loop-sizing
-PKG=exploration/stellarator_e2e/pkg/stellarator_tea
-uv run --no-sync python -c "import json, sys; from scripts.study import identity; print(identity.assert_matches(json.load(open(sys.argv[1])), sys.argv[2]))" "$REC/results/package_identity.json" "$PKG" | tee "$R/8b-before.txt"
+REC=exploration/magnet_materials/studies/20260929-magnet-material-comparison
+IDPKG=exploration/magnet_materials/magnet_materials_tea        # the record's package, for 8b
+PKG=exploration/stellarator_e2e/pkg/stellarator_tea            # 8c's package
+uv run --no-sync python -c "import json, sys; from scripts.study import identity; print(identity.assert_matches(json.load(open(sys.argv[1])), sys.argv[2]))" "$REC/results/package_identity.json" "$IDPKG" | tee "$R/8b-before.txt"
 ```
 
 **8c, run B** (needs teax and the licence). The arguments are the supplement's full stellarator request, `docs/integration_seam_operator_guide.md` § "The full invocation in fusion-tea", with the `--groups` the supplement names for the current interface. Only `--out-dir` differs between B and C.
@@ -105,6 +112,7 @@ uv run --no-sync python scripts/integrate.py "${INTEGRATE_ARGS[@]}" --out-dir "$
 ## Step 5: switch
 
 ```bash
+uv pip install --python "$FTC/.venv/bin/python" --no-deps "$AMBSE_WHEEL" "$CODEGEN_WHEEL"   # again: run B re-synced to the lock (step 2)
 cp "$EV"/fusion-tea/wrappers/scripts/study/*.py scripts/study/
 cp "$EV/fusion-tea/wrappers/scripts/integrate.py" scripts/integrate.py
 ROUTES=(
@@ -121,10 +129,11 @@ ROUTES=(
 sed -i -f "$EV/fusion-tea/routes.sed" "${ROUTES[@]}"
 git rm -r -q scripts/study/schemas
 patch -p1 < "$EV/fusion-tea/step5-tests.patch"
-patch -p1 < "$EV/fusion-tea/step5-guide-contract.patch"
 ```
 
 The nine route files are named, never globbed: git's pathspec `*` crosses `/` and would match the route copies inside committed records, which must not change.
+
+`step5-guide-contract.patch` is not applied: its reduction of `tests/study/test_integrate_guide_contract.py` is already in O4's commit `699b0a74d`, and applying it again rejects both hunks.
 
 **Expected:**
 
@@ -134,7 +143,7 @@ git grep -n 'from scripts.study' -- "${ROUTES[@]}"                              
 git status --porcelain --untracked-files=all -- exploration/ | cut -c4- | grep -vxF -f <(printf '%s\n' "${ROUTES[@]}")   # nothing
 ```
 
-Both patches apply with no reject. Phase 6 checked that they apply cleanly, in this order, to a fresh copy of `b06585709`, alone and after O4's four text patches.
+`step5-tests.patch` applies with no reject, fuzz or offset to `b06585709`, and so to O4's tip, where its 17 files are unchanged.
 
 ## Step 6: declare
 
@@ -161,41 +170,43 @@ find .agents/skills/run-study -type f | sort; readlink .claude/skills/run-study;
 
 ```bash
 record_env "$R/C"                                                                     # (8a)
-uv run --no-sync pytest tests/study tests/models/test_model_family_spines.py -q -rs --junitxml="$R/C/junit.xml" > "$R/C/pytest.txt" 2>&1; echo "exit $?" >> "$R/C/pytest.txt"   # (8a)
+uv run --no-sync pytest tests/study tests/models/test_model_family_spines.py -q -rs --continue-on-collection-errors --junitxml="$R/C/junit.xml" > "$R/C/pytest.txt" 2>&1; echo "exit $?" >> "$R/C/pytest.txt"   # (8a)
 python3 "$EV/rehearsal/junit-diff.py" "$R/B/junit.xml" "$R/C/junit.xml" | tee "$R/B-to-C.txt"   # (8a) C's pass rule
 ```
 
-**8a expected:** `junit-diff.py` exits 0 for B to C: no test that passed in B fails, errors, skips or goes missing in C, and a test failing in both fails with the same message. A to B is classified for step 9.
+**8a expected:** B to C differs only in gate-2 refusals the generator move causes, and in nothing else. `junit-diff.py` exits 1 and reports exactly the 21 integrate tests the runbook's 8a pass rule lists, each failing in C at gate 2 (`regeneration`, `package-not-integrated`). In B, these tests ran the old generator (step 2) and got past gate 2. Any other reported line breaks the rule. A to B is classified for step 9.
 
 **8b, after step 5:**
 
 ```bash
-uv run --no-sync python -c "import json, sys; from scripts.study import identity; print(identity.assert_matches(json.load(open(sys.argv[1])), sys.argv[2]))" "$REC/results/package_identity.json" "$PKG" | tee "$R/8b-after.txt"
+uv run --no-sync python -c "import json, sys; from scripts.study import identity; print(identity.assert_matches(json.load(open(sys.argv[1])), sys.argv[2]))" "$REC/results/package_identity.json" "$IDPKG" | tee "$R/8b-after.txt"
 cmp "$R/8b-before.txt" "$R/8b-after.txt"
-read -r SEED SAMPLE STORE < <(python3 -c "import json, sys; s = json.load(open(sys.argv[1]))['stores'][0]; print(s['sampling']['seed'], s['sampling']['sample_size_requested'], s['path'])" "$REC/results/verification_summary.json")
-ls "$STORE"     # the store the record verified; teax's _work area is not committed, so it may be absent
-uv run --no-sync sysml-codegen study verify --package exploration/stellarator_e2e/generated --manifest exploration/stellarator_e2e/studies/manifest.json --identity "$REC/results/package_identity.json" --store "$STORE" --seed "$SEED" --sample-size "$SAMPLE" --out "$R/reverify.json"
+python3 -c "import json, sys; [print(s['path']) for s in json.load(open(sys.argv[1]))['stores']]" "$REC/results/verification_summary.json" | xargs ls   # the stores the record verified
+# The record's own verify command, with the installed tool and a new --out:
+mapfile -t VERIFY < <(python3 -c "import json, sys; c = json.load(open(sys.argv[1]))['command']; c[c.index('--out') + 1] = sys.argv[2]; print('\n'.join(c[1:]))" "$REC/results/verification_summary.json" "$R/reverify.json")
+PYTHONPATH=$FTC:$TEAX_SIMKIT_PATH uv run --no-sync sysml-codegen study verify "${VERIFY[@]}"   # simkit, and the oracle module's `exploration.…` imports
 python3 -c "import json, sys; a, b = (json.load(open(p)) for p in sys.argv[1:]); k = lambda d: [(s['sampling']['sampled_case_ids'], s['worst_channel_rel_dev']) for s in d['stores']] + [d['verdicts_rederived'], d['verdict_mismatches'], d['outcome']]; print('same' if k(a) == k(b) else 'DIFFERENT')" "$REC/results/verification_summary.json" "$R/reverify.json"
 git status --short -- "$REC"
 git grep -l '"kind": "effective"' -- '*package_identity.json' | xargs -r grep -l -F -f <(printf '%s\n' "${ROUTES[@]}")
 ```
 
-**8b expected:** the two `assert_matches` digests are equal; the re-run gives `same`; the record directory's `git status` prints nothing; the last command, which lists effective identity documents naming a rewritten route, prints nothing. Only `tool.path`, `tool.source_digest` and `command[0]` differ between the two summaries, from `scripts/study/verify.py` to `sysml_codegen/study/verify.py` (B2). If the record's store is absent from `$FTC`, the `verify` half is **not rehearsable** for that record: say so, with the store path, or choose a record whose store is present.
+**8b expected:** the two `assert_matches` digests are equal; the re-run gives `same`; the record directory's `git status` prints nothing; the last command, which lists effective identity documents naming a rewritten route, prints nothing. Only `tool.path`, `tool.source_digest` and `command[0]` differ between the two summaries, from `scripts/study/verify.py` to `sysml_codegen/study/verify.py` (B2). The `verify` half is **not rehearsable** at `699b0a74d`: the chosen record's two stores (`results/native/20260929-magnet-material-comparison.db`, `results/_work/magnet-materials-baseline-point-v1.db`) are not committed, and it is the only record that recomputes. Run the `ls` to show it, and skip the three `verify` lines.
 
 **8c, run C, and the gate-7 driver:**
 
 ```bash
 uv run --no-sync python scripts/integrate.py "${INTEGRATE_ARGS[@]}" --out-dir "$R/C/integrate"; echo "exit $?"
-PYTHONPATH=$FTC:$TEAX_SIMKIT_PATH uv run --no-sync python -c 'import sys; from sysml_codegen.study.read_coverage import run_route; run_route(*sys.argv[1:])' exploration/stellarator_e2e/studies study_route execute_baseline "$R/rc" "$PKG" exploration/stellarator_e2e/studies/manifest.json rehearsal
+mkdir -p "$R/rc/read-coverage-tmp"
+TMPDIR="$R/rc/read-coverage-tmp" PYTHONPATH=$FTC:$TEAX_SIMKIT_PATH uv run --no-sync python -c 'import sys; from sysml_codegen.study.read_coverage import run_route; run_route(*sys.argv[1:])' exploration/stellarator_e2e/studies study_route execute_baseline "$R/rc" "$PKG" exploration/stellarator_e2e/studies/manifest.json rehearsal
 python3 -c "import json, sys; r = json.load(open(sys.argv[1])); print(r['outcome'], r['violations'])" "$R/rc/read_coverage.json"
 for run in B C; do python3 -c "import json, sys; r = json.load(open(sys.argv[1])); b = r['blocker'] or {}; print(sys.argv[2], r['class'], b.get('gate'), b.get('mode'), b.get('condition'))" "$R/$run/integrate/integration_return.json" "$run"; done
 ```
 
-**8c expected:** B and C print the same class, gate, mode and condition, or both print `CANDIDATE`. Their returns differ only in closed-list fields, the ones SC12's comparator maps or masks (`../parity/README.md`): tool paths and source digests (B2), producers (B2, B11), gate 1b's teax root (B7), and read-coverage receipt bookkeeping (B1, B8, B13). The driver prints `pass []`. The driver needs no `SYSML_CODEGEN_PROJECT_ROOT`: the package is in `$FTC`'s work tree, so it finds the root itself. Design Appendix H3's form sets it; that is harmless.
+**8c expected:** B and C print the same class, gate, mode and condition, or both print `CANDIDATE`. Their returns differ only in closed-list fields, the ones SC12's comparator maps or masks (`../parity/README.md`): tool paths and source digests (B2), producers (B2, B11), gate 1b's teax root (B7), and read-coverage receipt bookkeeping (B1, B8, B13). With the supplement's historical `--expected-teax-revision`, both stop at gate 1b (`teax-revision`, `toolchain-drift`) unless the teax checkout is at that revision. The driver prints `pass []`. `TMPDIR` points inside the driver's out directory because the route's first `tempfile.mkdtemp` makes tempfile probe its directory with a new file, and that probe has to land in the out directory, where the observer admits it as new output; both seams arrange this. Without it, the probe lands in `/tmp` and is refused as an undeclared read. The driver needs no `SYSML_CODEGEN_PROJECT_ROOT`: the package is in `$FTC`'s work tree, so it finds the root itself. Design Appendix H3's form sets it; that is harmless.
 
 ## Step 9: consequence note
 
-From `$R/A-to-B.txt` (8a) and 8c's B run, record what moving the generator by about 142 commits did to fusion-tea's packages: gate 2 refusals, gate 4 snapshot drift, and any test that passed in A and not in B. Count the commits with `git -C "$CG" rev-list --count 8a758e9..HEAD`.
+Record what moving the generator from `8a758e9` to the branch tip did to fusion-tea's packages: gate 2 refusals, gate 4 snapshot drift, and any test that passed in A and not in B. In the rehearsal, A to B cannot show it, because B's integrate tests fall back to the old generator (step 2); 8a's B to C list shows it instead. Count the commits with `git -C "$CG" rev-list --count 8a758e9..HEAD`. 142 of them take the pin to sysml-codegen `main` as the branch found it (`aa35f06`); the branch adds its own (214 at `310dfc6`), so the adoption's count is `8a758e9` to the merge commit.
 
 ## Clean up
 
