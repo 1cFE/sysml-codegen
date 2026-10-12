@@ -1,14 +1,12 @@
 # Product Backlog
 
-**Updated:** 2026-10-10
+**Updated:** 2026-10-11
 
 Current work and independently justified follow-ons. Owner-originated rulings retain their source authority; agent proposals remain challengeable. Historical closed work is available through Git and durable registers.
 
 ## Active Work
 
-| Item | Status | Authority and next boundary |
-|------|--------|-----------------------------|
-| [GAP-CLOSE](epic_gap_close.md) | Local scope certified; F1 runtime leg closed 2026-07-20 | The old full-suite PR-wave evidence gap remains historical and is not retroactively proved by today's tests. |
+No active implementation items. ELABORATE-FIRST and PR-readiness cleanup are closed; their bounded certification and historical authority are recorded in [CURRENT_WORK](../CURRENT_WORK.md).
 
 ## Capabilities and Diagnostics
 
@@ -34,11 +32,19 @@ The parser predecessor closed by owner direction with its historical `Needs Work
 
 ## Retained Model and Assurance Work
 
+### [GAP-CLOSE] Historical PR-wave evidence — unscheduled reconciliation
+
+[INHERITED: historical GAP-CLOSE epic and independent audit, Git references below] Local scope is certified and F1 runtime normalization was verified closed in merged TEAx `fa0e06a` on 2026-07-20. The July full-suite PR-wave evidence gap remains unreconciled. The epic (`a082db22a120f5fa420312f96881a59b71166cd5:.project/backlog/epic_gap_close.md`) retains the July evidence record: the normalized-runtime behavior is closed, while pre-fix regression evidence and the full-suite wave gate remain unreconciled. The July audit also refuted the pushed companion whitespace claim; the independent audit (`a082db22a120f5fa420312f96881a59b71166cd5:.project/backlog/epic_gap_close_audit_independent.md`) describes its July 18 candidate. Today's passing tests do not retroactively certify that wave.
+
+### [SOURCE-IDENTITY-LIFECYCLE-ASSURANCE] Complete 35-coordinate evidence — unscheduled `[AGENT]`
+
+The [source-identity reconciliation](../reference/source-identity-reconciliation.md) records the surviving requirement grades and per-coordinate bounds. All 29 cell keys have controls, but full 35-coordinate lifecycle evidence and LC-SI-23 remain PARTIAL. Separately scope any further assurance work against those recorded gaps, preserving the owner's descoped joined-study/lineage obligations. ELABORATE-FIRST closed for independently certified bounded delivery on 2026-10-10; this entry does not reopen its implementation.
+
 ### [SNAPSHOT-CODEC-AND-DUP-CONSOLIDATION] Digest-sensitive consolidations deferred from REPO-CLEANUP Move C — P3, unowned (filed 2026-08-25)
 
 Move C deleted the dead lanes; three *duplication* findings from the same inventory (`.project/research/20260820-201945_line-count-anatomy-and-salvageability.md` §5) are consolidations whose cost is a digest or byte change, so they were filed rather than done:
 
-- The hand-written snapshot codec (`snapshot/instance_graph.py`, ~550 collapsible lines of field-copying) — needs dataclass→Pydantic, discriminators on three untagged unions, an `instance-graph/v4` schema bump, and 22 licensed fixture re-captures.
+- The hand-written snapshot codec (`snapshot/instance_graph.py`, ~550 collapsible lines in the August inventory) — the original proposal was dataclass→Pydantic with union discriminators and a graph-version bump. Current snapshots are v6; re-derive migration scope and the tracked fixture set before scheduling.
 - The two ExpressionIR→Python numeric compilers (`calc_compat_renderer.py`, `predicate_compiler.py`) differ mainly in spacing — consolidating changes emitted bytes, so it rides with a deliberate baseline re-capture, not a cleanup pass.
 - The canonical-JSON encoder copies (three byte-identical of six) sit on sealed-digest paths (contracts, snapshot, catalog); consolidate only with the byte-identity gate run per encoder.
 
@@ -64,28 +70,28 @@ The identical number reproduces on untouched `catf_mfe_d5` — it was always tru
 **Scope of the fix (separately authorized per the 6-D ruling; NOT inside Item 5):**
 - First decision is the fix's **home**, made in daylight with its own provenance: the derivative's copy of the library (frozen twins untouched; physics diverges deliberately; PROVENANCE records it) vs the upstream shared library (frozen-twin territory; needs its own ruling).
 - A physically defensible replacement coefficient is a **modeling decision** — owner or domain-source signed, never agent-invented (same rule as tolerances).
-- Re-run of the Item 5 Phase 6 acceptance under the corrected model (coverage unaffected; headline flips back; the SC-5 candidate labeling reverts to the natural direction).
+- Re-run Item 5 Phase 6 acceptance under the corrected model; derive feasibility headlines and SC-5 candidate labeling from the resulting model arithmetic.
 
-**Evidence home:** Item 5's verification record and the 6-D ruling (`.project/completed/20260813_catf-constraint-policy-acceptance/`); acceptance record states the authored point is gate-infeasible under the model as authored.
+**Evidence home:** Item 5's verification record, source-derived arithmetic, and the 6-D ruling are retained at `62a07e5c870158672eb100f1cba73adfe4c9df28:.project/completed/20260813_catf-constraint-policy-acceptance/`. The acceptance record states the authored point is gate-infeasible under the model as authored. [AGENT] The same derivation includes about 51.20 MW of nuclear heating at cryogenic temperature; at 50× refrigeration power, removing static heat leak alone still leaves about 2,560 MW of cooling demand. A corrected coefficient therefore requires fresh feasibility assessment rather than assuming the headline becomes feasible.
 
 ---
 
-### [CALCDEF-GATE-IMPLEMENTATION] Implement calculation-definition constraint gates (graph v4 + catalog 4.0.0) — P1, unowned, awaiting owner authorization (filed at owner direction, 2026-08-13)
+### [CALCDEF-GATE-IMPLEMENTATION] Implement calculation-definition constraint gates — P1, unowned, awaiting owner authorization (filed at owner direction, 2026-08-13)
 
-**What it is:** the production implementation of the capability CONSTRAINT-SEMANTICS Item 6 designed. One asserted constraint owned by a calculation definition expands into one concrete check per calculation occurrence, with usage-level coverage and occurrence-level results joined through exact graph identity. Today such a usage ends as `non_reaching / owner_kind_unattachable`; nothing executes.
+**What it is:** the production implementation of the capability CONSTRAINT-SEMANTICS Item 6 designed. One asserted constraint owned by a calculation definition expands into one concrete check per calculation occurrence, with usage-level coverage and occurrence-level results joined through exact graph identity. Today the usage is classified `non_reaching / owner_kind_unattachable` with error severity; an asserted gate halts generation with `SI_CONSTRAINT_UNATTACHED`. Evidence: `tests/unit/test_constraint_usage_record_mint.py::test_asserted_gate_owned_by_a_calc_def_halts_naming_the_missing_attachment` and `src/sysml_codegen/elaboration/graph.py`.
 
-**Authorization status `[OWNER 2026-08-13]`:** **not authorized in the CONSTRAINT-SEMANTICS epic.** The owner ruled at Item 6's close that this is a separate, later decision. It is unowned and unscheduled. It competes for the next slot with `[CATF-CRYO-HEAT-LEAK-COEFFICIENT]` (P1) and the paused ELABORATE-FIRST Item 7 resumption. **No agent may start it without a new owner ruling.**
+**Authorization status `[OWNER 2026-08-13]`:** **not authorized in the CONSTRAINT-SEMANTICS epic.** The owner ruled at Item 6's close that this is a separate, later decision. It is unowned and unscheduled. It competes for the next slot with `[CATF-CRYO-HEAT-LEAK-COEFFICIENT]` (P1). **No agent may start it without a new owner ruling.**
 
-**Estimate:** 7–9 working days, cross-repository (codegen + TEAx).
+**Historical estimate `[AGENT]`:** 7–9 working days, cross-repository (codegen + TEAx); re-estimate against the delivered architecture before scheduling.
 
-**Plan of record:** `.project/completed/20260813_calcdef-constraint-gate-design/implementation-item.md` — file-level scope, dependency pins, phase order, and customer-shaped acceptance tests, revised against three rounds of independent design review (F1–F8). Its companions are `spec.md`, `design.md`, `design-review.md`, and `probes/findings.md` in the same archived folder. The spec's production-acceptance boxes are deliberately still open: they are this item's, not Item 6's.
+**Historical design:** `be8d3dd:.project/completed/20260813_calcdef-constraint-gate-design/implementation-item.md` — file-level scope, dependency pins, phase order, and customer-shaped acceptance tests, revised against three rounds of independent design review (F1–F8). Its companions are `spec.md`, `design.md`, `design-review.md`, and `probes/findings.md` in the same archived folder. The spec's production-acceptance boxes are deliberately still open: they are this item's, not Item 6's. [AGENT] Reconcile the proposed graph-v4/catalog-4 migration against today's v6 snapshots and catalog 3.0.0 before implementation.
 
-**Start gate — SATISFIED, and here is why it mattered:** no lawful start SHA existed until Item 8's unit-lane characterizations landed, because the constraint-formal and computed-attribute unit lanes carried `unit=None` by construction and would have refused valid models. They landed at **`62a07e5c870158672eb100f1cba73adfe4c9df28`**. The gate dissolves; the only remaining block is owner authorization. Evidence bundle: `.project/completed/20260813_unit-lane-port-metadata/verification.md`.
+**Historical unit-lane prerequisite — SATISFIED:** constraint-formal and computed-attribute unit metadata landed at **`62a07e5c870158672eb100f1cba73adfe4c9df28`**. Evidence bundle: `62a07e5c870158672eb100f1cba73adfe4c9df28:.project/completed/20260813_unit-lane-port-metadata/verification.md`. Owner authorization remains required; the historical dependency pins need refresh against the current repositories.
 
 **Carried guards and consequences:**
 
-- **SC8 — re-derive, never reuse.** The future graph-v4 snapshot record must derive its own then-current tracked path set from Git and prove equality against that. It may **not** reuse Item 8's 23 paths or the older 15-path subset; those are dated evidence, not durable scope.
-- **TEAx re-vendor.** This work ships **catalog 4.0.0**, so TEAx must be re-vendored against a catalog-4 producer candidate. TEAx stays on `constraint-semantics-item3` @ `5b70ae9` until one exists.
+- **SC8 — re-derive, never reuse.** A future snapshot migration must derive its own then-current tracked path set from Git and prove equality against that. Item 8's 23 paths and the older 15-path subset are dated evidence, not durable scope.
+- **TEAx re-vendor.** The archived design proposes **catalog 4.0.0** and coordinated TEAx consumer changes. Its `5b70ae9` baseline is historical; the October cleanup execution used TEAx `8d877460ac4f6f264561d916e40c1708adb13397`. Refresh producer/consumer compatibility and immutable dependency pins when shaping this capability.
 - **R5 joint delivery is declined.** Folding Item 8's unit-lane work into this implementation was ruled out and executed as ruled — Item 8 shipped standalone. The option text survives in `design.md` as a decision record only; **reviving it requires a new owner ruling**, not an agent reading the recorded option.
 
 ---
@@ -118,7 +124,7 @@ Owner directed filing this as a ticket at the docs-lifecycle-sync wrap. The life
 2. **Catalog schema 2.0.0** — `CATALOG_SCHEMA_VERSION` (`contracts/versions.py:18`) and the catalog contract (`test_catalog_schema_version.py`, `test_catalog_definition_join.py`).
 3. **Trust manifest / bootstrap** — `contracts/manifest.py` and the trust-anchor behavior (Item 7's tests).
 
-Discipline: matrix recount per memory `verification-matrix-drift-modes` (index totals + per-family counts, not just the summary block); current baseline **288 rows / 156 PASS / 34 families** after the ELABORATE-FIRST step-4 pass closed all UNTESTED rows and filed the REQ-CS family (2026-08-14).
+Discipline: matrix recount per memory `verification-matrix-drift-modes` (index totals + per-family counts, not just the summary block). The **288 rows / 156 PASS / 34 families** count belongs to 2026-08-14; the current matrix summary lists 313 requirements and 35 families. [AGENT] Reconcile the three candidate surfaces against current matrix rows and retired mechanisms before scheduling; the old producer-resolution modules and catalog 2.0.0 are historical scope.
 
 *The previous line here read "276 rows / 275 PASS / 32 families." The row and family counts were right for their date; **"275 PASS" was never true** — the matrix's own summary read 133 at the time and its tables read 134. Corrected by recount, not by adopting either number (`.project/completed/20260814_constraint-docs-agent-sync/verification.md`).*
 
@@ -211,36 +217,10 @@ Of those 32, the 23 in the three named families (EPC 8, GA 8, LVP 9, minus REQ-E
 
 - **[CATF-ACCEPTANCE-LANE-MANUAL] The CATF end-to-end feasibility-rejection lane is a reproduced run, not a committed test — P3 `[AGENT]`, unowned.** Item 5's SC-5 has two halves. The coverage half is durably gated (population oracle by scan; `tests/unit/data/expected-coverage.md` drives `tests/unit/test_coverage_ledger_agreement.py`). The feasibility half — the authored CATF design point reaching `reject` through generate → seal → load → execute → policy → durable record — is recorded evidence reproducible from `probes/acceptance_run.py` in the archived item home, and nothing fails if it regresses. Deliberate at the time (the lane needs the TEAx checkout on `constraint-semantics-item3`, which is unmerged). Fix direction: mark the lane as intentionally manual in a named place, or file it as a licensed/marked test once the TEAx branch lands.
 
-## Disposition References
+## Historical Scope Question
 
-- **[ELABORATE-FIRST]** Closed 2026-10-10 by owner direction after independent bounded certification. Final epic/audit/product-lens: Git `0e43cc76179e21473c36f2b30d473a3cf9626c4a:.project/backlog/epic_elaborate_first_architecture.md` and `0e43cc76179e21473c36f2b30d473a3cf9626c4a:.project/backlog/epic_elaborate_first_architecture_audit.md`. Full 35-coordinate/LC-SI-23 assurance remains PARTIAL in [source-identity reconciliation](../reference/source-identity-reconciliation.md); diagnostic/deep-override/array follow-ons retain their existing scope.
+### [HIERARCHICAL-OUTPUT] Recover original scope — unscheduled
 
-These entries preserve reference targets; they are completion/retirement records, not active implementation requests.
+The original item folder is absent and its scope is not independently recovered. This remains an unresolved historical-scope question.
 
-- **[UNIT-SCRAPE-BYTE-OFFSET]** Resolved by owner-directed deletion of all three unit guessers, with parser-native value units retained. Authority: cleanup spec-review Resolution L2-2, 2026-10-08; public live/snapshot unit tests.
-- **[SERIALIZE-NAN-SEAL]** Strict contract/input encoders and public non-finite refusal checks implemented. The public route already refused upstream; this encoder repair is additional defense, not proof an invalid public package previously shipped.
-- **[EMIT-STEP-REGRESSION-GATE]** Implemented by the durable all-22 public package oracle and template/rendering mutation checks; candidate evidence is retained at `540826abd4cb55759fd80a731a65376e25ee8afa:.project/active/pr-readiness-cleanup/evidence.md`.
-- **[CONSTRAINT-GATES-UNTAGGED]** Discharged at ELABORATE-FIRST cutover step 4 on 2026-08-14. REQ-CS records the retained gates; the Item-5 minting disposition is unchanged.
-- **[ARTIFACT-MANIFEST-TESTS-HARD-FAIL]** Closed by owner-authorized verification-tool retirement in REPO-CLEANUP Move C, 2026-08-25.
-- **[V11-DEAD-GATE-DOCS]** Closed by deletion of the dead gate and correction of its live references.
-- **[NESTED-OCCURRENCE-OVERRIDE]** The old resolver mechanism is retired. Surviving occurrence behavior and diagnostic bounds are tracked by source-identity evidence and [ANCHORING-ARRAYED-DIAGNOSTIC].
-- **[TRUTH-DEBT-INHERITED-FORMULA-COMPILE]** The legacy inherited-formula compiler is retired; current computed-attribute evidence uses exact elaboration.
-- **[STALE-BASELINE-CLASS]** V5 extraction baseline mechanism retired; actual v6 snapshot freshness is checked in this cleanup.
-- **[TRUTH-DEBT-IFE-PLANT-CHAIN-STALE]** The v5 classifier/snapshot mechanism is retired.
-- **[GB-PARAMGROUPS-TYPING]** The old graph-builder surface is retired; current generation typing is repaired without relaxing mypy.
-- **[DOTTED-LEAF-PART-BLIND]** The name-fallback alias mechanism is retired; exact source identity owns current resolution.
-- **[ITEM7-F4-CUTOVER]** Discharged by later cutover/retirement; no old aggregation resolver remains to wire.
-- **[ITEM7-MATRIX-TEST-GAPS]** Current source-identity/matrix evidence replaces the retired-row proof gap; any surviving partial evidence remains in the matrix.
-- **[CONSTRAINT-FORM-PER-DIMENSION-COST]** Superseded by owner-directed unit-guesser removal; declaration comment labels no longer force duplicated dimension-specific forms.
-- **[CONSTRAINT-ARCH-UNIFY]** The legacy resolver/lowering stack is retired; the original cross-stack unification proposal no longer describes current work. Codec/compiler follow-ons remain separately scoped above.
-- **[GAP-CLOSE-F1-TEAX-NORMALIZATION]** Verified closed in merged TEAx `fa0e06a`, 2026-07-20; no new F1 implementation is pending.
-- **[REPO-CLEANUP]** Complete and merged in PR #15. Historical rulings and replacement evidence remain in registers/ledger and Git.
-- **generation-boundary** Delivered at `6523521`; it is not a February active feature.
-- **new-pipeline-explainer** Built then purged at `507e838`; it is not current active work.
-- **hierarchical-output** Its folder is absent and original scope is not independently recovered. This is an unscheduled historical-scope question, not a completed feature claim.
-
-- **[CONSTRAINT-MODEL-INVARIANTS]** The old mutable lowered-record shape is retired; current catalog/receipt totality and assignment validators retain the live invariant. New defects need a current reproducer, not the old removed-model premise.
-- **[CONTRACT-VERIFY-BOUNDARY]** Digest syntax, fingerprint derivation, hostile artifact paths, and symlink containment are covered by `tests/unit/test_verify_package.py`; the older missing-validation claim is superseded.
-- **[INLINE-CONSTRAINT-WIRING]** The old fixture collides with a generated binding and is correctly refused publicly before mutation. Evidence: `tests/execution/test_constraint_verdicts_exact_route.py::test_a_binding_that_collides_with_a_generated_name_is_refused_at_generation`; it is not an unimplemented valid binding shape.
-- **[V2-HTML-BUILD]** The explainer was added at `5be8276`, shipped at `385e163`, and purged at `507e838`; this is a historical delivered artifact, not active implementation.
-- **[GOLDEN-BYPASSES-RUN-CODEGEN]** The new all-22 public package oracle covers the shipped route; the older zero-entry private-helper test retains its narrower component scope.
+Closed and superseded backlog entries are archived at `a082db22a120f5fa420312f96881a59b71166cd5:.project/backlog/BACKLOG.md`. Current completion summaries are in [CURRENT_WORK](../CURRENT_WORK.md).

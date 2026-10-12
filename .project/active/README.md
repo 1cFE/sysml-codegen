@@ -30,11 +30,7 @@ active/
 
 ## Completing a Work Item
 
-1. Ensure all deliverables exist
-2. Validate success criteria met
-3. Move folder to `../completed/` with date prefix
-4. Update `../CURRENT_WORK.md`
-5. Update epic in `../backlog/`
+Follow [the project README's record-then-delete policy](../README.md#4-item-and-epic-close--the-standing-rule-owner-2026-08-23). Preserve durable decisions, promises, and useful findings in their owning registers or research. Remove the closed item folder and update CURRENT_WORK and BACKLOG; Git history is the archive.
 
 ## Naming Convention
 

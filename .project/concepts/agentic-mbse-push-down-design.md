@@ -1,7 +1,7 @@
 # agentic-mbse Push-Down Design: Abstraction Boundary & Execution Plan
 
 **Date**: 2026-02-20
-**Based on**: `.project/research/20260220-163000_agentic-mbse-boundary-analysis.md`
+**Based on**: `a082db22a120f5fa420312f96881a59b71166cd5:.project/research/20260220-163000_agentic-mbse-boundary-analysis.md`
 **Branch**: cost-pattern-refactor (1821 tests as of review)
 **Status**: Design — awaiting approval
 **Refreshed**: 2026-07-06 against HEAD `a2cdc18` (branch `truth-debt-epic-plan`) — see the

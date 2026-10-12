@@ -1110,8 +1110,8 @@ against specific constructs without loading a full model.
 | `fusion_modeling/docs/architecture/ADR-001-input-parameter-definition.md` | Entry point taxonomy |
 | `fusion_modeling/docs/architecture/ADR-002-calculation-architecture.md` | Calc location rules, expression handling |
 | `fusion_modeling/docs/architecture/ADR-003-signal-identifiers.md` | Identifier contracts, no-reconstruction rule |
-| `.project/research/20260202-180000_expression-compilation-and-inline-math-strategy.md` | Strategy evaluation, Approach F definition |
-| `.project/research/20260109-205122_cost-modeling-codegen-changes.md` | Nested CalcUsage analysis, template detection |
+| `a082db22a120f5fa420312f96881a59b71166cd5:.project/research/20260202-180000_expression-compilation-and-inline-math-strategy.md` | Strategy evaluation, Approach F definition |
+| `a082db22a120f5fa420312f96881a59b71166cd5:.project/research/20260109-205122_cost-modeling-codegen-changes.md` | Nested CalcUsage analysis, template detection |
 | `fusion-tea/.project/research/20260202-120000_codegen-native-costing-upgrade-design.md` | Gap analysis, 5 approaches |
 
 ---
