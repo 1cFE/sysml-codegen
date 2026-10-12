@@ -5,7 +5,7 @@ Learning-test leg for the first Phase-2 shape
 author — derived attributes exposing calc outputs, consumers in other packages
 chaining to them, sibling-calc chaining, package-level calcs/attributes, and untyped
 part usages carrying all of it. Findings:
-``.project/research/20260807-163643_elaborator-crosspackage-expose-shapes.md``.
+``aa35f06fb6b3bacfd42c7763a07a4ee4fdaafa57:.project/research/20260807-163643_elaborator-crosspackage-expose-shapes.md``.
 
 Two test families:
 

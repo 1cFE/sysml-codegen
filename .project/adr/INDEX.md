@@ -6,9 +6,14 @@
 - 0002 · Resolve generated index ids by sibling filename · seams: product-ledger, project-workflow
 - 0003 · Cite decisions by register path · seams: decision-registers, documentation
 - 0004 · Derive occurrences from exact parser evidence or refuse by name · seams: extraction, elaboration
-- 0005 · Exact-identity elaboration replaces string resolution, with no compatibility layer · seams: extraction, elaboration, snapshot
 - 0006 · No late-fill, direct literal actuals are valid, the embedded catalog is the sole schema authority · seams: generation, contracts, teax
 - 0007 · agentic-mbse owns neutral SysML facts; sysml-codegen owns rendering and assembly · seams: agentic-mbse, extraction
 - 0008 · Cross-repo merges use explicit merge commits, never squash or rebase · seams: git-workflow, fusion-tea
 - 0009 · Compute identifiers once, look up thereafter · seams: extraction, elaboration, generation
 - 0010 · Coverage truth and headline semantics · seams: generation, teax, reporting
+- 0011 · Parser declarations, concrete occurrences, and typed graph projection · seams: extraction, elaboration, projection, snapshot
+- 0012 · Semantic evidence has one acquisition owner and complete closed values · seams: extraction, elaboration, generation, agentic-mbse
+- 0013 · Units come from parser-native values rather than prose guessing · seams: extraction, elaboration, generation
+- 0014 · Constraint verdicts are evidence; raised arithmetic is execution failure · seams: generation, constraint-evaluation, reporting
+
+- 0005 · Exact-identity elaboration replaces string resolution, with no compatibility layer · seams: extraction, elaboration, snapshot · amended

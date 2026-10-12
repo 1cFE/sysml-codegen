@@ -8,11 +8,11 @@ status"). Source-identity amendment state: see "Current conclusion" (sole author
 **Created:** 2026-07-19
 **Scope:** authoring validation, code generation, package integrity, evaluation, and studies
 **Requirements:** `.project/concepts/constraint-execution-lifecycle-requirements.md`
-**Evidence:** `.project/research/20260719-111228_constraint-execution-lifecycle-evidence-census.md`
+**Evidence:** `aa35f06fb6b3bacfd42c7763a07a4ee4fdaafa57:.project/research/20260719-111228_constraint-execution-lifecycle-evidence-census.md`
 **Adversarial review:**
-`.project/research/20260719-125806_constraint-execution-lifecycle-contract-adversarial-review.md`
+`aa35f06fb6b3bacfd42c7763a07a4ee4fdaafa57:.project/research/20260719-125806_constraint-execution-lifecycle-contract-adversarial-review.md`
 **Correction re-review:**
-`.project/research/20260719-134700_constraint-execution-lifecycle-contract-correction-rereview.md`
+`aa35f06fb6b3bacfd42c7763a07a4ee4fdaafa57:.project/research/20260719-134700_constraint-execution-lifecycle-contract-correction-rereview.md`
 
 ## Authority and reading rule
 
@@ -1594,10 +1594,10 @@ table above.
 
 ### Corrections and consumer proof
 
-- `.project/research/20260719-125806_constraint-execution-lifecycle-contract-adversarial-review.md`
-- `.project/research/20260718-192048_constraint-exec-pr-wave-code-review.md`
-- `.project/research/20260719-065712_constraint-profile-semantics-and-license-reconciliation.md`
-- `.project/research/20260719-103419_gate-b-independent-assessment.md`
+- `aa35f06fb6b3bacfd42c7763a07a4ee4fdaafa57:.project/research/20260719-125806_constraint-execution-lifecycle-contract-adversarial-review.md`
+- `aa35f06fb6b3bacfd42c7763a07a4ee4fdaafa57:.project/research/20260718-192048_constraint-exec-pr-wave-code-review.md`
+- `aa35f06fb6b3bacfd42c7763a07a4ee4fdaafa57:.project/research/20260719-065712_constraint-profile-semantics-and-license-reconciliation.md`
+- `aa35f06fb6b3bacfd42c7763a07a4ee4fdaafa57:.project/research/20260719-103419_gate-b-independent-assessment.md`
 - `../fusion-tea-stellarator-mbse-demo/.project/research/20260719-082509_gate-b-root-cause-constraint-lowering-vs-v11-bridge.md`
 - `/home/reid/1cfe/fusion-tea/exploration/ife_e2e/study/findings.md`
 - `../fusion-tea-stellarator-mbse-demo/work/active/WI-027_demo-constraint-execution/{spec,design,plan}.md`
