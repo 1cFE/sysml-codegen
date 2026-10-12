@@ -14,7 +14,7 @@ disagree about what those words mean.
 `tool-source-digest/v1` names an algorithm — canonical text over a named file list —
 not one particular list. Every emission carries its ``files`` list in the same
 ``{path, sha256}`` shape ``manifest.tool_source_digest()`` uses, so a record can tell
-whose revision it is reading (design Risks, L5c).
+whose revision it is reading.
 
 Generic by construction: this module names no package, no key prefix, and no adapter.
 It imports no teax.

@@ -580,8 +580,8 @@ def assert_package_clean(request: Request, env: dict[str, str]) -> None:
     """Gate 0, step 3: the package tree is git-clean, through the producer's own subcommand.
 
     ``preflight.py clean`` is exactly this check and it already exists, so it is invoked
-    rather than reimplemented. Inside the gitignored test workspace git has nothing to say,
-    which is why the byte gates run on the seam's own digest instead (D8).
+    rather than reimplemented. Inside a git-ignored directory git has nothing to say, which
+    is why the byte gates run on the seam's own digest instead.
 
     Returns nothing. Gate 0 is not one of the ten rows and the return schema has no field for
     its evidence, so the results document is written where the guide says it is and cited by
@@ -936,7 +936,7 @@ def junit_outcome(junit_path: Path) -> tuple[int, int]:
     """How many ``<failure>`` and ``<error>`` elements a junit report carries.
 
     That split is all junit gives, and on its own it does **not** carry the
-    refused-versus-could-not-run distinction: an absent wheel variable raises inside a test
+    refused-versus-could-not-run distinction: an absent environment variable raises inside a test
     *body* and lands as a ``<failure>``. Gate 0's environment sweep is what makes this
     reading sound; junit is the secondary signal and the evidence file.
     """

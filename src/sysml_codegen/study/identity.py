@@ -83,7 +83,7 @@ def effective_digest(
 
 
 def adapter_source_digest(adapter_sources: Sequence[tuple[str, str]]) -> str:
-    """sha256 over just the sorted ``adapter`` lines (design S1).
+    """sha256 over just the sorted ``adapter`` lines.
 
     The record's snapshot takes a *single* sha256 for the route's sources while a route
     may declare several. This is that value; the document also carries the per-file list

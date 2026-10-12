@@ -14,7 +14,7 @@ Everything here is mechanism. Every failure raises :class:`ManifestError`, which
 the CLI turns into a non-zero exit with no output written.
 
 Generic by construction: this module names no package, no key prefix, and no
-adapter (Invariant 6).
+adapter.
 """
 
 from __future__ import annotations
@@ -33,7 +33,8 @@ INDICATOR_INPUT_RECIPE = "indicator-input-fingerprint/v1"
 TOOL_SOURCE_RECIPE = "tool-source-digest/v1"
 
 #: Files whose bytes make up the tool-source digest. The schema files are in
-#: the set because they are the seam Items 2 and 4 cite — a schema edit is a tool change.
+#: the set because they are the document contract records and the other tools cite — a
+#: schema edit is a tool change.
 TOOL_SOURCE_FILES = (
     "sysml_codegen/study/indicators.py",
     "sysml_codegen/study/manifest.py",
@@ -44,7 +45,7 @@ TOOL_SOURCE_FILES = (
 )
 
 #: YAML-family suffixes that are *not* the globbed ``.yaml``. A pipeline carrying one
-#: of these would be silently skipped by the glob, so its presence is a failure (M1).
+#: of these would be silently skipped by the glob, so its presence is a failure.
 #: Every other file in ``pipelines/`` is ignored — ``__init__.py`` is a sealed artifact
 #: of every generated package, and a rule that refused it would refuse every package.
 _STRAY_YAML_SUFFIXES = frozenset({".yml", ".YAML", ".Yaml", ".YML", ".Yml", ".yAML"})
@@ -495,7 +496,7 @@ def assert_pin_matches(manifest: LoadedManifest, computed: dict) -> None:
 def assert_read_set_covered(
     resolved_paths: list[Path], package_root: Path | str, manifest: LoadedManifest
 ) -> None:
-    """Every path the reader opened must sit inside the package and inside the pin (M3).
+    """Every path the reader opened must sit inside the package and inside the pin.
 
     The reader resolves the inputs files from the pipeline's own EntryPoint refs, so a
     regenerated pipeline could point at a file the recipe never globbed — read by the

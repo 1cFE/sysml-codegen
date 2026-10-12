@@ -24,7 +24,7 @@ Usage:
     indicators.py --package DIR --print-fingerprint
 
 Generic by construction: this module names no package, no key prefix, and no
-adapter (Invariant 6).
+adapter.
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ from sysml_codegen.study import roots
 REPORT_SCHEMA_VERSION = "study-indicators/v1"
 AXIS_DECLARATION_SCHEMA_VERSION = "study-axis-declaration/v1"
 
-#: The four disclosure strings, fixed text versioned with the schema (D5). Emitted
+#: The four disclosure strings, fixed text versioned with the schema. Emitted
 #: verbatim at the document level and inside every group, so a group excerpted into a
 #: record's per-axis framing section still carries them.
 NOT_DERIVABLE = {
@@ -253,7 +253,7 @@ def classify_ref(raw: str, entry_groups: set[str], where: str) -> tuple[str, str
 class ParsedPipelines:
     """Every pipeline file, parsed, with the artifact paths the reader resolved.
 
-    Kept separate from the graph so the read-set coverage check (M3) runs between
+    Kept separate from the graph so the read-set coverage check runs between
     the two: the inputs files are named by the pipelines themselves, so they are
     checked against the manifest's pin before a single one of them is opened.
     """
@@ -271,7 +271,7 @@ class ParsedPipelines:
 def read_pipelines(package_root: Path) -> ParsedPipelines:
     """Parse every ``pipelines/*.yaml`` and resolve the inputs files they declare.
 
-    Each file must carry exactly one EntryPoint and one ExitPoint (R11), and a module
+    Each file must carry exactly one EntryPoint and one ExitPoint, and a module
     name may not appear in two files. Inputs paths come from the EntryPoint block's
     own refs, relative to the pipeline file's directory — never reconstructed.
     """
@@ -314,7 +314,7 @@ def build_graph(parsed: ParsedPipelines) -> PackageGraph:
     )
     for module in graph.modules.values():
         if module.module_type in ("EntryPoint", "ExitPoint"):
-            continue  # R11: neither participates in the closure
+            continue  # an EntryPoint or ExitPoint never participates in the closure
         bound: set[str] = set()
         channels: set[str] = set()
         for port_name, port in module.inputs.items():
@@ -363,7 +363,7 @@ def _read_input_keys(path: Path) -> list[str]:
 
 
 def reachable_channels(declared: set[str], graph: PackageGraph) -> tuple[set[str], set[str]]:
-    """Conservative forward closure (R10).
+    """Conservative forward closure.
 
     A module fires if any declared key or any tainted channel is among its inputs,
     and firing taints all of its outputs. Iterated to fixpoint.
@@ -440,7 +440,7 @@ def read_model_contract(package_root: Path) -> ModelContract:
 
 
 def predicate_operands(entry: dict) -> tuple[str, list[dict]]:
-    """The operator and ordered operand descriptors from ``predicate_ir`` (R7, R8).
+    """The operator and ordered operand descriptors from ``predicate_ir``.
 
     Literal operands exist only here — they appear in no YAML and no input file.
     Feature/literal leaves inside binary products, comparisons and conjunctions are
@@ -673,7 +673,7 @@ def _constraint_entry(
 
 
 def suffix_siblings(declared_keys: list[str], graph: PackageGraph) -> list[str]:
-    """Advisory only (R12): keys outside the group sharing a declared key's suffix.
+    """Advisory only: keys outside the group sharing a declared key's suffix.
 
     Computed after the trace and never merged into the group. Suffixes are not
     identity — a tie whose suffix differs will never surface here, which is why
@@ -814,9 +814,9 @@ def build_report(
 ) -> dict:
     """Run every gate, trace the selected groups, and assemble the whole document.
 
-    Gate order is fixed (D8): manifest schema (already done by the loader) →
+    Gate order is fixed: manifest schema (already done by the loader) →
     package identity → indicator-input fingerprint → pipeline parse → contract parse
-    → declared-key resolution → trace. The read-set coverage check (M3) is one
+    → declared-key resolution → trace. The read-set coverage check is one
     assertion after the parse; it does not disturb that order.
     """
     manifest_mod.assert_package_identity(loaded, package_root)
