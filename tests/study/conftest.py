@@ -208,6 +208,11 @@ class PackageCopy:
         mutate(data)
         self.manifest.write_text(json.dumps(data, indent=2) + "\n")
 
+    def edit_axes(self, mutate: Callable[[dict[str, Any]], object]) -> None:
+        data = json.loads(self.axes.read_text())
+        mutate(data)
+        self.axes.write_text(json.dumps(data, indent=2) + "\n")
+
     def repin(self) -> None:
         computed = manifest_mod.indicator_input_fingerprint(self.path)
         self.edit_manifest(
@@ -216,11 +221,14 @@ class PackageCopy:
             )
         )
 
-    def run(self, *, repin: bool = True) -> tuple[int, str, str]:
+    def run(
+        self, *, repin: bool = True, out: Path | None = None, group: tuple[str, ...] = ()
+    ) -> tuple[int, str, str]:
         if repin:
             self.repin()
         return run_tool_raw(
-            self.path, self.manifest, self.axes, env=environment_with_root(REPO_ROOT)
+            self.path, self.manifest, self.axes, out=out, group=group,
+            env=environment_with_root(REPO_ROOT),
         )
 
 
@@ -252,3 +260,39 @@ def package_copy(tmp_path: Path) -> Callable[[Path, Path, Path], PackageCopy]:
 @pytest.fixture
 def synthetic_copy(package_copy: Callable[[Path, Path, Path], PackageCopy]) -> PackageCopy:
     return package_copy(SYNTHETIC_PACKAGE, SYNTHETIC_MANIFEST, SYNTHETIC_AXES)
+
+
+@pytest.fixture
+def station_copy(package_copy: Callable[[Path, Path, Path], PackageCopy]) -> PackageCopy:
+    return package_copy(STATION_PACKAGE, STATION_MANIFEST, STATION_AXES)
+
+
+# ------------------------------------------------------------- the station as a project
+
+
+@pytest.fixture
+def station_project(monkeypatch: pytest.MonkeyPatch) -> Path:
+    """The station fixture read in place as its own project: the variable names it."""
+    monkeypatch.setenv(roots.PROJECT_ROOT_ENV, str(STATION))
+    return STATION
+
+
+#: Commits in a scratch repository need an author, and must not depend on the caller's
+#: git configuration.
+_SCRATCH_COMMIT = (
+    "-c", "user.name=study tests", "-c", "user.email=study-tests@example.invalid",
+    "-c", "commit.gpgsign=false",
+)
+
+
+@pytest.fixture
+def station_repo(tmp_path: Path) -> Path:
+    """The station fixture copied into a fresh git repository and committed, for tests that
+    mutate it. The repository ignores ``__pycache__/``, as this one does, because loading the
+    package writes bytecode beside it."""
+    repo = tmp_path / "station"
+    shutil.copytree(STATION, repo, ignore=shutil.ignore_patterns("__pycache__"))
+    (repo / ".gitignore").write_text("__pycache__/\n")
+    for argv in (["init", "-q"], ["add", "."], [*_SCRATCH_COMMIT, "commit", "-q", "-m", "station"]):
+        subprocess.run(["git", "-C", str(repo), *argv], check=True, capture_output=True)
+    return repo.resolve()
