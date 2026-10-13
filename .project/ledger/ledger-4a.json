@@ -4370,7 +4370,7 @@
    "breaks_on": "sysml_codegen.orchestration.snapshot_context (L-026, 4B-G2); sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": true,
    "disposition_4c_note": "Gate 4C part 7 chunk 19 (2026-08-11), superseding the part-5 defer. Twelve nodes and the file says what they are in its first line: learning tests that PIN CURRENT BEHAVIOUR, including the two known fan-out defects, so that the Item 4/5 repair shows up as deliberate red. They are a record of two forensic findings - path A, an occurrence override silently stamped into three public fields; path B, a lenient miss minting a per-consumer entry point with the value backfilled so the identity loss is invisible - not a contract anything should keep satisfying. Archiving rather than retiring is the honest disposition: the findings outlive the pins, and their home is the research doc the file itself cites. The repair those pins were waiting for is the exact route, and where a claim here is a POSITIVE one it already has an owner: the shared-producer and dotted-cross-part controls converge at the node (chunk 15, L-172), and reference-derived versus authored literals stay distinguishable through the identity evidence L-181 pins live.",
-   "findings_home": ".project/research/20260805-054752_source-identity-route-evidence.md",
+   "findings_home": "aa35f06fb6b3bacfd42c7763a07a4ee4fdaafa57:.project/research/20260805-054752_source-identity-route-evidence.md",
    "archived_to": "scripts/archive/test_source_identity_routes.py",
    "state": "executed",
    "executed_commit": "19072adf41dcfe3bf1385e843a52c414fac02969"

@@ -36,3 +36,11 @@ The mental-alignment drafts remain uncommitted owner review material.
 The permanent pre-cleanup archive is Git `a082db22a120f5fa420312f96881a59b71166cd5`; retrieve a removed tracked file with `git show a082db22a120f5fa420312f96881a59b71166cd5:.project/<path>`. An exact temporary archive, including uncommitted updates to removed records, is `/tmp/sysml-codegen-project-cleanup-20261011/removed-artifacts.tar.gz`; its manifest and checksum are in the adjacent `receipt.json`. Original mental-alignment contents and the Git index are preserved.
 
 Verification: 73 relevant tests passed; ledger path/surface checks passed; removed-file Git citations resolve and Markdown diff checks pass.
+
+## Research Register Harvest — 2026-10-12
+
+[OWNER] Review the remaining research reports deeply and move consequential information into ADR/product. All 39 reports were read and individually classified. New builder ADRs 0011–0014 capture exact graph identity/projection, exclusive semantic-evidence ownership, the owner-directed removal of unit guessing, and constraint-evaluation semantics. Existing product entries already capture the relevant implemented promises; no duplicate promises were filed. Original authority grades and current assurance limits remain intact.
+
+The reports are archived at Git `aa35f06fb6b3bacfd42c7763a07a4ee4fdaafa57:.project/research/<filename>`; the exact backup, per-file review notes, and validation receipt are under `/tmp/sysml-codegen-research-review-20261012/`. Surviving citations name their immutable archive. Backlog anonymous-key/profile-parity claims now describe current verification questions rather than retired defects; CATF manual-acceptance tracking and the named C19 authoring guidance were corrected.
+
+Verification: 321 focused tests passed with the license loaded; ledger path/surface and Markdown checks passed. Three independent source reviews found no material fidelity issues in the captures. Original mental-alignment drafts and Git index remain unchanged.

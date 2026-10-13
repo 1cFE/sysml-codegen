@@ -390,17 +390,7 @@ onto one parameter. Only LITERAL values apply; a non-literal supplied value fall
 to an ordinary user-fill entry point. (The V11 uncovered-parameter diagnostic once
 documented here was dead by construction and was deleted — REPO-CLEANUP Move C.)
 
-**Limitation — nested-occurrence overrides are not captured correctly
-(`[NESTED-OCCURRENCE-OVERRIDE]`, BACKLOG P2).** A `:>>` override on a usage nested inside an
-*instantiated* part def is captured **definition-relative** while demand resolves
-**occurrence-relative**, so the materializer never matches and the model literal is lost — the
-calc binding falls to a manual-required entry point (value dropped, with a WARN naming both the
-captured and the demanded scope — a tripwire added 2026-07-24, not a fix), and a constraint
-actual halts generation under strict INV-2. Shape (b) above is safe only in its flat,
-non-nested form; do not read this section as promising nested-occurrence override capture. Probe
-fixture: `tests/fixtures/nested_occurrence_override_probe/` (expected to halt; its flat sibling
-`constraint_def_owned_redefining/` resolves through the same machinery, isolating nesting as the
-sole trigger).
+The nested-occurrence override in `tests/fixtures/nested_occurrence_override_probe/` is supported by the exact route. Its dedicated C19 test (`tests/execution/test_c19_nested_occurrence_teax.py`) checks both consumers through live generation, in-place snapshot replay, and relocated replay. The earlier materializer mismatch belonged to the retired string-resolution route; current lifecycle evidence bounds are recorded in `.project/reference/source-identity-reconciliation.md`.
 
 ---
 

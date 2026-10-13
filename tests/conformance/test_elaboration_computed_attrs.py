@@ -7,7 +7,7 @@ inputs are the expression's feature terms resolved by the same referent rules as
 calc bindings. Consumers referencing the attribute get a producer edge, so
 FORMULA→FORMULA chains (previously unsupported by the legacy front end) follow
 naturally. Fixture: ``attr_expr_probe`` (patterns A–D). Findings:
-``.project/research/20260807-171548_elaborator-computed-attributes.md``.
+``aa35f06fb6b3bacfd42c7763a07a4ee4fdaafa57:.project/research/20260807-171548_elaborator-computed-attributes.md``.
 
 All tests require a live SysIDE license.
 """

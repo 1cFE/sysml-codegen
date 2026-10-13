@@ -7,7 +7,7 @@ The legacy pipeline needs instance-scoped channel machinery to disambiguate —
 in the instance graph the disambiguation holds by construction, because every
 occurrence is its own node. No leg-specific implementation was needed; these
 tests pin that the leg-1 mechanics already carry the shape. Findings:
-``.project/research/20260807-165502_elaborator-sibling-channels.md``.
+``aa35f06fb6b3bacfd42c7763a07a4ee4fdaafa57:.project/research/20260807-165502_elaborator-sibling-channels.md``.
 
 The fixture also authors the degenerate ``in fuel = fuel`` idiom on the shared
 ``Chamber`` producer — a real SRC-01 in the fixture, rejected strict and

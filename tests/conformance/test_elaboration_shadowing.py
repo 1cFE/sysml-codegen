@@ -7,7 +7,7 @@ case. Authoring note baked into the fixture: an overridable default chain needs
 ``default`` at every level — SysIDE rejects ``:>>`` over a bound (``=``) value
 (``feature-value-overriding``).
 
-Findings: ``.project/research/20260807-174301_elaborator-shadowing-literals.md``.
+Findings: ``aa35f06fb6b3bacfd42c7763a07a4ee4fdaafa57:.project/research/20260807-174301_elaborator-shadowing-literals.md``.
 All tests require a live SysIDE license.
 """
 
