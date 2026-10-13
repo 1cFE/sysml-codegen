@@ -37,9 +37,10 @@ RUNTIMES = {"claude": ("claude",), "codex": ("codex",), "both": ("claude", "code
 #: Claude's alias of a skill bundle is a relative link to the shared folder, as agentic-mbse's
 #: ``init`` makes it by default. ``install_bundle`` takes "symlink" or "copy".
 LINK_MODE = "symlink"
-#: The first agentic-mbse revision whose installer carries ``INSTALLER_API_VERSION``.
-#: ``README.md`` names the same revision; a test holds the two together.
-INSTALLER_API_REVISION = "0843fe2"
+#: The first agentic-mbse ``main`` revision whose installer carries ``INSTALLER_API_VERSION``,
+#: the merge of agentic-mbse PR #24. ``README.md`` names the same revision; a test holds the two
+#: together.
+INSTALLER_API_REVISION = "d42c8b9"
 #: The answers to a conflict, as agentic-mbse's installer names them.
 CHOICES = {"s": "skip", "b": "backup", "o": "overwrite", "S": "skip_all", "O": "overwrite_all"}
 

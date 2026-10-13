@@ -45,7 +45,7 @@ It writes four things:
 
 **Who owns what.** The skill files and the command are managed. A re-install refreshes an unmodified file and keeps an edited one (at a terminal it asks); `--force` replaces it. The study policy is the project's document: it is created once, and only `--force` writes it again. The installer is agentic-mbse's, on sysml-codegen's own manifest, so `agentic-mbse init` and `install-commands` leave each other's files alone, in either order.
 
-**agentic-mbse revision.** `install-commands` needs agentic-mbse's installer API `installer/v1`, which first ships in agentic-mbse revision `0843fe2`. It checks this before it writes anything and refuses with exit 1, naming that revision, when the installed agentic-mbse lacks it. No other command needs it.
+**agentic-mbse revision.** `install-commands` needs agentic-mbse's installer API `installer/v1`, which first ships in agentic-mbse revision `d42c8b9`. It checks this before it writes anything and refuses with exit 1, naming that revision, when the installed agentic-mbse lacks it. No other command needs it.
 
 **The tools.** Each runs as `sysml-codegen study <tool>`, or as `python -m sysml_codegen.study.<tool>`:
 
