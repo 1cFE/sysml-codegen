@@ -219,6 +219,69 @@ Of those 32, the 23 in the three named families (EPC 8, GA 8, LVP 9, minus REQ-E
 
 - **[CATF-ACCEPTANCE-LANE-MANUAL] The CATF feasibility-rejection lane is recorded evidence without a committed regression gate — P3 `[AGENT]`, unowned.** Item 5 coverage is gated by `tests/unit/test_coverage_ledger_agreement.py`. Its generate → seal → load → execute → policy → durable-record rejection was a recorded manual acceptance run; its archived harness names historical artifact roots. The former unmerged-TEAx explanation is obsolete. Decide whether to keep this lane explicitly manual or add a committed artifact-bound runtime regression for the current model.
 
+## Study Layer (WRAP-SPLIT Item 3 follow-ups)
+
+Filed by the audit fix pass of WRAP-SPLIT Item 3 (study-layer-to-codegen, branch `study-layer-to-codegen`), 2026-10-12, on the orchestrator's brief, because the item folder is deleted at close (audit F2). The audit is `01990a5:.project/active/study-layer-to-codegen/audit.md`; `evidence/` paths below are in that commit's item folder.
+
+### [STUDY-RECORD-RESUME] A resume path for a study record stopped at § 17 — unscheduled `[AGENT]`
+
+The shipped runbook (`src/sysml_codegen/assets/skills/run-study/runbook.md`) has a § 17 stop rule but does not say how a stopped record resumes. Item 3's dry run hit it: the agent obeyed record immutability and started a new study id, which is defensible but costly (dry-run finding F-DR1, `evidence/dry-run/run-20261012/RESULT.md:36`). The text came over unchanged from fusion-tea's runbook, and changing the record lifecycle was outside Item 3's closed list. Source: audit F2 and its F-DR1 disposition.
+
+### [STUDY-ROUTE-POINT-RUNNER] The route contract leaves the point runner open — unscheduled, the owner's or orchestrator's call `[AGENT]`
+
+The shipped contract for a package's route names `execute_baseline` and then "whatever runs the study's points" (`runbook.md:261`). A route that fixes its grid in code therefore satisfies the contract and still defeats step 7's rule that the window is chosen after the oracle scan (`runbook.md:83`). Requiring the point runner to take step 7's window would change study semantics, so the decision is not an implementer's. This restates dry-run finding F-DR2, whose recorded cause was wrong: the neutral fixture's route already has a points entry, `run_points` (`tests/fixtures/study_station/studies/study_route.py:44`); the dry run fixed its grid because its brief named only `execute_baseline` and `run_grid` (`evidence/dry-run/brief.md:29`). Source: audit F4.
+
+### [INTEGRATE-CALLER-ERROR-AS-SEAM-FAULT] `integrate` reports two caller mistakes as `seam-internal-error` — unscheduled `[AGENT]`, inherited
+
+Both paths fail closed, but each says "the seam broke" for a caller's error:
+
+- A `--census-file` that is valid JSON of the wrong shape, or lacks `derived_against_semantic_fingerprint`, raises `KeyError` or `TypeError` in gate 4 (`src/sysml_codegen/study/integrate.py:1206-1221`). The catch-all at `:1621` returns `seam-internal-error`, exit 2.
+- A baseline result without `executed_under.store_id` raises `KeyError` at `:1298`, which escapes the `ToolError`-only handler at `:1350`, also exit 2.
+
+Both are byte-faithful to fusion-tea `b06585709`, so the fix is a behaviour change and was kept out of the move. The audit's proposed mapping: gate 4 `input-invalid` for the census, gate 7 `could_not_run` for the baseline result. The `index` mypy override on `integrate` is what hides them (see the next item). Source: audit F5.
+
+### [VERIFY-MISSING-STORE-TRACEBACK] `verify` crashes on a missing store instead of refusing — unscheduled `[AGENT]`, inherited
+
+Given a `--store` path that does not exist, `verify` lets teax's store open raise an uncaught `sqlite3.OperationalError` rather than refusing with a `ToolError` that names the path. It still fails closed (non-zero exit, no summary written), but the message is a traceback. Found by the Item 3 rehearsal's step 8b (fusion-tea record `20260929-magnet-material-comparison`, whose stores are not committed). Byte-faithful to fusion-tea `b06585709`, so the fix is a behaviour change kept out of the move: check the store path exists before opening it, and refuse naming it.
+
+### [READ-COVERAGE-STALE-BYTECODE] Gate 7 refuses a route whose bytecode cache is stale — unscheduled `[AGENT]`, inherited
+
+When a route module's `__pycache__/*.pyc` is older than its source, the observed run recompiles it, and `read_coverage` refuses with `dependency changed after read: …/__pycache__/study_route.cpython-312.pyc`. The next run passes, because the cache is then fresh. fusion-tea's adoption hit this on the first gate-7 run after step 5 rewrote the route imports. fusion-tea's original observer refuses the same way after `touch study_route.py` (agentic-mbse `.project/completed/20261012_study-layer-to-codegen/evidence/adoption-20261012.md`). It fails closed, but the message points at a cache rather than the route. A fix could treat a rewritten `.pyc` of an observed source as that source's read, or run the route with `PYTHONDONTWRITEBYTECODE`. Either is a behaviour change.
+
+### [STUDY-PORTED-MYPY-OVERRIDES] Typing debt in the eight ported study modules — P3 `[AGENT]`
+
+`pyproject.toml`'s `[[tool.mypy.overrides]]` blocks relax checking for the eight modules ported byte-faithfully from fusion-tea (`common`, `identity`, `indicators`, `integrate`, `manifest`, `preflight`, `read_coverage`, `verify`). The audit's strict probe (`--check-untyped-defs --disallow-untyped-defs`, 53 errors in 6 files) found what each hides:
+
+- `disallow_untyped_defs = false` (all eight): 29 untyped defs (read_coverage 12, verify 12, preflight 3, integrate 2). Looseness only; checking their bodies found nothing beyond the codes below.
+- `identity` `attr-defined`: `.get` on `object` at `:262`, unreachable because the contract is validated first.
+- `indicators` `arg-type`, `no-any-return`: `arg-type` at `:617` (a `None` key, guarded at `:618`) and `:903`; `no-any-return` at `:134`. Looseness.
+- `integrate` `index`, `no-any-return`: `:1210-1221` and `:1298` hide the two real misreports in [INTEGRATE-CALLER-ERROR-AS-SEAM-FAULT]; `:1169` and `:1388-1389` are looseness over validated documents.
+- `manifest` `no-any-return`: `:402`, over a schema-validated manifest.
+- `preflight` `arg-type`, `assignment`, `attr-defined`: seven guarded `arg-type` sites at `:383-417`, `assignment` at `:313`, and `attr-defined` at `:126` and `:136`. The last two are real but cosmetic: a non-object `model_contract.json` gives an `AttributeError` traceback, still exit 1 with no document.
+- `verify` `index`: `:507`, after the contract is asserted at `:500`.
+- `ignore_missing_imports` for `simkit` and `yaml`: no stubs.
+
+Typing the modules is a byte change, so it belongs after fusion-tea adopts the moved layer. The `no-any-return` sites were not re-probed by the audit; their list rests on Item 3's Phase 1 mypy run. Source: audit § Code integrity, "The mypy overrides, named".
+
+### [STUDY-CHECK-RECORD] Ship the record checker as `sysml-codegen study check-record` — unscheduled `[AGENT]`
+
+Item 3 shipped no record checker (design DD12). The installed runbook's steps 14 and 15 carry **Check:** lines the executor runs, and the dry run's evidence script `evidence/dry-run/check_record.py` ran five checks over the committed record and agreed with them. Shipping that script as a `study` subcommand gives a target one command for the same checks. Rejected at design time: shipping it inside Item 3, and an installed pytest template. Source: design DD12, review S6.
+
+### [STUDY-PORTED-SMELLS] Smells kept in the ported study modules — unscheduled `[AGENT]`, inherited
+
+Design DD19 removed the `if __package__` path inserts and kept these, each byte-faithful to fusion-tea `b06585709`:
+
+- argparse `prog="<tool>.py"` in `indicators.py:927`, `preflight.py:472`, `verify.py:585` and `integrate.py:408`, so usage lines name a file the target never runs instead of `sysml-codegen study <tool>`;
+- `indicators.write_atomically` (`indicators.py:907`), a local atomic-write helper;
+- `integrate.py`'s size (1,663 lines);
+- gate 4's fixed `*.snapshot.json` glob beside the models root (`integrate.py:1132`). The follow-up is an explicit `--snapshot` flag.
+
+`read_coverage.py`'s untyped style is [STUDY-PORTED-MYPY-OVERRIDES]. Each fix is a byte change, so it belongs after fusion-tea adopts the moved layer. Source: design DD19, review S7.
+
+### [STUDY-GLUE-LEDGER-SEMANTICS] Is a non-empty glue ledger a model-development finding? — the owner's call `[AGENT]`
+
+The shipped runbook treats a non-empty glue ledger as a scoped disclosure (`runbook.md:94`; `record-template.md:126-128`). It treats an axis the model does not resist as a model-development finding (`runbook.md:56`). The owner's concept says glue is temporary and "studies will not need glue" (run-study concept, amended 2026-08-18), and P-004 calls a harness-injected value "a massive, disgusting smell". Not a regression: the text came over unchanged (read-through RB-14). Making it a finding changes study semantics, so the owner decides. Source: Item 3 product-lens audit-F6.
+
 ## Historical Scope Question
 
 ### [HIERARCHICAL-OUTPUT] Recover original scope — unscheduled

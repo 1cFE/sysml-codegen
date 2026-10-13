@@ -4,9 +4,13 @@
 
 ## Active Work
 
-No active implementation items. The backlog holds separately scoped capabilities, diagnostics, model work, and assurance limits.
+None recorded.
+
+The backlog holds separately scoped capabilities, diagnostics, model work, and assurance limits.
 
 ## Shipped State and Historical Authority
+
+WRAP-SPLIT Item 3 (`study-layer-to-codegen`) closed 2026-10-12, certified with follow-ups, in [PR #20](https://github.com/1cFE/sysml-codegen/pull/20). The study layer ships from this repo: `install-commands` installs `run-study`, and `sysml-codegen study` runs the tools in `sysml_codegen.study` (P-007; ADRs 0015–0017). Its spec, design, plan, audit and evidence are retained at `4dfe275f9d90aa2f07824f48349f373df151ef03:.project/active/study-layer-to-codegen/`. fusion-tea's adoption runbook and its kit moved to agentic-mbse `.project/completed/20261012_study-layer-to-codegen/`. Follow-ups are in the backlog's "Study Layer" section.
 
 ELABORATE-FIRST closed 2026-10-10 by owner direction after final independent certification of the bounded delivered architecture and downstream scope. The final epic, audit, and aggregate product-lens are retained at `0e43cc76179e21473c36f2b30d473a3cf9626c4a:.project/backlog/epic_elaborate_first_architecture.md` and `0e43cc76179e21473c36f2b30d473a3cf9626c4a:.project/backlog/epic_elaborate_first_architecture_audit.md`. Fresh audit checks: 195 licensed passes and 53 stock-runtime passes; 21 acceptance artifact hashes matched. Four broader evidence/process criteria and Item 1's historical-clean-base conjunct remain unchecked in the Git record. Full 35-coordinate lifecycle assurance and LC-SI-23 remain PARTIAL in the [source-identity map](reference/source-identity-reconciliation.md); diagnostic, deep-override, and array bounds retain their existing dispositions.
 

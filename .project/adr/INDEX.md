@@ -15,5 +15,8 @@
 - 0012 · Semantic evidence has one acquisition owner and complete closed values · seams: extraction, elaboration, generation, agentic-mbse
 - 0013 · Units come from parser-native values rather than prose guessing · seams: extraction, elaboration, generation
 - 0014 · Constraint verdicts are evidence; raised arithmetic is execution failure · seams: generation, constraint-evaluation, reporting
+- 0015 · Study tools anchor the project root to the package's git work tree, with an explicit override · seams: study, fusion-tea
+- 0016 · Reuse agentic-mbse's installer through an API version pin, not a package-version bound · seams: installer, agentic-mbse, fusion-tea
+- 0017 · Study location settings are the one environment read reachable from the CLI · seams: study, cli, conformance
 
 - 0005 · Exact-identity elaboration replaces string resolution, with no compatibility layer · seams: extraction, elaboration, snapshot · amended

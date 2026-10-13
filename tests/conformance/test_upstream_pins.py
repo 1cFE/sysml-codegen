@@ -11,6 +11,7 @@ from __future__ import annotations
 import agentic_mbse
 import pytest
 from agentic_mbse import SEMANTIC_EVIDENCE_API_VERSION
+from agentic_mbse.cli.installation import INSTALLER_API_VERSION
 from agentic_mbse.sysml.constraint_facts import CONSTRAINT_FACTS_SCHEMA_VERSION
 from agentic_mbse.sysml.executable_profile import PROFILE_SEMANTIC_VERSION
 from agentic_mbse.sysml.expression_ir import EXPRESSION_IR_SCHEMA_VERSION
@@ -25,6 +26,7 @@ from sysml_codegen import _upstream_pins
         ("SEMANTIC_EVIDENCE_API_VERSION", SEMANTIC_EVIDENCE_API_VERSION),
         ("CONSTRAINT_FACTS_SCHEMA_VERSION", CONSTRAINT_FACTS_SCHEMA_VERSION),
         ("EXPRESSION_IR_SCHEMA_VERSION", EXPRESSION_IR_SCHEMA_VERSION),
+        ("INSTALLER_API_VERSION", INSTALLER_API_VERSION),
         ("PROFILE_SEMANTIC_VERSION", PROFILE_SEMANTIC_VERSION),
     ],
 )
@@ -43,6 +45,7 @@ def test_every_pin_is_covered_by_this_test() -> None:
         "AGENTIC_MBSE_PACKAGE_VERSION",
         "CONSTRAINT_FACTS_SCHEMA_VERSION",
         "EXPRESSION_IR_SCHEMA_VERSION",
+        "INSTALLER_API_VERSION",
         "PROFILE_SEMANTIC_VERSION",
         "SEMANTIC_EVIDENCE_API_VERSION",
     }

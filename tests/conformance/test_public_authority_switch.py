@@ -223,6 +223,8 @@ def test_no_cli_flag_or_environment_variable_selects_a_route(
     cutover cannot be added quietly.
     """
     forbidden = ("legacy", "exact", "route", "authority", "builder", "v5", "v6", "elaborat")
+    # No `study` entry: integrate's `--route-*` flags name a study's execution route, a
+    # different sense of "route" that the study layer's closed list keeps byte-faithful.
     for command in ("generate", "snapshot", "seal", "install-commands"):
         main_returns([command, "--help"])
         help_text = capsys.readouterr().out.lower()
@@ -237,7 +239,28 @@ def test_no_cli_flag_or_environment_variable_selects_a_route(
         for name in _reachable_sysml_codegen_modules("sysml_codegen.cli")
         if _reads_the_environment(name)
     )
-    assert readers == []
+    # One named allowance: study location settings (`SYSML_CODEGEN_PROJECT_ROOT`,
+    # `TEAX_SIMKIT_PATH`, the environment the integration seam hands its producers). They do
+    # not affect generation authority. No other reader may appear.
+    assert readers == ["sysml_codegen.study.roots"]
+
+
+def test_the_study_package_reads_the_environment_only_in_roots() -> None:
+    """Every study module asks ``roots`` for the environment; only ``roots`` reads it.
+
+    Walked over the whole package, not the CLI's reachable set, so a study module the CLI
+    does not import yet cannot become a second reader unnoticed.
+    """
+    import pkgutil
+
+    import sysml_codegen.study as study
+
+    modules = [
+        f"{study.__name__}.{info.name}" for info in pkgutil.iter_modules(study.__path__)
+    ]
+    assert "sysml_codegen.study.roots" in modules
+    readers = sorted(name for name in modules if _reads_the_environment(name))
+    assert readers == ["sysml_codegen.study.roots"]
 
 
 def test_the_public_api_exports_no_second_construction_entry_point() -> None:
@@ -250,7 +273,10 @@ def test_the_public_api_exports_no_second_construction_entry_point() -> None:
         "GenerationConfig",
         "cmd_generate",
         "cmd_install_commands",
-        "CODEGEN_COMMANDS",
+        # The study dispatcher hands its arguments to a study tool and constructs nothing.
+        "cmd_study",
+        # `CODEGEN_COMMANDS` is gone: it was the old installer's file list, and the packaged
+        # assets tree (`sysml_codegen/assets/`) replaced it.
     }
 
 

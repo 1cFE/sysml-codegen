@@ -1,0 +1,14 @@
+# The station's declaration for `sysml-codegen study integrate`, written for
+# study-layer-to-codegen. It declares both repo-scope gates, so a request can reach CANDIDATE.
+
+[tool.sysml-codegen.integrate]
+environment = []
+backup-prefix = "station-integration-backup-"
+
+[tool.sysml-codegen.integrate.gates.pinned-packages]
+target = "gates/check_pins.py"
+checked = "the fixture's toolchain imports"
+
+[tool.sysml-codegen.integrate.gates.model-family-spine]
+target = "gates/check_census.py"
+checked = "the tracked entry-point census against the committed package"

@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 sysml-codegen transforms SysML v2 models into executable Python code for TEAx-style simulation frameworks. It extracts calculation definitions from SysML, builds a computation graph, and generates Pydantic schemas, TEAx module wrappers, implementation stencils, and pipeline YAML.
 
+It also ships the **study layer**: the `sysml_codegen.study` tools, the `run-study` skill bundle and a study-policy template. `sysml-codegen install-commands` installs the skill, the `teax-completion` command and the policy into a project; `sysml-codegen study <tool>` runs the tools there. See § The study layer below.
+
 ## Commands
 
 ```bash
@@ -32,6 +34,12 @@ uv run sysml-codegen snapshot --models path/to/models --output path/to/instance_
 
 # Run code generation from that snapshot (license-free; mutually exclusive with --models)
 uv run sysml-codegen generate --from-snapshot path/to/snapshot --output path/to/output --package-name my_package
+
+# Install the study layer into a project (needs agentic-mbse's installer API installer/v1)
+uv run sysml-codegen install-commands path/to/project [--assistant claude|codex|both] [--list] [--force]
+
+# Run a study tool: indicators, preflight, verify or integrate
+uv run sysml-codegen study indicators --package DIR --manifest FILE --groups FILE
 ```
 
 The licensed suite needs `SYSIDE_LICENSE_KEY`, which lives in the companion checkout's `.env`
@@ -96,6 +104,18 @@ Document 09 now carries only the live model set. For the constraint catalog ther
 retired-document account left: the elaborator decides every constraint usage while building
 the instance graph, projection renders what it decided, and the catalog models live in
 `resolution/models.py` (CONSTRAINT-SEMANTICS Item 2 semantics).
+
+### The study layer
+
+The study layer moved here from fusion-tea (WRAP-SPLIT Item 3). Outside a closed list of changes it is byte-faithful to fusion-tea `b06585709`, and the closed item's folder, retained in git at `4dfe275:.project/active/study-layer-to-codegen/`, holds that list and the parity evidence.
+
+- **`study/`**: the eight moved tools (`common`, `manifest`, `identity`, `indicators`, `preflight`, `verify`, `read_coverage`, `integrate`), plus `roots`, `census`, `declarations` and the seven document schemas. The ported modules carry a recorded mypy override and per-file ruff ignores in `pyproject.toml`; keep their bytes unless the change is the point.
+- **The project root** (`study/roots.py`, `.project/adr/0015-study-root-anchors-to-the-package-work-tree.md`): an in-process override, then `SYSML_CODEGEN_PROJECT_ROOT`, then the git work tree that contains `--package`. No root, or a working directory in a different work tree, is exit 2 with no document.
+- **teax** is `TEAX_SIMKIT_PATH`, the simkit root, and nothing else.
+- **`roots.py` is the only module reachable from the CLI that reads the environment** (`.project/adr/0017-study-location-settings-are-the-one-environment-read.md`). A conformance test greps source text, comments included.
+- **`integrate`** reads the project's own facts from `[tool.sysml-codegen.integrate]` in its `pyproject.toml` (`study/declarations.py`).
+- **Installation** (`cli/install.py`, `.project/adr/0016-installer-reuse-through-an-api-version-pin.md`) goes through agentic-mbse's `Installer` on its own manifest, `.sysml-codegen/install.json`. The shipped files live in `src/sysml_codegen/assets/`. `install-commands` checks agentic-mbse's `INSTALLER_API_VERSION` against `_upstream_pins.INSTALLER_API_VERSION` before it installs.
+- **Tests**: `tests/study/` (default lane), `tests/unit/test_install_commands.py`, and `tests/execution/test_study_*.py` (the teax lane, with `TEAX_SIMKIT_PATH` and `CODEGEN_EXECUTION_PROVENANCE` set). The neutral fixture is `tests/fixtures/study_station/`; never `ruff format` its generated package.
 
 ### Key Data Models
 

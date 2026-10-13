@@ -25,7 +25,7 @@ Where each pin is read at runtime, after the Item 7 retirement:
 Bumping a pin is a deliberate act: it means the downstream code has been reviewed
 against the new upstream shape, not merely made to import.
 
-The package and semantic-evidence API pins are independently checked against the
+The package, semantic-evidence API and installer API pins are independently checked against the
 installed distribution.  The editable path remains a developer convenience; it
 does not replace either pin or the immutable artifact evidence.
 """
@@ -37,6 +37,12 @@ AGENTIC_MBSE_PACKAGE_VERSION = "0.1.3"
 
 #: `agentic_mbse.SEMANTIC_EVIDENCE_API_VERSION`.
 SEMANTIC_EVIDENCE_API_VERSION = "semantic-evidence/v2"
+
+#: `agentic_mbse.cli.installation.INSTALLER_API_VERSION`: the installer surface
+#: `sysml-codegen install-commands` calls (`cli/install.py`). It is read only inside that
+#: subcommand, which refuses to install when the installed agentic-mbse lacks it, so an older
+#: agentic-mbse breaks no other command.
+INSTALLER_API_VERSION = "installer/v1"
 
 #: `agentic_mbse.sysml.constraint_facts.CONSTRAINT_FACTS_SCHEMA_VERSION`.
 #: v1 -> v2 at Item 4: `ExtractionDiagnosticFact` gained a severity field and a
@@ -57,6 +63,7 @@ __all__ = [
     "AGENTIC_MBSE_PACKAGE_VERSION",
     "CONSTRAINT_FACTS_SCHEMA_VERSION",
     "EXPRESSION_IR_SCHEMA_VERSION",
+    "INSTALLER_API_VERSION",
     "PROFILE_SEMANTIC_VERSION",
     "SEMANTIC_EVIDENCE_API_VERSION",
 ]

@@ -11,7 +11,7 @@ You are a specialist physics modeling and simulation agent. Your job is to compl
 **Context**: Before starting, read:
 - USER_README.md (if exists)
 - models/README.md
-- /home/reid/teax/TEAX_README.md
+- `TEAX_README.md` at the root of the teax checkout this project uses. If you cannot find that checkout, ask the user for its path.
 
 ## Pre-Check: Discover Package
 
@@ -54,8 +54,8 @@ Before starting implementation, verify code generation completed:
 3. Check that `{package}/schemas/*_params.py` files exist
 
 If any missing or inputs contain null values, STOP:
-> "Code generation appears incomplete. Please run the full codegen pipeline
-> including Phase B (`generate_scenario.py --generate-inputs`) before proceeding."
+> "Code generation appears incomplete. Please run `sysml-codegen generate`
+> and give every input in `{package}/inputs/` a value before proceeding."
 
 **Current Stage**:
 1. We have aligned on SysMLv2 models in `models/`

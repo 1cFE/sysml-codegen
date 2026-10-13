@@ -1,0 +1,122 @@
+{
+  "catalog_schema_version": "3.0.0",
+  "constraint_catalog": {
+    "concrete_entries": [
+      {
+        "constraint_id": "PumpStation__station__pump_fit__aa8dd6c31b6b238a",
+        "declaration_id": "24bc1d35-f3ce-5325-a96e-e92bcbfff86a",
+        "definition_qualified_name": "PumpStation::CapacityCoversDemand",
+        "evaluation_channel": "PumpStation__station__pump_fit__aa8dd6c31b6b238a__evaluation",
+        "expected_value": true,
+        "is_negated": false,
+        "membership_kind": null,
+        "owner_instance_path": "PumpStation__station",
+        "owner_qualified_name": "PumpStation::station",
+        "predicate_ir": "{\"kind\":\"operator\",\"operand_type\":null,\"operands\":[{\"kind\":\"feature_ref\",\"operand_type\":{\"category\":\"real\",\"enumeration\":null,\"unit\":null},\"reference\":{\"chain_segments\":[],\"source_name\":\"capacity\",\"target\":{\"kind\":\"AttributeUsage\",\"name\":\"capacity\",\"qualified_name\":\"PumpStation::CapacityCoversDemand::capacity\"},\"target_types\":[\"ScalarValues::Real\",\"Base::DataValue\",\"Base::Anything\"]},\"schema_version\":\"expression-ir/v1\"},{\"kind\":\"feature_ref\",\"operand_type\":{\"category\":\"real\",\"enumeration\":null,\"unit\":null},\"reference\":{\"chain_segments\":[],\"source_name\":\"demand_flow\",\"target\":{\"kind\":\"AttributeUsage\",\"name\":\"demand_flow\",\"qualified_name\":\"PumpStation::CapacityCoversDemand::demand_flow\"},\"target_types\":[\"ScalarValues::Real\",\"Base::DataValue\",\"Base::Anything\"]},\"schema_version\":\"expression-ir/v1\"}],\"operator\":\">=\",\"schema_version\":\"expression-ir/v1\"}",
+        "predicate_source_key": "definition:PumpStation::CapacityCoversDemand",
+        "source_form": "definition_typed",
+        "source_local_identity": "pump_fit",
+        "usage_qualified_name": "PumpStation::station::pump_fit"
+      }
+    ],
+    "excluded_records": [],
+    "fingerprint": "228183369f50afdc4877e1b3b77631e1c3702ed95eec2f5d104d0d8f3d14c9a8",
+    "source_records": [
+      {
+        "definition_qualified_name": "PumpStation::CapacityCoversDemand",
+        "formal_names": [
+          "capacity",
+          "demand_flow"
+        ]
+      }
+    ],
+    "usage_records": [
+      {
+        "declaration_id": "24bc1d35-f3ce-5325-a96e-e92bcbfff86a",
+        "definition_qualified_name": "PumpStation::CapacityCoversDemand",
+        "disposition_detail": "PumpStation::station::pump_fit profile eligibility admit",
+        "disposition_kind": "eligible",
+        "disposition_reason": "admitted",
+        "disposition_severity": "info",
+        "expected_value": true,
+        "inapplicability_reason": null,
+        "is_negated": false,
+        "membership_kind": null,
+        "occurrence_count": 1,
+        "owner_kind": "part_usage",
+        "owner_qualified_name": "PumpStation::station",
+        "source_form": "definition_typed",
+        "source_local_identity": "pump_fit",
+        "usage_qualified_name": "PumpStation::station::pump_fit"
+      }
+    ]
+  },
+  "evaluation_semantics": "kleene-three-valued",
+  "outputs": [
+    {
+      "channel_name": "PumpStation__station__demand__required_flow",
+      "field_name": "root",
+      "python_type": "float"
+    },
+    {
+      "channel_name": "PumpStation__station__pumping__annual_cost",
+      "field_name": "root",
+      "python_type": "float"
+    },
+    {
+      "channel_name": "PumpStation__station__pump_fit__aa8dd6c31b6b238a__evaluation",
+      "field_name": "evaluation",
+      "python_type": "ConstraintEvaluation"
+    },
+    {
+      "channel_name": "constraint_report",
+      "field_name": "constraint_report",
+      "python_type": "ConstraintReport"
+    }
+  ],
+  "parameters": [
+    {
+      "default_value": 0.005,
+      "entry_type": "design_attribute",
+      "param_group": "station_params",
+      "python_type": "float",
+      "qualified_name": "PumpStation__station__allowed_rise_rate"
+    },
+    {
+      "default_value": 12.0,
+      "entry_type": "design_attribute",
+      "param_group": "station_params",
+      "python_type": "float",
+      "qualified_name": "PumpStation__station__basin_area"
+    },
+    {
+      "default_value": 0.3,
+      "entry_type": "design_attribute",
+      "param_group": "station_params",
+      "python_type": "float",
+      "qualified_name": "PumpStation__station__design_inflow"
+    },
+    {
+      "default_value": 0.1,
+      "entry_type": "design_attribute",
+      "param_group": "station_params",
+      "python_type": "float",
+      "qualified_name": "PumpStation__station__energy_price"
+    },
+    {
+      "default_value": 0.25,
+      "entry_type": "design_attribute",
+      "param_group": "station_params",
+      "python_type": "float",
+      "qualified_name": "PumpStation__station__installed_capacity"
+    },
+    {
+      "default_value": 8.0,
+      "entry_type": "design_attribute",
+      "param_group": "station_params",
+      "python_type": "float",
+      "qualified_name": "PumpStation__station__pump_head"
+    }
+  ],
+  "semantic_fingerprint": "e2240e55292fa104eabc342b53453b5f7e1ee9d41153917c70065967bcb1cf6f"
+}

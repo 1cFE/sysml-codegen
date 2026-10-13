@@ -16,6 +16,11 @@ import pytest
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
+#: The study fixture commits a generated package, and the generator writes its own
+#: ``tests/test_implementations_runnable.py`` into it. That file imports ``station_study`` as a
+#: top-level package, which only TEAx's loader puts on the path, so this suite never collects it.
+collect_ignore_glob = ["fixtures/study_station/pkg/*"]
+
 
 @functools.lru_cache(maxsize=1)
 def _license_available() -> bool:
