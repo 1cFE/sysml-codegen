@@ -1,5 +1,0 @@
-{
-  "exit_code": 0,
-  "stdout": "recipe indicator-input-fingerprint/v1\ndigest 7a5e6ff32b61d3d4522df18105e20be0e9d3433c1ab713fdfdb8f71aba45fe85\nfiles\n  contracts/model_contract.json 728f3c6a9403ea52c094970ba62b5e2c0298037d645570833ea0d95f6e8cdfbf\n  inputs/station_params.json 68a10e1e2222b96f84157b0733049e9ee3c96671ec94752247a665162ad51142\n  pipelines/pipeline.yaml e32b4faacd46b1cda0b0e7d2a672a1ef6ad08ff18d38ffe7146421c4c7875fe4\n",
-  "stderr": ""
-}

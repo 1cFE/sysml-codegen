@@ -6,7 +6,8 @@ fusion-tea's consumers use 32 names on the study modules, listed in its
 surface (design Appendix C). Each must exist on the moved module with the shape it had.
 
 ``data/compat_surface.json`` records that shape, captured once from the staged ``b06585709``
-modules by ``.project/active/study-layer-to-codegen/evidence/compat/capture_compat_surface.py``
+modules by WRAP-SPLIT Item 3's capture script (in git at ``4dfe275``,
+``.project/active/study-layer-to-codegen/evidence/compat/capture_compat_surface.py``)
 with :func:`describe` below: each name's kind and its parameters, bases, value or module,
 without annotations. Behaviour is SC12's and, at adoption, fusion-tea's own suite's.
 """

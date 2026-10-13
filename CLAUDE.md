@@ -107,7 +107,7 @@ the instance graph, projection renders what it decided, and the catalog models l
 
 ### The study layer
 
-The study layer moved here from fusion-tea (WRAP-SPLIT Item 3). Outside a closed list of changes it is byte-faithful to fusion-tea `b06585709`, and `.project/active/study-layer-to-codegen/` (or `completed/` once closed) holds that list and the parity evidence.
+The study layer moved here from fusion-tea (WRAP-SPLIT Item 3). Outside a closed list of changes it is byte-faithful to fusion-tea `b06585709`, and the closed item's folder, retained in git at `4dfe275:.project/active/study-layer-to-codegen/`, holds that list and the parity evidence.
 
 - **`study/`**: the eight moved tools (`common`, `manifest`, `identity`, `indicators`, `preflight`, `verify`, `read_coverage`, `integrate`), plus `roots`, `census`, `declarations` and the seven document schemas. The ported modules carry a recorded mypy override and per-file ruff ignores in `pyproject.toml`; keep their bytes unless the change is the point.
 - **The project root** (`study/roots.py`, `.project/adr/0015-study-root-anchors-to-the-package-work-tree.md`): an in-process override, then `SYSML_CODEGEN_PROJECT_ROOT`, then the git work tree that contains `--package`. No root, or a working directory in a different work tree, is exit 2 with no document.

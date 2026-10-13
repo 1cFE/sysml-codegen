@@ -28,7 +28,7 @@ The generated package includes schemas, input JSON, module wrappers, implementat
 
 ## The study layer
 
-sysml-codegen also ships the study layer: a `run-study` skill for Claude Code and Codex, a study-policy template, and the tools a study calls. A project that generates a package with sysml-codegen and runs it with teax can run a parameter study on it, from intake to a committed record, with nothing else copied in.
+sysml-codegen also ships the study layer: a `run-study` skill for Claude Code and Codex, a study-policy template, and the tools a study calls. A project that generates a package with sysml-codegen and runs it with teax can run a parameter study on it, from intake to a committed record. For each package it studies, the project writes five pieces: an annex, a study-package manifest, an axis declaration, a route and an oracle (the installed runbook's "What a package annex supplies" says what each holds). Nothing else is copied in.
 
 Install it at the project root:
 

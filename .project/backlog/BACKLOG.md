@@ -259,9 +259,24 @@ Given a `--store` path that does not exist, `verify` lets teax's store open rais
 
 Typing the modules is a byte change, so it belongs after fusion-tea adopts the moved layer. The `no-any-return` sites were not re-probed by the audit; their list rests on Item 3's Phase 1 mypy run. Source: audit § Code integrity, "The mypy overrides, named".
 
-### [STUDY-LAYER-PRODUCT-ENTRY] Product-ledger entry for the study layer — due at Item 3's close `[AGENT]`
+### [STUDY-CHECK-RECORD] Ship the record checker as `sysml-codegen study check-record` — unscheduled `[AGENT]`
 
-The spec and design promise that, at close, `.project/product/` gains an entry for the study layer citing the owner's 2026-10-06 decision that it ships from sysml-codegen (`01990a5:.project/active/study-layer-to-codegen/spec.md:239`, `design.md:457`). Without it, P-004's parse-walk-emit definition (`.project/product/0004-product-identity-parse-walk-emit.md`) reads as excluding a layer `README.md` now claims; P-001 already gives the layer its role. Add it with `.project/scripts/product.sh` at `/_my_close`. Source: audit F2.
+Item 3 shipped no record checker (design DD12). The installed runbook's steps 14 and 15 carry **Check:** lines the executor runs, and the dry run's evidence script `evidence/dry-run/check_record.py` ran five checks over the committed record and agreed with them. Shipping that script as a `study` subcommand gives a target one command for the same checks. Rejected at design time: shipping it inside Item 3, and an installed pytest template. Source: design DD12, review S6.
+
+### [STUDY-PORTED-SMELLS] Smells kept in the ported study modules — unscheduled `[AGENT]`, inherited
+
+Design DD19 removed the `if __package__` path inserts and kept these, each byte-faithful to fusion-tea `b06585709`:
+
+- argparse `prog="<tool>.py"` in `indicators.py:927`, `preflight.py:472`, `verify.py:585` and `integrate.py:408`, so usage lines name a file the target never runs instead of `sysml-codegen study <tool>`;
+- `indicators.write_atomically` (`indicators.py:907`), a local atomic-write helper;
+- `integrate.py`'s size (1,663 lines);
+- gate 4's fixed `*.snapshot.json` glob beside the models root (`integrate.py:1132`). The follow-up is an explicit `--snapshot` flag.
+
+`read_coverage.py`'s untyped style is [STUDY-PORTED-MYPY-OVERRIDES]. Each fix is a byte change, so it belongs after fusion-tea adopts the moved layer. Source: design DD19, review S7.
+
+### [STUDY-GLUE-LEDGER-SEMANTICS] Is a non-empty glue ledger a model-development finding? — the owner's call `[AGENT]`
+
+The shipped runbook treats a non-empty glue ledger as a scoped disclosure (`runbook.md:94`; `record-template.md:126-128`). It treats an axis the model does not resist as a model-development finding (`runbook.md:56`). The owner's concept says glue is temporary and "studies will not need glue" (run-study concept, amended 2026-08-18), and P-004 calls a harness-injected value "a massive, disgusting smell". Not a regression: the text came over unchanged (read-through RB-14). Making it a finding changes study semantics, so the owner decides. Source: Item 3 product-lens audit-F6.
 
 ## Historical Scope Question
 
