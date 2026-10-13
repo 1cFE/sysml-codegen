@@ -244,6 +244,10 @@ Both are byte-faithful to fusion-tea `b06585709`, so the fix is a behaviour chan
 
 Given a `--store` path that does not exist, `verify` lets teax's store open raise an uncaught `sqlite3.OperationalError` rather than refusing with a `ToolError` that names the path. It still fails closed (non-zero exit, no summary written), but the message is a traceback. Found by the Item 3 rehearsal's step 8b (fusion-tea record `20260929-magnet-material-comparison`, whose stores are not committed). Byte-faithful to fusion-tea `b06585709`, so the fix is a behaviour change kept out of the move: check the store path exists before opening it, and refuse naming it.
 
+### [READ-COVERAGE-STALE-BYTECODE] Gate 7 refuses a route whose bytecode cache is stale — unscheduled `[AGENT]`, inherited
+
+When a route module's `__pycache__/*.pyc` is older than its source, the observed run recompiles it, and `read_coverage` refuses with `dependency changed after read: …/__pycache__/study_route.cpython-312.pyc`. The next run passes, because the cache is then fresh. fusion-tea's adoption hit this on the first gate-7 run after step 5 rewrote the route imports. fusion-tea's original observer refuses the same way after `touch study_route.py` (agentic-mbse `.project/completed/20261012_study-layer-to-codegen/evidence/adoption-20261012.md`). It fails closed, but the message points at a cache rather than the route. A fix could treat a rewritten `.pyc` of an observed source as that source's read, or run the route with `PYTHONDONTWRITEBYTECODE`. Either is a behaviour change.
+
 ### [STUDY-PORTED-MYPY-OVERRIDES] Typing debt in the eight ported study modules — P3 `[AGENT]`
 
 `pyproject.toml`'s `[[tool.mypy.overrides]]` blocks relax checking for the eight modules ported byte-faithfully from fusion-tea (`common`, `identity`, `indicators`, `integrate`, `manifest`, `preflight`, `read_coverage`, `verify`). The audit's strict probe (`--check-untyped-defs --disallow-untyped-defs`, 53 errors in 6 files) found what each hides:
