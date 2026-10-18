@@ -233,9 +233,9 @@ def test_agentic_summary_equals_codegen_index(root):
 
 **Repo:** codegen, this folder only.
 
-- [ ] `adr-0012-amendment.md` from the archived draft; its "until Item 2 lands" invariant names `tests/conformance/subset_profile/test_occurrence_parity.py` and the pre-merge run (design.md § A).
-- [ ] `adr-0001-amendment.md` (design.md § Cross-repo enforcement) and `p0001-amendment.md` (O20).
-- [ ] `adr-0016-amendment.md` (D12) and `adr-fact-placement-draft.md`, the codegen register's half of D14 and the split enforcement of invariant 1.
+- [x] `adr-0012-amendment.md` from the archived draft; its "until Item 2 lands" invariant names `tests/conformance/subset_profile/test_occurrence_parity.py` and the pre-merge run (design.md § A).
+- [x] `adr-0001-amendment.md` (design.md § Cross-repo enforcement) and `p0001-amendment.md` (O20).
+- [x] `adr-0016-amendment.md` (D12) and `adr-fact-placement-draft.md`, the codegen register's half of D14 and the split enforcement of invariant 1.
 
 **Done when:** each file exists, states its target file and line, and ends "Filing: owner, at merge (RG-3)".
 
@@ -650,7 +650,14 @@ See design.md § Potential Risks. Phase-specific:
 - Deviations:
   - The plan's `NO_REFUSAL` rule is "exactly when no record refuses the shape". Two shapes (`part_multiplicity_nonunique`, `part_multiplicity_negative_bound`) have no decided context yet, so no record refuses them, but each record names an `expected_code`. They map to that code, and the test uses the record's `expected_code` as the rule: `NO_REFUSAL` exactly when the record has none. The two undecided shapes are pinned by name.
   - The oracle's `full_crosscheck` step is not ported. It ran codegen's full `elaborate_model_paths` and checked that its occurrences and calc nodes matched the oracle's partial run, which stops after the writers. That compares codegen with itself, not with agentic-mbse, and the old parity script only printed it as a summary column. A writer error the normaliser does not expect now raises instead of being recorded.
+  - Criterion A2 asks which agentic-mbse version first carries the contract. None does: `SUBSET_PROFILE_VERSION` arrived in `b2d5768d`, and the package reports 0.1.3 on both sides of it. `evidence/versioning.md` records that and meets A2 in D12's form.
   - Two agentic-mbse test files (`test_subset_extraction.py`, `test_conditional_operator_spelling.py`) loaded four models from the retired seed directory. Those models moved to `tests/fixtures/subset_profile/cases/` (`recursive_containment`, `range_multiplicity_parts`, `product_invocation`, `conditional_operator`), and the tests point there. The plan did not list them.
+
+#### Step 1.6 (2026-10-18)
+- Five staged files in this folder, each naming its target file and lines and ending "Filing: owner, at merge (RG-3)": `adr-0012-amendment.md`, `adr-0001-amendment.md`, `p0001-amendment.md`, `adr-0016-amendment.md`, `adr-fact-placement-draft.md`. ADR and promise bodies are immutable, so each is a new entry plus an `amend` flip by the target repository's script, with the commands written out. The fact-placement draft is a new entry that amends nothing.
+- `adr-0012-amendment.md` follows the archived draft except for its parity guard: the stored-oracle test it named is retired (P1.5), so it names codegen's live parity test, and it says "the pre-merge run" where the draft said "codegen CI". The archived draft is unchanged.
+- Found while writing `adr-0001-amendment.md`: agentic-mbse ADR 0001 invariant 6 names `scripts/subset_profile/occurrence_parity.py compare --all` as the interim check, and P1.5 deleted that script. The check it stood in for exists now (codegen's parity test), so nothing is unguarded, but the filed ADR points at a deleted script until the amendment is filed. The staged file says so.
+- Each staged entry's provenance is `[AGENT]` from the 2a design, with owner ratification to be recorded at filing. None of them is owner-originated.
 
 ### Phase 2 Completion
 
