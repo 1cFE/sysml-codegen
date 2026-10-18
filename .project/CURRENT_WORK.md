@@ -4,7 +4,7 @@
 
 ## Active Work
 
-- `subset-profile-conformance` (EXEC-SUBSET-CONTRACT Item 2a, epic in agentic-mbse): spec in progress.
+- `subset-profile-conformance` (EXEC-SUBSET-CONTRACT Item 2a, epic in agentic-mbse): implementing. Phase 1 of 7 is done and its gate passed (2026-10-18); the audit and Phase 2 are next. Plan: `.project/active/subset-profile-conformance/plan.md`.
 
 The backlog holds separately scoped capabilities, diagnostics, model work, and assurance limits.
 

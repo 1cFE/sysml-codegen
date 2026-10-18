@@ -595,14 +595,21 @@ See design.md § Potential Risks. Phase-specific:
 
 ## Implementation Notes
 
-[TO BE FILLED DURING IMPLEMENTATION]
+Phase 1 notes are below, per step. Later phases add their own sections.
 
 ### Phase 1 Completion
-**Completed:** 
-**Actual Changes:** 
+**Completed:** 2026-10-18. Phase gate passed, except the audit, which is the orchestrator's to run (`/_my_audit`).
+**Actual Changes:** codegen `5e5a57b8` (1.1–1.2), `06f938fc` (1.3), `a353ddd3` (1.4), `d2319b97` (1.5), `ec04304a` (1.6), and the phase-gate fix commit after them; agentic-mbse `c39b4cda` (1.2), `186d7ff3` (1.4), `8be21e04` (1.5). Per-step detail is in the step notes below.
 **Split denominators (H, T) after P1.4:** codegen account H = 31, T = 86 (47 `unknown`, 39 `public_capability`); agentic-mbse account H = 29, T = 10. Counted by PD4's rule: head is a row with a `rule` or `matrix_row`, plus the 10 rows in `extraction/calc_compat_renderer.py`; tail is every other `public_capability` or `unknown` row. Codegen's T includes 13 `unknown` rows added at the move for unrecognized raises (see Step 1.4 notes).
-**Issues:** 
-**Deviations:** 
+**Issues:** One new failure at the phase gate, caused by this branch and fixed before close. `tests/conformance/test_constraint_population_oracle.py` treats every top-level fixture directory as one model, so it read the P1.5 seed directory (34 independent models) as one fixture and failed 4 tests. It now skips directories named in `MODEL_COLLECTIONS`, each with the test that covers its models. P2's `tests/fixtures/subset_profile/` (codegen-only cases, D14) is the same kind of directory and must be added there when it is created.
+**Phase gate (2026-10-18):**
+- Snapshots: `git diff --exit-code d73a4fc5` over the 22 committed `instance_graph_snapshot.json` files exits 0.
+- Accept/refuse: the 88 tests in `test_public_package_oracle.py` and `test_v6_recapture_batch.py` pass, and `baseline.json` and `batch.json` are unchanged since `d73a4fc5`.
+- Regressions: codegen licensed suite 2945 passed, 10 failed, 9 skipped, with the 10 failing IDs exactly the baseline's; 210 tests added, none removed. agentic-mbse 3473 passed, 94 failed, 35 errors, 9 skipped, with the 129 failing IDs exactly the baseline's. Its 70 removed IDs are the retired parity test (69) and `test_both_trees_are_accounted`, and its 19 added are the P1.2 script tests and the P1.4 account tests.
+- Merge order: `git log subset-conformance..main` is empty in both repositories. Checked against the local `main` refs; nothing was fetched.
+- Static checks: codegen mypy clean (87 files), ruff 94 (baseline 94); agentic-mbse mypy 98 errors (baseline 98), ruff 118 (baseline 118).
+- Audit: not run here.
+**Deviations:** listed per step below. The ones that change a planned contract: `GenerationCode` has 20 members and `code` is required (1.3); the refusal payload also covers package-write failures (1.3); an explicit follow-up row may name a matrix row, and the matrix gains `codegen_account` (1.4); agentic-mbse's scanner is `scan_sites/2` (1.4); the `NO_REFUSAL` rule follows the record's `expected_code` (1.5); four agentic-mbse models moved to `cases/` (1.5).
 
 #### Steps 1.1–1.2 (2026-10-18)
 - Baseline in `evidence/baseline.md`: codegen 2735 passed, 10 failed, 9 skipped; agentic-mbse 3524 passed, 94 failed, 35 errors. Every failure predates 2a: the 10 codegen failures also fail at `b5663c07` + `ccd57d83`, and agentic-mbse fails on the same 129 IDs at `ccd57d83`. All are environment failures (missing `web` extra, Pandoc, PIL; a hardcoded `/home/reid/1cfe` path; a commit, `07531e64`, absent from this clone; argparse quoting in the system Python). S1 said nine `test_check_ledger_4a.py` failures; there are eight, plus one in `tests/study/test_study_cli.py`.
