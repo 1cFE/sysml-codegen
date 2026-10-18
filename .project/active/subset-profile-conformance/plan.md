@@ -1,6 +1,6 @@
 # Implementation Plan: Independent conformance corpus and per-site codes (EXEC-SUBSET-CONTRACT Item 2a)
 
-**Status:** Draft
+**Status:** Implementation in progress (Phase 1)
 **Created:** 2026-10-18
 **Last Updated:** 2026-10-18
 
@@ -105,12 +105,12 @@ That a `SiteReason` set at a raise site survives the live route's rebuild (`orch
 
 **Repos:** both, read-only; writes only to this folder.
 
-- [ ] Record revisions: codegen `git rev-parse HEAD`; agentic `git rev-parse HEAD`; SysIDE version; `agentic_mbse.__version__`.
-- [ ] codegen licensed suite: `uv run --extra dev pytest tests/ -q -rfEs -p no:cacheprovider --junitxml=/tmp/subset-2a/baseline-codegen.xml`. Expected from S1: 2735 passed, 9 skipped, 10 failed.
-- [ ] agentic licensed suite: `uv run pytest tests/ -q -rfEs --junitxml=/tmp/subset-2a/baseline-agentic.xml`.
-- [ ] Static checks in both repos (commands in the phase gate).
-- [ ] **G2 probe** (PD10). Write `spikes/g2/model.sysml`: a part definition with a referenced multiplicity bound, and a usage that overrides it. Run it through `spikes/s1/harness.py`'s generator half. Record occurrence count, codes and the definition-bound control in `evidence/g2-probe.md`.
-- [ ] Write `evidence/baseline.md`: pass, fail and skip by test ID in both repos, with each skip's reason.
+- [x] Record revisions: codegen `git rev-parse HEAD`; agentic `git rev-parse HEAD`; SysIDE version; `agentic_mbse.__version__`.
+- [x] codegen licensed suite: `uv run --extra dev pytest tests/ -q -rfEs -p no:cacheprovider --junitxml=/tmp/subset-2a/baseline-codegen.xml`. Expected from S1: 2735 passed, 9 skipped, 10 failed.
+- [x] agentic licensed suite: `uv run pytest tests/ -q -rfEs --junitxml=/tmp/subset-2a/baseline-agentic.xml`.
+- [x] Static checks in both repos (commands in the phase gate).
+- [x] **G2 probe** (PD10). Write `spikes/g2/model.sysml`: a part definition with a referenced multiplicity bound, and a usage that overrides it. Run it through `spikes/s1/harness.py`'s generator half. Record occurrence count, codes and the definition-bound control in `evidence/g2-probe.md`.
+- [x] Write `evidence/baseline.md`: pass, fail and skip by test ID in both repos, with each skip's reason.
 
 ### Step 1.2: Scripts take output parameters; pre-existing failures decided
 
@@ -118,14 +118,14 @@ That a `SiteReason` set at a raise site survives the live route's rebuild (`orch
 
 Test first: agentic `tests/test_subset_profile_scripts.py` (new, pure) asserts that `codegen_suite.py run` requires `--out` and `--codegen-rev`, that no script in `scripts/subset_profile/` names `.project/completed/` as a literal, and that `isolated_tree.py` exports the seven helpers `codegen_suite.py` imports.
 
-- [ ] `scripts/subset_profile/isolated_tree.py` (new): move `build_tree`, `child_env`, `read_identity`, `read_license_key`, `resolve_rev`, `sibling_state`, `IsolationBreachError` from `probe.py` (design.md D13). `probe.py` stays until P2.1 retires it, importing from `isolated_tree.py`.
-- [ ] `codegen_suite.py`: `--codegen-rev` replaces `PINNED_CODEGEN_REV`; `--out` replaces the archive path (`:43-50`); `--select` defaults to `tests/conformance/subset_profile`. No receipt writing yet.
-- [ ] `run_trees.py`, `render_matrix.py`, `validate_diff.py`, `scan_sites.py`: output path is a required parameter (PD12).
-- [ ] **Pre-existing run** (PD11): `uv run python scripts/subset_profile/codegen_suite.py run --agentic-rev ccd57d83 --codegen-rev b5663c07 --label baseline-2a --select tests/ --out /tmp/subset-2a/preexisting`. For each of the 10 known failures, record whether it fails at the bases.
-- [ ] For `tests/unit/test_check_ledger_4a.py` (9 failures): also run `git cat-file -e 1672c57^{commit}` and `git cat-file -e 07531e64^{commit}` in codegen and record whether the commits exist. A missing commit makes it an environment failure, not a 2a one.
-- [ ] For `test_self_binding_guidance_contract.py::test_zero_unmarked_self_named_examples_across_all_trees`: record whether `project_templates/MODELING_PROCESS.md.template` differs between agentic `ccd57d83` and HEAD (`git diff ccd57d83 HEAD -- project_templates/MODELING_PROCESS.md.template`).
-- [ ] If agentic's HEAD baseline had failures, export `ccd57d83` with `git archive` into `/tmp/subset-2a/agentic-ccd57d83` and run its suite there.
-- [ ] Add a "Pre-existing" table to `evidence/baseline.md`: test ID, fails at bases (yes/no), cause.
+- [x] `scripts/subset_profile/isolated_tree.py` (new): move `build_tree`, `child_env`, `read_identity`, `read_license_key`, `resolve_rev`, `sibling_state`, `IsolationBreachError` from `probe.py` (design.md D13). `probe.py` stays until P2.1 retires it, importing from `isolated_tree.py`.
+- [x] `codegen_suite.py`: `--codegen-rev` replaces `PINNED_CODEGEN_REV`; `--out` replaces the archive path (`:43-50`); `--select` defaults to `tests/conformance/subset_profile`. No receipt writing yet.
+- [x] `run_trees.py`, `render_matrix.py`, `validate_diff.py`, `scan_sites.py`: output path is a required parameter (PD12).
+- [x] **Pre-existing run** (PD11): `uv run python scripts/subset_profile/codegen_suite.py run --agentic-rev ccd57d83 --codegen-rev b5663c07 --label baseline-2a --select tests/ --out /tmp/subset-2a/preexisting`. For each of the 10 known failures, record whether it fails at the bases.
+- [x] For `tests/unit/test_check_ledger_4a.py` (9 failures): also run `git cat-file -e 1672c57^{commit}` and `git cat-file -e 07531e64^{commit}` in codegen and record whether the commits exist. A missing commit makes it an environment failure, not a 2a one.
+- [x] For `test_self_binding_guidance_contract.py::test_zero_unmarked_self_named_examples_across_all_trees`: record whether `project_templates/MODELING_PROCESS.md.template` differs between agentic `ccd57d83` and HEAD (`git diff ccd57d83 HEAD -- project_templates/MODELING_PROCESS.md.template`).
+- [x] If agentic's HEAD baseline had failures, export `ccd57d83` with `git archive` into `/tmp/subset-2a/agentic-ccd57d83` and run its suite there.
+- [x] Add a "Pre-existing" table to `evidence/baseline.md`: test ID, fails at bases (yes/no), cause.
 
 **Done when:** agentic `uv run pytest tests/test_subset_profile_scripts.py tests/test_subset_probe_judge.py -q` passes, and `evidence/baseline.md` classifies all 10 failures.
 
@@ -603,6 +603,14 @@ See design.md § Potential Risks. Phase-specific:
 **Split denominators (H, T) after P1.4:** 
 **Issues:** 
 **Deviations:** 
+
+#### Steps 1.1–1.2 (2026-10-18)
+- Baseline in `evidence/baseline.md`: codegen 2735 passed, 10 failed, 9 skipped; agentic-mbse 3524 passed, 94 failed, 35 errors. Every failure predates 2a: the 10 codegen failures also fail at `b5663c07` + `ccd57d83`, and agentic-mbse fails on the same 129 IDs at `ccd57d83`. All are environment failures (missing `web` extra, Pandoc, PIL; a hardcoded `/home/reid/1cfe` path; a commit, `07531e64`, absent from this clone; argparse quoting in the system Python). S1 said nine `test_check_ledger_4a.py` failures; there are eight, plus one in `tests/study/test_study_cli.py`.
+- The base run in an exported tree adds 50 failures that pass at HEAD, because `git archive` carries no `.git` and the study-layer tests need a git work tree. Recorded in `baseline.md` as a method artifact. It matters for P7: the gate's default selection, `tests/conformance/subset_profile`, must not read git state.
+- G2 probe (`evidence/g2-probe.md`): the usage override is ignored and generation succeeds, so P4's G2 case asserts a silent loss (2 occurrences, not 3).
+- agentic `c39b4cda`: `isolated_tree.py` holds the tree helpers; `read_identity` now returns a dict, so it no longer depends on the probe judge that P2.1 retires, and `probe.py` wraps it in its `Identity`. Every script imports from `isolated_tree.py`, and none imports from `probe.py` (tested), so P2.1 can delete `probe.py` alone.
+- Beyond PD12's five scripts, `probe.py` (`--log-dir`) and `occurrence_parity.py` (`--out` on `compare` and `controls`) also stopped writing into the archive, because the plan's own test ("no script in `scripts/subset_profile/` names `.project/completed/`") covers them. `scan_sites.py --out` was already a parameter with no default; it stays optional because `--reconcile` alone writes nothing.
+- The scripts' codegen checkout default moved from `~/src/sysml-codegen` (the owner's main checkout) to the sibling of the agentic-mbse checkout, the same layout as codegen's `../agentic-mbse` path dependency. The base run read this worktree.
 
 ### Phase 2 Completion
 
