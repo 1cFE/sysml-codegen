@@ -1,0 +1,13 @@
+{
+  "id": "indexed-reference__indexed_reference__constraint_predicate",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_INDEXED_SOURCE_UNSUPPORTED"
+    ],
+    "reasons": [
+      "evidence_indexed_reference_unsupported"
+    ]
+  }
+}

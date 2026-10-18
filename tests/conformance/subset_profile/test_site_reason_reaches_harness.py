@@ -7,9 +7,9 @@ witness per carrier type and per converter branch of
 ``orchestration/elaborated_pipeline.py:_build_from_extractor``, each run through
 ``run_codegen`` exactly as a user runs it.
 
-The witness models are written here rather than read from agentic-mbse's Item 1 probes.
-Those probes live in agentic-mbse's ``tests/`` tree, which codegen does not read (spec
-Boundaries); they become package data in P2.1.
+Each witness is a packaged conformance case where one carries the branch's reason (read
+through agentic-mbse's package, design D14), a committed fixture, or, where neither exists, a
+model written here.
 
 Two branches have no model that reaches them:
 
@@ -33,6 +33,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
+from agentic_mbse.sysml.conformance_case import packaged_case_dir
 
 from sysml_codegen.cli.refusal import RefusalKind
 from sysml_codegen.elaboration.diagnostics import SiteReason
@@ -67,6 +68,10 @@ def _fixture(name: str) -> Callable[[Path], Path]:
     return lambda _tmp_path: FIXTURES_DIR / name
 
 
+def _packaged(case_id: str) -> Callable[[Path], Path]:
+    return lambda _tmp_path: packaged_case_dir(case_id)
+
+
 @dataclass(frozen=True)
 class Witness:
     #: The carrier type and converter branch the reason travels through.
@@ -81,82 +86,25 @@ REACH_WITNESSES = (
         "ReadinessFinding__readiness_with_referent",
         SiteReason.BINDING_SOURCE_FORM_UNSUPPORTED,
         RefusalKind.READINESS,
-        _inline(
-            """
-            package fx {
-                private import ScalarValues::*;
-                calc def Total {
-                    in xs : Real[0..*] ordered nonunique;
-                    return r : Real = NumericalFunctions::sum(xs);
-                }
-                part def Site {
-                    attribute a : Real = 1.0;
-                    attribute b : Real = 2.0;
-                    calc t : Total { in xs = (a, b); }
-                }
-                part site : Site;
-            }
-            """
-        ),
+        _packaged("binding-source__expression_source__owner_instantiated"),
     ),
     Witness(
         "Diagnostic__GraphValidationError__diagnostic_with_referent",
         SiteReason.CONSTRAINT_PROFILE_BLOCKED,
         RefusalKind.DIAGNOSTIC,
-        _inline(
-            """
-            package fx {
-                private import ScalarValues::*;
-                calc def Twice { in v : Real; return r : Real = 2.0 * v; }
-                part def Site {
-                    attribute x : Real = 1.0;
-                    attribute enabled : Boolean = true;
-                    calc t : Twice { in v = x; }
-                    assert constraint c { x > 0.0 and enabled }
-                }
-                part site : Site;
-            }
-            """
-        ),
+        _packaged("constraint-predicate__blocked_predicate__owner_instantiated"),
     ),
     Witness(
         "ElaborationInvariantError__diagnostic_with_referent",
         SiteReason.OCCURRENCE_MULTIPLICITY_ORDERED,
         RefusalKind.DIAGNOSTIC,
-        _inline(
-            """
-            package fx {
-                private import ScalarValues::*;
-                calc def Twice { in v : Real; return r : Real = 2.0 * v; }
-                part def Server {
-                    attribute power : Real = 100.0;
-                    calc t : Twice { in v = power; }
-                }
-                part def Rack { part servers : Server[2] ordered; }
-                part rack : Rack;
-            }
-            """
-        ),
+        _packaged("part-multiplicity__ordered__expanded_part_usage"),
     ),
     Witness(
         "SemanticEvidenceError__semantic_evidence_diagnostic",
         SiteReason.EVIDENCE_INDEXED_REFERENCE_UNSUPPORTED,
         RefusalKind.DIAGNOSTIC,
-        _inline(
-            """
-            package fx {
-                private import ScalarValues::*;
-                calc def Twice { in v : Real; return r : Real = 2.0 * v; }
-                part def Q { attribute v : Real = 1.0; }
-                part def Site {
-                    part qs : Q[2];
-                    attribute head : Real = qs#(1).v;
-                    calc t : Twice { in v = head; }
-                }
-                part site : Site;
-            }
-            """
-        ),
+        _packaged("indexed-reference__indexed_reference__attribute_value"),
     ),
     Witness(
         "ExactTypeError__diagnostic_with_referent",

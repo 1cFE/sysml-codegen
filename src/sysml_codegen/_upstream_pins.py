@@ -65,7 +65,7 @@ PROFILE_SEMANTIC_VERSION = "executable-profile/v4"
 #: version, which `subset_profile_adapter.REASON_MAPPING` was reviewed against. It names the
 #: contract; the agentic-mbse package version does not (EXEC-SUBSET-CONTRACT Item 2a D12). The
 #: adapter refuses to import against any other value.
-SUBSET_PROFILE_VERSION = "subset-profile/v1"
+SUBSET_PROFILE_VERSION = "subset-profile/v2"
 
 __all__ = [
     "AGENTIC_MBSE_PACKAGE_VERSION",

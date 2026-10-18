@@ -31,6 +31,7 @@ if TYPE_CHECKING:
 
     from sysml_codegen.cli.refusal import Refusal, RefusalItem
     from sysml_codegen.elaboration import InstanceGraph
+    from tests.helpers.subset_profile.cases import GeneratorRun
 
 
 class ScreenCalledError(AssertionError):
@@ -50,6 +51,24 @@ class GeneratorObservation:
     @property
     def refusals(self) -> tuple[RefusalItem, ...]:
         return () if self.refusal is None else self.refusal.items
+
+    def run(self) -> GeneratorRun:
+        """This run's outcome, codes and site reasons, in stored-answer form.
+
+        A refusal that carries no code is a harness failure, not an answer (design D15): every
+        raise on the route carries one, and an unclassified failure is ``SI_INTERNAL_DEFECT``.
+        """
+        from tests.helpers.subset_profile.cases import GeneratorOutcome, GeneratorRun
+
+        if self.generated:
+            return GeneratorRun(GeneratorOutcome.GENERATED, (), ())
+        if not self.refusals:
+            raise AssertionError(f"run_codegen refused with no code: {self.refusal}")
+        return GeneratorRun(
+            GeneratorOutcome.REFUSED,
+            tuple(sorted(item.code.value for item in self.refusals)),
+            tuple(sorted(item.reason for item in self.refusals if item.reason is not None)),
+        )
 
 
 class _RefusalCapture(logging.Handler):

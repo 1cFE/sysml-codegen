@@ -1,14 +1,22 @@
-"""The stored answers of a subset-profile case, read strictly (design Appendix A).
+"""The subset-profile conformance cases: stored answers, the case store, agreement and the record.
 
-Two documents describe a case:
+A case is one small model with two stored answers (EXEC-SUBSET-CONTRACT Item 2a design D1, D14):
 
-- the stored generator answer, ``tests/expectations/subset_profile/cases/<case_id>.json``,
-  which every case has wherever its model lives;
-- the packaged ``case.json`` beside a screen-tested model in agentic-mbse's
-  ``sysml/subset_cases/<case_id>/``.
+- the generator's, ``tests/expectations/subset_profile/cases/<case_id>.json``, which every case
+  has wherever its model lives;
+- the screen's, which lives with the model. A case agentic-mbse tests the screen on is
+  agentic-mbse package data (``agentic_mbse/sysml/subset_cases/<case_id>/``, read through
+  ``agentic_mbse.sysml.conformance_case``); a case only codegen needs keeps its model under
+  ``tests/fixtures/subset_profile/<case_id>/`` and its screen answer and construct in its
+  stored generator answer.
 
-Loading refuses an unknown key, a missing key, a value of the wrong form, and a stored
-answer whose ``id`` is not its file name. Comparing answers with observations is not here.
+Agreement (design § C) is one rule for every subject. With C the generator's codes and M the
+codes the mapping gives the screen's ``refused`` findings: a run that generated agrees when the
+screen refuses nothing; a run that refused agrees when some code in M is in C. Anything else is
+a disagreement, and a disagreement passes only if the hand-edited record lists it (D3). This
+module is the record's only reader, and it writes nothing.
+
+Everything here is pure: it reads stored files, the packaged records and the mapping.
 """
 
 from __future__ import annotations
@@ -21,14 +29,32 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
-from sysml_codegen.elaboration.diagnostics import SiteReason
+from agentic_mbse.sysml.conformance_case import (
+    Construct,
+    ScreenAnswer,
+    ScreenFinding,
+    load_packaged_case,
+    packaged_case_dir,
+    packaged_case_ids,
+    screen_answer_from_json,
+)
+from agentic_mbse.sysml.subset_profile import PACKAGED_RULES, Outcome, RuleRecords
 
-PACKAGED_CASE_SCHEMA = "subset-case/1"
+from sysml_codegen.elaboration.diagnostics import SiteReason
+from sysml_codegen.subset_profile_adapter import REASON_MAPPING, NoRefusal
+
+_TESTS = Path(__file__).resolve().parents[2]
+EXPECTATIONS_DIR = _TESTS / "expectations" / "subset_profile"
+ANSWERS_DIR = EXPECTATIONS_DIR / "cases"
+DISAGREEMENTS_PATH = EXPECTATIONS_DIR / "disagreements.json"
+#: Codegen-home case models (design D14). A model collection, not one model.
+CODEGEN_CASES_DIR = _TESTS / "fixtures" / "subset_profile"
+
 _RG1_ID = re.compile(r"RG1-[1-9][0-9]*")
 
 
 class CaseAnswerError(ValueError):
-    """A stored answer or packaged case does not have the Appendix A form."""
+    """A stored answer or the disagreement record does not have its stored form."""
 
 
 class CaseHome(StrEnum):
@@ -56,6 +82,34 @@ class LossDisposition(StrEnum):
     CANDIDATE_REFUSAL = "candidate_refusal"
 
 
+class DisagreementKind(StrEnum):
+    GENERATOR_REFUSES_SCREEN_SILENT = "generator_refuses_screen_silent"
+    SCREEN_REFUSES_GENERATOR_BUILDS = "screen_refuses_generator_builds"
+    CODE_UNMAPPED = "code_unmapped"
+
+
+class Resolution(StrEnum):
+    #: The generator's refusal is an output fact codegen owns; no shared rule can describe it.
+    CODEGEN_OWNED = "codegen_owned"
+    #: A refusal family with no rule: reproduced, with a stable codegen reason.
+    REPRODUCED_GAP = "reproduced_gap"
+    #: The generator side is an owner decision (RG-1); the entry names its recommendation.
+    RG1_PENDING = "rg1_pending"
+    #: String policy, the owner's (RG-2).
+    RG2_PENDING = "rg2_pending"
+
+
+@dataclass(frozen=True)
+class GeneratorRun:
+    """What one live run of the generator determines: the part of the answer capture writes."""
+
+    outcome: GeneratorOutcome
+    #: The sorted multiset of elaboration and generation codes.
+    codes: tuple[str, ...]
+    #: The sorted multiset of the site reasons the refusal carried.
+    reasons: tuple[SiteReason, ...]
+
+
 @dataclass(frozen=True)
 class StubAnswer:
     output: str
@@ -71,29 +125,10 @@ class SeamAnswer:
 
 @dataclass(frozen=True)
 class GeneratorAnswer:
-    outcome: GeneratorOutcome
-    #: The sorted multiset of elaboration and generation codes.
-    codes: tuple[str, ...]
-    reasons: tuple[SiteReason, ...]
+    run: GeneratorRun
     witnesses: tuple[str, ...]
     stubs: tuple[StubAnswer, ...]
     seams: tuple[SeamAnswer, ...]
-
-
-@dataclass(frozen=True)
-class ScreenFinding:
-    rule: str
-    shape: str
-    context: str
-    outcome: str
-    subject: str
-
-
-@dataclass(frozen=True)
-class ScreenAnswer:
-    verdict: str
-    #: The complete set the screen reports, so an unrelated rule change also shows as drift.
-    findings: tuple[ScreenFinding, ...]
 
 
 @dataclass(frozen=True)
@@ -104,34 +139,49 @@ class LossAnswer:
 
 
 @dataclass(frozen=True)
+class CodegenCase:
+    """The parts of a codegen-home case that an agentic-home case keeps in ``case.json``."""
+
+    construct: Construct
+    screen: ScreenAnswer
+
+
+@dataclass(frozen=True)
 class StoredAnswer:
     case_id: str
     home: CaseHome
     generator: GeneratorAnswer
-    #: Present exactly for codegen-home cases; an agentic-home case's screen answer is packaged.
-    screen: ScreenAnswer | None
+    #: Present exactly for codegen-home cases.
+    codegen: CodegenCase | None
     loss: LossAnswer | None
 
-
-@dataclass(frozen=True)
-class Construct:
-    file: str
-    lines: tuple[int, int]
+    @property
+    def subject(self) -> str:
+        return f"case:{self.case_id}"
 
 
 @dataclass(frozen=True)
-class Provenance:
-    from_probe: str | None
-    note: str
+class Disagreement:
+    """A computed disagreement, keyed as the record keys its entries (design D3)."""
+
+    subject: str
+    kind: DisagreementKind
+    generator_codes: tuple[str, ...]
+    #: Sorted reasons of the screen's ``refused`` findings.
+    screen_reasons: tuple[str, ...]
 
 
 @dataclass(frozen=True)
-class PackagedCase:
-    case_id: str
-    construct: Construct
-    screen: ScreenAnswer
-    agentic_site_witnesses: tuple[str, ...]
-    provenance: Provenance
+class DisagreementEntry:
+    disagreement: Disagreement
+    resolution: Resolution
+    r3_row: str | None
+    owner: str
+    reason: str
+    rg1: str | None
+
+
+# ---- reading ----------------------------------------------------------------------------------
 
 
 def _fields(
@@ -151,15 +201,26 @@ def _fields(
 
 
 def _text(value: Any, where: str) -> str:
-    if not isinstance(value, str) or not value:
+    if not isinstance(value, str) or not value.strip():
         raise CaseAnswerError(f"{where}: expected a non-empty string, got {value!r}")
     return value
 
 
-def _texts(value: Any, where: str) -> tuple[str, ...]:
+def _list(value: Any, where: str) -> list[Any]:
     if not isinstance(value, list):
         raise CaseAnswerError(f"{where}: expected a list, got {type(value).__name__}")
-    return tuple(_text(item, f"{where}[{i}]") for i, item in enumerate(value))
+    return value
+
+
+def _texts(value: Any, where: str) -> tuple[str, ...]:
+    return tuple(_text(item, f"{where}[{i}]") for i, item in enumerate(_list(value, where)))
+
+
+def _sorted_texts(value: Any, where: str) -> tuple[str, ...]:
+    texts = _texts(value, where)
+    if list(texts) != sorted(texts):
+        raise CaseAnswerError(f"{where}: must be sorted, got {list(texts)}")
+    return texts
 
 
 def _member[E: StrEnum](enum: type[E], value: Any, where: str) -> E:
@@ -169,9 +230,9 @@ def _member[E: StrEnum](enum: type[E], value: Any, where: str) -> E:
         raise CaseAnswerError(f"{where}: {value!r} is not a {enum.__name__}") from None
 
 
-def _objects(value: Any, where: str) -> list[Any]:
-    if not isinstance(value, list):
-        raise CaseAnswerError(f"{where}: expected a list, got {type(value).__name__}")
+def _rg1(value: Any, where: str) -> str:
+    if not (isinstance(value, str) and _RG1_ID.fullmatch(value)):
+        raise CaseAnswerError(f"{where}: expected RG1-<n>, got {value!r}")
     return value
 
 
@@ -182,11 +243,16 @@ def _generator(value: Any, where: str) -> GeneratorAnswer:
         required=frozenset({"outcome", "codes", "reasons"}),
         optional=frozenset({"witnesses", "stubs", "seams"}),
     )
-    codes = _texts(data["codes"], f"{where}.codes")
-    if list(codes) != sorted(codes):
-        raise CaseAnswerError(f"{where}.codes: must be sorted, got {list(codes)}")
+    outcome = _member(GeneratorOutcome, data["outcome"], f"{where}.outcome")
+    codes = _sorted_texts(data["codes"], f"{where}.codes")
+    reasons = tuple(
+        _member(SiteReason, reason, f"{where}.reasons[{i}]")
+        for i, reason in enumerate(_sorted_texts(data["reasons"], f"{where}.reasons"))
+    )
+    if (outcome is GeneratorOutcome.REFUSED) != bool(codes) or (reasons and not codes):
+        raise CaseAnswerError(f"{where}: a refused run has codes, and only a refused run does")
     stubs = []
-    for i, item in enumerate(_objects(data.get("stubs", []), f"{where}.stubs")):
+    for i, item in enumerate(_list(data.get("stubs", []), f"{where}.stubs")):
         stub = _fields(item, f"{where}.stubs[{i}]", required=frozenset({"output", "reason"}))
         stubs.append(
             StubAnswer(
@@ -195,7 +261,7 @@ def _generator(value: Any, where: str) -> GeneratorAnswer:
             )
         )
     seams = []
-    for i, item in enumerate(_objects(data.get("seams", []), f"{where}.seams")):
+    for i, item in enumerate(_list(data.get("seams", []), f"{where}.seams")):
         seam = _fields(
             item, f"{where}.seams[{i}]", required=frozenset({"kind", "declaration", "expect"})
         )
@@ -207,34 +273,28 @@ def _generator(value: Any, where: str) -> GeneratorAnswer:
             )
         )
     return GeneratorAnswer(
-        outcome=_member(GeneratorOutcome, data["outcome"], f"{where}.outcome"),
-        codes=codes,
-        reasons=tuple(
-            _member(SiteReason, reason, f"{where}.reasons[{i}]")
-            for i, reason in enumerate(_objects(data["reasons"], f"{where}.reasons"))
-        ),
+        run=GeneratorRun(outcome=outcome, codes=codes, reasons=reasons),
         witnesses=_texts(data.get("witnesses", []), f"{where}.witnesses"),
         stubs=tuple(stubs),
         seams=tuple(seams),
     )
 
 
-def _screen(value: Any, where: str) -> ScreenAnswer:
-    data = _fields(value, where, required=frozenset({"verdict", "findings"}))
-    findings = []
-    for i, item in enumerate(_objects(data["findings"], f"{where}.findings")):
-        finding = _fields(
-            item,
-            f"{where}.findings[{i}]",
-            required=frozenset({"rule", "shape", "context", "outcome", "subject"}),
-        )
-        findings.append(
-            ScreenFinding(
-                **{key: _text(finding[key], f"{where}.findings[{i}].{key}") for key in finding}
-            )
-        )
-    return ScreenAnswer(
-        verdict=_text(data["verdict"], f"{where}.verdict"), findings=tuple(findings)
+def _construct(value: Any, where: str) -> Construct:
+    data = _fields(value, where, required=frozenset({"file", "lines", "description"}))
+    lines = data["lines"]
+    if not (
+        isinstance(lines, list)
+        and len(lines) == 2
+        and all(isinstance(n, int) and n >= 1 for n in lines)
+        and lines[0] <= lines[1]
+    ):
+        raise CaseAnswerError(f"{where}.lines: expected [first, last], got {lines!r}")
+    return Construct(
+        file=_text(data["file"], f"{where}.file"),
+        first_line=lines[0],
+        last_line=lines[1],
+        description=_text(data["description"], f"{where}.description"),
     )
 
 
@@ -242,10 +302,8 @@ def _loss(value: Any, where: str) -> LossAnswer:
     data = _fields(
         value, where, required=frozenset({"family", "disposition"}), optional=frozenset({"rg1"})
     )
-    rg1 = data.get("rg1")
-    if rg1 is not None and not (isinstance(rg1, str) and _RG1_ID.fullmatch(rg1)):
-        raise CaseAnswerError(f"{where}.rg1: expected RG1-<n>, got {rg1!r}")
     disposition = _member(LossDisposition, data["disposition"], f"{where}.disposition")
+    rg1 = None if data.get("rg1") is None else _rg1(data["rg1"], f"{where}.rg1")
     if disposition is LossDisposition.CANDIDATE_REFUSAL and rg1 is None:
         raise CaseAnswerError(f"{where}: a candidate refusal names its RG1-<n>")
     return LossAnswer(
@@ -257,74 +315,198 @@ def load_stored_answer(path: Path) -> StoredAnswer:
     """Read one stored generator answer, ``<case_id>.json``."""
     where = str(path)
     data = _fields(
-        json.loads(path.read_text()),
+        json.loads(path.read_text(encoding="utf-8")),
         where,
         required=frozenset({"id", "home", "generator"}),
-        optional=frozenset({"screen", "loss"}),
+        optional=frozenset({"construct", "screen", "loss"}),
     )
     case_id = _text(data["id"], f"{where}.id")
     if case_id != path.stem:
         raise CaseAnswerError(f"{where}: id {case_id!r} is not the file name {path.stem!r}")
     home = _member(CaseHome, data["home"], f"{where}.home")
-    if ("screen" in data) != (home is CaseHome.CODEGEN):
+    local_fields = {"construct", "screen"}
+    if local_fields & data.keys() != (local_fields if home is CaseHome.CODEGEN else set()):
         raise CaseAnswerError(
-            f"{where}: a screen answer is stored here exactly for codegen-home cases"
+            f"{where}: a construct and a screen answer are stored here exactly for "
+            "codegen-home cases"
         )
+    codegen = (
+        CodegenCase(
+            construct=_construct(data["construct"], f"{where}.construct"),
+            screen=_screen(data["screen"], f"{where}.screen"),
+        )
+        if home is CaseHome.CODEGEN
+        else None
+    )
     return StoredAnswer(
         case_id=case_id,
         home=home,
         generator=_generator(data["generator"], f"{where}.generator"),
-        screen=_screen(data["screen"], f"{where}.screen") if "screen" in data else None,
+        codegen=codegen,
         loss=_loss(data["loss"], f"{where}.loss") if "loss" in data else None,
     )
 
 
-def load_packaged_case(case_dir: Path) -> PackagedCase:
-    """Read the ``case.json`` of one packaged case directory, ``subset_cases/<case_id>/``."""
-    path = case_dir / "case.json"
-    where = str(path)
+def _screen(value: Any, where: str) -> ScreenAnswer:
+    try:
+        return screen_answer_from_json(value, where)
+    except ValueError as error:
+        raise CaseAnswerError(str(error)) from error
+
+
+# ---- the case store ---------------------------------------------------------------------------
+
+
+def answer_ids() -> frozenset[str]:
+    """Every case with a stored generator answer."""
+    return frozenset(p.stem for p in ANSWERS_DIR.glob("*.json"))
+
+
+def packaged_ids() -> frozenset[str]:
+    """Every case whose model is agentic-mbse package data."""
+    return frozenset(packaged_case_ids())
+
+
+def codegen_ids() -> frozenset[str]:
+    """Every case whose model lives in this repository."""
+    if not CODEGEN_CASES_DIR.is_dir():
+        return frozenset()
+    return frozenset(d.name for d in CODEGEN_CASES_DIR.iterdir() if d.is_dir())
+
+
+def load_answer(case_id: str) -> StoredAnswer:
+    return load_stored_answer(ANSWERS_DIR / f"{case_id}.json")
+
+
+def all_answers() -> tuple[StoredAnswer, ...]:
+    return tuple(load_answer(case_id) for case_id in sorted(answer_ids()))
+
+
+def model_root(answer: StoredAnswer) -> Path:
+    """The directory holding the case's model files."""
+    if answer.home is CaseHome.AGENTIC:
+        return packaged_case_dir(answer.case_id)
+    return CODEGEN_CASES_DIR / answer.case_id
+
+
+def construct_of(answer: StoredAnswer) -> Construct:
+    if answer.codegen is not None:
+        return answer.codegen.construct
+    return load_packaged_case(answer.case_id).construct
+
+
+def screen_of(answer: StoredAnswer) -> ScreenAnswer:
+    """The case's stored screen answer, wherever it lives."""
+    if answer.codegen is not None:
+        return answer.codegen.screen
+    return load_packaged_case(answer.case_id).screen
+
+
+# ---- agreement (design § C) -------------------------------------------------------------------
+
+
+def _reason(finding: ScreenFinding, rules: RuleRecords) -> str:
+    return rules.rule(finding.rule).shape(finding.shape).reason
+
+
+def mapped_code(finding: ScreenFinding, rules: RuleRecords = PACKAGED_RULES) -> str:
+    """The code the mapping says the generator refuses a ``refused`` finding with."""
+    reason = _reason(finding, rules)
+    mapping = REASON_MAPPING[reason]
+    if isinstance(mapping, NoRefusal):
+        raise ValueError(
+            f"{finding.rule}/{finding.shape} is refused, but its reason {reason!r} maps to "
+            "NO_REFUSAL: the records and the mapping disagree"
+        )
+    return mapping.code_for(finding.context).value
+
+
+def disagreement(
+    subject: str,
+    run: GeneratorRun,
+    screen: ScreenAnswer,
+    rules: RuleRecords = PACKAGED_RULES,
+) -> Disagreement | None:
+    """The disagreement between one subject's generator run and screen answer, if any."""
+    refused = [f for f in screen.findings if f.outcome is Outcome.REFUSED]
+    reasons = tuple(sorted({_reason(f, rules) for f in refused}))
+    if run.outcome is GeneratorOutcome.GENERATED:
+        if not refused:
+            return None
+        kind = DisagreementKind.SCREEN_REFUSES_GENERATOR_BUILDS
+    elif not refused:
+        kind = DisagreementKind.GENERATOR_REFUSES_SCREEN_SILENT
+    elif {mapped_code(f, rules) for f in refused} & set(run.codes):
+        return None
+    else:
+        kind = DisagreementKind.CODE_UNMAPPED
+    return Disagreement(subject, kind, run.codes, reasons)
+
+
+# ---- the disagreement record (design D3) -------------------------------------------------------
+
+
+def _entry(value: Any, where: str) -> DisagreementEntry:
     data = _fields(
-        json.loads(path.read_text()),
+        value,
         where,
         required=frozenset(
-            {"schema", "construct", "screen", "agentic_site_witnesses", "provenance"}
+            {
+                "subject",
+                "kind",
+                "generator_codes",
+                "screen_reasons",
+                "resolution",
+                "r3_row",
+                "owner",
+                "reason",
+            }
         ),
+        optional=frozenset({"rg1"}),
     )
-    if data["schema"] != PACKAGED_CASE_SCHEMA:
-        raise CaseAnswerError(
-            f"{where}.schema: expected {PACKAGED_CASE_SCHEMA!r}, got {data['schema']!r}"
-        )
-    construct = _fields(
-        data["construct"], f"{where}.construct", required=frozenset({"file", "lines"})
-    )
-    lines = construct["lines"]
-    if not (
-        isinstance(lines, list)
-        and len(lines) == 2
-        and all(isinstance(n, int) and n >= 1 for n in lines)
-        and lines[0] <= lines[1]
-    ):
-        raise CaseAnswerError(f"{where}.construct.lines: expected [first, last], got {lines!r}")
-    provenance = _fields(
-        data["provenance"],
-        f"{where}.provenance",
-        required=frozenset({"note"}),
-        optional=frozenset({"from_probe"}),
-    )
-    from_probe = provenance.get("from_probe")
-    return PackagedCase(
-        case_id=case_dir.name,
-        construct=Construct(
-            file=_text(construct["file"], f"{where}.construct.file"), lines=(lines[0], lines[1])
+    subject = _text(data["subject"], f"{where}.subject")
+    if not subject.startswith(("case:", "fixture:")):
+        raise CaseAnswerError(f"{where}.subject: expected case:<id> or fixture:<path>")
+    resolution = _member(Resolution, data["resolution"], f"{where}.resolution")
+    rg1 = None if data.get("rg1") is None else _rg1(data["rg1"], f"{where}.rg1")
+    if (resolution is Resolution.RG1_PENDING) != (rg1 is not None):
+        raise CaseAnswerError(f"{where}: an rg1_pending entry names its RG1-<n>, and only one does")
+    r3_row = data["r3_row"]
+    return DisagreementEntry(
+        disagreement=Disagreement(
+            subject=subject,
+            kind=_member(DisagreementKind, data["kind"], f"{where}.kind"),
+            generator_codes=_sorted_texts(data["generator_codes"], f"{where}.generator_codes"),
+            screen_reasons=_sorted_texts(data["screen_reasons"], f"{where}.screen_reasons"),
         ),
-        screen=_screen(data["screen"], f"{where}.screen"),
-        agentic_site_witnesses=_texts(
-            data["agentic_site_witnesses"], f"{where}.agentic_site_witnesses"
-        ),
-        provenance=Provenance(
-            from_probe=None
-            if from_probe is None
-            else _text(from_probe, f"{where}.provenance.from_probe"),
-            note=_text(provenance["note"], f"{where}.provenance.note"),
-        ),
+        resolution=resolution,
+        r3_row=None if r3_row is None else _text(r3_row, f"{where}.r3_row"),
+        owner=_text(data["owner"], f"{where}.owner"),
+        reason=_text(data["reason"], f"{where}.reason"),
+        rg1=rg1,
     )
+
+
+def read_disagreements(path: Path = DISAGREEMENTS_PATH) -> tuple[DisagreementEntry, ...]:
+    """Read the hand-edited disagreement record. Nothing writes it."""
+    where = str(path)
+    data = _fields(
+        json.loads(path.read_text(encoding="utf-8")),
+        where,
+        required=frozenset({"schema", "entries"}),
+    )
+    if data["schema"] != "subset-disagreements/1":
+        raise CaseAnswerError(f"{where}.schema: unknown schema {data['schema']!r}")
+    entries = tuple(
+        _entry(item, f"{where}.entries[{i}]")
+        for i, item in enumerate(_list(data["entries"], f"{where}.entries"))
+    )
+    subjects = [e.disagreement.subject for e in entries]
+    if len(subjects) != len(set(subjects)):
+        raise CaseAnswerError(f"{where}: a subject is listed twice")
+    return entries
+
+
+def recorded(found: Disagreement, entries: tuple[DisagreementEntry, ...]) -> bool:
+    """Whether the record lists exactly this disagreement."""
+    return any(e.disagreement == found for e in entries)

@@ -1,0 +1,11 @@
+{
+  "id": "candidate-calc-result-expression__bare_result__calc_result_expression__arithmetic",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EVIDENCE_INCOMPLETE"
+    ],
+    "reasons": []
+  }
+}

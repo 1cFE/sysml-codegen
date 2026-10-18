@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sysml_codegen.elaboration.diagnostics import SiteReason
+    from sysml_codegen.elaboration.graph import Diagnostic
     from sysml_codegen.generation.constraint_name_safety import ConstraintNameViolation
 
 
@@ -75,7 +76,9 @@ class CodeGenerationError(Exception):
     - Generation process fails
 
     ``code`` names the refusal family. ``reason`` names the raise site within it, where
-    one has been assigned (``SiteReason``).
+    one has been assigned (``SiteReason``). ``diagnostics`` holds the elaboration
+    diagnostics of a refusal that wraps a graph's own (a projection failure), so a caller
+    reads their codes and locations without parsing the message that renders them.
     """
 
     def __init__(
@@ -85,8 +88,10 @@ class CodeGenerationError(Exception):
         code: GenerationCode,
         reason: SiteReason | None = None,
         name_safety_violation: ConstraintNameViolation | None = None,
+        diagnostics: tuple[Diagnostic, ...] = (),
     ) -> None:
         super().__init__(message)
         self.code = code
         self.reason = reason
         self.name_safety_violation = name_safety_violation
+        self.diagnostics = diagnostics

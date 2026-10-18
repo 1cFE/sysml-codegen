@@ -394,6 +394,37 @@ def test_name_collision_refusal_logs_code_and_site_reason(tmp_path, caplog):
     ]
 
 
+def test_projection_refusal_logs_the_diagnostics_it_wraps(monkeypatch):
+    """The user's message names the projection's own code, so the payload carries it too."""
+    from sysml_codegen.cli.refusal import generation_refusal
+    from sysml_codegen.elaboration.graph import Diagnostic
+    from sysml_codegen.elaboration.project import ProjectionError
+    from sysml_codegen.orchestration import exact_pipeline_context
+
+    collision = Diagnostic(
+        ElaborationCode.SI_RENDERING_COLLISION,
+        None,
+        "fx::site::s",
+        None,
+        "two declarations render to one entry point",
+        source_file="root-0/model.sysml",
+        source_line=5,
+    )
+
+    def refuse(*_args):
+        raise ProjectionError([collision])
+
+    monkeypatch.setattr(exact_pipeline_context, "project", refuse)
+    with pytest.raises(CodeGenerationError) as error:
+        exact_pipeline_context._project_or_fail(SimpleNamespace(), None)
+    assert error.value.code is GenerationCode.PROJECTION_FAILED
+    assert "SI_RENDERING_COLLISION" in str(error.value)
+    assert generation_refusal(error.value).items == (
+        RefusalItem(GenerationCode.PROJECTION_FAILED, None, None, None),
+        RefusalItem(ElaborationCode.SI_RENDERING_COLLISION, None, "root-0/model.sysml", 5),
+    )
+
+
 _INTERNAL_DEFECT_REFUSAL = Refusal(
     RefusalKind.DIAGNOSTIC,
     (

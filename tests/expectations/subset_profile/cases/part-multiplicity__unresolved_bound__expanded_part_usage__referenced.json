@@ -1,0 +1,11 @@
+{
+  "id": "part-multiplicity__unresolved_bound__expanded_part_usage__referenced",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_MULTIPLICITY_UNRESOLVED"
+    ],
+    "reasons": []
+  }
+}

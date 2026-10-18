@@ -1,0 +1,65 @@
+{
+  "schema": "subset-disagreements/1",
+  "entries": [
+    {
+      "subject": "case:candidate-calc-result-expression__bare_result__calc_result_expression__arithmetic",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EVIDENCE_INCOMPLETE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "CALC-DEF-BARE-RESULT",
+      "owner": "EXEC-SUBSET-CONTRACT Item 2a P3 (rule or reproduced gap, design D11)",
+      "reason": "No rule recognizes a calc def whose result is a bare expression; the generator refuses it for having zero output attributes. P3 decides by the rule criterion whether the contract gains a rule."
+    },
+    {
+      "subject": "case:candidate-calc-result-expression__bare_result__calc_result_expression__max",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EVIDENCE_INCOMPLETE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "CALC-DEF-BARE-RESULT",
+      "owner": "EXEC-SUBSET-CONTRACT Item 2a P3 (rule or reproduced gap, design D11)",
+      "reason": "The max spelling of the calc def bare result: same refusal, same open decision as the arithmetic case."
+    },
+    {
+      "subject": "case:candidate-es-002__constraint_binds_calc_input__binding_value",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "ES-002",
+      "owner": "EXEC-SUBSET-CONTRACT Item 2a P3 (rule or reproduced gap, design D11)",
+      "reason": "A constraint binding a calc usage's input is refused at elaboration/occurrence.py:180, a site wider than the shape. No rule recognizes it; P3 decides by the rule criterion."
+    },
+    {
+      "subject": "case:candidate-es-008__nested_named_subset__part_usage",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_REDEFINITION_INVALID"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "ES-008",
+      "owner": "EXEC-SUBSET-CONTRACT Item 2a P3 (rule or reproduced gap, design D11)",
+      "reason": "Nested named subsets that each redefine a value are refused in this spelling. No rule recognizes it; P3 covers the other four spellings and decides by the rule criterion."
+    },
+    {
+      "subject": "case:candidate-es-009__composition_by_subsetting__part_usage",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "ES-009",
+      "owner": "EXEC-SUBSET-CONTRACT Item 2a P3 (rule or reproduced gap, design D11)",
+      "reason": "Composition by subsetting a top-level usage is refused at elaboration/elaborate.py:2345, a site wider than the shape. No rule recognizes it; P3 decides by the rule criterion."
+    },
+    {
+      "subject": "case:candidate-es-010-refusal__string_to_calc_input__binding_value",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["PROJECTION_FAILED", "SI_RENDERING_COLLISION"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": "ES-010",
+      "owner": "sysml-codegen; String policy is the owner's (RG-2)",
+      "reason": "A String value bound to a calc input is refused at projection. Entry-point membership is an output fact codegen owns (ADR 0007), so no shared rule can describe it; the contract reports String values omitted."
+    }
+  ]
+}

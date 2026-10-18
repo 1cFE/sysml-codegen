@@ -84,7 +84,7 @@ Each row produces an artifact and the phase **continues**. Nothing in this plan 
 
 - [ ] **Snapshots byte-stable (invariant 9).** codegen: `git diff --exit-code d73a4fc5 -- ':/tests/fixtures/*/instance_graph_snapshot.json'` exits 0 (22 files).
 - [ ] **Accept/refuse unchanged (invariant 10).** codegen, licensed: `uv run --extra dev pytest tests/conformance/test_public_package_oracle.py tests/conformance/test_v6_recapture_batch.py -rs` passes. Any diff to `tests/expectations/public_package_oracle/baseline.json` or `tests/fixtures/v6_recapture_batch/batch.json` changes message text only, and is listed in `evidence/changed-outputs.md` with its cause.
-- [ ] **No regressions against the baseline.** codegen licensed suite and agentic-mbse suite, compared by test ID with `evidence/baseline.md`. A new failure is fixed before the phase closes.
+- [ ] **No regressions against the baseline.** codegen licensed suite and agentic-mbse suite, compared by test ID with `evidence/baseline.md`. A new failure is fixed before the phase closes. From P2 on, agentic-mbse runs with all extras installed (`uv run --all-extras pytest tests/ -q -rfEs`), and its pre-existing set is the 5 IDs of the all-extras baseline (3 Pandoc, 2 hardcoded `/home/reid/1cfe` path); the 129-ID default-extras set is history.
 - [ ] **Item 4 merge order.** In agentic: `git log --oneline subset-conformance..main`. If `main` has new commits touching `src/agentic_mbse/sysml/` or `src/agentic_mbse/errors.py`, rebase `subset-conformance` onto it, rerun this phase's tests and note it in Implementation Notes. Same check in codegen against `main`.
 - [ ] **Static checks.** codegen: `uv run --extra dev mypy src/` and `uv run --extra dev ruff check src/ tests/`. agentic: `uv run mypy src/` and `uv run ruff check src/ tests/`. Compared with the baseline.
 - [ ] **Audit.** `/_my_audit` reviews every diff to stored answers, `disagreements.json`, `REASON_MAPPING` and the site account as the named reviewer (spec Independence).
@@ -277,12 +277,12 @@ def test_every_case_has_exactly_one_generator_answer_and_one_home():
     assert answers == packaged | local
 ```
 
-- [ ] agentic: move the 80 probe models to `src/agentic_mbse/sysml/subset_cases/<id>/` with `case.json` (`schema: subset-case/1`, construct, screen answer, `agentic_site_witnesses`, `provenance.from_probe`); retire `observation*.json`. Check `pyproject.toml:49-63` ships `*.sysml` and `case.json`.
-- [ ] agentic: loader accepts `case:` by form only, rejects `probe:` (`subset_profile.py:396-409`); records cite `case:<id>`; `tests/helpers/subset_records.py:85, :101` switch to `case:<pair>`; retired shapes leave records, rule and `SUBSET_REASON_CODES`; `v2` and the digest test (PD13); vocabulary, records and version tests updated.
-- [ ] agentic: repoint `test_subset_profile_rules_{instantiation,modelwide}.py` to packaged cases; remove `tests/test_subset_probe_evidence.py`, `tests/test_subset_probe_judge.py`, `tests/helpers/subset_probe_judge.py`, `scripts/subset_profile/probe.py`.
-- [ ] codegen: pin to `v2`; mapping drops retired reasons; `cases.py` gains packaged-case loading, the agreement function (design.md § C) and the `disagreements.json` reader (PD3); `tests/expectations/subset_profile/disagreements.json` created by hand (empty or with entries the captures need); D3 writer-guard test.
-- [ ] codegen: capture the 80 stored generator answers with the capture helper (writes generator blocks only; refuses a failing screen answer without an entry). Review each diff.
-- [ ] codegen licensed `test_generator_half.py`: every case's live generator half equals its stored answer, and case isolation holds (refusal locations inside the construct lines, after `root-N/` normalisation).
+- [x] agentic: move the 80 probe models to `src/agentic_mbse/sysml/subset_cases/<id>/` with `case.json` (`schema: subset-case/1`, construct, screen answer, `agentic_site_witnesses`, `provenance.from_probe`); retire `observation*.json`. Check `pyproject.toml:49-63` ships `*.sysml` and `case.json`.
+- [x] agentic: loader accepts `case:` by form only, rejects `probe:` (`subset_profile.py:396-409`); records cite `case:<id>`; `tests/helpers/subset_records.py:85, :101` switch to `case:<pair>`; retired shapes leave records, rule and `SUBSET_REASON_CODES`; `v2` and the digest test (PD13); vocabulary, records and version tests updated.
+- [x] agentic: repoint `test_subset_profile_rules_{instantiation,modelwide}.py` to packaged cases; remove `tests/test_subset_probe_evidence.py`, `tests/test_subset_probe_judge.py`, `tests/helpers/subset_probe_judge.py`, `scripts/subset_profile/probe.py`.
+- [x] codegen: pin to `v2`; mapping drops retired reasons; `cases.py` gains packaged-case loading, the agreement function (design.md § C) and the `disagreements.json` reader (PD3); `tests/expectations/subset_profile/disagreements.json` created by hand (empty or with entries the captures need); D3 writer-guard test.
+- [x] codegen: capture the 80 stored generator answers with the capture helper (writes generator blocks only; refuses a failing screen answer without an entry). Review each diff.
+- [x] codegen licensed `test_generator_half.py`: every case's live generator half equals its stored answer, and case isolation holds (refusal locations inside the construct lines, after `root-N/` normalisation).
 
 **Done when:** agentic `uv run pytest tests/test_subset_case_citations.py tests/test_sysml/ -q` and codegen licensed `uv run --extra dev pytest tests/conformance/subset_profile/ -rs` pass. Manual: `uv build --wheel` in agentic, and the wheel listing contains `agentic_mbse/sysml/subset_cases/`.
 
@@ -667,6 +667,25 @@ Phase 1 notes are below, per step. Later phases add their own sections.
 - Each staged entry's provenance is `[AGENT]` from the 2a design, with owner ratification to be recorded at filing. None of them is owner-originated.
 
 ### Phase 2 Completion
+
+#### Step 2.1 (2026-10-18)
+- agentic: the 80 probes are packaged cases under `src/agentic_mbse/sysml/subset_cases/<id>/`, each a `model.sysml` (moved with `git mv`) and a `case.json`. The wheel lists 80 `case.json` and 80 `.sysml` files there. Each stored screen answer was checked against its probe's recorded expectation before the probe files were removed: no mismatches, and five extra findings, each one a second finding of the same rule on the same construct.
+- agentic: one module owns the case format, `src/agentic_mbse/sysml/conformance_case.py` (`load_packaged_case`, `screen_answer`, `screen_answer_from_json`). codegen reads `case.json` through it and has no parser of its own, so the format has one reader.
+- agentic: records cite `case:<id>` and the loader rejects `probe:`. `SUBSET_PROFILE_VERSION` is `subset-profile/v2`, pinned in `test_subset_profile_version.py`. The two retired part-multiplicity shapes left the records, the rule and `SUBSET_REASON_CODES`.
+- agentic: `tests/test_subset_case_citations.py` checks each citation from the screen side: the case is packaged, it is a record case, and its stored answer shows the cited pair. It also checks the controls and reproductions draw no refusal, and that every record case is cited. The two rule tests replay every packaged case and compare it with the stored screen answer.
+- codegen: `tests/helpers/subset_profile/cases.py` holds the stored-answer schema, the agreement function (design § C) and the `disagreements.json` reader. `capture.py` writes only the generator block, and refuses a run that disagrees with the screen unless the record already lists it. `test_disagreement_record.py` holds the writer guard.
+- codegen: 80 stored answers captured, 52 refused and 28 generated. Each was compared with its probe's recorded generator result. Two differ, both from the payload change below: ES-010's refusal now lists `SI_RENDERING_COLLISION` beside `PROJECTION_FAILED`, and one constraint case lists `SI_CONSTRAINT_BLOCKED` twice, because it has two blocked predicates.
+- codegen: `disagreements.json` was written by hand with six entries, all of kind `generator_refuses_screen_silent`: the two bare-result calc cases, ES-002, ES-008, ES-009 (each `reproduced_gap`, for P3 to decide), and ES-010's refusal side (`codegen_owned`).
+- codegen: `test_generator_half.py` (licensed, 160 tests) runs every case live and compares it with its stored answer, and checks every located refusal sits inside the construct's lines.
+- codegen: the reach test's four inline witnesses that matched a packaged case now read that case (design invariant 7, one copy of each model). Those cases give the same refusal kind and reason.
+- Verification: codegen licensed `tests/conformance/subset_profile/` plus the answer, CLI and oracle tests: 740 passed, no skips. agentic `tests/test_subset_case_citations.py tests/test_sysml/` plus the matrix, site-account and scripts tests: 1271 passed, 1 skipped. codegen mypy clean, ruff 94 (baseline 94). agentic ruff 118 (baseline 118), mypy 88, the same count as agentic `HEAD` (`8be21e04`) in the all-extras environment. The Phase 1 figure of 98 was taken before the all-extras sync, so 88 is the mypy baseline from P2 on.
+- Deviations:
+  - The projection refusal now carries the diagnostics it wraps. Before, ES-010's structured code was only `PROJECTION_FAILED`, and `SI_RENDERING_COLLISION` was in the message text only, which the harness does not parse (design D2). `CodeGenerationError` gained `diagnostics` (`core/errors.py`), `_project_or_fail` passes them (`orchestration/exact_pipeline_context.py`), and `generation_refusal` lists them (`cli/refusal.py`). Messages and accept/refuse are unchanged. The second raise in `_project_or_fail` is a new relay row in codegen's site account (493 rows).
+  - `case.json` gains `kind` (record, control or reproduction) and `construct.description`, and each screen finding gains `line`, so isolation can be checked on the screen side. Codegen-home answers carry `construct` and `screen`.
+  - `EvidenceStatus.PROBE_OBSERVED` became `CASE_OBSERVED`, `example_probe` became `example_case`, and the matrix statuses were renamed to match.
+  - The part-multiplicity rule raises `ValueError` on the two retired resolutions instead of dropping them silently.
+  - The records' `verified_against` fields still name the Item 1 revisions. P7 refreshes them.
+  - `SI_CONSTRAINT_BLOCKED` carries no location in the payload, so the isolation check cannot place it. It is listed by name in `test_generator_half.py`.
 
 ### Phase 3 Completion
 

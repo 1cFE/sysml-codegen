@@ -140,7 +140,13 @@ def _computation_digest(graph: ComputationGraph) -> str:
 def _project_or_fail(graph: InstanceGraph, targets: tuple[str, ...] | None) -> ComputationGraph:
     try:
         return project(graph, targets)
-    except (GraphValidationError, ProjectionError, TypeError, ValueError) as error:
+    except (GraphValidationError, ProjectionError) as error:
+        raise CodeGenerationError(
+            f"exact graph projection failed: {error}",
+            code=GenerationCode.PROJECTION_FAILED,
+            diagnostics=error.diagnostics,
+        ) from error
+    except (TypeError, ValueError) as error:
         raise CodeGenerationError(
             f"exact graph projection failed: {error}", code=GenerationCode.PROJECTION_FAILED
         ) from error
@@ -302,6 +308,7 @@ def build_exact_pipeline_context(
         raise
     except Exception as error:
         raise unexpected_public_failure(error) from error
+
 
 def build_exact_pipeline_context_from_snapshot(
     snapshot_path: Path,

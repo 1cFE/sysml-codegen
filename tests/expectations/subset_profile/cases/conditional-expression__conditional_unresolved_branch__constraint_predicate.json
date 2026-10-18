@@ -1,0 +1,13 @@
+{
+  "id": "conditional-expression__conditional_unresolved_branch__constraint_predicate",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EVIDENCE_INCOMPLETE"
+    ],
+    "reasons": [
+      "evidence_resolved_target_missing"
+    ]
+  }
+}

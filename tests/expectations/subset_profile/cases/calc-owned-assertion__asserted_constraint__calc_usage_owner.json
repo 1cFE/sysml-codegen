@@ -1,0 +1,11 @@
+{
+  "id": "calc-owned-assertion__asserted_constraint__calc_usage_owner",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_CONSTRAINT_UNATTACHED"
+    ],
+    "reasons": []
+  }
+}

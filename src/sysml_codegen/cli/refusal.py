@@ -77,4 +77,14 @@ def diagnostic_refusal(error: ElaborationDiagnosticError) -> Refusal:
 
 
 def generation_refusal(error: CodeGenerationError) -> Refusal:
-    return Refusal(RefusalKind.GENERATION, (RefusalItem(error.code, error.reason, None, None),))
+    """The generation code, then the diagnostics of any graph refusal it wraps."""
+    return Refusal(
+        RefusalKind.GENERATION,
+        (
+            RefusalItem(error.code, error.reason, None, None),
+            *(
+                RefusalItem(d.code, d.reason, d.source_file, d.source_line)
+                for d in error.diagnostics
+            ),
+        ),
+    )

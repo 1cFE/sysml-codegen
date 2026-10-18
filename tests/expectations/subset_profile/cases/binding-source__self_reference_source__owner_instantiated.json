@@ -1,0 +1,13 @@
+{
+  "id": "binding-source__self_reference_source__owner_instantiated",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_SELF_BINDING"
+    ],
+    "reasons": [
+      "binding_source_form_unsupported"
+    ]
+  }
+}

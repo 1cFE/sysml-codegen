@@ -80,10 +80,6 @@ REASON_MAPPING: Mapping[str, ReasonMapping | NoRefusal] = MappingProxyType(
         "part_multiplicity_unresolved_bound": ReasonMapping(
             ElaborationCode.SI_MULTIPLICITY_UNRESOLVED
         ),
-        # No context of these two shapes is decided yet; the code is the record's
-        # `expected_code`, read from the generator's code rather than observed.
-        "part_multiplicity_nonunique": ReasonMapping(ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED),
-        "part_multiplicity_negative_bound": ReasonMapping(ElaborationCode.SI_MULTIPLICITY_INVALID),
         "invocation_callable_unsupported": ReasonMapping(
             ElaborationCode.SI_EXPRESSION_SOURCE_UNSUPPORTED
         ),

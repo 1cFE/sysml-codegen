@@ -1,0 +1,11 @@
+{
+  "id": "part-multiplicity__range__expanded_part_usage__depth_two",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_MULTIPLICITY_UNSUPPORTED"
+    ],
+    "reasons": []
+  }
+}

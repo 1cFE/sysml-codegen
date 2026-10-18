@@ -33,12 +33,6 @@ from sysml_codegen.subset_profile_adapter import (
 from tests.conftest import REPO_ROOT
 
 SHAPES = [(rule.rule_id, shape) for rule in PACKAGED_RULES.rules for shape in rule.shapes]
-#: Shapes whose records carry an `expected_code` but decide no context yet. Their mapping is
-#: the expected code; when a case decides them, this set shrinks.
-UNDECIDED_REFUSING_SHAPES = {
-    ("part-multiplicity", "negative_bound"),
-    ("part-multiplicity", "nonunique"),
-}
 
 
 def _id(item: tuple[str, ShapeRecord]) -> str:
@@ -68,13 +62,14 @@ def test_no_refusal_exactly_when_the_record_names_no_refusal_code(item):
     assert (REASON_MAPPING[shape.reason] is NO_REFUSAL) == (shape.expected_code is None)
 
 
-def test_the_undecided_refusing_shapes_are_the_named_two():
-    undecided = {
+def test_every_shape_with_a_refusal_code_is_refused_somewhere():
+    """So the mapping's codes are observed refusals, never a code read from the generator."""
+    undecided = [
         (rule_id, shape.shape_id)
         for rule_id, shape in SHAPES
         if shape.expected_code is not None and not shape.contexts_with(Outcome.REFUSED)
-    }
-    assert undecided == UNDECIDED_REFUSING_SHAPES
+    ]
+    assert undecided == []
 
 
 @pytest.mark.parametrize("item", [i for i in SHAPES if i[1].expected_code], ids=_id)
