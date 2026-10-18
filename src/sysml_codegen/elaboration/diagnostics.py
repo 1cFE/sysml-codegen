@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-__all__ = ["ElaborationCode", "ElaborationInvariantError"]
+__all__ = ["ElaborationCode", "ElaborationInvariantError", "SiteReason"]
 
 
 class ElaborationCode(StrEnum):
@@ -36,6 +36,38 @@ class ElaborationCode(StrEnum):
     SI_INTERNAL_DEFECT = "SI_INTERNAL_DEFECT"
 
 
+class SiteReason(StrEnum):
+    """Which refusal site fired, finer than its code (EXEC-SUBSET-CONTRACT Item 2a D8).
+
+    Many sites share one ``ElaborationCode``, and a later check can refuse with the same
+    code as an earlier one it shadows. The reason names the site, so a conformance case
+    can tell which one refused. Members are ``<stage>_<condition>`` and stay distinct from
+    the shared contract's ``SUBSET_REASON_CODES``, which name modelled shapes, not sites.
+
+    A reason is carried live only. It is not part of the v6 snapshot encoding, and a
+    sealed graph holds no diagnostics to carry one.
+    """
+
+    OCCURRENCE_MULTIPLICITY_ORDERED = "occurrence_multiplicity_ordered"
+    CONSTRAINT_PROFILE_BLOCKED = "constraint_profile_blocked"
+    BINDING_SOURCE_FORM_UNSUPPORTED = "binding_source_form_unsupported"
+    EXTRACTION_TYPING_TARGET_UNSUPPORTED = "extraction_typing_target_unsupported"
+    ELABORATION_NO_EXECUTABLE_CONTENT = "elaboration_no_executable_content"
+    GENERATION_CONSTRAINT_NAME_UNSAFE = "generation_constraint_name_unsafe"
+    INTERNAL_FAILURE_UNCLASSIFIED = "internal_failure_unclassified"
+    # Relayed from agentic-mbse: one per ``SemanticEvidenceCode``, set where the live
+    # route converts a ``SemanticEvidenceError`` (``orchestration/elaborated_pipeline.py``).
+    EVIDENCE_METATYPE_CHECK_FAILED = "evidence_metatype_check_failed"
+    EVIDENCE_EXPRESSION_KIND_UNSUPPORTED = "evidence_expression_kind_unsupported"
+    EVIDENCE_OPERAND_ITERATION_FAILED = "evidence_operand_iteration_failed"
+    EVIDENCE_EXPRESSION_DEPTH_EXHAUSTED = "evidence_expression_depth_exhausted"
+    EVIDENCE_RESOLVED_TARGET_MISSING = "evidence_resolved_target_missing"
+    EVIDENCE_DOCUMENT_TIER_MISSING = "evidence_document_tier_missing"
+    EVIDENCE_DOCUMENT_TIER_UNKNOWN = "evidence_document_tier_unknown"
+    EVIDENCE_RESOLVED_LEAF_MISSING = "evidence_resolved_leaf_missing"
+    EVIDENCE_INDEXED_REFERENCE_UNSUPPORTED = "evidence_indexed_reference_unsupported"
+
+
 class ElaborationInvariantError(ValueError):
     """An exact-ID invariant failed before a usable graph could be built."""
 
@@ -46,9 +78,11 @@ class ElaborationInvariantError(ValueError):
         *,
         reference: str | None = None,
         location: tuple[str, int] | None = None,
+        reason: SiteReason | None = None,
     ) -> None:
         self.code = code
         self.detail = detail
         self.reference = reference
         self.location = location
+        self.reason = reason
         super().__init__(f"{code.value}: {detail}")

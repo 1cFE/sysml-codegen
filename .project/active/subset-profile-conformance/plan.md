@@ -154,14 +154,14 @@ def test_sealed_graph_diagnostics_empty(path):
 `REACH_WITNESSES` has one entry per carrier type (`ReadinessFinding`, `Diagnostic`, `ElaborationInvariantError`, `CodeGenerationError`, `ExactTypeError`, `ExpressionInventoryError`) and per converter branch (`orchestration/elaborated_pipeline.py:289-356`, `_readiness_with_referent` `:399`, `_semantic_evidence_diagnostic` `:419`, `_diagnostic_with_referent` `:438-455`). Pick each witness from an existing fixture or Item 1 probe; prefer a shared-rule site so its reason counts toward P2. A branch with no reachable witness is listed by name in the test module with the attempt made.
 
 Changes (design.md D2, D8, D15):
-- [ ] `elaboration/diagnostics.py`: `SiteReason` (PD7), with only the members the reach witnesses need. Pure test: disjoint from `SUBSET_REASON_CODES`.
-- [ ] `core/errors.py`: `GenerationCode` (today's prefixes, PD7); `CodeGenerationError` gains `code` and `reason`; message text unchanged.
-- [ ] `reason: SiteReason | None` on `ReadinessFinding`, `ElaborationInvariantError`, `CompilationError`, `ExactTypeError`, `ExpressionInventoryError`, and on `Diagnostic` with default `None`.
-- [ ] `orchestration/elaborated_pipeline.py`: every converter copies `reason` (O17). `_semantic_evidence_diagnostic` reads a total `SemanticEvidenceCode → SiteReason` table (pure totality test).
-- [ ] `elaboration/elaborate.py:133, :194`: messages end in ` (reason: <id>)` when a reason is set.
-- [ ] `snapshot/instance_graph.py:947`: the encoder refuses a `Diagnostic` with a reason set; output otherwise unchanged. Unit test for the refusal.
-- [ ] `cli/__init__.py:1189-1230`: every refusal log call gains `extra={"refusal": …}` (codes, reasons, locations); the `except Exception` branch carries the converted `unexpected_public_failure`. Unit test beside `tests/unit/test_cli_generation.py:348`.
-- [ ] `tests/helpers/subset_profile/observe.py`: generator half (run `run_codegen`, tripwire on the three screen entry points, read `extra`, spy on `elaborate_model_paths`, read `model_contract.json`) and screen half. `tests/helpers/subset_profile/cases.py`: answer schema (Appendix A) and loading only; agreement comes in P2.1.
+- [x] `elaboration/diagnostics.py`: `SiteReason` (PD7), with only the members the reach witnesses need. Pure test: disjoint from `SUBSET_REASON_CODES`.
+- [x] `core/errors.py`: `GenerationCode` (today's prefixes, PD7); `CodeGenerationError` gains `code` and `reason`; message text unchanged.
+- [x] `reason: SiteReason | None` on `ReadinessFinding`, `ElaborationInvariantError`, `CompilationError`, `ExactTypeError`, `ExpressionInventoryError`, and on `Diagnostic` with default `None`.
+- [x] `orchestration/elaborated_pipeline.py`: every converter copies `reason` (O17). `_semantic_evidence_diagnostic` reads a total `SemanticEvidenceCode → SiteReason` table (pure totality test).
+- [x] `elaboration/elaborate.py:133, :194`: messages end in ` (reason: <id>)` when a reason is set.
+- [x] `snapshot/instance_graph.py:947`: the encoder refuses a `Diagnostic` with a reason set; output otherwise unchanged. Unit test for the refusal.
+- [x] `cli/__init__.py:1189-1230`: every refusal log call gains `extra={"refusal": …}` (codes, reasons, locations); the `except Exception` branch carries the converted `unexpected_public_failure`. Unit test beside `tests/unit/test_cli_generation.py:348`.
+- [x] `tests/helpers/subset_profile/observe.py`: generator half (run `run_codegen`, tripwire on the three screen entry points, read `extra`, spy on `elaborate_model_paths`, read `model_contract.json`) and screen half. `tests/helpers/subset_profile/cases.py`: answer schema (Appendix A) and loading only; agreement comes in P2.1.
 
 **Done when:** licensed `uv run --extra dev pytest tests/conformance/subset_profile/ tests/unit/test_cli_generation.py tests/conformance/test_snapshot_v6_envelope.py -rs` passes with zero skips of license-gated tests, and the phase-gate snapshot and oracle checks pass. Changed refusal text (the reason suffix) is listed in `evidence/changed-outputs.md`.
 
@@ -611,6 +611,20 @@ See design.md § Potential Risks. Phase-specific:
 - agentic `c39b4cda`: `isolated_tree.py` holds the tree helpers; `read_identity` now returns a dict, so it no longer depends on the probe judge that P2.1 retires, and `probe.py` wraps it in its `Identity`. Every script imports from `isolated_tree.py`, and none imports from `probe.py` (tested), so P2.1 can delete `probe.py` alone.
 - Beyond PD12's five scripts, `probe.py` (`--log-dir`) and `occurrence_parity.py` (`--out` on `compare` and `controls`) also stopped writing into the archive, because the plan's own test ("no script in `scripts/subset_profile/` names `.project/completed/`") covers them. `scan_sites.py --out` was already a parameter with no default; it stays optional because `--reconcile` alone writes nothing.
 - The scripts' codegen checkout default moved from `~/src/sysml-codegen` (the owner's main checkout) to the sibling of the agentic-mbse checkout, the same layout as codegen's `../agentic-mbse` path dependency. The base run read this worktree.
+
+#### Step 1.3 (2026-10-18)
+- The reach test passes for every carrier type and every converter branch in `_build_from_extractor` (`orchestration/elaborated_pipeline.py`): ReadinessFinding, GraphValidationError diagnostics, ElaborationInvariantError, SemanticEvidenceError, ExactTypeError, CodeGenerationError re-raised during construction, and CodeGenerationError at generation. Checked against a mutation: when the two `*_with_referent` converters drop `reason`, the six witnesses that pass through a converter fail, and the four that do not still pass.
+- Two branches have no model that reaches them, so they are listed by name in the test module and witnessed by a raise patched in at the inventory call. `ExpressionInventoryError`: every raise is a consistency check over the inventory the same call built, and the one authored form it refuses, an index, leaves through `_indexed_refusal` as a `SemanticEvidenceError`. `except Exception`: by definition nothing classified reaches it.
+- The witness models are written inline in the test, not read from agentic-mbse's Item 1 probes. The plan said "pick each witness from an existing fixture or Item 1 probe", but the probes live in agentic-mbse's `tests/` tree, and the spec's [HARD] boundary says codegen takes nothing from there. The inline models have the probes' shape. Two (blocked predicate, indexed reference) gained a calc, so the model has executable content beside the refused construct. After P2.1 packages the probes, the reach witnesses can cite packaged cases instead.
+- `SiteReason` (`elaboration/diagnostics.py`) has the six members the witnesses need plus nine `evidence_*` members, one per `SemanticEvidenceCode`, for the total relay table `_EVIDENCE_REASONS`.
+- `run_codegen` and `_generate_package_from_graph` log one `Refusal` (`cli/refusal.py`, new) on every failing path. The harness (`tests/helpers/subset_profile/observe.py`) requires exactly one on a refusal and none on success. Changed message text is in `evidence/changed-outputs.md`.
+- Verification: the done-when command passes (163 tests, no skips); the full licensed suite has the baseline's 10 failures and no others (2794 passed); the 22 snapshots are byte-stable against `d73a4fc5`; the oracle and recapture-batch tests pass; mypy `src/` is clean and ruff `src/ tests/` still reports the baseline's 94.
+- Deviations:
+  - `GenerationCode` has 20 members, not only today's eight message prefixes. Twelve raises had no prefix, and D15 needs every raise to carry a code, so they got members named for their condition (for example `NOTHING_TO_GENERATE`, `RECEIPT_INVALID`). Message text is unchanged.
+  - `code` is a required keyword on `CodeGenerationError`, so a raise without a code fails at construction rather than waiting for the E1 scan.
+  - `_readiness_with_referent` and `_diagnostic_with_referent` now use `dataclasses.replace`, so a field added later is carried without editing them.
+  - The refusal payload is also attached in `_generate_package_from_graph`, with a `PACKAGE_WRITE` kind (carrying no code) for write and seal failures. The plan named only `cli/__init__.py:1189-1230`, but a generation-stage refusal is logged there, and the harness needs it.
+  - `test_elaboration_payload_identity.py::test_profile_block_halts_exact_route_before_projection` round-trips a non-strict graph that holds a blocked diagnostic. With the encoder refusal it now asserts the refusal first, then strips the reasons and round-trips as before. Production encodes only after `require_projectable`, so D8's premise holds.
 
 ### Phase 2 Completion
 

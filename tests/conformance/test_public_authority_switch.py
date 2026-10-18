@@ -472,10 +472,13 @@ def test_a_refusal_after_the_context_but_before_the_writer_also_leaves_the_tree(
     because no writer runs before that check.
     """
     import sysml_codegen.cli as cli
+    from sysml_codegen.core.errors import GenerationCode
     from sysml_codegen.generation import CodeGenerationError
 
     def refuse(_graph: object) -> None:
-        raise CodeGenerationError("injected duplicate-output-path refusal")
+        raise CodeGenerationError(
+            "injected duplicate-output-path refusal", code=GenerationCode.DUPLICATE_OUTPUT_PATH
+        )
 
     monkeypatch.setattr(cli, "_check_duplicate_output_paths", refuse)
 

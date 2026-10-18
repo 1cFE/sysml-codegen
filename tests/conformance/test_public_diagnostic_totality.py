@@ -460,6 +460,7 @@ def test_a_formed_generation_refusal_is_not_relabelled_an_internal_defect(
 ) -> None:
     """A refusal the generator already formed keeps its own code and vocabulary."""
     import sysml_codegen.cli as cli_module
+    from sysml_codegen.core.errors import GenerationCode
     from sysml_codegen.generation import CodeGenerationError
 
     monkeypatch.setattr(
@@ -471,7 +472,10 @@ def test_a_formed_generation_refusal_is_not_relabelled_an_internal_defect(
         cli_module,
         "_generate_package_from_graph",
         lambda _graph, _config: (_ for _ in ()).throw(
-            CodeGenerationError("EXIT_POINT_TYPE_UNSUPPORTED: module='m' output='root'")
+            CodeGenerationError(
+                "EXIT_POINT_TYPE_UNSUPPORTED: module='m' output='root'",
+                code=GenerationCode.EXIT_POINT_TYPE_UNSUPPORTED,
+            )
         ),
     )
     config = GenerationConfig(

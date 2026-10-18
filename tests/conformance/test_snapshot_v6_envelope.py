@@ -24,12 +24,20 @@ from __future__ import annotations
 import hashlib
 import json
 import shutil
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
+from sysml_codegen.elaboration.diagnostics import ElaborationCode, SiteReason
+from sysml_codegen.elaboration.graph import Diagnostic
 from sysml_codegen.snapshot import envelope as v6
 from sysml_codegen.snapshot.capture import capture_instance_graph_snapshot
+from sysml_codegen.snapshot.instance_graph import (
+    InstanceGraphCodecError,
+    decode_instance_graph,
+    encode_instance_graph,
+)
 from tests.conftest import FIXTURES_DIR, requires_license
 
 pytestmark = requires_license
@@ -637,3 +645,24 @@ def test_every_refusal_shares_one_public_base_type(tmp_path: Path, captured_payl
         v6.SnapshotCertifiabilityError,
     ):
         assert issubclass(subclass, v6.InstanceGraphSnapshotError)
+
+
+def test_encoder_refuses_a_diagnostic_whose_site_reason_it_cannot_carry() -> None:
+    graph = v6.load_instance_graph_snapshot(
+        FIXTURES_DIR / "agg_literal_probe" / "instance_graph_snapshot.json"
+    )
+    diagnostic = Diagnostic(
+        code=ElaborationCode.SI_CONSTRAINT_BLOCKED,
+        consumer=None,
+        consumer_display="<model>",
+        param_name=None,
+        detail="blocked",
+    )
+
+    graph.diagnostics = [replace(diagnostic, reason=SiteReason.CONSTRAINT_PROFILE_BLOCKED)]
+    with pytest.raises(InstanceGraphCodecError, match="site reason v6 cannot encode"):
+        encode_instance_graph(graph)
+
+    graph.diagnostics = [diagnostic]
+    [decoded] = decode_instance_graph(encode_instance_graph(graph)).diagnostics
+    assert decoded == diagnostic

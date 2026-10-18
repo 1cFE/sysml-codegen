@@ -18,11 +18,13 @@ from sysml_codegen.elaboration import (
     ProjectionError,
     project,
 )
+from sysml_codegen.elaboration.diagnostics import SiteReason
 from sysml_codegen.elaboration.identity import declaration_id_for
 from sysml_codegen.extraction import expression_compiler
 from sysml_codegen.extraction.data_models import CalculationDefinitionData
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.snapshot.instance_graph import (
+    InstanceGraphCodecError,
     decode_instance_graph,
     encode_instance_graph,
 )
@@ -259,7 +261,14 @@ def test_profile_block_halts_exact_route_before_projection(
     assert len(blocked) == 1
     assert blocked[0].consumer_display.endswith("__blocked_guard")
     assert "block_real_equality_requires_tolerance" in blocked[0].detail
+    assert blocked[0].reason is SiteReason.CONSTRAINT_PROFILE_BLOCKED
 
+    # The site reason is live only: v6 has no field for it, so the codec refuses rather than
+    # drop it. Without it, the diagnostic round-trips through the unchanged encoding.
+    with pytest.raises(InstanceGraphCodecError, match="site reason"):
+        encode_instance_graph(graph)
+    graph.diagnostics = [replace(diagnostic, reason=None) for diagnostic in graph.diagnostics]
+    blocked = [replace(diagnostic, reason=None) for diagnostic in blocked]
     rebuilt = decode_instance_graph(encode_instance_graph(graph))
     rebuilt_blocked = [
         diagnostic

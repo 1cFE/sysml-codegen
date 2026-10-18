@@ -15,6 +15,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sysml_codegen.elaboration.diagnostics import SiteReason
 
 __all__ = [
     "ReadinessCode",
@@ -47,3 +51,4 @@ class ReadinessFinding:
     reference: str | None = None
     source_file: str | None = None
     source_line: int | None = None
+    reason: SiteReason | None = None

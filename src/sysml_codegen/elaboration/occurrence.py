@@ -13,6 +13,7 @@ from agentic_mbse.sysml.syside_adapter import SysideAdapter
 from sysml_codegen.elaboration.diagnostics import (
     ElaborationCode,
     ElaborationInvariantError,
+    SiteReason,
 )
 from sysml_codegen.elaboration.display import display_name, display_qualified_name
 from sysml_codegen.elaboration.identity import (
@@ -51,12 +52,14 @@ class InvalidRedefinitionFamilyError(ElaborationInvariantError):
         *,
         reference: str | None = None,
         location: tuple[str, int] | None = None,
+        reason: SiteReason | None = None,
     ) -> None:
         super().__init__(
             ElaborationCode.SI_REDEFINITION_INVALID,
             detail,
             reference=reference,
             location=location,
+            reason=reason,
         )
 
 
@@ -70,8 +73,9 @@ class MultiplicityExpansionError(ElaborationInvariantError):
         *,
         reference: str | None = None,
         location: tuple[str, int] | None = None,
+        reason: SiteReason | None = None,
     ) -> None:
-        super().__init__(code, detail, reference=reference, location=location)
+        super().__init__(code, detail, reference=reference, location=location, reason=reason)
 
 
 class RecursiveContainmentError(ElaborationInvariantError):
@@ -83,12 +87,14 @@ class RecursiveContainmentError(ElaborationInvariantError):
         *,
         reference: str | None = None,
         location: tuple[str, int] | None = None,
+        reason: SiteReason | None = None,
     ) -> None:
         super().__init__(
             ElaborationCode.SI_CONTAINMENT_RECURSIVE,
             detail,
             reference=reference,
             location=location,
+            reason=reason,
         )
 
 
@@ -828,6 +834,7 @@ def _multiplicity_indices(
             f"ordered multiplicity on {name!r} is outside the supported occurrence model",
             reference=reference,
             location=location,
+            reason=SiteReason.OCCURRENCE_MULTIPLICITY_ORDERED,
         )
     if getattr(usage, "is_nonunique", False):
         reference, location = _multiplicity_diagnostic_context(usage, multiplicity)

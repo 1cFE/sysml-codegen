@@ -32,7 +32,7 @@ from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.core.models import AutoImplContext, AutoImplOutput, AutoImplStep
 from sysml_codegen.core.type_mapping import QUALIFIED_SYSML_TO_PYTHON
-from sysml_codegen.elaboration.diagnostics import ElaborationInvariantError
+from sysml_codegen.elaboration.diagnostics import ElaborationInvariantError, SiteReason
 from sysml_codegen.elaboration.display import display_name, display_qualified_name
 from sysml_codegen.elaboration.expression_evidence import (
     ExpressionEvidenceInventory,
@@ -140,8 +140,13 @@ def _render_readiness_finding(finding: ReadinessFinding) -> str:
     )
     return (
         f"{finding.code.value}: {finding.usage_qualified_name}.{finding.param_name}"
-        f"{reference}: {finding.detail}{location}"
+        f"{reference}: {finding.detail}{location}{_reason_suffix(finding.reason)}"
     )
+
+
+def _reason_suffix(reason: SiteReason | None) -> str:
+    """The rendered site reason, or nothing for a site that has none yet."""
+    return f" (reason: {reason.value})" if reason is not None else ""
 
 
 class ElaborationDiagnosticError(Exception):
@@ -186,6 +191,7 @@ def unexpected_public_failure(error: Exception) -> ElaborationDiagnosticError:
                 reference=None,
                 source_file=None,
                 source_line=None,
+                reason=SiteReason.INTERNAL_FAILURE_UNCLASSIFIED,
             ),
         )
     )
@@ -201,7 +207,7 @@ def _render_public_diagnostic(diagnostic: Diagnostic) -> str:
     )
     return (
         f"{diagnostic.code.value}: {diagnostic.consumer_display}{reference}: "
-        f"{diagnostic.detail}{location}"
+        f"{diagnostic.detail}{location}{_reason_suffix(diagnostic.reason)}"
     )
 
 
@@ -1356,6 +1362,7 @@ class _ExactElaborator:
                         node.display_path,
                         None,
                         f"constraint profile blocked execution: {reasons}",
+                        reason=SiteReason.CONSTRAINT_PROFILE_BLOCKED,
                     )
                 self._collect_bound_members(usage, definition, node)
                 if definition is not None and node.source_form == "definition_typed":
@@ -1936,7 +1943,13 @@ class _ExactElaborator:
             literal = extract_literal_value(expression)
             unsupported = self._unsupported_code(evidence)
             if unsupported is not None:
-                self._record_readiness(consumer, port, unsupported, evidence)
+                self._record_readiness(
+                    consumer,
+                    port,
+                    unsupported,
+                    evidence,
+                    reason=SiteReason.BINDING_SOURCE_FORM_UNSUPPORTED,
+                )
                 continue
             self._pending_bindings.append(
                 _PendingBinding(
@@ -2201,6 +2214,8 @@ class _ExactElaborator:
         port: ConsumerPortId,
         code: ReadinessCode,
         evidence: BindingSourceEvidence,
+        *,
+        reason: SiteReason,
     ) -> None:
         key = (DeclarationId(evidence.formal.element_id), code)
         if key in self._readiness_keys:
@@ -2237,6 +2252,7 @@ class _ExactElaborator:
                     and evidence.location is not None
                     else None
                 ),
+                reason=reason,
             )
         )
         if not self._strict:
@@ -2726,6 +2742,7 @@ class _ExactElaborator:
         *,
         reference: str | None = None,
         location: tuple[str, int] | None = None,
+        reason: SiteReason | None = None,
     ) -> None:
         diagnostic = Diagnostic(
             code=code,
@@ -2736,6 +2753,7 @@ class _ExactElaborator:
             reference=reference,
             source_file=location[0] if location is not None else None,
             source_line=location[1] if location is not None else None,
+            reason=reason,
         )
         if diagnostic not in self._graph.diagnostics:
             self._graph.diagnostics.append(diagnostic)

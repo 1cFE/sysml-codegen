@@ -27,7 +27,7 @@ def _refuse_colliding_field_names(group_label: str, fields: list[dict[str, Any]]
     when a model also declares the unindexed spelling — rare, and a genuine
     ambiguity the operator has to resolve in the model.
     """
-    from sysml_codegen.core.errors import CodeGenerationError
+    from sysml_codegen.core.errors import CodeGenerationError, GenerationCode
 
     seen: dict[str, str] = {}
     for field in fields:
@@ -37,7 +37,8 @@ def _refuse_colliding_field_names(group_label: str, fields: list[dict[str, Any]]
             raise CodeGenerationError(
                 f"PARAM_FIELD_COLLISION: parameter group {group_label!r}: keys "
                 f"{prior!r} and {alias!r} both "
-                f"render as the schema field {name!r} — rename one in the model"
+                f"render as the schema field {name!r} — rename one in the model",
+                code=GenerationCode.PARAM_FIELD_COLLISION,
             )
         seen[name] = alias
 

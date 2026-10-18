@@ -16,6 +16,7 @@ from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.core.qualified_names import sanitize_name
 from sysml_codegen.core.type_mapping import QUALIFIED_SYSML_TO_PYTHON
+from sysml_codegen.elaboration.diagnostics import SiteReason
 from sysml_codegen.extraction.data_models import (
     AttributeInfo,
     CalculationDefinitionData,
@@ -332,6 +333,7 @@ class SysMLDataExtractor:
                 "or ScalarValues::String",
                 reference=reference,
                 location=location,
+                reason=SiteReason.EXTRACTION_TYPING_TARGET_UNSUPPORTED,
             )
         sysml_type = str(getattr(typing_target, "name", None) or qualified_type)
 

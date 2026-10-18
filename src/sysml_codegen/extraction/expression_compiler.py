@@ -14,10 +14,13 @@ import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from agentic_mbse.sysml.constraint_extraction import extract_expression_ir
+
+if TYPE_CHECKING:
+    from sysml_codegen.elaboration.diagnostics import SiteReason
 
 # NOTE: calc_compat_renderer imports CompilationError/_sanitize_name from this module, so
 # render_calc_expression is imported inside compile_calc_def_exact to avoid a circular import.
@@ -40,7 +43,9 @@ class CompilationError(Exception):
     """Raised when the renderer cannot produce a Python expression (unresolved reference,
     unsupported operator, or unparseable output)."""
 
-    pass
+    def __init__(self, message: str, *, reason: SiteReason | None = None) -> None:
+        super().__init__(message)
+        self.reason = reason
 
 
 @dataclass(frozen=True)

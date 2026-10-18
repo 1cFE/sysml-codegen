@@ -20,7 +20,7 @@ from agentic_mbse.sysml.expression_ir import (
 )
 
 from sysml_codegen.core.models import AutoImplContext
-from sysml_codegen.elaboration.diagnostics import ElaborationCode
+from sysml_codegen.elaboration.diagnostics import ElaborationCode, SiteReason
 from sysml_codegen.elaboration.identity import (
     ConsumerPortId,
     DeclarationId,
@@ -80,6 +80,8 @@ class Diagnostic:
     reference: str | None = None
     source_file: str | None = None
     source_line: int | None = None
+    #: Live only: the v6 snapshot encoding has no field for it (``SiteReason``).
+    reason: SiteReason | None = None
 
 
 class GraphValidationError(ValueError):

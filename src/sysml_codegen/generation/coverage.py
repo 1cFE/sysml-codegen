@@ -33,7 +33,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Literal
 
-from sysml_codegen.core.errors import CodeGenerationError
+from sysml_codegen.core.errors import CodeGenerationError, GenerationCode
 from sysml_codegen.elaboration.graph import ASSERTED_SOURCE_FORMS, DISPOSITION_REASONS
 
 if TYPE_CHECKING:
@@ -100,18 +100,21 @@ class CoverageAccountData:
             raise CodeGenerationError(
                 "coverage account is internally inconsistent: "
                 f"assessed {self.assessed_gate_count} + unassessed "
-                f"{self.unassessed_gate_count} != applicable {self.applicable_gate_total}"
+                f"{self.unassessed_gate_count} != applicable {self.applicable_gate_total}",
+                code=GenerationCode.COVERAGE_ACCOUNT_INVALID,
             )
         if sum(self.unassessed_reasons.values()) != self.unassessed_gate_count:
             raise CodeGenerationError(
                 "coverage account is internally inconsistent: unassessed_reasons sums to "
-                f"{sum(self.unassessed_reasons.values())}, not {self.unassessed_gate_count}"
+                f"{sum(self.unassessed_reasons.values())}, not {self.unassessed_gate_count}",
+                code=GenerationCode.COVERAGE_ACCOUNT_INVALID,
             )
         counted = self.applicable_gate_total + self.inapplicable_gate_count
         if counted > self.authored_usage_total:
             raise CodeGenerationError(
                 "coverage account is internally inconsistent: "
-                f"{counted} gates accounted against {self.authored_usage_total} authored usages"
+                f"{counted} gates accounted against {self.authored_usage_total} authored usages",
+                code=GenerationCode.COVERAGE_ACCOUNT_INVALID,
             )
 
     @property
@@ -155,7 +158,8 @@ def assert_reason_vocabulary_is_known(
             "coverage derivation has not been taught reason "
             + ", ".join(repr(reason) for reason in untaught)
             + ": rule whether it sits inside or outside the feasibility denominator, then "
-            "add it to KNOWN_REASONS in generation/coverage.py"
+            "add it to KNOWN_REASONS in generation/coverage.py",
+            code=GenerationCode.COVERAGE_REASON_UNTAUGHT,
         )
 
 
@@ -194,7 +198,8 @@ def _refuse_inapplicable_live_gate(record: ConstraintCatalogUsageRecord) -> None
             f"{record.usage_qualified_name} ({record.declaration_id}) is marked inapplicable "
             f"but produced {record.occurrence_count} executable entries: an inapplicability "
             "marker states a gate is not part of the feasible set, and this gate ran. Remove "
-            "the marker, or stop asserting the gate."
+            "the marker, or stop asserting the gate.",
+            code=GenerationCode.COVERAGE_ACCOUNT_INVALID,
         )
 
 
