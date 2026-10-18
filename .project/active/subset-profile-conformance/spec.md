@@ -31,28 +31,28 @@ The criteria fall into six groups, A–F. Each group can be audited without the 
 
 **A. Pins, mapping and occurrence parity**
 
-- [ ] `_upstream_pins.py` carries `SUBSET_PROFILE_VERSION`, and `tests/conformance/test_upstream_pins.py` fails when the imported value differs.
-- [ ] `pyproject.toml`'s agentic-mbse requirement admits no published version that lacks the pinned contract version. The evidence states which agentic-mbse version first carries it and how that was checked.
-- [ ] A codegen mapping takes each reason in `SUBSET_REASON_CODES` to the `ElaborationCode` values the generator emits for it. One reason may map to several codes.
-- [ ] A reason whose findings are never `refused` (for example `string_value_not_generated`) maps to an explicit "no refusal" entry.
-- [ ] A test fails if the mapping's keys differ from `SUBSET_REASON_CODES`.
-- [ ] A test fails if any (reason, code) pair in the mapping has no conformance case in which the generator emitted that code for a finding with that reason.
-- [ ] Codegen renders a finding to its own diagnostic (code, the rule record's remedy text, location). Unit tests cover every reason. `generate` does not call it in 2a.
-- [ ] A sysml-codegen test compares agentic-mbse's occurrence summary with codegen's occurrence index on the 34-case seed, the v6 corpus fixtures and every conformance case with instantiation, and fails on any difference. Missing inputs make it fail or report itself unrun by name. A mutation that changes one codegen multiplicity reading makes it fail.
-- [ ] The ADR 0012 amendment text, taken from agentic-mbse `evidence/adr-0012-amendment-draft.md`, names this parity test in its "until Item 2 lands" invariant and is staged in this item's folder for the owner to file. The archived draft is left as it is.
-- [ ] A draft amendment to agentic-mbse ADR 0001 invariant 1, making conformance cases admissible evidence alongside probes, is staged in this item's folder for the owner to file (Known Requirements → Gates).
+- [x] `_upstream_pins.py` carries `SUBSET_PROFILE_VERSION`, and `tests/conformance/test_upstream_pins.py` fails when the imported value differs.
+- [x] `pyproject.toml`'s agentic-mbse requirement admits no published version that lacks the pinned contract version. The evidence states which agentic-mbse version first carries it and how that was checked.
+- [x] A codegen mapping takes each reason in `SUBSET_REASON_CODES` to the `ElaborationCode` values the generator emits for it. One reason may map to several codes.
+- [x] A reason whose findings are never `refused` (for example `string_value_not_generated`) maps to an explicit "no refusal" entry.
+- [x] A test fails if the mapping's keys differ from `SUBSET_REASON_CODES`.
+- [x] A test fails if any (reason, code) pair in the mapping has no conformance case in which the generator emitted that code for a finding with that reason.
+- [x] Codegen renders a finding to its own diagnostic (code, the rule record's remedy text, location). Unit tests cover every reason. `generate` does not call it in 2a.
+- [x] A sysml-codegen test compares agentic-mbse's occurrence summary with codegen's occurrence index on the 34-case seed, the v6 corpus fixtures and every conformance case with instantiation, and fails on any difference. Missing inputs make it fail or report itself unrun by name. A mutation that changes one codegen multiplicity reading makes it fail.
+- [x] The ADR 0012 amendment text, taken from agentic-mbse `evidence/adr-0012-amendment-draft.md`, names this parity test in its "until Item 2 lands" invariant and is staged in this item's folder for the owner to file. The archived draft is left as it is.
+- [x] A draft amendment to agentic-mbse ADR 0001 invariant 1, making conformance cases admissible evidence alongside probes, is staged in this item's folder for the owner to file (Known Requirements → Gates).
 
 **B. Shared rules against the generator's route**
 
-- [ ] A test runs every conformance case's generator half with `extract_subset_facts` and `evaluate_subset_profile` patched to raise, and shows each completes. Item 2b inherits this test as a tripwire (Non-Goals).
-- [ ] For every (rule, shape, context) the records decide as `refused`, a case shows the generator refusing it.
-- [ ] For every refused shape, a case shows a context where it is `admitted`, `omitted` or `excluded`. The exception is a shape the generator refuses in every context the rule can compute: Item 1's SA-1 change lets such a shape carry a `no_admitted_context` statement instead (agentic-mbse Item 1 `spec.md` Change Log, 2026-10-15), and then it needs a refusing case for each context the rule can compute.
-- [ ] Where they apply to a rule, the cases cover: inherited and redefined contexts, alternate spellings, template versus instance, and the dc3 `proto3`, `proto4nest` and `conv` shapes rebuilt as minimal retained models. A case built from an Item 1 probe names the probe ID.
+- [x] A test runs every conformance case's generator half with `extract_subset_facts` and `evaluate_subset_profile` patched to raise, and shows each completes. Item 2b inherits this test as a tripwire (Non-Goals).
+- [x] For every (rule, shape, context) the records decide as `refused`, a case shows the generator refusing it.
+- [x] For every refused shape, a case shows a context where it is `admitted`, `omitted` or `excluded`. The exception is a shape the generator refuses in every context the rule can compute: Item 1's SA-1 change lets such a shape carry a `no_admitted_context` statement instead (agentic-mbse Item 1 `spec.md` Change Log, 2026-10-15), and then it needs a refusing case for each context the rule can compute.
+- [x] Where they apply to a rule, the cases cover: inherited and redefined contexts, alternate spellings, template versus instance, and the dc3 `proto3`, `proto4nest` and `conv` shapes rebuilt as minimal retained models. A case built from an Item 1 probe names the probe ID.
 - [ ] Every directory under `tests/fixtures/` is classed as generating, refusing or not a model, and a test fails on an unclassed one. On every generating fixture the screen reports zero `refused`, or the fixture is a recorded disagreement under Known Requirements → Gates (screen refuses what the generator builds).
 - [ ] For each refusal site that witnesses a shared rule, disabling that site in the generator makes its case report a mismatch. For each rule and shape, disabling the screen's recognition makes its cases report a mismatch. These mutation checks run in the default licensed suite. For `invocation-callable` and `constraint-predicate` the shared decision table is not mutated; Known Requirements → Independence records that limit.
 - [ ] Every record outcome `omitted` or `excluded` rests on a case that observes the omission or exclusion in the generated contract or catalog, or in a runtime value. A text or literal search over emitted files does not count. This includes the three site rules' `omitted` contexts (`other_expression_site`), which Item 1 certified by literal absence.
-- [ ] Every `unconfirmed` pair r3-proposal § 3 routes to Item 2 (listed in Known Requirements → R3 rows) has a case, and its record moves to the observed outcome. A pair that cannot be observed keeps `unconfirmed`, and its record gives the reason.
-- [ ] `part-multiplicity/nonunique` and `part-multiplicity/negative_bound`, retired by the owner, are gone from the records and the reason vocabulary.
+- [x] Every `unconfirmed` pair r3-proposal § 3 routes to Item 2 (listed in Known Requirements → R3 rows) has a case, and its record moves to the observed outcome. A pair that cannot be observed keeps `unconfirmed`, and its record gives the reason.
+- [x] `part-multiplicity/nonunique` and `part-multiplicity/negative_bound`, retired by the owner, are gone from the records and the reason vocabulary.
 
 **C. Agreement and the R3 gaps**
 

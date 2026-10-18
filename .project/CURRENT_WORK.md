@@ -4,7 +4,7 @@
 
 ## Active Work
 
-- `subset-profile-conformance` (EXEC-SUBSET-CONTRACT Item 2a, epic in agentic-mbse): implementing. Phases 1 and 2 of 7 are done and their gates passed (2026-10-18); agentic-mbse `subset-conformance` was rebased onto `main` after Item 4 merged. The Phase 2 audit and Phase 3 (agreement and the R3 rows) are next. Plan: `.project/active/subset-profile-conformance/plan.md`.
+- `subset-profile-conformance` (EXEC-SUBSET-CONTRACT Item 2a, epic in agentic-mbse): implementing. Phases 1 and 2 of 7 are done and their gates passed (2026-10-18); agentic-mbse `subset-conformance` was rebased onto `main` after Item 4 merged. Phase 1–2 audit (2026-10-18, `audit.md`): needs work — codegen never compares the live screen with a stored answer, so the screen mutation test passes with its recognizer already off (fix before P3 closes); Phase 3 (agreement and the R3 rows) is next. Plan: `.project/active/subset-profile-conformance/plan.md`.
 
 The backlog holds separately scoped capabilities, diagnostics, model work, and assurance limits.
 
