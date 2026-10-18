@@ -1,0 +1,21 @@
+{
+  "id": "deep-qualified-wiring__feature_chain",
+  "home": "codegen",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      11,
+      11
+    ],
+    "description": "calc usage consumer binds d to station.sensor.core.r, the same output through a feature chain"
+  },
+  "screen": {
+    "verdict": "clear",
+    "findings": []
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": []
+  }
+}

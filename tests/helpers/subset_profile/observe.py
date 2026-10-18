@@ -260,6 +260,15 @@ def _graph_attr(observation: GeneratorObservation, declaration: DeclarationId) -
     return {"count": len(nodes)}
 
 
+def _attr_value(observation: GeneratorObservation, declaration: DeclarationId) -> Any:
+    """Each attribute node of the declaration: its value and where the value came from."""
+    nodes = [a for a in _graph(observation).attrs.values() if a.declaration_id == declaration]
+    return sorted(
+        ({"value": a.value, "value_site": a.value_site.value} for a in nodes),
+        key=lambda n: (n["value_site"], repr(n["value"])),
+    )
+
+
 def _entry_point(observation: GeneratorObservation, declaration: DeclarationId) -> Any:
     """The entry points projection minted from a node of the declaration, by public key."""
     return sorted(name for name, owner in observation.entry_points if owner == declaration)
@@ -303,6 +312,7 @@ def seam_value(
 
     readers: dict[SeamKind, Callable[[GeneratorObservation, DeclarationId], Any]] = {
         SeamKind.GRAPH_ATTR: _graph_attr,
+        SeamKind.ATTR_VALUE: _attr_value,
         SeamKind.ENTRY_POINT: _entry_point,
         SeamKind.CATALOG_USAGE: _catalog_usage,
         SeamKind.CALC_COMPILABILITY: _calc_compilability,

@@ -1,0 +1,11 @@
+{
+  "id": "candidate-es-002__calc_binds_calc_input__binding_value",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_OCCURRENCE_MISSING"
+    ],
+    "reasons": []
+  }
+}

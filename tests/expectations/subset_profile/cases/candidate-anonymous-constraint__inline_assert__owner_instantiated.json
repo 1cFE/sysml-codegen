@@ -1,0 +1,11 @@
+{
+  "id": "candidate-anonymous-constraint__inline_assert__owner_instantiated",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_ID_UNSTABLE"
+    ],
+    "reasons": []
+  }
+}

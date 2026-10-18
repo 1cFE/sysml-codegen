@@ -1,0 +1,11 @@
+{
+  "id": "candidate-es-002__attribute_reads_calc_input__attribute_value",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_OCCURRENCE_MISSING"
+    ],
+    "reasons": []
+  }
+}

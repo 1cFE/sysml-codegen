@@ -43,9 +43,12 @@
     ],
     "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._owner_kind::coded::SI_CONSTRAINT_UNATTACHED::1": [
       "calc-owned-assertion__asserted_constraint__calc_usage_owner",
+      "calc-owned-assertion__asserted_constraint__unmapped_owner_kind",
+      "calc-owned-assertion__asserted_constraint__unmapped_owner_kind__item_usage",
       "calc-owned-assertion__non_asserted_constraint__calc_usage_owner",
-      "candidate-unattachable-constraint-owner__asserted_constraint__item_definition_owner",
-      "candidate-unattachable-constraint-owner__non_asserted_constraint__item_definition_owner",
+      "calc-owned-assertion__non_asserted_constraint__unmapped_owner_kind",
+      "calc-owned-assertion__non_asserted_constraint__unmapped_owner_kind__attribute_definition",
+      "calc-owned-assertion__non_asserted_constraint__unmapped_owner_kind__constraint_definition",
       "constraint-predicate__blocked_predicate__owner_other",
       "constraint-predicate__non_numerical_predicate__owner_other"
     ],
@@ -129,11 +132,16 @@
     "calc-owned-assertion/asserted_constraint": [
       "calc-owned-assertion__asserted_constraint__calc_definition_owner",
       "calc-owned-assertion__asserted_constraint__calc_usage_owner",
+      "calc-owned-assertion__asserted_constraint__unmapped_owner_kind",
+      "calc-owned-assertion__asserted_constraint__unmapped_owner_kind__item_usage",
       "constraint-predicate__blocked_predicate__owner_other",
       "constraint-predicate__non_numerical_predicate__owner_other"
     ],
     "calc-owned-assertion/non_asserted_constraint": [
-      "calc-owned-assertion__non_asserted_constraint__calc_usage_owner"
+      "calc-owned-assertion__non_asserted_constraint__calc_usage_owner",
+      "calc-owned-assertion__non_asserted_constraint__unmapped_owner_kind",
+      "calc-owned-assertion__non_asserted_constraint__unmapped_owner_kind__attribute_definition",
+      "calc-owned-assertion__non_asserted_constraint__unmapped_owner_kind__constraint_definition"
     ],
     "conditional-expression/conditional_unresolved_branch": [
       "conditional-expression__conditional_resolved_branches__attribute_value",

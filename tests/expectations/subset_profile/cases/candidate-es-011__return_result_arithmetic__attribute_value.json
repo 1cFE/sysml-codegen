@@ -1,0 +1,11 @@
+{
+  "id": "candidate-es-011__return_result_arithmetic__attribute_value",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EDGE_DANGLING"
+    ],
+    "reasons": []
+  }
+}

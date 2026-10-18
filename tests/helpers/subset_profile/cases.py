@@ -71,6 +71,7 @@ class GeneratorOutcome(StrEnum):
 
 class SeamKind(StrEnum):
     GRAPH_ATTR = "graph_attr"
+    ATTR_VALUE = "attr_value"
     ENTRY_POINT = "entry_point"
     CATALOG_USAGE = "catalog_usage"
     CALC_COMPILABILITY = "calc_compilability"

@@ -4,11 +4,14 @@ A directory is a model root (``generating`` or ``refusing``), lies inside one, o
 ``container`` whose children are classed in turn. A directory that holds no model is
 ``not_a_model``, and so is everything under it. Classes come from exactly one place each:
 
-- the 37 corpus fixtures: ``tests/fixtures/v6_recapture_batch/batch.json`` (``refused`` lists
-  the refusing ones; their codes are the public package oracle's);
+- the 23 corpus fixtures ``tests/fixtures/v6_recapture_batch/batch.json`` lists as
+  ``refused``, with the codes it records: elaboration refused them, so ``run_codegen`` does too;
 - codegen-home conformance cases: their stored generator answer;
 - every other directory: ``tests/expectations/subset_profile/fixture_classes.json``, written
-  from one reviewed generator-half run per root and confirmed live by P3's fixture test.
+  from one reviewed generator-half run per root and confirmed live by
+  ``test_fixture_agreement.py``. That includes the 14 corpus fixtures the batch lists as
+  captured: a captured snapshot means elaboration sealed a graph, not that ``run_codegen``
+  generated, and three of them are refused at generation (Item 2a P3 found this).
 """
 
 from __future__ import annotations
@@ -80,24 +83,42 @@ def read_fixture_classes(path: Path = FIXTURE_CLASSES_PATH) -> dict[str, StoredC
     return {key: _stored_class(value, key) for key, value in data["fixtures"].items()}
 
 
-def batch_classes(path: Path = BATCH_PATH) -> dict[str, FixtureClass]:
-    """The 37 corpus fixtures, classed by the recapture batch."""
+def batch_classes(path: Path = BATCH_PATH) -> dict[str, StoredClass]:
+    """The corpus fixtures the recapture batch records as refused, with their codes."""
     batch = json.loads(path.read_text(encoding="utf-8"))
-    refused = set(batch["refused"])
     return {
-        name: FixtureClass.REFUSING if name in refused else FixtureClass.GENERATING
-        for name in batch["fixtures"]
+        name: StoredClass(
+            FixtureClass.REFUSING, tuple(sorted(batch["records"][name]["codes"])), None
+        )
+        for name in batch["refused"]
     }
 
 
-def case_classes() -> dict[str, FixtureClass]:
+def case_classes() -> dict[str, StoredClass]:
     """Codegen-home conformance cases, classed by their stored generator answers."""
     root = cases.CODEGEN_CASES_DIR.relative_to(FIXTURES_DIR)
     classes = {
-        str(root / answer.case_id): FixtureClass.REFUSING
-        if answer.generator.run.outcome is GeneratorOutcome.REFUSED
-        else FixtureClass.GENERATING
+        str(root / answer.case_id): StoredClass(
+            FixtureClass.REFUSING
+            if answer.generator.run.outcome is GeneratorOutcome.REFUSED
+            else FixtureClass.GENERATING,
+            answer.generator.run.codes,
+            None,
+        )
         for answer in cases.all_answers()
         if answer.home is CaseHome.CODEGEN
     }
-    return classes | ({str(root): FixtureClass.CONTAINER} if classes else {})
+    if not classes:
+        return {}
+    container = StoredClass(FixtureClass.CONTAINER, (), "codegen-home conformance cases (D14)")
+    return classes | {str(root): container}
+
+
+def all_classes() -> dict[str, StoredClass]:
+    """Every classed path, from whichever one source classes it."""
+    return read_fixture_classes() | batch_classes() | case_classes()
+
+
+def model_roots() -> dict[str, StoredClass]:
+    """Every classed model root: a generating or refusing directory."""
+    return {k: v for k, v in all_classes().items() if v.fixture_class in MODEL_CLASSES}

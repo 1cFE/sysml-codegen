@@ -1,0 +1,21 @@
+{
+  "id": "candidate-es-011__out_attribute_arithmetic__attribute_value",
+  "home": "codegen",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      8,
+      8
+    ],
+    "description": "attribute y = c.r * k, where r is calc def Twice's out attribute"
+  },
+  "screen": {
+    "verdict": "clear",
+    "findings": []
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": []
+  }
+}

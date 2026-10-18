@@ -1,0 +1,21 @@
+{
+  "id": "candidate-es-010-refusal__string_library_default__unbound_input",
+  "home": "codegen",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      4
+    ],
+    "description": "calc usage t leaves its String input u unbound, so the calc def default \"liter\" applies (the library-default entry path)"
+  },
+  "screen": {
+    "verdict": "clear",
+    "findings": []
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": []
+  }
+}

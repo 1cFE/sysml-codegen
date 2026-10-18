@@ -1,0 +1,11 @@
+{
+  "id": "candidate-ambiguous-typing__incomparable_typings__part_usage",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_REDEFINITION_INVALID"
+    ],
+    "reasons": []
+  }
+}

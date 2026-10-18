@@ -2,6 +2,86 @@
   "schema": "subset-disagreements/1",
   "entries": [
     {
+      "subject": "case:blocked-predicate-unmapped-code__anonymous_assert_by_reference",
+      "kind": "code_unmapped",
+      "generator_codes": ["SI_ID_UNSTABLE"],
+      "screen_reasons": ["constraint_predicate_blocked"],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "`assert positive;` (an anonymous assertion of a named constraint): the screen refuses it as blocked_predicate and the generator refuses it SI_ID_UNSTABLE, so both refuse with codes that do not map. P3 fixed agentic-mbse's occurrence copy so the screen indexes it as codegen does. The generator's refusal fails closed, so this is not an RG-1 candidate; the SiteReason that would map it is P5's. The case lives in codegen's home (D14), not agentic-mbse's package: the records cannot cite it for the refused pair, because a cited refused case must show the mapped code (SI_CONSTRAINT_BLOCKED) and this one does not."
+    },
+    {
+      "subject": "case:blocked-predicate-unmapped-code__constraint_check_typed",
+      "kind": "code_unmapped",
+      "generator_codes": ["SI_EDGE_DANGLING"],
+      "screen_reasons": ["constraint_predicate_blocked"],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A `Constraints::ConstraintCheck`-typed constraint: the screen refuses it as blocked_predicate; the generator fails earlier with SI_EDGE_DANGLING (constraint profile selected an unrecognized definition UUID). Both refuse; narrowing the rule would make the screen silent on a refused model, so the contract is not narrowed. The generator fails closed, so not RG-1. Mapping waits on P5's SiteReason. The case lives in codegen's home (D14), not agentic-mbse's package: the records cannot cite it for the refused pair, because a cited refused case must show the mapped code (SI_CONSTRAINT_BLOCKED) and this one does not."
+    },
+    {
+      "subject": "case:blocked-predicate-unmapped-code__quantity_operands_mixed_units",
+      "kind": "code_unmapped",
+      "generator_codes": ["SI_EDGE_DANGLING"],
+      "screen_reasons": ["constraint_predicate_blocked"],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A predicate summing quantities in different units: the screen refuses it as blocked_predicate; the generator refuses SI_EDGE_DANGLING because the operand is quantity-typed (unsupported exact type ISQBase::LengthValue), not because the units differ. Not narrowed and not RG-1, for the same reasons as the ConstraintCheck case. The case lives in codegen's home (D14), not agentic-mbse's package: the records cannot cite it for the refused pair, because a cited refused case must show the mapped code (SI_CONSTRAINT_BLOCKED) and this one does not."
+    },
+    {
+      "subject": "case:blocked-predicate-unmapped-code__quantity_operands_same_units",
+      "kind": "code_unmapped",
+      "generator_codes": ["SI_EDGE_DANGLING"],
+      "screen_reasons": ["constraint_predicate_blocked"],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "The same-unit control for the mixed-unit sum: refused the same way, which shows the cause is the quantity-typed operand. Same decision as the mixed-unit case. The case lives in codegen's home (D14), not agentic-mbse's package: the records cannot cite it for the refused pair, because a cited refused case must show the mapped code (SI_CONSTRAINT_BLOCKED) and this one does not."
+    },
+    {
+      "subject": "case:blocked-predicate-unmapped-code__untyped_assert",
+      "kind": "code_unmapped",
+      "generator_codes": ["SI_EDGE_DANGLING"],
+      "screen_reasons": ["constraint_predicate_blocked"],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "`assert constraint bare;` (an untyped asserted constraint): the screen refuses it as blocked_predicate; the generator fails SI_EDGE_DANGLING (unrecognized definition UUID). Both refuse; not narrowed and not RG-1. Mapping waits on P5's SiteReason. The case lives in codegen's home (D14), not agentic-mbse's package: the records cannot cite it for the refused pair, because a cited refused case must show the mapped code (SI_CONSTRAINT_BLOCKED) and this one does not."
+    },
+    {
+      "subject": "case:candidate-ambiguous-typing__incomparable_typings__part_usage",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_REDEFINITION_INVALID"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "PUSH-DOWN-HIER-PROFILE-AMBIG-INHERITED-ATTR",
+      "owner": "Reid Westwood",
+      "reason": "PUSH-DOWN-HIER-PROFILE-AMBIG-INHERITED-ATTR: a part usage with two incomparable user-definition typings is refused (SI_REDEFINITION_INVALID), not resolved to the sorted-first typing the backlog row assumed. The screen has no rule for typing selection and reports this model incomplete, not refused. Turning the typing fact into a shared fact is Item 3's."
+    },
+    {
+      "subject": "case:candidate-anonymous-constraint__inline_assert__owner_instantiated",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_ID_UNSTABLE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "An anonymous inline `assert constraint { ... }`: the generator refuses it because the declaration has no reload-stable qualified identity (SI_ID_UNSTABLE). The same code refuses anonymous part defs and usages (fixtures cycle_indirect, elab_identity_collision_probe), so the family is any anonymous declaration codegen must index. No rule today; a model-wide anonymous-declaration rule is a candidate for the owner."
+    },
+    {
+      "subject": "case:candidate-anonymous-constraint__inline_constraint__owner_instantiated",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_ID_UNSTABLE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "The non-asserted spelling of the anonymous inline constraint: the same SI_ID_UNSTABLE refusal and the same candidate rule."
+    },
+    {
       "subject": "case:candidate-calc-result-expression__bare_result__calc_result_expression__arithmetic",
       "kind": "generator_refuses_screen_silent",
       "generator_codes": ["SI_EVIDENCE_INCOMPLETE"],
@@ -9,7 +89,17 @@
       "resolution": "reproduced_gap",
       "r3_row": "CALC-DEF-BARE-RESULT",
       "owner": "Reid Westwood",
-      "reason": "No rule recognizes a calc def whose result is a bare expression; the generator refuses it for having zero output attributes. P3 decides by the rule criterion whether the contract gains a rule."
+      "reason": "A calc def whose result is a bare expression is refused for having zero output attributes. The condition is codegen's extractor finding no output (extractor.py:91-230), and a declared `return r : Real;` beside the bare expression is refused the same way, so the reaching set is whatever the extractor reads as an output; no shared fact carries it. Reproduced gap, decided in P3."
+    },
+    {
+      "subject": "case:candidate-calc-result-expression__bare_result__calc_result_expression__declared_return",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EVIDENCE_INCOMPLETE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "CALC-DEF-BARE-RESULT",
+      "owner": "Reid Westwood",
+      "reason": "A calc def that declares `return r : Real;` and then gives a bare expression: still refused for zero output attributes. This is the case that shows the condition is the extractor's output reading, not the bare expression alone."
     },
     {
       "subject": "case:candidate-calc-result-expression__bare_result__calc_result_expression__max",
@@ -19,7 +109,157 @@
       "resolution": "reproduced_gap",
       "r3_row": "CALC-DEF-BARE-RESULT",
       "owner": "Reid Westwood",
-      "reason": "The max spelling of the calc def bare result: same refusal, same open decision as the arithmetic case."
+      "reason": "The max spelling of the calc def bare result: the same zero-output refusal and the same P3 decision as the arithmetic case."
+    },
+    {
+      "subject": "case:candidate-calc-result-expression__bare_result__calc_result_expression__unused",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EVIDENCE_INCOMPLETE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "CALC-DEF-BARE-RESULT",
+      "owner": "Reid Westwood",
+      "reason": "A bare result expression that nothing reads: refused for zero output attributes all the same, so the refusal is model-wide, not tied to a consumer."
+    },
+    {
+      "subject": "case:candidate-es-002__attribute_reads_calc_input__attribute_value",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "ES-002",
+      "owner": "Reid Westwood",
+      "reason": "ES-002 family: an attribute reading a calc usage's input is refused SI_OCCURRENCE_MISSING. The site refuses any reference into a feature owned by a calc usage, item usage or attribute usage, except calc outputs (_calculation_output_producers). The reaching set depends on codegen's _reference_address and _calculation_output_producers, which no shared fact carries, so the row closes as a reproduced gap."
+    },
+    {
+      "subject": "case:candidate-es-002__attribute_usage_feature__attribute_value",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "ES-002",
+      "owner": "Reid Westwood",
+      "reason": "ES-002 family, reached through a feature owned by an attribute usage: the same SI_OCCURRENCE_MISSING site and the same reproduced-gap decision."
+    },
+    {
+      "subject": "case:candidate-es-002__calc_binds_calc_input__binding_value",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "ES-002",
+      "owner": "Reid Westwood",
+      "reason": "ES-002 family, a calc usage binding another calc usage's input: the same site and the same reproduced-gap decision."
+    },
+    {
+      "subject": "case:candidate-es-002__constraint_binds_calc_input__binding_value",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "ES-002",
+      "owner": "Reid Westwood",
+      "reason": "ES-002 as recorded: a constraint binding a calc usage's input is refused at elaboration/occurrence.py:180. P3 found the site's reach (any reference into a feature of a calc, item or attribute usage other than a calc output) is not stateable from shared facts, so the row closes as a reproduced gap."
+    },
+    {
+      "subject": "case:candidate-es-002__item_usage_feature__attribute_value",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "ES-002",
+      "owner": "Reid Westwood",
+      "reason": "ES-002 family, reached through a feature owned by an item usage: the same site and the same reproduced-gap decision."
+    },
+    {
+      "subject": "case:candidate-es-008__nested_named_subset__part_usage",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_REDEFINITION_INVALID"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "ES-008",
+      "owner": "Reid Westwood",
+      "reason": "ES-008: refused when two or more sibling subsets each redefine the same nested value (SI_REDEFINITION_INVALID). A single redefinition, plain nesting and an outer redefinition all generate (codegen-home controls). Which writer wins is codegen's value-writer selection, not a shared fact, so the row closes as a reproduced gap."
+    },
+    {
+      "subject": "case:candidate-es-008__nested_named_subset__part_usage__single_rack",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_REDEFINITION_INVALID"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "ES-008",
+      "owner": "Reid Westwood",
+      "reason": "ES-008, nested named subsets under a single rack: the same two-writer refusal and the same reproduced-gap decision."
+    },
+    {
+      "subject": "case:candidate-es-008__sibling_subsets_redefine__part_usage",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_REDEFINITION_INVALID"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "ES-008",
+      "owner": "Reid Westwood",
+      "reason": "ES-008, sibling subsets redefining one value at top level: the same two-writer refusal and the same reproduced-gap decision."
+    },
+    {
+      "subject": "case:candidate-es-009__composition_by_subsetting__part_usage",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "ES-009",
+      "owner": "Reid Westwood",
+      "reason": "ES-009: subsetting an untyped top-level usage and reading its own attribute is refused SI_OCCURRENCE_MISSING (elaborate.py:2345). Typed subsetting, nested untyped subsetting and a direct package read all generate (codegen-home controls). The reach depends on codegen's occurrence anchoring, so the row closes as a reproduced gap."
+    },
+    {
+      "subject": "case:candidate-es-009__composition_by_subsetting__root_part_usage",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "ES-009",
+      "owner": "Reid Westwood",
+      "reason": "ES-009 at a root part usage: the same refusal and the same reproduced-gap decision."
+    },
+    {
+      "subject": "case:candidate-es-009__reference_through_ref_part__attribute_value",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "ES-009",
+      "owner": "Reid Westwood",
+      "reason": "A reference through a `ref part` reaches a neighboring SI_OCCURRENCE_MISSING site (no producer in the consumer domain). Recorded with ES-009 as the site's other reaching shape; reproduced gap."
+    },
+    {
+      "subject": "case:candidate-es-010-refusal__string_to_calc_input__binding_value",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["PROJECTION_FAILED", "SI_RENDERING_COLLISION"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": "ES-010",
+      "owner": "Reid Westwood",
+      "reason": "A String value bound to a calc input is refused at projection. Entry-point membership is an output fact codegen owns (ADR 0007), so no shared rule can describe it; the contract reports String values omitted. Policy is RG-2."
+    },
+    {
+      "subject": "case:candidate-es-010-refusal__string_usage_literal__binding_value",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["PROJECTION_FAILED", "SI_RENDERING_COLLISION"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": "ES-010",
+      "owner": "Reid Westwood",
+      "reason": "ES-010 usage-literal path: a String literal written in a calc usage binding is refused at projection. Entry-point membership is an output fact codegen owns (ADR 0007), so no shared rule can describe it; the contract reports String values omitted. The library-default path generates (codegen-home control). Policy is RG-2."
+    },
+    {
+      "subject": "case:candidate-es-011__return_result_arithmetic__attribute_value",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EDGE_DANGLING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "ES-011",
+      "owner": "Reid Westwood",
+      "reason": "ES-011: arithmetic on a named calc return (`c.r * k` with `return r`) is refused SI_EDGE_DANGLING. The `out attribute r` spelling generates (codegen-home control). The refusal depends on how codegen wires a return to its output channel, which no shared fact carries; reproduced gap."
     },
     {
       "subject": "case:conditional-expression__conditional_resolved_branches__calc_result_expression",
@@ -42,6 +282,16 @@
       "reason": "The conditional spelling of the calc def bare result (Appendix C): refused for having zero output attributes, so the record marks the conditional-expression pair unobservable."
     },
     {
+      "subject": "case:deep-qualified-wiring__qualified_reference",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "DEEP-QUALIFIED-WIRING",
+      "owner": "Reid Westwood",
+      "reason": "DEEP-QUALIFIED-WIRING: a deep qualified reference to a nested producer is refused SI_OCCURRENCE_MISSING (no producer in the consumer domain); the feature-chain spelling generates (codegen-home control). Producer existence needs codegen's output wiring, which the contract does not model. Reproduced gap; implementation stays sysml-codegen [DEEP-QUALIFIED-OUTPUT-WIRING]."
+    },
+    {
       "subject": "case:indexed-reference__indexed_reference__calc_result_expression",
       "kind": "generator_refuses_screen_silent",
       "generator_codes": ["SI_EVIDENCE_INCOMPLETE"],
@@ -62,64 +312,474 @@
       "reason": "A bare result calling an unsupported callable: refused for having zero output attributes before the callable matters, so the record marks the invocation-callable pair unobservable."
     },
     {
-      "subject": "case:candidate-unattachable-constraint-owner__asserted_constraint__item_definition_owner",
+      "subject": "fixture:anonymous_return",
       "kind": "generator_refuses_screen_silent",
-      "generator_codes": ["SI_CONSTRAINT_UNATTACHED"],
+      "generator_codes": ["SI_EVIDENCE_INCOMPLETE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "CALC-DEF-BARE-RESULT",
+      "owner": "Reid Westwood",
+      "reason": "An anonymous `return` gives the calc def no named result, so it has zero output channels (SI_EVIDENCE_INCOMPLETE). Same extractor condition as CALC-DEF-BARE-RESULT."
+    },
+    {
+      "subject": "fixture:constraint_coverage_eligible_inapplicable",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["COVERAGE_ACCOUNT_INVALID"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A constraint-domain inapplicability marker is late, malformed or misplaced, so codegen's constraint coverage account refuses. The marker convention is codegen's own, not SysML semantics a shared fact carries."
+    },
+    {
+      "subject": "fixture:constraint_domain_inapplicable_late_marker",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_CONSTRAINT_INCOMPLETE"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A constraint-domain inapplicability marker is late, malformed or misplaced, so codegen's constraint coverage account refuses. The marker convention is codegen's own, not SysML semantics a shared fact carries."
+    },
+    {
+      "subject": "fixture:constraint_domain_inapplicable_malformed",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_CONSTRAINT_INCOMPLETE"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A constraint-domain inapplicability marker is late, malformed or misplaced, so codegen's constraint coverage account refuses. The marker convention is codegen's own, not SysML semantics a shared fact carries."
+    },
+    {
+      "subject": "fixture:constraint_domain_inapplicable_plain_form",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_CONSTRAINT_INCOMPLETE"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A constraint-domain inapplicability marker is late, malformed or misplaced, so codegen's constraint coverage account refuses. The marker convention is codegen's own, not SysML semantics a shared fact carries."
+    },
+    {
+      "subject": "fixture:constraint_inline",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["CONSTRAINT_NAME_UNSAFE"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "The generated constraint's binding names collide (CONSTRAINT_NAME_UNSAFE). Name safety is a property of codegen's output naming, which the contract does not model."
+    },
+    {
+      "subject": "fixture:constraint_name_collision_probe",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_ID_UNSTABLE"],
       "screen_reasons": [],
       "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "Found in P2.2: a constraint owned by an item def attaches to nothing, and the generator refuses it as unattached. calc-owned-assertion recognizes only calc def and calc usage owners, so the screen is silent. No R3 row routes it; P3 decides by the rule criterion whether calc-owned-assertion widens to every owner the occurrence facts cannot attach."
+      "reason": "An anonymous declaration codegen must index has no reload-stable qualified identity (SI_ID_UNSTABLE). Same family as the anonymous-constraint cases; a model-wide anonymous-declaration rule is a candidate for the owner."
     },
     {
-      "subject": "case:candidate-unattachable-constraint-owner__non_asserted_constraint__item_definition_owner",
+      "subject": "fixture:constraint_non_numerical",
       "kind": "generator_refuses_screen_silent",
-      "generator_codes": ["SI_CONSTRAINT_UNATTACHED"],
+      "generator_codes": ["CONSTRAINT_NAME_UNSAFE"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "The generated constraint's binding names collide (CONSTRAINT_NAME_UNSAFE). Name safety is a property of codegen's output naming, which the contract does not model."
+    },
+    {
+      "subject": "fixture:constraint_occurrence_demand/anonymous",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_ID_UNSTABLE"],
       "screen_reasons": [],
       "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "The non-asserted spelling of the item def owner case: the same refusal and the same open decision."
+      "reason": "An anonymous declaration codegen must index has no reload-stable qualified identity (SI_ID_UNSTABLE). Same family as the anonymous-constraint cases; a model-wide anonymous-declaration rule is a candidate for the owner."
     },
     {
-      "subject": "case:candidate-es-002__constraint_binds_calc_input__binding_value",
+      "subject": "fixture:constraint_occurrence_demand/constraint_only",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["CONSTRAINT_NAME_UNSAFE"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "The generated constraint's binding names collide (CONSTRAINT_NAME_UNSAFE). Name safety is a property of codegen's output naming, which the contract does not model."
+    },
+    {
+      "subject": "fixture:constraint_occurrence_demand/cycle",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_CONTAINMENT_RECURSIVE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "Recursive containment or a specialization cycle (SI_CONTAINMENT_RECURSIVE). The screen has no rule for containment cycles; the model is refused before any subset construct matters."
+    },
+    {
+      "subject": "fixture:constraint_occurrence_demand/cycle_indirect",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_ID_UNSTABLE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "An anonymous declaration codegen must index has no reload-stable qualified identity (SI_ID_UNSTABLE). Same family as the anonymous-constraint cases; a model-wide anonymous-declaration rule is a candidate for the owner."
+    },
+    {
+      "subject": "fixture:constraint_occurrence_demand/order",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["CONSTRAINT_NAME_UNSAFE"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "The generated constraint's binding names collide (CONSTRAINT_NAME_UNSAFE). Name safety is a property of codegen's output naming, which the contract does not model."
+    },
+    {
+      "subject": "fixture:constraint_occurrence_demand/shared",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["CONSTRAINT_NAME_UNSAFE"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "The generated constraint's binding names collide (CONSTRAINT_NAME_UNSAFE). Name safety is a property of codegen's output naming, which the contract does not model."
+    },
+    {
+      "subject": "fixture:deep_cross_scope_probe",
       "kind": "generator_refuses_screen_silent",
       "generator_codes": ["SI_OCCURRENCE_MISSING"],
       "screen_reasons": [],
       "resolution": "reproduced_gap",
-      "r3_row": "ES-002",
+      "r3_row": "DEEP-QUALIFIED-WIRING",
       "owner": "Reid Westwood",
-      "reason": "A constraint binding a calc usage's input is refused at elaboration/occurrence.py:180, a site wider than the shape. No rule recognizes it; P3 decides by the rule criterion."
+      "reason": "The fixture DEEP-QUALIFIED-WIRING names: a deep qualified reference has no producer in the consumer domain (SI_OCCURRENCE_MISSING). Reproduced gap per the R3 row; the codegen-home case deep-qualified-wiring__qualified_reference is its minimal form."
     },
     {
-      "subject": "case:candidate-es-008__nested_named_subset__part_usage",
+      "subject": "fixture:def_qual_one_occ_above",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "DEEP-QUALIFIED-WIRING",
+      "owner": "Reid Westwood",
+      "reason": "A reference does not resolve to a producer in the consumer's domain (SI_OCCURRENCE_MISSING / SI_OCCURRENCE_AMBIGUOUS). Producer existence depends on codegen's reference addressing (_reference_address), which the contract does not model; same family as DEEP-QUALIFIED-WIRING."
+    },
+    {
+      "subject": "fixture:def_qual_sibling_scope",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "DEEP-QUALIFIED-WIRING",
+      "owner": "Reid Westwood",
+      "reason": "A reference does not resolve to a producer in the consumer's domain (SI_OCCURRENCE_MISSING / SI_OCCURRENCE_AMBIGUOUS). Producer existence depends on codegen's reference addressing (_reference_address), which the contract does not model; same family as DEEP-QUALIFIED-WIRING."
+    },
+    {
+      "subject": "fixture:def_qual_two_occ_above",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "DEEP-QUALIFIED-WIRING",
+      "owner": "Reid Westwood",
+      "reason": "A reference does not resolve to a producer in the consumer's domain (SI_OCCURRENCE_MISSING / SI_OCCURRENCE_AMBIGUOUS). Producer existence depends on codegen's reference addressing (_reference_address), which the contract does not model; same family as DEEP-QUALIFIED-WIRING."
+    },
+    {
+      "subject": "fixture:elab_constraint_formal_identity",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["CONSTRAINT_NAME_UNSAFE"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "The generated constraint's binding names collide (CONSTRAINT_NAME_UNSAFE). Name safety is a property of codegen's output naming, which the contract does not model."
+    },
+    {
+      "subject": "fixture:elab_identity_collision_probe",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_ID_UNSTABLE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "An anonymous declaration codegen must index has no reload-stable qualified identity (SI_ID_UNSTABLE). Same family as the anonymous-constraint cases; a model-wide anonymous-declaration rule is a candidate for the owner."
+    },
+    {
+      "subject": "fixture:elab_namespace_distinguishability_probe",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SYSML_NAMESPACE_NOT_DISTINGUISHABLE", "SYSML_NAMESPACE_NOT_DISTINGUISHABLE"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A member name shadows an inherited member, so two namespace paths cannot be told apart (SYSML_NAMESPACE_NOT_DISTINGUISHABLE). Distinguishability is codegen's naming check."
+    },
+    {
+      "subject": "fixture:elab_native_plural_scope",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["REGISTRY_CLASS_NAME_COLLISION"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "Two generated module classes collide after aliasing (REGISTRY_CLASS_NAME_COLLISION). Class naming is codegen's output naming."
+    },
+    {
+      "subject": "fixture:feature_typing_integrity",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_TYPE_INVALID"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A feature with no typing is refused (SI_TYPE_INVALID, 0 typings). The contract has no rule for supported value types."
+    },
+    {
+      "subject": "fixture:item4_require",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EDGE_DANGLING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A requirement-related feature has no exact live declaration (SI_EDGE_DANGLING). No rule recognizes the construct; the SiteReason that would name it is P5's."
+    },
+    {
+      "subject": "fixture:non_finite_literal",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["EXTRACTION_DIAGNOSTIC_BLOCKING"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A non-finite numeric literal raises a blocking extraction diagnostic in codegen's extractor (EXTRACTION_DIAGNOSTIC_BLOCKING). The diagnostic is codegen's literal policy."
+    },
+    {
+      "subject": "fixture:occurrence_calc_domain_derivation",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["PROJECTION_FAILED", "SI_RENDERING_COLLISION"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A package-scoped value has no root occurrence to take a parameter-group identity from (SI_RENDERING_COLLISION at projection). Parameter-group identity is an output fact codegen owns."
+    },
+    {
+      "subject": "fixture:occurrence_domain_derivation",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "DEEP-QUALIFIED-WIRING",
+      "owner": "Reid Westwood",
+      "reason": "A reference does not resolve to a producer in the consumer's domain (SI_OCCURRENCE_MISSING / SI_OCCURRENCE_AMBIGUOUS). Producer existence depends on codegen's reference addressing (_reference_address), which the contract does not model; same family as DEEP-QUALIFIED-WIRING."
+    },
+    {
+      "subject": "fixture:occurrence_multiplicity_incomparable",
       "kind": "generator_refuses_screen_silent",
       "generator_codes": ["SI_REDEFINITION_INVALID"],
       "screen_reasons": [],
       "resolution": "reproduced_gap",
-      "r3_row": "ES-008",
+      "r3_row": "PUSH-DOWN-HIER-PROFILE-AMBIG-INHERITED-ATTR",
       "owner": "Reid Westwood",
-      "reason": "Nested named subsets that each redefine a value are refused in this spelling. No rule recognizes it; P3 covers the other four spellings and decides by the rule criterion."
+      "reason": "Two incomparable writers or typings for one feature (SI_REDEFINITION_INVALID); codegen refuses rather than choosing. Same family as candidate-ambiguous-typing (PUSH-DOWN-HIER-PROFILE-AMBIG-INHERITED-ATTR)."
     },
     {
-      "subject": "case:candidate-es-009__composition_by_subsetting__part_usage",
+      "subject": "fixture:plant_value_shapes",
+      "kind": "code_unmapped",
+      "generator_codes": ["SI_TYPE_INVALID"],
+      "screen_reasons": ["binding_source_self_reference"],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A calc input typed by a user enumeration ('Wall Kind') is refused as an unsupported type (SI_TYPE_INVALID) before the self-referencing binding the screen refuses is reached. The contract has no rule for supported value types."
+    },
+    {
+      "subject": "fixture:sibling_formal_cycle",
       "kind": "generator_refuses_screen_silent",
-      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "generator_codes": ["SI_EDGE_DANGLING"],
       "screen_reasons": [],
       "resolution": "reproduced_gap",
-      "r3_row": "ES-009",
+      "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "Composition by subsetting a top-level usage is refused at elaboration/elaborate.py:2345, a site wider than the shape. No rule recognizes it; P3 decides by the rule criterion."
+      "reason": "Two sibling calc usages feed each other's formals, a producer dependency cycle (SI_EDGE_DANGLING). The contract has no rule for producer cycles."
     },
     {
-      "subject": "case:candidate-es-010-refusal__string_to_calc_input__binding_value",
+      "subject": "fixture:source_identity_occurrence_ambiguity",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING", "SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "DEEP-QUALIFIED-WIRING",
+      "owner": "Reid Westwood",
+      "reason": "A reference does not resolve to a producer in the consumer's domain (SI_OCCURRENCE_MISSING / SI_OCCURRENCE_AMBIGUOUS). Producer existence depends on codegen's reference addressing (_reference_address), which the contract does not model; same family as DEEP-QUALIFIED-WIRING."
+    },
+    {
+      "subject": "fixture:subset_profile_occurrence_seed/es010_refused_string_calc_input",
       "kind": "generator_refuses_screen_silent",
       "generator_codes": ["PROJECTION_FAILED", "SI_RENDERING_COLLISION"],
       "screen_reasons": [],
       "resolution": "codegen_owned",
       "r3_row": "ES-010",
       "owner": "Reid Westwood",
-      "reason": "A String value bound to a calc input is refused at projection. Entry-point membership is an output fact codegen owns (ADR 0007), so no shared rule can describe it; the contract reports String values omitted."
+      "reason": "ES-010: a String reaching a calc input as a non-numeric default is refused at projection. Entry-point membership is an output fact codegen owns (ADR 0007). Policy is RG-2."
+    },
+    {
+      "subject": "fixture:subset_profile_occurrence_seed/f1_abort_incomparable_typings",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_REDEFINITION_INVALID"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "PUSH-DOWN-HIER-PROFILE-AMBIG-INHERITED-ATTR",
+      "owner": "Reid Westwood",
+      "reason": "Two incomparable writers or typings for one feature (SI_REDEFINITION_INVALID); codegen refuses rather than choosing. Same family as candidate-ambiguous-typing (PUSH-DOWN-HIER-PROFILE-AMBIG-INHERITED-ATTR)."
+    },
+    {
+      "subject": "fixture:subset_profile_occurrence_seed/f1_abort_recursive_containment",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_CONTAINMENT_RECURSIVE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "Recursive containment or a specialization cycle (SI_CONTAINMENT_RECURSIVE). The screen has no rule for containment cycles; the model is refused before any subset construct matters."
+    },
+    {
+      "subject": "fixture:subset_profile_occurrence_seed/f1_abort_specialization_cycle",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_CONTAINMENT_RECURSIVE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "Recursive containment or a specialization cycle (SI_CONTAINMENT_RECURSIVE). The screen has no rule for containment cycles; the model is refused before any subset construct matters."
+    },
+    {
+      "subject": "fixture:subset_profile_occurrence_seed/f1_calc_redefined_everywhere",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["PROJECTION_FAILED", "SI_RENDERING_COLLISION"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A package-scoped value has no root occurrence to take a parameter-group identity from (SI_RENDERING_COLLISION at projection). Parameter-group identity is an output fact codegen owns."
+    },
+    {
+      "subject": "fixture:subset_profile_occurrence_seed/f1_effective_declaration_slot",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["NOTHING_TO_GENERATE"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "The model has no calculation, constraint or calc def, so there is nothing to generate. An occurrence seed written for the elaborator, not a generation subject; codegen's empty-model refusal."
+    },
+    {
+      "subject": "fixture:subset_profile_occurrence_seed/f1_inherited_multiplicity_redef",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["NOTHING_TO_GENERATE"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "The model has no calculation, constraint or calc def, so there is nothing to generate. An occurrence seed written for the elaborator, not a generation subject; codegen's empty-model refusal."
+    },
+    {
+      "subject": "fixture:subset_profile_occurrence_seed/f1_inherited_ordered_redef",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["NOTHING_TO_GENERATE"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "The model has no calculation, constraint or calc def, so there is nothing to generate. An occurrence seed written for the elaborator, not a generation subject; codegen's empty-model refusal."
+    },
+    {
+      "subject": "fixture:subset_profile_occurrence_seed/f1_multiplicity_only_on_redef",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["NOTHING_TO_GENERATE"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "The model has no calculation, constraint or calc def, so there is nothing to generate. An occurrence seed written for the elaborator, not a generation subject; codegen's empty-model refusal."
+    },
+    {
+      "subject": "fixture:u2_usage_qual_two_owner_occ",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING", "SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "DEEP-QUALIFIED-WIRING",
+      "owner": "Reid Westwood",
+      "reason": "A reference does not resolve to a producer in the consumer's domain (SI_OCCURRENCE_MISSING / SI_OCCURRENCE_AMBIGUOUS). Producer existence depends on codegen's reference addressing (_reference_address), which the contract does not model; same family as DEEP-QUALIFIED-WIRING."
+    },
+    {
+      "subject": "fixture:u3_usage_qual_multi_occ",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "DEEP-QUALIFIED-WIRING",
+      "owner": "Reid Westwood",
+      "reason": "A reference does not resolve to a producer in the consumer's domain (SI_OCCURRENCE_MISSING / SI_OCCURRENCE_AMBIGUOUS). Producer existence depends on codegen's reference addressing (_reference_address), which the contract does not model; same family as DEEP-QUALIFIED-WIRING."
+    },
+    {
+      "subject": "fixture:u3b_usage_qual_single_occ",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "DEEP-QUALIFIED-WIRING",
+      "owner": "Reid Westwood",
+      "reason": "A reference does not resolve to a producer in the consumer's domain (SI_OCCURRENCE_MISSING / SI_OCCURRENCE_AMBIGUOUS). Producer existence depends on codegen's reference addressing (_reference_address), which the contract does not model; same family as DEEP-QUALIFIED-WIRING."
+    },
+    {
+      "subject": "fixture:unresolvable_attr_probe",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["REGISTRY_CLASS_NAME_COLLISION"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "Two generated module classes collide after aliasing (REGISTRY_CLASS_NAME_COLLISION). Class naming is codegen's output naming."
+    },
+    {
+      "subject": "fixture:usage_owner_bare_alias_arrayed",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_AMBIGUOUS"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "DEEP-QUALIFIED-WIRING",
+      "owner": "Reid Westwood",
+      "reason": "A reference does not resolve to a producer in the consumer's domain (SI_OCCURRENCE_MISSING / SI_OCCURRENCE_AMBIGUOUS). Producer existence depends on codegen's reference addressing (_reference_address), which the contract does not model; same family as DEEP-QUALIFIED-WIRING."
+    },
+    {
+      "subject": "fixture:usage_owner_calc_usage_leaf",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "ES-002",
+      "owner": "Reid Westwood",
+      "reason": "A reference into a feature owned by a calc usage (`comp_a::twice`) has no target (SI_OCCURRENCE_MISSING): the ES-002 site, reached from a corpus fixture."
+    },
+    {
+      "subject": "fixture:zero_output_calc",
+      "kind": "code_unmapped",
+      "generator_codes": ["SI_EVIDENCE_INCOMPLETE"],
+      "screen_reasons": ["binding_source_self_reference"],
+      "resolution": "reproduced_gap",
+      "r3_row": "CALC-DEF-BARE-RESULT",
+      "owner": "Reid Westwood",
+      "reason": "A calc def with zero output attributes (SI_EVIDENCE_INCOMPLETE). The screen refuses the model for a self-referencing binding source, which the generator never reaches because it stops at the zero-output calc. Same extractor condition as CALC-DEF-BARE-RESULT."
     }
   ]
 }

@@ -13,6 +13,12 @@ generation-stage codes, which name no source, and ``SI_CONSTRAINT_BLOCKED``, who
 the executable profile writes only into the message text (``_render_block_reason`` in
 ``elaboration/elaborate.py``), which the harness does not parse (design D2).
 
+Item 2a P3 added two more, both found on the cases where the generator refuses with a code no
+screen finding maps to. ``SI_ID_UNSTABLE`` is raised from ``elaboration/identity.py:45`` with a
+message and no source, and the ``SI_EDGE_DANGLING`` raises those cases reach (a
+dangling definition UUID or feature, a producer cycle) name a subject but pass no source.
+A located refusal with either code is still held to the construct.
+
 Licensed.
 """
 
@@ -34,7 +40,12 @@ pytestmark = requires_license
 ANSWERS = cases.all_answers()
 SEAMS = [(a, seam) for a in ANSWERS for seam in a.generator.seams]
 UNLOCATED_CODES = frozenset(
-    {ElaborationCode.SI_CONSTRAINT_BLOCKED.value} | {code.value for code in GenerationCode}
+    {
+        ElaborationCode.SI_CONSTRAINT_BLOCKED.value,
+        ElaborationCode.SI_EDGE_DANGLING.value,
+        ElaborationCode.SI_ID_UNSTABLE.value,
+    }
+    | {code.value for code in GenerationCode}
 )
 _ROOT_SLOT = re.compile(r"root-\d+/")
 

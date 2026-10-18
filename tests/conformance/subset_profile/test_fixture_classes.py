@@ -16,6 +16,7 @@ from tests.conftest import FIXTURES_DIR
 from tests.helpers.subset_profile.fixture_classes import (
     MODEL_CLASSES,
     FixtureClass,
+    all_classes,
     batch_classes,
     case_classes,
     read_fixture_classes,
@@ -24,9 +25,7 @@ from tests.helpers.subset_profile.fixture_classes import (
 STORED = read_fixture_classes()
 SOURCES = {"fixture_classes.json": STORED.keys(), "batch.json": batch_classes().keys()}
 SOURCES["stored answers"] = case_classes().keys()
-CLASSES: dict[str, FixtureClass] = (
-    {key: value.fixture_class for key, value in STORED.items()} | batch_classes() | case_classes()
-)
+CLASSES: dict[str, FixtureClass] = {k: v.fixture_class for k, v in all_classes().items()}
 
 
 def test_each_path_has_exactly_one_class_source():

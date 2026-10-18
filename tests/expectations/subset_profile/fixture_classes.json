@@ -1,6 +1,9 @@
 {
   "schema": "subset-fixture-classes/1",
   "fixtures": {
+    "agg_literal_probe": {
+      "class": "generating"
+    },
     "alias_agg_d5": {
       "class": "generating"
     },
@@ -9,6 +12,9 @@
       "codes": [
         "SI_EVIDENCE_INCOMPLETE"
       ]
+    },
+    "attr_expr_probe": {
+      "class": "generating"
     },
     "catf_mfe_d5": {
       "class": "not_a_model",
@@ -117,11 +123,21 @@
     "constraint_domain_satisfy_calc_def": {
       "class": "generating"
     },
+    "constraint_inline": {
+      "class": "refusing",
+      "codes": [
+        "CONSTRAINT_NAME_UNSAFE"
+      ],
+      "note": "The recapture batch lists it as captured: elaboration seals a graph, and run_codegen then refuses at generation."
+    },
     "constraint_malformed_mixed": {
       "class": "refusing",
       "codes": [
         "SI_CONSTRAINT_BLOCKED"
       ]
+    },
+    "constraint_multi_instance": {
+      "class": "generating"
     },
     "constraint_name_collision_control": {
       "class": "generating"
@@ -131,6 +147,13 @@
       "codes": [
         "SI_ID_UNSTABLE"
       ]
+    },
+    "constraint_non_numerical": {
+      "class": "refusing",
+      "codes": [
+        "CONSTRAINT_NAME_UNSAFE"
+      ],
+      "note": "The recapture batch lists it as captured: elaboration seals a graph, and run_codegen then refuses at generation."
     },
     "constraint_occurrence_demand": {
       "class": "container",
@@ -191,6 +214,9 @@
       "class": "generating"
     },
     "d316_crosspart_expose": {
+      "class": "generating"
+    },
+    "d38_caret": {
       "class": "generating"
     },
     "def_qual_one_occ_above": {
@@ -320,6 +346,9 @@
         "SI_TYPE_INVALID"
       ]
     },
+    "fusion_tea": {
+      "class": "generating"
+    },
     "gate_a_d5": {
       "class": "generating"
     },
@@ -362,6 +391,9 @@
       "codes": [
         "SI_EDGE_DANGLING"
       ]
+    },
+    "modeled_default_fidelity": {
+      "class": "generating"
     },
     "multifile_group_identity": {
       "class": "generating"
@@ -417,6 +449,18 @@
       "codes": [
         "SI_CONSTRAINT_BLOCKED"
       ]
+    },
+    "quoted_owner_formula": {
+      "class": "generating"
+    },
+    "retype_model": {
+      "class": "generating"
+    },
+    "sample_model": {
+      "class": "generating"
+    },
+    "shadowed_reference": {
+      "class": "generating"
     },
     "sibling_formal_cycle": {
       "class": "refusing",
@@ -705,6 +749,13 @@
     "unit_lane_source_identity": {
       "class": "generating"
     },
+    "unresolvable_attr_probe": {
+      "class": "refusing",
+      "codes": [
+        "REGISTRY_CLASS_NAME_COLLISION"
+      ],
+      "note": "The recapture batch lists it as captured: elaboration seals a graph, and run_codegen then refuses at generation."
+    },
     "usage_owned_reference_consumers": {
       "class": "generating"
     },
@@ -732,6 +783,9 @@
     "v6_recapture_batch": {
       "class": "not_a_model",
       "note": "The batch record of the 37 corpus fixtures; it classes them."
+    },
+    "wi014_toy": {
+      "class": "generating"
     },
     "zero_output_calc": {
       "class": "refusing",

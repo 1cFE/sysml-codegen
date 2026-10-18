@@ -1,6 +1,6 @@
 # Implementation Plan: Independent conformance corpus and per-site codes (EXEC-SUBSET-CONTRACT Item 2a)
 
-**Status:** Implementation in progress (Phases 1–2 done, audited mid-run; Phase 3 next)
+**Status:** Implementation in progress (Phases 1–3 done; Phases 1–2 audited mid-run; Phase 3 not yet audited; Phase 4 next)
 **Created:** 2026-10-18
 **Last Updated:** 2026-10-18
 
@@ -379,10 +379,10 @@ def test_fixture_class_confirmed_then_screen_agrees(fixture): ...
 
 **Repos:** codegen; agentic for any D11 rule.
 
-- [ ] C1 pure agreement over all cases; C2 licensed fixture test (stored class confirmed by the generator half, then the live screen judged against it); C3 record equality (design.md § C, D3).
-- [ ] R3 cases (Appendix C): ES-002 (binding, admitted neighbor, other shapes reaching `occurrence.py:180`); ES-008 (five spellings, plain-nesting control); ES-009 (other shapes reaching `elaborate.py:2345`); ES-010 refusal side (one per projection entry path); ES-011 (`return r`, `out attribute r`); CALC-DEF-BARE-RESULT (arithmetic, `max`, conditional); DEEP-QUALIFIED-WIRING (minimal case plus fixture `deep_cross_scope_probe`); PUSH-DOWN literal shape (`sum(5.0)`); PUSH-DOWN redefinition precedence and ambiguous inherited attribute (pinned cases).
-- [ ] D11 per row, written to `evidence/r3-closure.md` one line per row. A rule adds its function, reason, record and facts in agentic, plus mapping entry and witness case in codegen. A gap adds a `reproduced_gap` entry; its `SiteReason` lands in P5.
-- [ ] **RG-1 stop:** any `rg1_pending` disagreement gets `RG1-<n>` in `rg1-recommendations.md` and its `kerml-expert` question (PD10). Continue.
+- [x] C1 pure agreement over all cases; C2 licensed fixture test (stored class confirmed by the generator half, then the live screen judged against it); C3 record equality (design.md § C, D3).
+- [x] R3 cases (Appendix C): ES-002 (binding, admitted neighbor, other shapes reaching `occurrence.py:180`); ES-008 (five spellings, plain-nesting control); ES-009 (other shapes reaching `elaborate.py:2345`); ES-010 refusal side (one per projection entry path); ES-011 (`return r`, `out attribute r`); CALC-DEF-BARE-RESULT (arithmetic, `max`, conditional); DEEP-QUALIFIED-WIRING (minimal case plus fixture `deep_cross_scope_probe`); PUSH-DOWN literal shape (`sum(5.0)`); PUSH-DOWN redefinition precedence and ambiguous inherited attribute (pinned cases).
+- [x] D11 per row, written to `evidence/r3-closure.md` one line per row. A rule adds its function, reason, record and facts in agentic, plus mapping entry and witness case in codegen. A gap adds a `reproduced_gap` entry; its `SiteReason` lands in P5.
+- [x] **RG-1 stop:** any `rg1_pending` disagreement gets `RG1-<n>` in `rg1-recommendations.md` and its `kerml-expert` question (PD10). Continue.
 
 **Done when:** codegen pure `uv run --extra dev pytest tests/conformance/subset_profile/test_agreement.py -q` and licensed `uv run --extra dev pytest tests/conformance/subset_profile/ -rs` pass; agentic suite passes; every R3 row assigned to P3 has a line in `evidence/r3-closure.md` (rows finished in P5 say so).
 
@@ -762,6 +762,42 @@ Fixes for `audit.md` (Phases 1–2, Needs Work). Experiment plugins are committe
 - **Advisory 5 (disagreement `owner`).** Every entry's `owner` is now `Reid Westwood`, and the field keeps its name. Why a person and not a rename: the spec defines a recorded disagreement as having an owner, and an entry can outlive the phase or work item that wrote it, so a work item cannot be accountable for it. The field's comment in `tests/helpers/subset_profile/cases.py` says so. Which phase decides an entry is in its `reason` text.
 
 ### Phase 3 Completion
+**Completed:** 2026-10-18. Phase gate passed, except the audit, which is the orchestrator's to run (`/_my_audit`).
+**Actual Changes:** one commit in each repo, named in the final report of `briefs/implement_p3.md`'s run. Per-area detail below; the per-row decisions are in `evidence/r3-closure.md`.
+**Phase gate (2026-10-18):**
+- Snapshots: `git diff --exit-code d73a4fc5` over the committed `instance_graph_snapshot.json` files exits 0.
+- Accept/refuse: `test_public_package_oracle.py` and `test_v6_recapture_batch.py` pass inside the full licensed run; `baseline.json` and `batch.json` are unchanged since `d73a4fc5`.
+- Regressions: codegen licensed suite (`uv run --extra dev pytest tests/ -q -rfEs`, `.env` sourced) 5143 passed, 9 failed, 9 skipped; the 9 failures are the baseline IDs (`test_study_cli.py` bogus-tool and the 8 `test_check_ledger_4a.py` tests). agentic-mbse (`uv run --all-extras pytest tests/ -q -rfEs`) 3918 passed, 5 failed, 8 skipped, 1 xfailed; the 5 are the all-extras baseline IDs.
+- Merge order: `git log subset-conformance..main` is empty in both repos (local refs; nothing fetched), so no rebase.
+- Static checks: codegen mypy clean (87 files), ruff 94 (baseline 94); agentic-mbse ruff 118 (baseline 118), mypy 88 (baseline 88).
+- Audit: not run here.
+
+#### Agreement (C1–C3)
+- `tests/conformance/subset_profile/test_agreement.py` (pure): each case's stored screen answer is judged against its stored generator answer; a disagreement passes only if recorded, and the record's `case:` entries must equal the computed set.
+- `tests/conformance/subset_profile/test_fixture_agreement.py` (licensed): for every model root under `tests/fixtures/`, the stored class must hold live, then the live screen is judged against the live generator run, and the record's `fixture:` entries must equal the computed set. Four roots SysIDE cannot load (`source_identity_absent_referent`, `source_identity_binding_forms`, `two_same_leaf_producers`, `subset_profile_occurrence_seed/f1_invalid_redefinition_family`) are checked to be parse refusals on both sides and are not agreement subjects. Codegen-home cases are model roots here too, so their class is held live, but they are `case:` subjects only, so one model is never recorded twice.
+- `disagreements.json` now holds 78 entries: 31 cases and 47 fixtures, all owner `Reid Westwood`. Of the cases, 29 are `reproduced_gap` and 2 `codegen_owned` (ES-010); of the fixtures, 26 are `reproduced_gap` and 21 `codegen_owned`. By kind: 71 `generator_refuses_screen_silent` and 7 `code_unmapped` (the five `blocked-predicate-unmapped-code__*` cases, `plant_value_shapes`, `zero_output_calc`); no `screen_refuses_generator_builds`. None is `rg1_pending`. The (subject, kind, codes, reasons) of each entry came from one reviewed run (`/tmp` scratch, not committed); resolution, R3 row and reason were written per family by hand. The two P2.2 item-def entries are gone: those cases are now record cases of the widened rule and agree.
+
+#### Contract changes (agentic-mbse)
+- **calc-owned-assertion widened (D11 holds).** New `ContextId.UNMAPPED_OWNER_KIND` and `OwnerKind.REQUIREMENT_DEFINITION`; `_calc_owned_assertion` maps `OwnerKind.OTHER` to the new context. Codegen's owner map is closed (`elaboration/elaborate.py:800-827`), so the refusing set can be stated. Records, matrix row ES-001 and the SA-1 statement updated; `subset-profile/v2` digest re-pinned (`05a9a502…`). The P2.2 item-def cases were renamed (`git mv`) into `calc-owned-assertion__*__unmapped_owner_kind`; three more owners and a requirement-def control added.
+- **Occurrence copy fixed for `assert positive;`** (orchestrator call). `occurrence_extraction.py` keys constraint attachments by element ID, as codegen's `_index_constraint_associations` does (`elaborate.py:592-604`); calc attachments still key by declaration ID. Occurrence parity holds on the case; `test_occurrence_parity.py` covers it because it runs every case in either home.
+
+#### Codegen-side changes
+- New codegen-home cases (D14): the R3 controls that belong to no rule (ES-002 calc-output neighbor; ES-008 one-subset, outer-redefinition and plain-nesting; ES-009 typed, nested-untyped and package-read; ES-010 library default; ES-011 `out attribute`), the PUSH-DOWN precedence and literal-shape cases, the two DEEP-QUALIFIED-WIRING cases, and the five `blocked-predicate-unmapped-code__*` cases.
+- `SeamKind.ATTR_VALUE` and its reader `_attr_value` (`tests/helpers/subset_profile/observe.py`), used to pin which value wins in the precedence cases.
+- `test_generator_half.py`: `SI_EDGE_DANGLING` and `SI_ID_UNSTABLE` join `UNLOCATED_CODES`. Their raises on these cases carry no source (`elaboration/identity.py:45`, and the dangling-UUID and producer-cycle raises), so isolation cannot check them; a located refusal with either code is still held to the construct.
+- `test_constraint_population_oracle.py`: `subset_profile` joins `MODEL_COLLECTIONS`, since it holds one model per subdirectory.
+- `mutations.json`: the deleted item-def IDs removed; the five unmapped-owner cases added to the `_owner_kind` generator set and to both calc-owned-assertion screen sets. New answers name their witnesses: the `_owner_kind` site for the unmapped-owner cases, the `SI_CONSTRAINT_BLOCKED` site for the two quantity-operand cases (it fires, then the run ends `SI_EDGE_DANGLING`).
+
+#### Issues Encountered
+- **False premise: "captured" is not "generates".** `fixture_classes.py` classed the 14 fixtures `batch.json` lists as captured as generating. Captured means elaboration sealed a graph; three of them (`constraint_inline`, `constraint_non_numerical`: `CONSTRAINT_NAME_UNSAFE`; `unresolvable_attr_probe`: `REGISTRY_CLASS_NAME_COLLISION`) are refused at generation. The batch now classes only its `refused` fixtures, with their codes; the 14 captured ones moved into `fixture_classes.json` from the reviewed run, each confirmed live.
+- **A cited refused case must show the mapped code.** P3 first packaged the three disagreeing spellings and the anonymous `assert positive;` as `blocked_predicate` record cases. `test_case_store.py` (ADR 0001 invariant 1, codegen half) failed on all five: their generator codes are `SI_EDGE_DANGLING` / `SI_ID_UNSTABLE`, not `SI_CONSTRAINT_BLOCKED`. They cannot be reproductions either, since the screen refuses them. They moved to codegen's home as `blocked-predicate-unmapped-code__*` and their citations left the records.
+
+#### Deviations from Plan
+- **The anonymous assert-by-reference case lives in codegen's home, not agentic-mbse's package.** The brief asked for it packaged. The records cannot cite it (above), and an uncited record case fails agentic-mbse's `test_every_record_case_is_cited`. In codegen's home, `test_screen_half.py` still holds its screen answer live and `test_occurrence_parity.py` still covers the fix.
+- **The three disagreeing spellings were not narrowed.** The narrow-by-default rule (spec L3-6) is for a screen refusal of a model the generator builds; here both refuse. Recorded as `code_unmapped` / `reproduced_gap`; no `kerml-expert` run and no RG-1 entry, because the generator fails closed.
+- **ES-010 has a third path that generates.** A calc def's String library default left unbound becomes a `str` entry point with a null default. Recorded as a P4 silent-loss finding.
+- **PUSH-DOWN ambiguous typing: the backlog premise is false.** Codegen refuses incomparable typings rather than picking sorted-first.
+- **New family: anonymous declarations (`SI_ID_UNSTABLE`).** Recorded as reproduced gaps; a model-wide rule is left for the owner to decide.
 
 ### Phase 4 Completion
 

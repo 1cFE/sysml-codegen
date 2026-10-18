@@ -84,6 +84,8 @@ REFUSED_BY_DESIGN = frozenset(
 MODEL_COLLECTIONS = {
     # tests/conformance/subset_profile/test_occurrence_parity.py
     "subset_profile_occurrence_seed",
+    # tests/conformance/subset_profile/test_agreement.py (codegen-home conformance cases)
+    "subset_profile",
 }
 
 
