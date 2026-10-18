@@ -1,0 +1,11 @@
+{
+  "id": "candidate-unattachable-constraint-owner__non_asserted_constraint__item_definition_owner",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_CONSTRAINT_UNATTACHED"
+    ],
+    "reasons": []
+  }
+}

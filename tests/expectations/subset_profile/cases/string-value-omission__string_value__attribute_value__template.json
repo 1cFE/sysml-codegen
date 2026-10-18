@@ -1,0 +1,23 @@
+{
+  "id": "string-value-omission__string_value__attribute_value__template",
+  "home": "agentic",
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "graph_attr",
+        "declaration": "fx::Spare::label",
+        "expect": {
+          "count": 0
+        }
+      },
+      {
+        "kind": "entry_point",
+        "declaration": "fx::Spare::label",
+        "expect": []
+      }
+    ]
+  }
+}

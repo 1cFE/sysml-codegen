@@ -22,6 +22,66 @@
       "reason": "The max spelling of the calc def bare result: same refusal, same open decision as the arithmetic case."
     },
     {
+      "subject": "case:conditional-expression__conditional_resolved_branches__calc_result_expression",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EVIDENCE_INCOMPLETE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "CALC-DEF-BARE-RESULT",
+      "owner": "EXEC-SUBSET-CONTRACT Item 2a P3 (rule or reproduced gap, design D11)",
+      "reason": "A bare conditional result with literal branches: the calc def is refused for having zero output attributes before the conditional matters, so the record marks the pair unobservable."
+    },
+    {
+      "subject": "case:conditional-expression__conditional_unresolved_branch__calc_result_expression",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EVIDENCE_INCOMPLETE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "CALC-DEF-BARE-RESULT",
+      "owner": "EXEC-SUBSET-CONTRACT Item 2a P3 (rule or reproduced gap, design D11)",
+      "reason": "The conditional spelling of the calc def bare result (Appendix C): refused for having zero output attributes, so the record marks the conditional-expression pair unobservable."
+    },
+    {
+      "subject": "case:indexed-reference__indexed_reference__calc_result_expression",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EVIDENCE_INCOMPLETE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "CALC-DEF-BARE-RESULT",
+      "owner": "EXEC-SUBSET-CONTRACT Item 2a P3 (rule or reproduced gap, design D11)",
+      "reason": "An indexed bare result: refused for having zero output attributes before the index matters, so the record marks the indexed-reference pair unobservable."
+    },
+    {
+      "subject": "case:invocation-callable__unsupported_callable__calc_result_expression",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EVIDENCE_INCOMPLETE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "CALC-DEF-BARE-RESULT",
+      "owner": "EXEC-SUBSET-CONTRACT Item 2a P3 (rule or reproduced gap, design D11)",
+      "reason": "A bare result calling an unsupported callable: refused for having zero output attributes before the callable matters, so the record marks the invocation-callable pair unobservable."
+    },
+    {
+      "subject": "case:candidate-unattachable-constraint-owner__asserted_constraint__item_definition_owner",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_CONSTRAINT_UNATTACHED"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "EXEC-SUBSET-CONTRACT Item 2a P3 (rule or reproduced gap, design D11)",
+      "reason": "Found in P2.2: a constraint owned by an item def attaches to nothing, and the generator refuses it as unattached. calc-owned-assertion recognizes only calc def and calc usage owners, so the screen is silent. No R3 row routes it; P3 decides by the rule criterion whether calc-owned-assertion widens to every owner the occurrence facts cannot attach."
+    },
+    {
+      "subject": "case:candidate-unattachable-constraint-owner__non_asserted_constraint__item_definition_owner",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_CONSTRAINT_UNATTACHED"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "EXEC-SUBSET-CONTRACT Item 2a P3 (rule or reproduced gap, design D11)",
+      "reason": "The non-asserted spelling of the item def owner case: the same refusal and the same open decision."
+    },
+    {
       "subject": "case:candidate-es-002__constraint_binds_calc_input__binding_value",
       "kind": "generator_refuses_screen_silent",
       "generator_codes": ["SI_OCCURRENCE_MISSING"],

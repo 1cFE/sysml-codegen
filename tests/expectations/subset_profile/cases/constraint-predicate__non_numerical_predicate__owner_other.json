@@ -1,0 +1,11 @@
+{
+  "id": "constraint-predicate__non_numerical_predicate__owner_other",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_CONSTRAINT_UNATTACHED"
+    ],
+    "reasons": []
+  }
+}

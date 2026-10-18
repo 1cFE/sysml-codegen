@@ -4,6 +4,27 @@
   "generator": {
     "outcome": "generated",
     "codes": [],
-    "reasons": []
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "graph_attr",
+        "declaration": "fx::gen::fuel_unit",
+        "expect": {
+          "count": 1
+        }
+      },
+      {
+        "kind": "entry_point",
+        "declaration": "fx::gen::fuel_unit",
+        "expect": []
+      },
+      {
+        "kind": "entry_point",
+        "declaration": "fx::gen::rate",
+        "expect": [
+          "fx__gen__rate"
+        ]
+      }
+    ]
   }
 }

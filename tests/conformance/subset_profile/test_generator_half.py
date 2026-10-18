@@ -5,6 +5,9 @@ tripwired (``observe.generator_half``). Its outcome, codes and site reasons must
 stored answer, and every refusal the run locates must sit on the case's construct, so a case
 that refuses for an unrelated reason shows up as a broken case rather than as evidence.
 
+A case may also assert seams (design D9): a fact about one declaration at a named point of
+the output, such as "no attribute node" for a dropped String value. Each must hold live.
+
 Two kinds of refusal carry no location in the payload, so isolation cannot check them:
 generation-stage codes, which name no source, and ``SI_CONSTRAINT_BLOCKED``, whose location
 the executable profile writes only into the message text (``_render_block_reason`` in
@@ -24,11 +27,12 @@ from sysml_codegen.core.errors import GenerationCode
 from sysml_codegen.elaboration.diagnostics import ElaborationCode
 from tests.conftest import requires_license
 from tests.helpers.subset_profile import cases, observe
-from tests.helpers.subset_profile.cases import StoredAnswer
+from tests.helpers.subset_profile.cases import SeamAnswer, StoredAnswer
 
 pytestmark = requires_license
 
 ANSWERS = cases.all_answers()
+SEAMS = [(a, seam) for a in ANSWERS for seam in a.generator.seams]
 UNLOCATED_CODES = frozenset(
     {ElaborationCode.SI_CONSTRAINT_BLOCKED.value} | {code.value for code in GenerationCode}
 )
@@ -57,3 +61,11 @@ def test_every_located_refusal_sits_on_the_construct(answer: StoredAnswer):
         if file != construct.file or not construct.contains(item.source_line):
             stray.append(item)
     assert stray == []
+
+
+@pytest.mark.parametrize(
+    ("answer", "seam"), SEAMS, ids=lambda v: v.case_id if isinstance(v, StoredAnswer) else v.kind
+)
+def test_every_seam_holds(answer: StoredAnswer, seam: SeamAnswer):
+    declaration = observe.declaration_in(cases.model_root(answer), seam.declaration)
+    assert observe.seam_value(_observe(answer.case_id), seam.kind, declaration) == seam.expect

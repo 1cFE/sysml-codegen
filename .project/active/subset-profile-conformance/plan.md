@@ -292,10 +292,10 @@ def test_every_case_has_exactly_one_generator_answer_and_one_home():
 
 **Repos:** agentic (packaged cases, `unobservable`), codegen (answers, codegen-home cases).
 
-- [ ] Case families per rule, where they apply (spec B4): near-neighbor, inherited and redefined contexts, alternate spellings, template versus instance. dc3 `proto3`, `proto4nest`, `conv` rebuilt as minimal models from a pinned dc3 export (record the dc3 revision).
-- [ ] One case per R3 § 3 `unconfirmed` pair (spec R3 rows table). Observed → record moves to its outcome. Unobservable → record keeps `unconfirmed` and gains `unobservable = {context, reason, evidence = ["case:…"]}`; agentic loader and records test learn the field.
-- [ ] `observe.py` seams: `graph_attr`, `entry_point`, `catalog_usage`, `calc_compilability`, `occurrences`, by `DeclarationId` (D9). Needed here for `omitted`/`excluded` pairs, including the three site rules' `other_expression_site`.
-- [ ] Record-coverage pure tests (design.md § B): refused pair → refusing case; refused shape → non-refused case or SA-1; `omitted`/`excluded` pair → seam-asserting case.
+- [x] Case families per rule, where they apply (spec B4): near-neighbor, inherited and redefined contexts, alternate spellings, template versus instance. dc3 `proto3`, `proto4nest`, `conv` rebuilt as minimal models from a pinned dc3 export (record the dc3 revision).
+- [x] One case per R3 § 3 `unconfirmed` pair (spec R3 rows table). Observed → record moves to its outcome. Unobservable → record keeps `unconfirmed` and gains `unobservable = {context, reason, evidence = ["case:…"]}`; agentic loader and records test learn the field.
+- [x] `observe.py` seams: `graph_attr`, `entry_point`, `catalog_usage`, `calc_compilability`, `occurrences`, by `DeclarationId` (D9). Needed here for `omitted`/`excluded` pairs, including the three site rules' `other_expression_site`.
+- [x] Record-coverage pure tests (design.md § B): refused pair → refusing case; refused shape → non-refused case or SA-1; `omitted`/`excluded` pair → seam-asserting case.
 
 **Done when:** codegen `uv run --extra dev pytest tests/conformance/subset_profile/test_record_coverage.py -q` and the licensed generator-half test pass; agentic `uv run pytest tests/test_subset_case_citations.py tests/test_sysml/ -q` passes.
 
@@ -686,6 +686,28 @@ Phase 1 notes are below, per step. Later phases add their own sections.
   - The part-multiplicity rule raises `ValueError` on the two retired resolutions instead of dropping them silently.
   - The records' `verified_against` fields still name the Item 1 revisions. P7 refreshes them.
   - `SI_CONSTRAINT_BLOCKED` carries no location in the payload, so the isolation check cannot place it. It is listed by name in `test_generator_half.py`.
+
+#### Step 2.2 (2026-10-18)
+- 26 new packaged cases. Each screen answer was computed after the record change and read against the expected outcome before it was kept; each generator answer was captured and read the same way.
+  - 17 cases for the R3 § 3 `unconfirmed` pairs, one per pair, plus a calc-def-owner variant for `binding-source/expression_source` at `owner_other`.
+  - 7 family cases (spec B4): a conditional inherited, redefined and in a template; an indexed reference in a template; an unsupported callable redefined and in a template; a String in a template. Each agrees with the screen. In particular, the generator refuses the site rules' shapes in an uninstantiated template, as the model-wide rules say.
+  - 2 reproductions of a gap found here (below).
+- Where each R3 § 3 pair landed:
+  - Observed, admitted: `binding-source/expression_source` at `owner_other`; `self_reference_source` at `owner_other` and `writer_overridden`; `constraint-predicate/non_numerical_predicate` at `owner_uninstantiated` (catalog `non_reaching`).
+  - Observed, excluded: `non_numerical_predicate` at `owner_package` (catalog `excluded`/`non_numerical`).
+  - Unobservable, with the reason in the record: `conditional_resolved_branches` in all six site contexts (every `if` conditional, literal-only branches included, ends the reference walk in RESOLVED_TARGET_MISSING, so no model reaches the shape); the three site rules at `calc_result_expression` (CALC-DEF-BARE-RESULT refuses first); `blocked_predicate` and `non_numerical_predicate` at `owner_other` (the unattached owner is refused first, by ES-001's code).
+- agentic: records gain `[[rule.shape.unobservable]]` (context, reason, case evidence). The loader refuses one on a decided context, on a context unconfirmed by design, with corpus evidence, or listed twice (`test_subset_profile_records.py`). `test_subset_case_citations.py` checks that an unobservable pair's case is packaged and shows no decided outcome for the pair. `render_matrix.py` prints the field. `v2` re-pinned at `e2983eba…`. The matrix's coverage text for ES-006, ES-007 and the site rules now says what is recorded.
+- codegen: `observe.py` reads the five seams by `DeclarationId` (`seam_value`, `declaration_in`). Entry points carry no declaration, so the harness records each one's owner node as projection mints it, through a spy on `_Projection._entry_source` (`elaboration/project.py`). 12 stored answers carry seams: the four `other_expression_site` cases (the calc usage's only output is `r`), the three String cases and their numeric control, and four catalog dispositions. `test_generator_half.py::test_every_seam_holds` checks them live.
+- codegen: `test_record_coverage.py` (pure, 57 tests): refused pair → a refusing case; refused shape → a generating case or SA-1; omitted/excluded pair → a case with a seam; every R3 § 3 pair decided or unobservable.
+- `disagreements.json` gained 6 hand-written entries, 12 in all: the four new `calc_result_expression` cases (CALC-DEF-BARE-RESULT) and the two item def reproductions.
+- `MODEL_COLLECTIONS` is unchanged: no codegen-home case exists yet, so `tests/fixtures/subset_profile/` was not created. It joins the oracle's collections when the first codegen-home case lands.
+- Verification: codegen `tests/conformance/subset_profile/` plus the answer tests, licensed: 694 passed, no skips. agentic `tests/test_subset_case_citations.py tests/test_sysml/`: 1261 passed, 1 skipped; with the matrix, site-account and scripts tests, 1353 passed. agentic mypy 88, unchanged.
+- **Found: a constraint owned by an item def is refused and no rule says so.** The generator refuses it as `SI_CONSTRAINT_UNATTACHED`, asserted or not. calc-owned-assertion recognizes only calc def and calc usage owners, so the screen is silent. Two reproduction cases (`candidate-unattachable-constraint-owner__*`) and two `reproduced_gap` entries hand it to P3, which decides by the rule criterion whether calc-owned-assertion widens to every owner the occurrence facts cannot attach. RG-1 is untouched.
+- **Premise conflict, for P4 (surfaced, not resolved).** Design § D says a String value leaves "no instance-graph attribute node and no entry point", with a numeric control where "both are present". In fact the String attribute does get an attribute node (it holds the text value), and it gets no entry point. But an unconsumed `Real` attribute gets no entry point either (checked on a scratch model). So on these cases, "no entry point" does not separate a String omission from an attribute nothing reads. The String seams here assert what is true (node present, no entry point; the consumed numeric control has one). Whether that is evidence of a String-specific omission is parked for P4's String families and `rg2-string-policy.md`.
+- Deviations:
+  - dc3 `proto3`, `proto4nest` and `conv` were dc3 session scratch and are in no dc3 revision. dc3 `60b44d53` keeps only their descriptions (U5, U2, U6 in `.project/active/toolkit-upstream-findings.md`). The minimal models already exist as `candidate-es-002/008/009`, so their provenance now names the dc3 revision and finding, and no new model was built.
+  - Constraint-predicate `owner_other` cases use a calc usage owner, where the screen and generator agree through calc-owned-assertion. The item def owner is the reproduction instead.
+  - The two reproductions locate their construct on the whole item def (lines 4–7), because the generator places the refusal on the owner.
 
 ### Phase 3 Completion
 

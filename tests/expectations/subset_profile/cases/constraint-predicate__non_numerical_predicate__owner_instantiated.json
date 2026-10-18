@@ -4,6 +4,16 @@
   "generator": {
     "outcome": "generated",
     "codes": [],
-    "reasons": []
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "catalog_usage",
+        "declaration": "fx::Site::c",
+        "expect": {
+          "kind": "excluded",
+          "reason": "non_numerical"
+        }
+      }
+    ]
   }
 }

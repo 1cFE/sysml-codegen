@@ -1,0 +1,11 @@
+{
+  "id": "indexed-reference__indexed_reference__calc_result_expression",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EVIDENCE_INCOMPLETE"
+    ],
+    "reasons": []
+  }
+}

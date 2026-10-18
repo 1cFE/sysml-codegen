@@ -1,0 +1,11 @@
+{
+  "id": "invocation-callable__unsupported_callable__calc_result_expression",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EVIDENCE_INCOMPLETE"
+    ],
+    "reasons": []
+  }
+}

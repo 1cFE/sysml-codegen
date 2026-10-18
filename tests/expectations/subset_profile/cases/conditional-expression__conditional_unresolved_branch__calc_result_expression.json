@@ -1,0 +1,11 @@
+{
+  "id": "conditional-expression__conditional_unresolved_branch__calc_result_expression",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EVIDENCE_INCOMPLETE"
+    ],
+    "reasons": []
+  }
+}

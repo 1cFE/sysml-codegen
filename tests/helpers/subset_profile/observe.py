@@ -8,6 +8,12 @@ catalog from the written ``contracts/model_contract.json``. The screen's three e
 are tripwired for the run, so a generator answer can never be the screen's answer in
 disguise.
 
+Seams (design D9): a stored answer can assert one fact about one declaration at a named
+point of the generator's output. The declaration is found by qualified name in the loaded
+model and compared by ``DeclarationId``, never by text. Entry points carry no declaration,
+so the harness records the owner node of each one as projection mints it, through a spy on
+``_Projection._entry_source`` (``elaboration/project.py``), the one private name it patches.
+
 Screen half: ``SysideAdapter.load_model``, then ``extract_subset_facts``, then
 ``evaluate_subset_profile``, as an agentic-mbse caller runs them.
 
@@ -16,6 +22,7 @@ Both halves need a syside license.
 
 from __future__ import annotations
 
+import importlib
 import json
 import logging
 import sys
@@ -31,7 +38,8 @@ if TYPE_CHECKING:
 
     from sysml_codegen.cli.refusal import Refusal, RefusalItem
     from sysml_codegen.elaboration import InstanceGraph
-    from tests.helpers.subset_profile.cases import GeneratorRun
+    from sysml_codegen.elaboration.identity import DeclarationId
+    from tests.helpers.subset_profile.cases import GeneratorRun, SeamKind
 
 
 class ScreenCalledError(AssertionError):
@@ -47,6 +55,8 @@ class GeneratorObservation:
     graph: InstanceGraph | None
     #: The written model contract; ``None`` when no package was written.
     contract: dict[str, Any] | None
+    #: Each entry point projection minted, with its owner node's declaration.
+    entry_points: frozenset[tuple[str, DeclarationId]]
 
     @property
     def refusals(self) -> tuple[RefusalItem, ...]:
@@ -151,6 +161,23 @@ def _elaboration_spy(graphs: list[InstanceGraph]) -> Iterator[None]:
 
 
 @contextmanager
+def _entry_point_spy(minted: set[tuple[str, DeclarationId]]) -> Iterator[None]:
+    # ``sysml_codegen.elaboration`` re-exports the ``project`` function under the module's name.
+    project = importlib.import_module("sysml_codegen.elaboration.project")
+    real = project._Projection._entry_source
+
+    def spy(self: Any, *, qualified_name: str, owner: Any, **kwargs: Any) -> Any:
+        minted.add((qualified_name, owner.declaration_id))
+        return real(self, qualified_name=qualified_name, owner=owner, **kwargs)
+
+    project._Projection._entry_source = spy
+    try:
+        yield
+    finally:
+        project._Projection._entry_source = real
+
+
+@contextmanager
 def _refusal_capture() -> Iterator[_RefusalCapture]:
     capture = _RefusalCapture()
     logger = logging.getLogger("sysml_codegen")
@@ -166,10 +193,12 @@ def generator_half(model_root: Path) -> GeneratorObservation:
     from sysml_codegen.cli import GenerationConfig, run_codegen
 
     graphs: list[InstanceGraph] = []
+    minted: set[tuple[str, DeclarationId]] = set()
     with (
         tempfile.TemporaryDirectory() as out,
         _refusal_capture() as capture,
         _elaboration_spy(graphs),
+        _entry_point_spy(minted),
         _screen_tripwire(),
     ):
         package_dir = Path(out) / "pkg"
@@ -190,7 +219,96 @@ def generator_half(model_root: Path) -> GeneratorObservation:
         refusal=None if generated else capture.refusals[0],
         graph=graphs[0] if graphs else None,
         contract=contract,
+        entry_points=frozenset(minted),
     )
+
+
+def declaration_in(model_root: Path, qualified_name: str) -> DeclarationId:
+    """The identity of the one feature named ``qualified_name`` in the model (every seam is one)."""
+    from agentic_mbse.sysml.syside_adapter import SysideAdapter
+
+    from sysml_codegen.elaboration.identity import declaration_id_for
+
+    model, diagnostics = SysideAdapter.load_model([model_root])
+    if diagnostics.contains_errors():
+        raise AssertionError([str(d) for d in diagnostics.all])
+    named = [
+        element
+        for element in SysideAdapter.elements_of_type(model, "Feature", include_subtypes=True)
+        if str(getattr(element, "qualified_name", None)) == qualified_name
+    ]
+    if len(named) != 1:
+        raise AssertionError(f"{len(named)} features are named {qualified_name!r}")
+    return declaration_id_for(named[0])
+
+
+def _graph(observation: GeneratorObservation) -> InstanceGraph:
+    if observation.graph is None:
+        raise AssertionError("the run elaborated no graph, so it has no graph seam")
+    return observation.graph
+
+
+def _contract(observation: GeneratorObservation) -> dict[str, Any]:
+    if observation.contract is None:
+        raise AssertionError("the run wrote no package, so it has no catalog seam")
+    return observation.contract
+
+
+def _graph_attr(observation: GeneratorObservation, declaration: DeclarationId) -> Any:
+    """How many attribute nodes the instance graph holds for the declaration."""
+    nodes = [a for a in _graph(observation).attrs.values() if a.declaration_id == declaration]
+    return {"count": len(nodes)}
+
+
+def _entry_point(observation: GeneratorObservation, declaration: DeclarationId) -> Any:
+    """The entry points projection minted from a node of the declaration, by public key."""
+    return sorted(name for name, owner in observation.entry_points if owner == declaration)
+
+
+def _catalog_usage(observation: GeneratorObservation, declaration: DeclarationId) -> Any:
+    """The catalog's disposition of the constraint usage."""
+    catalog = _contract(observation)["constraint_catalog"]
+    (record,) = [
+        r for r in catalog["usage_records"] if r["declaration_id"] == declaration.to_wire()
+    ]
+    return {"kind": record["disposition_kind"], "reason": record["disposition_reason"]}
+
+
+def _calc_compilability(observation: GeneratorObservation, declaration: DeclarationId) -> Any:
+    """Each calc node of the usage: its compilability and the names of its outputs."""
+    nodes = [c for c in _graph(observation).calcs.values() if c.declaration_id == declaration]
+    return sorted(
+        (
+            {"compilability": c.compilability.value, "outputs": sorted(c.output_names.values())}
+            for c in nodes
+        ),
+        key=lambda n: (n["compilability"], n["outputs"]),
+    )
+
+
+def _occurrences(observation: GeneratorObservation, declaration: DeclarationId) -> Any:
+    """The occurrence indices the instance graph holds for the part usage (null: unindexed)."""
+    records = [
+        o for o in _graph(observation).occurrences.values() if o.effective_usage_id == declaration
+    ]
+    indices = [o.occurrence_index for o in records]
+    return {"count": len(records), "indices": sorted(indices, key=lambda i: (i is not None, i))}
+
+
+def seam_value(
+    observation: GeneratorObservation, kind: SeamKind, declaration: DeclarationId
+) -> Any:
+    """The fact a stored seam asserts about ``declaration``, read from this run's output."""
+    from tests.helpers.subset_profile.cases import SeamKind
+
+    readers: dict[SeamKind, Callable[[GeneratorObservation, DeclarationId], Any]] = {
+        SeamKind.GRAPH_ATTR: _graph_attr,
+        SeamKind.ENTRY_POINT: _entry_point,
+        SeamKind.CATALOG_USAGE: _catalog_usage,
+        SeamKind.CALC_COMPILABILITY: _calc_compilability,
+        SeamKind.OCCURRENCES: _occurrences,
+    }
+    return readers[kind](observation, declaration)
 
 
 def screen_half(model_root: Path) -> SubsetProfileResult:

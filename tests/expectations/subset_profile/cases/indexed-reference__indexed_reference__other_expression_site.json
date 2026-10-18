@@ -4,6 +4,20 @@
   "generator": {
     "outcome": "generated",
     "codes": [],
-    "reasons": []
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "calc_compilability",
+        "declaration": "fx::Site::m",
+        "expect": [
+          {
+            "compilability": "fully_compilable",
+            "outputs": [
+              "r"
+            ]
+          }
+        ]
+      }
+    ]
   }
 }
