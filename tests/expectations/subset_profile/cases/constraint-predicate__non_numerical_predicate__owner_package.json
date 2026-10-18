@@ -15,5 +15,10 @@
         }
       }
     ]
+  },
+  "loss": {
+    "family": "es-007-non-numerical",
+    "disposition": "accepted_omission",
+    "control": "constraint-predicate__numeric_and__owner_instantiated"
   }
 }

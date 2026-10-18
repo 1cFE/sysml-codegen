@@ -28,6 +28,8 @@ from tests.helpers.subset_profile.cases import StoredAnswer
 
 MUTATIONS_PATH = cases.EXPECTATIONS_DIR / "mutations.json"
 SCHEMA = "subset-mutations/1"
+#: The renderer whose ``CompilationError`` raises are the stub family's sites (design D9).
+STUB_RENDERER = "sysml_codegen/extraction/calc_compat_renderer.py"
 
 
 class MutationRecordError(ValueError):
@@ -80,9 +82,20 @@ def shared_rule_sites() -> tuple[str, ...]:
     return tuple(sorted(r.site_id for r in site_scan.load_account().rows if r.rules))
 
 
+def stub_cause_sites() -> tuple[str, ...]:
+    """The codegen account rows whose site raises a stub cause (``calc_compat_renderer.py``)."""
+    return tuple(
+        sorted(
+            r.site_id
+            for r in site_scan.load_account().rows
+            if r.file == STUB_RENDERER and r.reason is not None
+        )
+    )
+
+
 def mutated_sites() -> tuple[str, ...]:
     """Every site the generator mutation test neutralizes: codegen's, then the shared ones."""
-    return (*shared_rule_sites(), *sorted(mutate.SHARED))
+    return (*shared_rule_sites(), *stub_cause_sites(), *sorted(mutate.SHARED))
 
 
 def codegen_witnesses() -> dict[str, frozenset[str]]:
@@ -125,12 +138,17 @@ def generator_firing() -> dict[str, frozenset[str]]:
 def answer_changed(answer: StoredAnswer) -> bool:
     """Whether a live generator run now ends differently from the stored answer.
 
-    Judged by outcome and site reasons, not codes (design D5): a shadowing site can produce the
-    same code. Stub causes join the judgment once the harness observes them (P4).
+    Judged by outcome, site reasons and stub causes, not codes (design D5): a shadowing site can
+    produce the same code, and a stub site changes no outcome at all.
     """
-    run = observe.generator_half(cases.model_root(answer)).run()
-    stored = answer.generator.run
-    return (run.outcome, run.reasons) != (stored.outcome, stored.reasons)
+    observation = observe.generator_half(cases.model_root(answer))
+    run = observation.run()
+    stored = answer.generator
+    return (run.outcome, run.reasons, observation.stubs()) != (
+        stored.run.outcome,
+        stored.run.reasons,
+        stored.stubs,
+    )
 
 
 def fired_in_generator(site_id: str) -> tuple[str, ...]:

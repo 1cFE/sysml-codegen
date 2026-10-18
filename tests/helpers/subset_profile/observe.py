@@ -2,7 +2,9 @@
 
 Generator half: ``run_codegen`` on the case model, exactly as a user runs it. The refusal
 comes from the ``extra={"refusal": ...}`` payload on its ERROR records, never from message
-text, where a code can also appear inside detail. The instance graph comes from a spy on
+text, where a code can also appear inside detail. Stubs come the same way, from the
+``extra={"manual_stub": ...}`` payload of the WARNING elaboration logs once per stubbed calc
+def member (design D9). The instance graph comes from a spy on
 ``elaborated_pipeline.elaborate_model_paths`` as the exact pipeline context calls it, and the
 catalog from the written ``contracts/model_contract.json``. The screen's three entry points
 are tripwired for the run, so a generator answer can never be the screen's answer in
@@ -38,8 +40,9 @@ if TYPE_CHECKING:
 
     from sysml_codegen.cli.refusal import Refusal, RefusalItem
     from sysml_codegen.elaboration import InstanceGraph
+    from sysml_codegen.elaboration.diagnostics import ManualStubNotice
     from sysml_codegen.elaboration.identity import DeclarationId
-    from tests.helpers.subset_profile.cases import GeneratorRun, SeamKind
+    from tests.helpers.subset_profile.cases import GeneratorRun, SeamKind, StubAnswer
 
 
 class ScreenCalledError(AssertionError):
@@ -57,10 +60,23 @@ class GeneratorObservation:
     contract: dict[str, Any] | None
     #: Each entry point projection minted, with its owner node's declaration.
     entry_points: frozenset[tuple[str, DeclarationId]]
+    #: Every stub notice the run logged, in log order.
+    stub_notices: tuple[ManualStubNotice, ...]
 
     @property
     def refusals(self) -> tuple[RefusalItem, ...]:
         return () if self.refusal is None else self.refusal.items
+
+    def stubs(self) -> tuple[StubAnswer, ...]:
+        """Each stubbed calc def member as ``<calc def>::<member>`` with its cause, sorted."""
+        from tests.helpers.subset_profile.cases import StubAnswer
+
+        return tuple(
+            sorted(
+                (StubAnswer(f"{n.calculation}::{n.output}", n.reason) for n in self.stub_notices),
+                key=lambda stub: (stub.output, stub.reason),
+            )
+        )
 
     def run(self) -> GeneratorRun:
         """This run's outcome, codes and site reasons, in stored-answer form.
@@ -81,15 +97,21 @@ class GeneratorObservation:
         )
 
 
-class _RefusalCapture(logging.Handler):
+class _LogCapture(logging.Handler):
+    """The structured payloads ``run_codegen`` logs: refusals at ERROR, stub notices at WARNING."""
+
     def __init__(self) -> None:
-        super().__init__(logging.ERROR)
+        super().__init__(logging.WARNING)
         self.refusals: list[Refusal] = []
+        self.stubs: list[ManualStubNotice] = []
 
     def emit(self, record: logging.LogRecord) -> None:
         refusal = getattr(record, "refusal", None)
         if refusal is not None:
             self.refusals.append(refusal)
+        stub = getattr(record, "manual_stub", None)
+        if stub is not None:
+            self.stubs.append(stub)
 
 
 def _rebind_everywhere(original: object, replacement: object) -> list[tuple[object, str]]:
@@ -178,13 +200,16 @@ def _entry_point_spy(minted: set[tuple[str, DeclarationId]]) -> Iterator[None]:
 
 
 @contextmanager
-def _refusal_capture() -> Iterator[_RefusalCapture]:
-    capture = _RefusalCapture()
+def _log_capture() -> Iterator[_LogCapture]:
+    capture = _LogCapture()
     logger = logging.getLogger("sysml_codegen")
+    previous = logger.level
     logger.addHandler(capture)
+    logger.setLevel(min(previous or logging.WARNING, logging.WARNING))
     try:
         yield capture
     finally:
+        logger.setLevel(previous)
         logger.removeHandler(capture)
 
 
@@ -196,7 +221,7 @@ def generator_half(model_root: Path) -> GeneratorObservation:
     minted: set[tuple[str, DeclarationId]] = set()
     with (
         tempfile.TemporaryDirectory() as out,
-        _refusal_capture() as capture,
+        _log_capture() as capture,
         _elaboration_spy(graphs),
         _entry_point_spy(minted),
         screen_tripwire(),
@@ -220,6 +245,7 @@ def generator_half(model_root: Path) -> GeneratorObservation:
         graph=graphs[0] if graphs else None,
         contract=contract,
         entry_points=frozenset(minted),
+        stub_notices=tuple(capture.stubs),
     )
 
 
@@ -274,6 +300,24 @@ def _entry_point(observation: GeneratorObservation, declaration: DeclarationId) 
     return sorted(name for name, owner in observation.entry_points if owner == declaration)
 
 
+def _contract_parameter(observation: GeneratorObservation, declaration: DeclarationId) -> Any:
+    """The written model contract's parameter for each entry point minted from the declaration.
+
+    The contract keys a parameter by its public key, which the entry-point spy ties to the
+    declaration; so this reads what a consumer of the package is given for that value.
+    """
+    parameters = {p["qualified_name"]: p for p in _contract(observation)["parameters"]}
+    return [
+        {
+            "key": key,
+            "entry_type": parameters[key]["entry_type"],
+            "python_type": parameters[key]["python_type"],
+            "default_value": parameters[key]["default_value"],
+        }
+        for key in _entry_point(observation, declaration)
+    ]
+
+
 def _catalog_usage(observation: GeneratorObservation, declaration: DeclarationId) -> Any:
     """The catalog's disposition of the constraint usage."""
     catalog = _contract(observation)["constraint_catalog"]
@@ -314,6 +358,7 @@ def seam_value(
         SeamKind.GRAPH_ATTR: _graph_attr,
         SeamKind.ATTR_VALUE: _attr_value,
         SeamKind.ENTRY_POINT: _entry_point,
+        SeamKind.CONTRACT_PARAMETER: _contract_parameter,
         SeamKind.CATALOG_USAGE: _catalog_usage,
         SeamKind.CALC_COMPILABILITY: _calc_compilability,
         SeamKind.OCCURRENCES: _occurrences,

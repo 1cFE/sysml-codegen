@@ -1,0 +1,35 @@
+{
+  "id": "calc-usage-result__no_bare_result__other_expression_site",
+  "home": "agentic",
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "calc_compilability",
+        "declaration": "fx::Site::m",
+        "expect": [
+          {
+            "compilability": "fully_compilable",
+            "outputs": [
+              "r"
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "contract_parameter",
+        "declaration": "fx::Site::m",
+        "expect": []
+      },
+      {
+        "kind": "entry_point",
+        "declaration": "fx::Site::x",
+        "expect": [
+          "fx__site__x"
+        ]
+      }
+    ]
+  }
+}

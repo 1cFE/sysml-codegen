@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -32,7 +33,11 @@ from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.core.models import AutoImplContext, AutoImplOutput, AutoImplStep
 from sysml_codegen.core.type_mapping import QUALIFIED_SYSML_TO_PYTHON
-from sysml_codegen.elaboration.diagnostics import ElaborationInvariantError, SiteReason
+from sysml_codegen.elaboration.diagnostics import (
+    ElaborationInvariantError,
+    ManualStubNotice,
+    SiteReason,
+)
 from sysml_codegen.elaboration.display import display_name, display_qualified_name
 from sysml_codegen.elaboration.expression_evidence import (
     ExpressionEvidenceInventory,
@@ -121,6 +126,31 @@ __all__ = [
     "ElaborationError",
     "unexpected_public_failure",
 ]
+
+logger = logging.getLogger(__name__)
+
+
+def _announce_stubs(calculation: str, compilation: ExactCalcDefCompilationResult) -> None:
+    """Log one ``ManualStubNotice`` per member of the calc def that compiled to a stub."""
+    for item in compilation.output_results:
+        if item.stub_reason is None:
+            continue
+        notice = ManualStubNotice(
+            calculation=calculation,
+            output=item.output_name,
+            reason=item.stub_reason,
+            detail=str(item.unsupported_reason),
+            intermediate=item.is_undeclared_intermediate,
+        )
+        logger.warning(
+            "Calculation %s output %s is a manual stub: %s (reason: %s)",
+            notice.calculation,
+            notice.output,
+            notice.detail,
+            notice.reason.value,
+            extra={"manual_stub": notice},
+        )
+
 
 
 class ElaborationError(Exception):
@@ -718,6 +748,7 @@ class _ExactElaborator:
                     ElaborationCode.SI_EDGE_DANGLING,
                     f"calculation {definition_id.to_wire()} compilation identity disagrees",
                 )
+            _announce_stubs(str(calc_def.qualified_name), compilation)
             result[definition_id] = compilation
         return result
 

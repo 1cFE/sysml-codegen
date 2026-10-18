@@ -108,6 +108,44 @@
       "invocation-callable__unsupported_callable__calc_definition_feature_value",
       "invocation-callable__unsupported_callable__constraint_predicate",
       "invocation-callable__unsupported_callable__constraint_predicate__predicate_root"
+    ],
+    "sysml_codegen/extraction/calc_compat_renderer.py::_render::free-text::CompilationError::1": [
+      "binding-source__expression_source__owner_instantiated",
+      "binding-source__expression_source__owner_instantiated__constraint_input",
+      "binding-source__expression_source__owner_instantiated__indexed_owner",
+      "binding-source__expression_source__owner_instantiated__nested",
+      "binding-source__expression_source__owner_instantiated__part_usage_owner",
+      "binding-source__expression_source__owner_instantiated__selected_and_overridden",
+      "binding-source__expression_source__owner_instantiated__subtype",
+      "binding-source__expression_source__owner_other",
+      "binding-source__expression_source__owner_other__calc_definition_owner",
+      "binding-source__expression_source__owner_package",
+      "binding-source__expression_source__owner_uninstantiated",
+      "binding-source__expression_source__writer_overridden",
+      "binding-source__expression_source__writer_overridden__tuple",
+      "binding-source__scalar_actual__owner_instantiated",
+      "binding-source__self_reference_source__owner_instantiated",
+      "binding-source__self_reference_source__owner_instantiated__indexed_owner",
+      "binding-source__self_reference_source__owner_instantiated__part_usage_owner",
+      "binding-source__self_reference_source__owner_instantiated__subtype",
+      "binding-source__self_reference_source__owner_package",
+      "binding-source__self_reference_source__owner_uninstantiated",
+      "calc-def-output-stub__invocation"
+    ],
+    "sysml_codegen/extraction/calc_compat_renderer.py::_render::free-text::CompilationError::2": [
+      "calc-def-output-stub__unsupported_operator_node"
+    ],
+    "sysml_codegen/extraction/calc_compat_renderer.py::_render_literal::free-text::CompilationError::1": [
+      "calc-def-output-stub__boolean_literal",
+      "calc-def-output-stub__string_literal"
+    ],
+    "sysml_codegen/extraction/calc_compat_renderer.py::_render_operator::free-text::CompilationError::1": [
+      "calc-def-output-stub__comparison_operator",
+      "calc-def-output-stub__not_operator"
+    ],
+    "sysml_codegen/extraction/calc_compat_renderer.py::_render_reference::free-text::CompilationError::2": [
+      "calc-def-output-stub__library_constant",
+      "calc-def-output-stub__python_keyword_member"
     ]
   },
   "screen": {
@@ -218,6 +256,11 @@
     "sysml_codegen/elaboration/occurrence.py::_multiplicity_indices::coded::SI_MULTIPLICITY_UNSUPPORTED::2": "The nonunique multiplicity site. SysIDE rejects a nonunique part usage before elaboration, so no loadable model reaches it; part-multiplicity/nonunique left the records in Item 2a P2.1 for the same reason.",
     "sysml_codegen/elaboration/occurrence.py::_multiplicity_indices::coded::SI_MULTIPLICITY_INVALID::1": "The negative-bound site. SysIDE rejects a negative multiplicity bound before elaboration, so no loadable model reaches it; part-multiplicity/negative_bound left the records in Item 2a P2.1 for the same reason.",
     "agentic_mbse/sysml/executable_profile.py::_evaluate_usage_against_definition::shared-profile::block_unresolved_definition::1": "No model reaches it in either half: a definition-typed assertion always resolves to a ConstraintDefinition (agentic-mbse scanner.toml [[unwitnessed_site]]).",
-    "agentic_mbse/sysml/reference_use.py::require_exact_reference_use::shared-evidence::INDEXED_REFERENCE_UNSUPPORTED::1": "No model reaches it in either half: only decompose_aggregation_expression calls it, and nothing under either src/ tree calls that (agentic-mbse scanner.toml [[unwitnessed_site]])."
+    "agentic_mbse/sysml/reference_use.py::require_exact_reference_use::shared-evidence::INDEXED_REFERENCE_UNSUPPORTED::1": "No model reaches it in either half: only decompose_aggregation_expression calls it, and nothing under either src/ tree calls that (agentic-mbse scanner.toml [[unwitnessed_site]]).",
+    "sysml_codegen/extraction/calc_compat_renderer.py::_render::free-text::CompilationError::3": "Stub cause COMPILE_IR_NODE_UNKNOWN. No model reaches it: the expression IR is a closed union and every member is handled by an earlier branch of _render, so only a new IR node kind would.",
+    "sysml_codegen/extraction/calc_compat_renderer.py::_render_operator::free-text::CompilationError::2": "Stub cause COMPILE_OPERATOR_WITHOUT_OPERANDS. No model found: every operator expression tried (binary, unary, conditional, comparison, not) reached the renderer with at least one operand.",
+    "sysml_codegen/extraction/calc_compat_renderer.py::_render_operator::free-text::CompilationError::3": "Stub cause COMPILE_UNARY_OPERATOR_UNSUPPORTED. No model reaches it: the only one-operand operators SysML has are +, -, not and ~; + and - render, and not and ~ are not in the arithmetic map, so they stub at the unsupported-operator site first.",
+    "sysml_codegen/extraction/calc_compat_renderer.py::_render_reference::free-text::CompilationError::1": "Stub cause COMPILE_FEATURE_CHAIN. No model found: a chain needs a calc input or member with features, and a calc input typed by an item or part def is refused SI_TYPE_INVALID, while a chain into an inner calc is refused SI_EDGE_DANGLING, both before compilation.",
+    "sysml_codegen/extraction/calc_compat_renderer.py::render_calc_expression::free-text::CompilationError::1": "Stub cause COMPILE_OUTPUT_NOT_PYTHON. No model found: the names that would render as invalid Python (a Python keyword, a leading digit) stub at _render_reference's unresolved-reference site first, because the renderer's _sanitize_name and the extractor's sanitizer disagree (case calc-def-output-stub__python_keyword_member)."
   }
 }

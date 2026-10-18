@@ -70,6 +70,7 @@ REASON_MAPPING: Mapping[str, ReasonMapping | NoRefusal] = MappingProxyType(
         "calc_owned_non_asserted_constraint": ReasonMapping(
             ElaborationCode.SI_CONSTRAINT_UNATTACHED
         ),
+        "calc_usage_bare_result_not_executed": NO_REFUSAL,
         "binding_source_expression": ReasonMapping(ReadinessCode.SI_EXPRESSION_SOURCE_UNSUPPORTED),
         "binding_source_self_reference": ReasonMapping(ReadinessCode.SI_SELF_BINDING),
         "indexed_reference_unsupported": ReasonMapping(

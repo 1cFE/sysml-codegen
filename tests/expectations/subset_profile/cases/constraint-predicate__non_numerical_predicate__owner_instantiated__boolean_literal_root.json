@@ -4,6 +4,21 @@
   "generator": {
     "outcome": "generated",
     "codes": [],
-    "reasons": []
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "catalog_usage",
+        "declaration": "Witness::Holder::c",
+        "expect": {
+          "kind": "excluded",
+          "reason": "non_numerical"
+        }
+      }
+    ]
+  },
+  "loss": {
+    "family": "es-007-non-numerical",
+    "disposition": "accepted_omission",
+    "control": "constraint-predicate__numeric_and__owner_instantiated"
   }
 }

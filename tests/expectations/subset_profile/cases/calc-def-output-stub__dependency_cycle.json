@@ -1,0 +1,47 @@
+{
+  "id": "calc-def-output-stub__dependency_cycle",
+  "home": "codegen",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      3
+    ],
+    "description": "calc def C's members a and b are bound to each other (a = b + v, b = a + v)"
+  },
+  "screen": {
+    "verdict": "clear",
+    "findings": []
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "stubs": [
+      {
+        "output": "fx::C::r",
+        "reason": "compile_dependency_cycle"
+      }
+    ],
+    "seams": [
+      {
+        "kind": "calc_compilability",
+        "declaration": "fx::Gen::t",
+        "expect": [
+          {
+            "compilability": "manual_required",
+            "outputs": [
+              "r"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "loss": {
+    "family": "calc-def-output-stub",
+    "disposition": "candidate_refusal",
+    "rg1": "RG1-10",
+    "control": "calc-def-output-stub__compiled_control"
+  }
+}

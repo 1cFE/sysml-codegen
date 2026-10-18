@@ -1,0 +1,36 @@
+{
+  "id": "string-value-omission__string_value__attribute_value__read_by_attribute_shorthand",
+  "home": "agentic",
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "attr_value",
+        "declaration": "fx::gen::fuel_unit",
+        "expect": [
+          {
+            "value": "liter",
+            "value_site": "occurrence_override"
+          }
+        ]
+      },
+      {
+        "kind": "attr_value",
+        "declaration": "fx::Gen::label",
+        "expect": [
+          {
+            "value": null,
+            "value_site": "definition_default"
+          }
+        ]
+      },
+      {
+        "kind": "entry_point",
+        "declaration": "fx::Gen::label",
+        "expect": []
+      }
+    ]
+  }
+}

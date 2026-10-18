@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import StrEnum
 
-__all__ = ["ElaborationCode", "ElaborationInvariantError", "SiteReason"]
+__all__ = ["ElaborationCode", "ElaborationInvariantError", "ManualStubNotice", "SiteReason"]
 
 
 class ElaborationCode(StrEnum):
@@ -62,6 +63,21 @@ class SiteReason(StrEnum):
     ELABORATION_NO_EXECUTABLE_CONTENT = "elaboration_no_executable_content"
     GENERATION_CONSTRAINT_NAME_UNSAFE = "generation_constraint_name_unsafe"
     INTERNAL_FAILURE_UNCLASSIFIED = "internal_failure_unclassified"
+    # Stub causes: a calc def output the compiler cannot render becomes a ``MANUAL_REQUIRED``
+    # stub on a successful run. One per renderer site (``extraction/calc_compat_renderer.py``)
+    # and per compiler path that stubs without raising (``extraction/expression_compiler.py``).
+    COMPILE_OUTPUT_NOT_PYTHON = "compile_output_not_python"
+    COMPILE_INVOCATION = "compile_invocation"
+    COMPILE_IR_NODE_UNSUPPORTED = "compile_ir_node_unsupported"
+    COMPILE_IR_NODE_UNKNOWN = "compile_ir_node_unknown"
+    COMPILE_LITERAL_KIND = "compile_literal_kind"
+    COMPILE_FEATURE_CHAIN = "compile_feature_chain"
+    COMPILE_REFERENCE_UNRESOLVED = "compile_reference_unresolved"
+    COMPILE_OPERATOR_UNSUPPORTED = "compile_operator_unsupported"
+    COMPILE_OPERATOR_WITHOUT_OPERANDS = "compile_operator_without_operands"
+    COMPILE_UNARY_OPERATOR_UNSUPPORTED = "compile_unary_operator_unsupported"
+    COMPILE_DEPENDENCY_CYCLE = "compile_dependency_cycle"
+    COMPILE_NO_EXPRESSION = "compile_no_expression"
     # Relayed from agentic-mbse: one per ``SemanticEvidenceCode``, set where the live
     # route converts a ``SemanticEvidenceError`` (``orchestration/elaborated_pipeline.py``).
     EVIDENCE_METATYPE_CHECK_FAILED = "evidence_metatype_check_failed"
@@ -73,6 +89,23 @@ class SiteReason(StrEnum):
     EVIDENCE_DOCUMENT_TIER_UNKNOWN = "evidence_document_tier_unknown"
     EVIDENCE_RESOLVED_LEAF_MISSING = "evidence_resolved_leaf_missing"
     EVIDENCE_INDEXED_REFERENCE_UNSUPPORTED = "evidence_indexed_reference_unsupported"
+
+
+@dataclass(frozen=True)
+class ManualStubNotice:
+    """One calc def output that compiles to a ``MANUAL_REQUIRED`` stub, and why (Item 2a D9).
+
+    Generation succeeds with a handwritten stub in its place, so the run itself says nothing.
+    Elaboration logs one notice per (calc def, output) as a warning carrying this object, so
+    the cause is visible on the live route. A from-snapshot run compiles nothing and logs none.
+    """
+
+    calculation: str
+    output: str
+    reason: SiteReason
+    detail: str
+    #: The stubbed member is an undeclared intermediate another output reads, not an output.
+    intermediate: bool
 
 
 class ElaborationInvariantError(ValueError):

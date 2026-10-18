@@ -24,6 +24,7 @@ if TYPE_CHECKING:
 
 # NOTE: calc_compat_renderer imports CompilationError/_sanitize_name from this module, so
 # render_calc_expression is imported inside compile_calc_def_exact to avoid a circular import.
+# SiteReason is imported there too: `elaboration` imports this module through `graph`.
 
 
 class Compilability(str, Enum):
@@ -60,6 +61,16 @@ class ExactCompilationResult:
     dependency_ids: tuple[UUID, ...] = ()
     unsupported_reason: str | None = None
     is_undeclared_intermediate: bool = False
+    #: Why the member is a stub: set exactly when ``compilability`` is ``MANUAL_REQUIRED``,
+    #: as ``unsupported_reason`` is.
+    stub_reason: SiteReason | None = None
+
+    def __post_init__(self) -> None:
+        stub = self.compilability is Compilability.MANUAL_REQUIRED
+        if stub != (self.stub_reason is not None) or stub != (self.unsupported_reason is not None):
+            raise ValueError(
+                f"member {self.output_name!r}: a stub names its cause, and only a stub does"
+            )
 
 
 @dataclass(frozen=True)
@@ -188,6 +199,8 @@ def compile_calc_def_exact(
     Names remain renderer metadata. They never classify a reference, select an
     AST, form a dependency edge, or attach the result to a graph node.
     """
+    from sysml_codegen.elaboration.diagnostics import SiteReason
+
     from .calc_compat_renderer import render_calc_expression
 
     definition_id = getattr(calc_def, "element_id", None)
@@ -250,6 +263,7 @@ def compile_calc_def_exact(
                 output_name=member_names[output_id],
                 compilability=Compilability.MANUAL_REQUIRED,
                 unsupported_reason="circular dependency detected",
+                stub_reason=SiteReason.COMPILE_DEPENDENCY_CYCLE,
             )
             for output_id in sorted(declared_output_ids)
         )
@@ -275,6 +289,7 @@ def compile_calc_def_exact(
                     compilability=Compilability.MANUAL_REQUIRED,
                     unsupported_reason="no expression AST",
                     is_undeclared_intermediate=is_intermediate,
+                    stub_reason=SiteReason.COMPILE_NO_EXPRESSION,
                 )
             )
             continue
@@ -303,6 +318,7 @@ def compile_calc_def_exact(
                     dependency_ids=dependencies,
                     unsupported_reason=str(error),
                     is_undeclared_intermediate=is_intermediate,
+                    stub_reason=error.reason,
                 )
             )
             continue

@@ -53,7 +53,12 @@ ANSWER = {
     },
     "construct": {"file": "model.sysml", "lines": [6, 9], "description": "a tuple actual"},
     "screen": {"verdict": "refused", "findings": [FINDING]},
-    "loss": {"family": "string_value", "disposition": "candidate_refusal", "rg1": "RG1-3"},
+    "loss": {
+        "family": "string_value",
+        "disposition": "candidate_refusal",
+        "rg1": "RG1-3",
+        "control": "a_control_case",
+    },
 }
 
 
@@ -84,6 +89,7 @@ def test_stored_answer_loads_every_field(tmp_path):
     assert answer.loss is not None
     assert answer.loss.disposition is LossDisposition.CANDIDATE_REFUSAL
     assert answer.loss.rg1 == "RG1-3"
+    assert answer.loss.control == "a_control_case"
 
 
 def test_agentic_home_answer_has_no_construct_or_screen(tmp_path):
@@ -117,6 +123,8 @@ def _edited(edit) -> dict:
         (_edited(lambda d: d["screen"]["findings"][0].update(rule="")), "non-empty text"),
         (_edited(lambda d: d["loss"].update(rg1="RG1-x")), "expected RG1-<n>"),
         (_edited(lambda d: d["loss"].pop("rg1")), "names its RG1-<n>"),
+        (_edited(lambda d: d["loss"].update(disposition="rg2_pending")), "names its RG1-<n>"),
+        (_edited(lambda d: d["loss"].pop("control")), "missing \\['control'\\]"),
     ],
 )
 def test_stored_answer_refuses_a_malformed_document(tmp_path, document, message):

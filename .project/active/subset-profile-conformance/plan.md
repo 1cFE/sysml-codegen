@@ -1,6 +1,6 @@
 # Implementation Plan: Independent conformance corpus and per-site codes (EXEC-SUBSET-CONTRACT Item 2a)
 
-**Status:** Implementation in progress (Phases 1–3 done; Phases 1–2 audited mid-run; Phase 3 not yet audited; Phase 4 next)
+**Status:** Implementation in progress (Phases 1–4 done; Phases 1–2 audited mid-run; Phases 3–4 not yet audited; Phase 5 next)
 **Created:** 2026-10-18
 **Last Updated:** 2026-10-18
 
@@ -422,15 +422,15 @@ def test_record_candidate_refusal_iff_case_loss_marks_it(): ...
 
 **Repos:** codegen; agentic (`candidate_refusal`, CALC-USAGE-BARE-RESULT rule if the criterion holds).
 
-- [ ] Families and controls per design.md § D: ES-010 String; CALC-USAGE-BARE-RESULT-DROP at PD8's seam; ES-007 NON_NUMERICAL; G1; G2 (asserting what P1.1's probe found); one stub case per cause with its compiled control.
-- [ ] String fixtures: both spellings × uninstantiated template, instantiated part, bound to a calc input, read by another attribute.
-- [ ] Stubs (D9): `CompilationError` reasons for every `calc_compat_renderer.py` site (`:62, :76, :78, :81, :96, :103, :109, :115, :120`; `:117` if found reachable), distinct for `:78`/`:81`; `ManualStubNotice` logged once per (calc def, output) at `elaborate.py:704` with `extra={"manual_stub": …}`; listed as new warnings in `evidence/changed-outputs.md`.
-- [ ] Stub-cause mutations: neutralising each renderer site changes its witness's stub cause.
-- [ ] D10: `Qualification.candidate_refusal` in agentic; `loss` block in each case; two-way pure test.
-- [ ] CALC-USAGE-BARE-RESULT-DROP: if the rule criterion holds, the contract reports every calc-usage bare result `omitted` with `candidate_refusal`. Otherwise file a codegen backlog item (owner Reid Westwood) stating the limit.
-- [ ] **RG-1 stop:** `RG1-<n>` entries for CALC-USAGE-BARE-RESULT-DROP, each stub cause, G1, G2. One `kerml-expert` invocation asks G1 and G2 with both case models attached (PD10); one question per other candidate. Answers to `evidence/semantics-checks.md`. Continue.
-- [ ] **RG-2 stop:** `rg2-string-policy.md`: options, effect of each on generated output and native consumers, recommendation. Continue.
-- [ ] `docs/architecture/modeling-assumptions.md`: today's behavior for String values, NON_NUMERICAL constraints, calc-usage bare results and stubbed outputs, citing case IDs; the redefinition-precedence and inherited-typing statement from P3's pinned cases; POSITIONAL-FORMAL-REDEFINITION linked as pending Item 4.
+- [x] Families and controls per design.md § D: ES-010 String; CALC-USAGE-BARE-RESULT-DROP at PD8's seam; ES-007 NON_NUMERICAL; G1; G2 (asserting what P1.1's probe found); one stub case per cause with its compiled control.
+- [x] String fixtures: both spellings × uninstantiated template, instantiated part, bound to a calc input, read by another attribute.
+- [x] Stubs (D9): `CompilationError` reasons for every `calc_compat_renderer.py` site (`:62, :76, :78, :81, :96, :103, :109, :115, :120`; `:117` if found reachable), distinct for `:78`/`:81`; `ManualStubNotice` logged once per (calc def, output) at `elaborate.py:704` with `extra={"manual_stub": …}`; listed as new warnings in `evidence/changed-outputs.md`.
+- [x] Stub-cause mutations: neutralising each renderer site changes its witness's stub cause.
+- [x] D10: `Qualification.candidate_refusal` in agentic; `loss` block in each case; two-way pure test.
+- [x] CALC-USAGE-BARE-RESULT-DROP: if the rule criterion holds, the contract reports every calc-usage bare result `omitted` with `candidate_refusal`. Otherwise file a codegen backlog item (owner Reid Westwood) stating the limit.
+- [x] **RG-1 stop:** `RG1-<n>` entries for CALC-USAGE-BARE-RESULT-DROP, each stub cause, G1, G2. One `kerml-expert` invocation asks G1 and G2 with both case models attached (PD10); one question per other candidate. Answers to `evidence/semantics-checks.md`. Continue.
+- [x] **RG-2 stop:** `rg2-string-policy.md`: options, effect of each on generated output and native consumers, recommendation. Continue.
+- [x] `docs/architecture/modeling-assumptions.md`: today's behavior for String values, NON_NUMERICAL constraints, calc-usage bare results and stubbed outputs, citing case IDs; the redefinition-precedence and inherited-typing statement from P3's pinned cases; POSITIONAL-FORMAL-REDEFINITION linked as pending Item 4.
 
 **Done when:** licensed `uv run --extra dev pytest tests/conformance/subset_profile/ -rs` passes; agentic suite passes; `rg1-recommendations.md` and `rg2-string-policy.md` contain the entries above; the phase gate shows no accept/refuse change.
 
@@ -714,7 +714,7 @@ Phase 1 notes are below, per step. Later phases add their own sections.
 - `MODEL_COLLECTIONS` is unchanged: no codegen-home case exists yet, so `tests/fixtures/subset_profile/` was not created. It joins the oracle's collections when the first codegen-home case lands.
 - Verification: codegen `tests/conformance/subset_profile/` plus the answer tests, licensed: 694 passed, no skips. agentic `tests/test_subset_case_citations.py tests/test_sysml/`: 1261 passed, 1 skipped; with the matrix, site-account and scripts tests, 1353 passed. agentic mypy 88, unchanged.
 - **Found: a constraint owned by an item def is refused and no rule says so.** The generator refuses it as `SI_CONSTRAINT_UNATTACHED`, asserted or not. calc-owned-assertion recognizes only calc def and calc usage owners, so the screen is silent. Two reproduction cases (`candidate-unattachable-constraint-owner__*`) and two `reproduced_gap` entries hand it to P3, which decides by the rule criterion whether calc-owned-assertion widens to every owner the occurrence facts cannot attach. RG-1 is untouched.
-- **Premise conflict, for P4 (surfaced, not resolved).** Design § D says a String value leaves "no instance-graph attribute node and no entry point", with a numeric control where "both are present". In fact the String attribute does get an attribute node (it holds the text value), and it gets no entry point. But an unconsumed `Real` attribute gets no entry point either (checked on a scratch model). So on these cases, "no entry point" does not separate a String omission from an attribute nothing reads. The String seams here assert what is true (node present, no entry point; the consumed numeric control has one). Whether that is evidence of a String-specific omission is parked for P4's String families and `rg2-string-policy.md`.
+- **Premise conflict, for P4 (surfaced, not resolved).** Design § D says a String value leaves "no instance-graph attribute node and no entry point", with a numeric control where "both are present". In fact the String attribute does get an attribute node (it holds the text value), and it gets no entry point. But an unconsumed `Real` attribute gets no entry point either (checked on a scratch model). So on these cases, "no entry point" does not separate a String omission from an attribute nothing reads. The String seams here assert what is true (node present, no entry point; the consumed numeric control has one). Whether that is evidence of a String-specific omission is parked for P4's String families and `rg2-string-policy.md`. **Closed in P4:** it is not. The String node holds its value, and the missing entry point is what any unconsumed attribute gets; the String-specific behavior is only at the calculation boundary (`rg2-string-policy.md`, "What corrects an earlier premise").
 - Deviations:
   - dc3 `proto3`, `proto4nest` and `conv` were dc3 session scratch and are in no dc3 revision. dc3 `60b44d53` keeps only their descriptions (U5, U2, U6 in `.project/active/toolkit-upstream-findings.md`). The minimal models already exist as `candidate-es-002/008/009`, so their provenance now names the dc3 revision and finding, and no new model was built.
   - Constraint-predicate `owner_other` cases use a calc usage owner, where the screen and generator agree through calc-owned-assertion. The item def owner is the reproduction instead.
@@ -800,6 +800,61 @@ Fixes for `audit.md` (Phases 1–2, Needs Work). Experiment plugins are committe
 - **New family: anonymous declarations (`SI_ID_UNSTABLE`).** Recorded as reproduced gaps; a model-wide rule is left for the owner to decide.
 
 ### Phase 4 Completion
+**Completed:** 2026-10-18. Phase gate passed, except the audit, which is the orchestrator's to run (`/_my_audit`).
+**Actual Changes:** agentic-mbse `301590aa` (pre-item 1: its own test for the P3 occurrence fix), `ca43aeea` (pre-item 2: backlog row amended), `95dc8aba` (P4); sysml-codegen one P4 commit, named in the final report of `briefs/implement_p4.md`'s run.
+**Phase gate (2026-10-18):**
+- Snapshots: `git diff --exit-code d73a4fc5` over the 22 committed `instance_graph_snapshot.json` files exits 0.
+- Accept/refuse: `test_public_package_oracle.py` and `test_v6_recapture_batch.py` pass inside the full licensed run; `baseline.json` and `batch.json` are unchanged since `d73a4fc5`.
+- Regressions: codegen licensed suite (`uv run --extra dev pytest tests/ -q -rfEs`, `.env` sourced) 5729 passed, 9 failed, 9 skipped; the 9 failures are the baseline IDs (`test_study_cli.py` bogus-tool and the 8 `test_check_ledger_4a.py` tests). agentic-mbse (`uv run --all-extras pytest tests/ -q -rfEs`) 3947 passed, 5 failed, 8 skipped, 1 xfailed; the 5 are the all-extras baseline IDs.
+- Merge order: `git log subset-conformance..main` is empty in both repos (local refs; nothing fetched), so no rebase.
+- Static checks: codegen mypy clean (87 files), ruff `src/ tests/` 94 (baseline 94); agentic-mbse ruff 118 (baseline 118), mypy 88 (baseline 88).
+- Audit: not run here.
+
+#### Pre-items (committed separately, before P4)
+- **agentic-mbse guards its own occurrence fix.** `tests/test_sysml/test_occurrence_extraction_constraints.py` with model `tests/fixtures/subset_profile/cases/anonymous_assertion.sysml`: every constraint usage, the anonymous `assert positive;` included, gets an attachment keyed by its SysIDE element ID, owned by `Site`, scoped to the generator roots. Shown failing on the pre-fix `occurrence_extraction.py` (`455c1f26^`): `OccurrenceFailure(IDENTITY_UNSTABLE, stage=writers)`. Passes at HEAD.
+- **Backlog row amended.** agentic-mbse `.project/backlog/BACKLOG.md`, PUSH-DOWN-HIER-PROFILE-AMBIG-INHERITED-ATTR: the "sorted-first" sentence replaced by the refusal (`SI_REDEFINITION_INVALID`), citing case `candidate-ambiguous-typing__incomparable_typings__part_usage` and `evidence/r3-closure.md`.
+
+#### Silent-loss families (D9, § D)
+- Every family has loss cases and a control: `es-010-string` (the unbound String library default; RG-2), `calc-usage-bare-result-drop` (RG1-3), `es-007-non-numerical` (accepted omission, three cases, control `constraint-predicate__numeric_and__owner_instantiated`, which gained its `catalog_usage` seam), `g1-redefinition-drops-bounds` (RG1-1), `g2-usage-override-of-referenced-bound` (RG1-2), `calc-def-output-stub` (RG1-4 to RG1-11). Each loss block now names its `control` (`LossAnswer.control`, required).
+- New seam `contract_parameter` (`tests/helpers/subset_profile/observe.py`): the model contract's parameters minted from a declaration, with key, entry type, Python type and default. It is what shows the null String default and the lost calc-usage binding.
+- `tests/conformance/subset_profile/test_silent_loss_seams.py` (pure): the families are exactly design § D's; each loss asserts at a seam its control shares; a stub loss has stubs and its control none. The seam values themselves are held live by `test_generator_half.py`, so the plan's licensed stencil became a pure test.
+- `tests/conformance/subset_profile/test_candidate_refusal_marks.py` (pure, D10): for every case a record cites, the admission's `candidate_refusal` holds if and only if the case's loss is `candidate_refusal`.
+
+#### String (ES-010, RG-2)
+- Cases for both spellings in every position: template (`…__template`, `…__template_shorthand`), instantiated part (`…__attribute_declaration`, `…__redefinition_shorthand`), bound to a calc input (`candidate-es-010-refusal__string_to_calc_input__binding_value` and new `…__attribute_declaration`, both refused; the new one has its `codegen_owned` disagreement entry), read by another attribute (`…__read_by_attribute`, `…__read_by_attribute_shorthand`). Numeric controls `…__unconsumed_numeric_value__attribute_value` and `…__numeric_value__attribute_value__read_by_attribute`.
+- Finding: outside the calculation boundary a String behaves exactly as a Real in the same position, so only the library-default case carries a loss block. This closes the P2.2 premise conflict (note amended above). `rg2-string-policy.md` gives four options and recommends refusing the library-default path (B), with filling the default (D) as the alternative. Not decided.
+
+#### Stubs (D9)
+- Twelve `SiteReason` members `compile_*` (`elaboration/diagnostics.py`): one per `CompilationError` raise in `extraction/calc_compat_renderer.py` (each raise passes it) and `compile_dependency_cycle` / `compile_no_expression` for the compiler's two non-raising stubs. `ExactCompilationResult.stub_reason` carries it; `__post_init__` refuses a result whose `MANUAL_REQUIRED`, `stub_reason` and `unsupported_reason` disagree (new `internal_invariant` row in the site account).
+- `ManualStubNotice` logged once per stubbed output by `_announce_stubs` (`elaboration/elaborate.py`), right after each calc def compiles; listed in `evidence/changed-outputs.md`. The harness collects notices (`GeneratorObservation.stub_notices`, `stubs()`); `test_live_stubs_equal_the_stored_stubs` holds every stored answer's `stubs` live. Twenty `binding-source__*` answers gained a `compile_invocation` stub (their `Total` sums its input).
+- Eleven codegen-home `calc-def-output-stub__*` cases, one per reachable cause, with `compiled_control`. Five renderer sites fire in a model and are mutated (`mutations.json` generator sets; `answer_changed` now compares stubs too). Five fire in none and are `unwitnessed` with the reason: the not-Python check (keyword names stub earlier), the unknown-IR-node branch (closed union), feature chains (refused upstream), no operands, and the unary-operator check (shadowed by the unsupported-operator check).
+
+#### CALC-USAGE-BARE-RESULT-DROP
+- The rule criterion holds: agentic-mbse's site facts list a calc usage's own result expression as an `other_expression_site`. New rule `calc-usage-result` (agentic `95dc8aba`), outcome `omitted`, qualified `candidate_refusal`; `REASON_MAPPING` maps `calc_usage_bare_result_not_executed` to `NO_REFUSAL` (`src/sysml_codegen/subset_profile_adapter.py`).
+- Finding beyond the plan: the case also loses the usage's `in v = x` binding. Likely cause is `_collect_bound_members` consuming SysIDE's lazy `owned_members` iterator in an `or ()` test (not confirmed). It changes output, not acceptance, so it is recorded in RG1-3 as a defect for a backlog item rather than fixed here.
+
+#### RG-1 and semantics checks
+- `rg1-recommendations.md`: RG1-1 to RG1-11, each with question, cases, today's behavior, semantics answer and recommendation. Recommend refuse for RG1-1, RG1-2, RG1-3 and RG1-10; keep the stub (withdraw the mark) for RG1-4 to RG1-7, RG1-9, RG1-11; fix the sanitizer mismatch for RG1-8.
+- `evidence/semantics-checks.md`: three `kerml-expert` invocations (G1 and G2 together with both case models; the calc-usage result; the stub causes).
+
+#### Docs
+- `docs/architecture/modeling-assumptions.md` § 10 (new): String values, non-numerical constraints, calc-usage result expressions, stubbed outputs, redefinition precedence and incomparable typings, multiplicity through redefinition, and POSITIONAL-FORMAL-REDEFINITION as pending Item 4. Three stale statements amended in place: the String row of "Supported Value Types" and "Literal Values" (a String reaching a calc input is refused), and Validation Rule V10 (incomparable typings are refused, not resolved first-in-order). V9's message was also removed with the legacy lane; its current behavior is marked unchecked.
+- `evidence/r3-closure.md`: "Closed in Phase 4" section.
+
+#### Issues Encountered
+- A reason value `compile_expression_absent` tripped `tests/conformance/test_no_expression_ast.py` (it bans the substring `compile_expression`). Renamed to `compile_no_expression`.
+- A runtime `SiteReason` import at the top of `expression_compiler.py` is circular (through `elaboration/graph.py`); it is imported inside `compile_calc_def_exact`, as the module already does for other elaboration types.
+- The citation test needs exactly one finding on a cited case's construct, so the String read-by-attribute model puts the reading attribute on its own line.
+
+#### Deviations from Plan
+- **The `kerml-expert` agent link is dangling in this worktree** (`.claude/agents/kerml-expert.md` points at `/home/reid/1cfe/...`). Each check ran as a general-purpose agent given agentic-mbse's `agents/kerml-expert.md` as its role.
+- **Stub causes were asked in one invocation**, one numbered question per cause, not one invocation each.
+- **G1, G2 and the stub causes have no record mark.** D10 marks a candidate in the record and the case; these have no shared rule that isolates them (G1's screen pair also covers correctly unexpanded usages), so only the case carries it, as design D10 already says for stubs.
+- **The record-to-recommendations check is not a test.** A test reading `rg1-recommendations.md` would break when this folder moves at close; every RG-1 id named by a case was checked against the document by hand.
+- **Verdict semantics unchanged.** CLEAR still counts a `candidate_refusal`-qualified finding as clean (`indexed-reference__indexed_reference__other_expression_site` is `clear` with the new finding). Changing that is Item 2b's.
+
+#### Orchestrator calls for Phase 5
+[AGENT] 2026-10-18: Phase 5 attempts shared rules for (a) anonymous declarations codegen must index (`SI_ID_UNSTABLE`) and (b) ES-002's broad shape (reference into a feature of a calc/item/attribute usage other than a calc output). Each becomes a rule if it can be stated from shared agentic-mbse facts with codegen's indexed-declaration set pinned by cases; otherwise it stays a reproduced gap with its exact boundary written in `r3-closure.md` for Item 5's guidance.
 
 ### Phase 5 Completion
 **Split count:** H = , L = , T = , tail count = , split taken: 

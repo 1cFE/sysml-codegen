@@ -6,7 +6,9 @@ stored answer, and every refusal the run locates must sit on the case's construc
 that refuses for an unrelated reason shows up as a broken case rather than as evidence.
 
 A case may also assert seams (design D9): a fact about one declaration at a named point of
-the output, such as "no attribute node" for a dropped String value. Each must hold live.
+the output, such as "no attribute node" for a dropped String value. Each must hold live. And
+every calc def member the run compiles to a ``MANUAL_REQUIRED`` stub must be stored with the
+cause its ``ManualStubNotice`` names, so a stub can neither appear nor change cause unseen.
 
 Two kinds of refusal carry no location in the payload, so isolation cannot check them:
 generation-stage codes, which name no source, and ``SI_CONSTRAINT_BLOCKED``, whose location
@@ -58,6 +60,12 @@ def _observe(case_id: str) -> observe.GeneratorObservation:
 @pytest.mark.parametrize("answer", ANSWERS, ids=lambda a: a.case_id)
 def test_live_run_equals_the_stored_answer(answer: StoredAnswer):
     assert _observe(answer.case_id).run() == answer.generator.run
+
+
+@pytest.mark.parametrize("answer", ANSWERS, ids=lambda a: a.case_id)
+def test_live_stubs_equal_the_stored_stubs(answer: StoredAnswer):
+    """Every calc def member the run stubs, with its cause, is stored; none other is (D9)."""
+    assert _observe(answer.case_id).stubs() == answer.generator.stubs
 
 
 @pytest.mark.parametrize("answer", ANSWERS, ids=lambda a: a.case_id)

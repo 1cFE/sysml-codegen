@@ -4,6 +4,12 @@
   "generator": {
     "outcome": "generated",
     "codes": [],
-    "reasons": []
+    "reasons": [],
+    "stubs": [
+      {
+        "output": "fx::Total::r",
+        "reason": "compile_invocation"
+      }
+    ]
   }
 }

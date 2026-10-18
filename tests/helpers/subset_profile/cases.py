@@ -73,14 +73,21 @@ class SeamKind(StrEnum):
     GRAPH_ATTR = "graph_attr"
     ATTR_VALUE = "attr_value"
     ENTRY_POINT = "entry_point"
+    CONTRACT_PARAMETER = "contract_parameter"
     CATALOG_USAGE = "catalog_usage"
     CALC_COMPILABILITY = "calc_compilability"
     OCCURRENCES = "occurrences"
 
 
 class LossDisposition(StrEnum):
+    """What a silent loss is today (design D10)."""
+
+    #: The generator leaves the construct out by design, and the contract says so.
     ACCEPTED_OMISSION = "accepted_omission"
+    #: A loss that should block, pending the owner's RG-1 decision.
     CANDIDATE_REFUSAL = "candidate_refusal"
+    #: A String loss: the policy is the owner's RG-2 decision, so it is neither of the above.
+    RG2_PENDING = "rg2_pending"
 
 
 class DisagreementKind(StrEnum):
@@ -113,6 +120,9 @@ class GeneratorRun:
 
 @dataclass(frozen=True)
 class StubAnswer:
+    """One calc def member compiled to a ``MANUAL_REQUIRED`` stub, as its notice names it."""
+
+    #: ``<calc def qualified name>::<member name>``.
     output: str
     reason: SiteReason
 
@@ -137,6 +147,8 @@ class LossAnswer:
     family: str
     disposition: LossDisposition
     rg1: str | None
+    #: The case where the carried form is present at the same seams (spec criterion D1).
+    control: str
 
 
 @dataclass(frozen=True)
@@ -263,6 +275,8 @@ def _generator(value: Any, where: str) -> GeneratorAnswer:
                 reason=_member(SiteReason, stub["reason"], f"{where}.stubs[{i}].reason"),
             )
         )
+    if stubs != sorted(stubs, key=lambda stub: (stub.output, stub.reason)):
+        raise CaseAnswerError(f"{where}.stubs: must be sorted by output, then reason")
     seams = []
     for i, item in enumerate(_list(data.get("seams", []), f"{where}.seams")):
         seam = _fields(
@@ -303,14 +317,20 @@ def _construct(value: Any, where: str) -> Construct:
 
 def _loss(value: Any, where: str) -> LossAnswer:
     data = _fields(
-        value, where, required=frozenset({"family", "disposition"}), optional=frozenset({"rg1"})
+        value,
+        where,
+        required=frozenset({"family", "disposition", "control"}),
+        optional=frozenset({"rg1"}),
     )
     disposition = _member(LossDisposition, data["disposition"], f"{where}.disposition")
     rg1 = None if data.get("rg1") is None else _rg1(data["rg1"], f"{where}.rg1")
-    if disposition is LossDisposition.CANDIDATE_REFUSAL and rg1 is None:
-        raise CaseAnswerError(f"{where}: a candidate refusal names its RG1-<n>")
+    if (disposition is LossDisposition.CANDIDATE_REFUSAL) != (rg1 is not None):
+        raise CaseAnswerError(f"{where}: a candidate refusal names its RG1-<n>, and only one does")
     return LossAnswer(
-        family=_text(data["family"], f"{where}.family"), disposition=disposition, rg1=rg1
+        family=_text(data["family"], f"{where}.family"),
+        disposition=disposition,
+        rg1=rg1,
+        control=_text(data["control"], f"{where}.control"),
     )
 
 

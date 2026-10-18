@@ -30,6 +30,8 @@ from agentic_mbse.sysml.expression_ir import (
     UnsupportedNode,
 )
 
+from sysml_codegen.elaboration.diagnostics import SiteReason
+
 from .expression_compiler import CompilationError, _sanitize_name
 
 __all__ = ["collect_calc_refs", "render_calc_expression"]
@@ -53,13 +55,16 @@ def render_calc_expression(ir: ExpressionIR, input_names: set[str], member_names
     outputs plus undeclared intermediates) classify it as bare ``{name}``. Any other
     reference, unsupported node, or unsupported operator raises CompilationError -- same
     exception the old path raised, so callers' ``except CompilationError`` fallback is
-    unchanged.
+    unchanged. Each raise names its site with a ``SiteReason``: the cause of the stub.
     """
     result = _render(ir, input_names, member_names)
     try:
         python_ast.parse(result, mode="eval")
     except SyntaxError as e:
-        raise CompilationError(f"Compiled expression is not valid Python: {result!r} ({e})") from e
+        raise CompilationError(
+            f"Compiled expression is not valid Python: {result!r} ({e})",
+            reason=SiteReason.COMPILE_OUTPUT_NOT_PYTHON,
+        ) from e
     return result
 
 
@@ -73,12 +78,18 @@ def _render(node: ExpressionIR, input_names: set[str], member_names: set[str]) -
     if isinstance(node, OperatorNode):
         return _render_operator(node, input_names, member_names)
     if isinstance(node, InvocationNode):
-        raise CompilationError(f"unsupported node: invocation ({node.function_qn})")
+        raise CompilationError(
+            f"unsupported node: invocation ({node.function_qn})",
+            reason=SiteReason.COMPILE_INVOCATION,
+        )
     if isinstance(node, UnsupportedNode):
         raise CompilationError(
-            f"Cannot compile unsupported node: {node.source_text} (reason: {node.diagnostic})"
+            f"Cannot compile unsupported node: {node.source_text} (reason: {node.diagnostic})",
+            reason=SiteReason.COMPILE_IR_NODE_UNSUPPORTED,
         )
-    raise CompilationError(f"Unknown IR node type: {type(node).__name__}")
+    raise CompilationError(
+        f"Unknown IR node type: {type(node).__name__}", reason=SiteReason.COMPILE_IR_NODE_UNKNOWN
+    )
 
 
 def _render_literal(node: LiteralNode) -> str:
@@ -93,31 +104,48 @@ def _render_literal(node: LiteralNode) -> str:
     kind = node.literal.kind
     if "LiteralInteger" in kind or "LiteralRational" in kind:
         return str(node.literal.value)
-    raise CompilationError(f"unsupported literal kind in calc expression: {kind!r}")
+    raise CompilationError(
+        f"unsupported literal kind in calc expression: {kind!r}",
+        reason=SiteReason.COMPILE_LITERAL_KIND,
+    )
 
 
 def _render_reference(
     node: FeatureReferenceNode, input_names: set[str], member_names: set[str]
 ) -> str:
     if node.reference.chain_segments:
-        raise CompilationError("feature chain expression not supported in CalcDef output")
+        raise CompilationError(
+            "feature chain expression not supported in CalcDef output",
+            reason=SiteReason.COMPILE_FEATURE_CHAIN,
+        )
     name = _sanitize_name(node.reference.source_name or "")
     if name in input_names:
         return f"inputs.{name}"
     if name in member_names:
         return name
-    raise CompilationError(f"unresolved reference: {name}")
+    raise CompilationError(
+        f"unresolved reference: {name}", reason=SiteReason.COMPILE_REFERENCE_UNRESOLVED
+    )
 
 
 def _render_operator(node: OperatorNode, input_names: set[str], member_names: set[str]) -> str:
     op_str = _ARITHMETIC_OPERATOR_MAP.get(node.operator)
     if op_str is None:
-        raise CompilationError(f"unsupported operator: {node.operator}")
+        raise CompilationError(
+            f"unsupported operator: {node.operator}",
+            reason=SiteReason.COMPILE_OPERATOR_UNSUPPORTED,
+        )
     if not node.operands:
-        raise CompilationError(f"operator with no operands: {node.operator}")
+        raise CompilationError(
+            f"operator with no operands: {node.operator}",
+            reason=SiteReason.COMPILE_OPERATOR_WITHOUT_OPERANDS,
+        )
     if len(node.operands) == 1:
         if node.operator not in ("+", "-"):
-            raise CompilationError(f"unsupported unary operator: {node.operator}")
+            raise CompilationError(
+                f"unsupported unary operator: {node.operator}",
+                reason=SiteReason.COMPILE_UNARY_OPERATOR_UNSUPPORTED,
+            )
         operand = _render(node.operands[0], input_names, member_names)
         return f"({node.operator}{operand})"
     parts = [_render(operand, input_names, member_names) for operand in node.operands]

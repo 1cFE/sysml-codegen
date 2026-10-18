@@ -28,3 +28,17 @@ Examples, from `run_codegen` on the reach witnesses in `tests/conformance/subset
 - `SI_INDEXED_SOURCE_UNSUPPORTED: qs#(1).v: reference='qs#(1).v': expression_evidence: indexed element reference is valid SysML but not implemented by this executable subset; the index is never flattened into a supported source [root-0/model.sysml:8] (reason: evidence_indexed_reference_unsupported)`
 
 What was checked: the public package oracle (`tests/conformance/test_public_package_oracle.py`) and the v6 recapture batch (`tests/conformance/test_v6_recapture_batch.py`) pass unchanged, so no oracle or batch text depends on these messages. No existing test asserted a full message that gained a suffix; the full licensed suite shows no new failure from the text change.
+
+## P4: the manual-stub notice
+
+A successful live run now logs one WARNING per calc def output that compiles to a `MANUAL_REQUIRED` stub. Before P4 a stub was silent. The record is `ManualStubNotice` (`src/sysml_codegen/elaboration/diagnostics.py`), logged by `_announce_stubs` in `src/sysml_codegen/elaboration/elaborate.py` with `extra={"manual_stub": notice}`, right after each calc def compiles. A from-snapshot run compiles nothing and logs nothing new.
+
+Example, from `sysml-codegen generate` on `tests/fixtures/subset_profile/calc-def-output-stub__invocation`:
+
+- `WARNING: Calculation fx::C output r is a manual stub: unsupported node: invocation (['NumericalFunctions', 'sum']) (reason: compile_invocation)`
+
+The reason is one of twelve new `SiteReason` members, `compile_*`: one per raise in `extraction/calc_compat_renderer.py` and one for each of the two compiler paths that stub without raising (`compile_dependency_cycle`, `compile_no_expression`). `CompilationError` text does not change; the reason travels as a field.
+
+Nothing else changes: what is generated, what is accepted or refused, and every refusal message. Checked: the 22 v6 snapshots are byte-identical to `d73a4fc5`; `public_package_oracle/baseline.json` and `batch.json` are unchanged since `d73a4fc5`, and their tests pass in the full licensed run.
+
+The site account (`tests/expectations/subset_profile/site_account.csv`) changed with this code: line numbers refreshed for every row in `elaborate.py` below the new helper and in the renderer, the `reason` column filled for the ten renderer rows, one new `internal_invariant` row for `ExactCompilationResult.__post_init__` (stub fields set together or not at all), and notes on four renderer rows saying no model reaches them. These are test expectations, not generator output.

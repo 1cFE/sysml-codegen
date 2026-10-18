@@ -4,6 +4,19 @@
   "generator": {
     "outcome": "generated",
     "codes": [],
-    "reasons": []
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "occurrences",
+        "declaration": "fx::rack::servers",
+        "expect": {
+          "count": 2,
+          "indices": [
+            0,
+            1
+          ]
+        }
+      }
+    ]
   }
 }

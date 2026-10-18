@@ -242,6 +242,16 @@
       "reason": "A String value bound to a calc input is refused at projection. Entry-point membership is an output fact codegen owns (ADR 0007), so no shared rule can describe it; the contract reports String values omitted. Policy is RG-2."
     },
     {
+      "subject": "case:candidate-es-010-refusal__string_to_calc_input__binding_value__attribute_declaration",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["PROJECTION_FAILED", "SI_RENDERING_COLLISION"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": "ES-010",
+      "owner": "Reid Westwood",
+      "reason": "The declaration spelling of the String-to-calc-input path (`attribute fuel_unit : String = \"liter\"` bound to `in u`) is refused at projection exactly as the instance-valued spelling is. Entry-point membership is an output fact codegen owns (ADR 0007), so no shared rule can describe it; the contract reports String values omitted. Policy is RG-2."
+    },
+    {
       "subject": "case:candidate-es-010-refusal__string_usage_literal__binding_value",
       "kind": "generator_refuses_screen_silent",
       "generator_codes": ["PROJECTION_FAILED", "SI_RENDERING_COLLISION"],
