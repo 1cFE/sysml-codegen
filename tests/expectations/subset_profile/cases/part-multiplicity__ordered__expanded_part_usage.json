@@ -8,6 +8,9 @@
     ],
     "reasons": [
       "occurrence_multiplicity_ordered"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/occurrence.py::_multiplicity_indices::coded::SI_MULTIPLICITY_UNSUPPORTED::1"
     ]
   }
 }

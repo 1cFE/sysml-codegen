@@ -49,6 +49,13 @@ class SiteReason(StrEnum):
     """
 
     OCCURRENCE_MULTIPLICITY_ORDERED = "occurrence_multiplicity_ordered"
+    OCCURRENCE_MULTIPLICITY_NONUNIQUE = "occurrence_multiplicity_nonunique"
+    OCCURRENCE_MULTIPLICITY_UPPER_UNRESOLVED = "occurrence_multiplicity_upper_unresolved"
+    OCCURRENCE_MULTIPLICITY_NEGATIVE = "occurrence_multiplicity_negative"
+    OCCURRENCE_MULTIPLICITY_LOWER_UNRESOLVED = "occurrence_multiplicity_lower_unresolved"
+    OCCURRENCE_MULTIPLICITY_RANGE = "occurrence_multiplicity_range"
+    ELABORATION_CONSTRAINT_OWNER_UNMAPPED = "elaboration_constraint_owner_unmapped"
+    ELABORATION_ASSERTED_CONSTRAINT_UNATTACHED = "elaboration_asserted_constraint_unattached"
     CONSTRAINT_PROFILE_BLOCKED = "constraint_profile_blocked"
     BINDING_SOURCE_FORM_UNSUPPORTED = "binding_source_form_unsupported"
     EXTRACTION_TYPING_TARGET_UNSUPPORTED = "extraction_typing_target_unsupported"

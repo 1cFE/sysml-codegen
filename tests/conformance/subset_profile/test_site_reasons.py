@@ -1,7 +1,9 @@
 """A site's recorded reason is the reason its raise passes (Item 2a E3, PD5 first form).
 
 Pure: the scan reads the ``reason=SiteReason.<member>`` a site passes literally, and the
-account's ``reason`` column must name the same member's value, in both directions. Requiring
+account's ``reason`` column must name the same member's value, in both directions. Every
+witness a stored answer or packaged case names is a scanned site; that each one fires is
+``test_witnesses.py``'s licensed check. Requiring
 every public row to have a reason and a witness is ``test_site_account_completeness.py``'s job
 (P6), so this test stays green while reasons land.
 
@@ -15,7 +17,7 @@ from __future__ import annotations
 
 from sysml_codegen.elaboration.diagnostics import SiteReason
 from tests.conformance.subset_profile.test_site_reason_reaches_harness import REACH_WITNESSES
-from tests.helpers.subset_profile import site_scan
+from tests.helpers.subset_profile import site_scan, witnesses
 
 SCAN = site_scan.scan()
 ACCOUNT = site_scan.load_account()
@@ -51,3 +53,12 @@ def test_the_reach_witnesses_reasons_are_recorded_at_their_sites():
     for witness in REACH_WITNESSES:
         if witness.reason not in SET_OFF_SITE:
             assert witness.reason.value in recorded, witness.branch
+
+
+def test_every_witness_names_a_scanned_site():
+    named = set(witnesses.codegen_witnesses()) | set(witnesses.agentic_witnesses())
+    assert sorted(named - SCAN.by_id().keys()) == []
+
+
+def test_every_codegen_witness_names_an_accounted_site():
+    assert sorted(set(witnesses.codegen_witnesses()) - ACCOUNT.ids()) == []

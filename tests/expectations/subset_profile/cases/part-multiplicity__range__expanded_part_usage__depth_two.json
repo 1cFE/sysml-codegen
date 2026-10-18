@@ -6,6 +6,11 @@
     "codes": [
       "SI_MULTIPLICITY_UNSUPPORTED"
     ],
-    "reasons": []
+    "reasons": [
+      "occurrence_multiplicity_range"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/occurrence.py::_multiplicity_indices::coded::SI_MULTIPLICITY_UNSUPPORTED::3"
+    ]
   }
 }

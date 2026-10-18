@@ -6,6 +6,11 @@
     "codes": [
       "SI_MULTIPLICITY_UNRESOLVED"
     ],
-    "reasons": []
+    "reasons": [
+      "occurrence_multiplicity_upper_unresolved"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/occurrence.py::_multiplicity_indices::coded::SI_MULTIPLICITY_UNRESOLVED::1"
+    ]
   }
 }

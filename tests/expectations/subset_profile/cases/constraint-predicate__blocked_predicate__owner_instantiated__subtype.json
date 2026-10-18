@@ -8,6 +8,9 @@
     ],
     "reasons": [
       "constraint_profile_blocked"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._build_constraint_nodes::coded::SI_CONSTRAINT_BLOCKED::1"
     ]
   }
 }

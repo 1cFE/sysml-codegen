@@ -1,0 +1,215 @@
+{
+  "schema": "subset-mutations/1",
+  "generator": {
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._build_constraint_nodes::coded::SI_CONSTRAINT_BLOCKED::1": [
+      "constraint-predicate__blocked_predicate__owner_instantiated",
+      "constraint-predicate__blocked_predicate__owner_instantiated__arithmetic_operand_mismatch",
+      "constraint-predicate__blocked_predicate__owner_instantiated__arithmetic_root",
+      "constraint-predicate__blocked_predicate__owner_instantiated__assert_by_reference",
+      "constraint-predicate__blocked_predicate__owner_instantiated__boolean_ordering",
+      "constraint-predicate__blocked_predicate__owner_instantiated__comparison_in_value_position",
+      "constraint-predicate__blocked_predicate__owner_instantiated__conjunction_in_value_position",
+      "constraint-predicate__blocked_predicate__owner_instantiated__connective_in_value_position",
+      "constraint-predicate__blocked_predicate__owner_instantiated__definition_without_predicate",
+      "constraint-predicate__blocked_predicate__owner_instantiated__feature_chain_root",
+      "constraint-predicate__blocked_predicate__owner_instantiated__implies_with_comparisons",
+      "constraint-predicate__blocked_predicate__owner_instantiated__part_usage_owner",
+      "constraint-predicate__blocked_predicate__owner_instantiated__real_equality",
+      "constraint-predicate__blocked_predicate__owner_instantiated__real_literal_root",
+      "constraint-predicate__blocked_predicate__owner_instantiated__real_reference_root",
+      "constraint-predicate__blocked_predicate__owner_instantiated__subtype",
+      "constraint-predicate__blocked_predicate__owner_instantiated__under_two",
+      "constraint-predicate__blocked_predicate__owner_instantiated__unit_annotation_root",
+      "constraint-predicate__blocked_predicate__owner_package"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._collect_bound_members::coded-returned::SI_SELF_BINDING|SI_INDEXED_SOURCE_UNSUPPORTED|SI_EXPRESSION_SOURCE_UNSUPPORTED::1": [
+      "binding-source__expression_source__owner_instantiated",
+      "binding-source__expression_source__owner_instantiated__arithmetic",
+      "binding-source__expression_source__owner_instantiated__constraint_input",
+      "binding-source__expression_source__owner_instantiated__indexed_owner",
+      "binding-source__expression_source__owner_instantiated__nested",
+      "binding-source__expression_source__owner_instantiated__part_usage_owner",
+      "binding-source__expression_source__owner_instantiated__selected_and_overridden",
+      "binding-source__expression_source__owner_instantiated__subtype",
+      "binding-source__expression_source__owner_package",
+      "binding-source__self_reference_source__owner_instantiated",
+      "binding-source__self_reference_source__owner_instantiated__indexed_owner",
+      "binding-source__self_reference_source__owner_instantiated__part_usage_owner",
+      "binding-source__self_reference_source__owner_instantiated__subtype",
+      "binding-source__self_reference_source__owner_package"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._halt_on_error_dispositions::coded::SI_CONSTRAINT_UNATTACHED::1": [
+      "calc-owned-assertion__asserted_constraint__calc_definition_owner"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._owner_kind::coded::SI_CONSTRAINT_UNATTACHED::1": [
+      "calc-owned-assertion__asserted_constraint__calc_usage_owner",
+      "calc-owned-assertion__non_asserted_constraint__calc_usage_owner",
+      "candidate-unattachable-constraint-owner__asserted_constraint__item_definition_owner",
+      "candidate-unattachable-constraint-owner__non_asserted_constraint__item_definition_owner",
+      "constraint-predicate__blocked_predicate__owner_other",
+      "constraint-predicate__non_numerical_predicate__owner_other"
+    ],
+    "sysml_codegen/elaboration/expression_evidence.py::_indexed_refusal::coded::INDEXED_REFERENCE_UNSUPPORTED::1": [
+      "indexed-reference__indexed_reference__attribute_value",
+      "indexed-reference__indexed_reference__attribute_value__template",
+      "indexed-reference__indexed_reference__binding_value",
+      "indexed-reference__indexed_reference__calc_definition_feature_value",
+      "indexed-reference__indexed_reference__constraint_predicate"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::_multiplicity_indices::coded::SI_MULTIPLICITY_UNRESOLVED::1": [
+      "part-multiplicity__unresolved_bound__expanded_part_usage",
+      "part-multiplicity__unresolved_bound__expanded_part_usage__referenced",
+      "part-multiplicity__unresolved_bound__expanded_part_usage__under_two"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::_multiplicity_indices::coded::SI_MULTIPLICITY_UNRESOLVED::2": [
+      "part-multiplicity__unresolved_bound__expanded_part_usage__lower"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::_multiplicity_indices::coded::SI_MULTIPLICITY_UNSUPPORTED::1": [
+      "part-multiplicity__ordered__expanded_part_usage",
+      "part-multiplicity__ordered__expanded_part_usage__under_two"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::_multiplicity_indices::coded::SI_MULTIPLICITY_UNSUPPORTED::3": [
+      "part-multiplicity__range__expanded_part_usage",
+      "part-multiplicity__range__expanded_part_usage__depth_two",
+      "part-multiplicity__range__expanded_part_usage__root",
+      "part-multiplicity__range__expanded_part_usage__subtype",
+      "part-multiplicity__range__expanded_part_usage__under_two"
+    ],
+    "agentic_mbse/sysml/executable_profile.py::_evaluate_usage_against_definition::shared-profile::block_assert_by_reference::1": [
+      "constraint-predicate__blocked_predicate__owner_instantiated__assert_by_reference"
+    ],
+    "agentic_mbse/sysml/executable_profile.py::_evaluate_usage_against_definition::shared-profile::block_missing_predicate::1": [
+      "constraint-predicate__blocked_predicate__owner_instantiated__definition_without_predicate"
+    ],
+    "agentic_mbse/sysml/reference_use.py::_reference_use::shared-evidence::RESOLVED_TARGET_MISSING::1": [
+      "conditional-expression__conditional_resolved_branches__attribute_value",
+      "conditional-expression__conditional_resolved_branches__binding_value",
+      "conditional-expression__conditional_resolved_branches__calc_definition_feature_value",
+      "conditional-expression__conditional_resolved_branches__constraint_predicate",
+      "conditional-expression__conditional_unresolved_branch__attribute_value",
+      "conditional-expression__conditional_unresolved_branch__attribute_value__inherited",
+      "conditional-expression__conditional_unresolved_branch__attribute_value__redefined",
+      "conditional-expression__conditional_unresolved_branch__attribute_value__template",
+      "conditional-expression__conditional_unresolved_branch__binding_value",
+      "conditional-expression__conditional_unresolved_branch__calc_definition_feature_value",
+      "conditional-expression__conditional_unresolved_branch__constraint_predicate",
+      "conditional-expression__conditional_unresolved_branch__constraint_predicate__predicate_root"
+    ],
+    "agentic_mbse/sysml/reference_use.py::_require_supported_invocation::shared-evidence::EXPRESSION_KIND_UNSUPPORTED::1": [
+      "invocation-callable__unsupported_callable__attribute_value",
+      "invocation-callable__unsupported_callable__attribute_value__max",
+      "invocation-callable__unsupported_callable__attribute_value__redefined",
+      "invocation-callable__unsupported_callable__attribute_value__size",
+      "invocation-callable__unsupported_callable__attribute_value__template",
+      "invocation-callable__unsupported_callable__binding_value",
+      "invocation-callable__unsupported_callable__calc_definition_feature_value",
+      "invocation-callable__unsupported_callable__constraint_predicate",
+      "invocation-callable__unsupported_callable__constraint_predicate__predicate_root"
+    ]
+  },
+  "screen": {
+    "binding-source/expression_source": [
+      "binding-source__expression_source__owner_instantiated",
+      "binding-source__expression_source__owner_instantiated__arithmetic",
+      "binding-source__expression_source__owner_instantiated__constraint_input",
+      "binding-source__expression_source__owner_instantiated__indexed_owner",
+      "binding-source__expression_source__owner_instantiated__nested",
+      "binding-source__expression_source__owner_instantiated__part_usage_owner",
+      "binding-source__expression_source__owner_instantiated__selected_and_overridden",
+      "binding-source__expression_source__owner_instantiated__subtype",
+      "binding-source__expression_source__owner_package"
+    ],
+    "binding-source/self_reference_source": [
+      "binding-source__self_reference_source__owner_instantiated",
+      "binding-source__self_reference_source__owner_instantiated__indexed_owner",
+      "binding-source__self_reference_source__owner_instantiated__part_usage_owner",
+      "binding-source__self_reference_source__owner_instantiated__subtype",
+      "binding-source__self_reference_source__owner_package"
+    ],
+    "calc-owned-assertion/asserted_constraint": [
+      "calc-owned-assertion__asserted_constraint__calc_definition_owner",
+      "calc-owned-assertion__asserted_constraint__calc_usage_owner",
+      "constraint-predicate__blocked_predicate__owner_other",
+      "constraint-predicate__non_numerical_predicate__owner_other"
+    ],
+    "calc-owned-assertion/non_asserted_constraint": [
+      "calc-owned-assertion__non_asserted_constraint__calc_usage_owner"
+    ],
+    "conditional-expression/conditional_unresolved_branch": [
+      "conditional-expression__conditional_resolved_branches__attribute_value",
+      "conditional-expression__conditional_resolved_branches__binding_value",
+      "conditional-expression__conditional_resolved_branches__calc_definition_feature_value",
+      "conditional-expression__conditional_resolved_branches__constraint_predicate",
+      "conditional-expression__conditional_unresolved_branch__attribute_value",
+      "conditional-expression__conditional_unresolved_branch__attribute_value__inherited",
+      "conditional-expression__conditional_unresolved_branch__attribute_value__redefined",
+      "conditional-expression__conditional_unresolved_branch__attribute_value__template",
+      "conditional-expression__conditional_unresolved_branch__binding_value",
+      "conditional-expression__conditional_unresolved_branch__calc_definition_feature_value",
+      "conditional-expression__conditional_unresolved_branch__constraint_predicate",
+      "conditional-expression__conditional_unresolved_branch__constraint_predicate__predicate_root"
+    ],
+    "constraint-predicate/blocked_predicate": [
+      "constraint-predicate__blocked_predicate__owner_instantiated",
+      "constraint-predicate__blocked_predicate__owner_instantiated__arithmetic_operand_mismatch",
+      "constraint-predicate__blocked_predicate__owner_instantiated__arithmetic_root",
+      "constraint-predicate__blocked_predicate__owner_instantiated__assert_by_reference",
+      "constraint-predicate__blocked_predicate__owner_instantiated__boolean_ordering",
+      "constraint-predicate__blocked_predicate__owner_instantiated__comparison_in_value_position",
+      "constraint-predicate__blocked_predicate__owner_instantiated__conjunction_in_value_position",
+      "constraint-predicate__blocked_predicate__owner_instantiated__connective_in_value_position",
+      "constraint-predicate__blocked_predicate__owner_instantiated__definition_without_predicate",
+      "constraint-predicate__blocked_predicate__owner_instantiated__feature_chain_root",
+      "constraint-predicate__blocked_predicate__owner_instantiated__implies_with_comparisons",
+      "constraint-predicate__blocked_predicate__owner_instantiated__part_usage_owner",
+      "constraint-predicate__blocked_predicate__owner_instantiated__real_equality",
+      "constraint-predicate__blocked_predicate__owner_instantiated__real_literal_root",
+      "constraint-predicate__blocked_predicate__owner_instantiated__real_reference_root",
+      "constraint-predicate__blocked_predicate__owner_instantiated__subtype",
+      "constraint-predicate__blocked_predicate__owner_instantiated__under_two",
+      "constraint-predicate__blocked_predicate__owner_instantiated__unit_annotation_root",
+      "constraint-predicate__blocked_predicate__owner_package"
+    ],
+    "indexed-reference/indexed_reference": [
+      "indexed-reference__indexed_reference__attribute_value",
+      "indexed-reference__indexed_reference__attribute_value__template",
+      "indexed-reference__indexed_reference__binding_value",
+      "indexed-reference__indexed_reference__calc_definition_feature_value",
+      "indexed-reference__indexed_reference__constraint_predicate"
+    ],
+    "invocation-callable/unsupported_callable": [
+      "invocation-callable__unsupported_callable__attribute_value",
+      "invocation-callable__unsupported_callable__attribute_value__max",
+      "invocation-callable__unsupported_callable__attribute_value__redefined",
+      "invocation-callable__unsupported_callable__attribute_value__size",
+      "invocation-callable__unsupported_callable__attribute_value__template",
+      "invocation-callable__unsupported_callable__binding_value",
+      "invocation-callable__unsupported_callable__calc_definition_feature_value",
+      "invocation-callable__unsupported_callable__constraint_predicate",
+      "invocation-callable__unsupported_callable__constraint_predicate__predicate_root"
+    ],
+    "part-multiplicity/ordered": [
+      "part-multiplicity__ordered__expanded_part_usage",
+      "part-multiplicity__ordered__expanded_part_usage__under_two"
+    ],
+    "part-multiplicity/range": [
+      "part-multiplicity__range__expanded_part_usage",
+      "part-multiplicity__range__expanded_part_usage__depth_two",
+      "part-multiplicity__range__expanded_part_usage__root",
+      "part-multiplicity__range__expanded_part_usage__subtype",
+      "part-multiplicity__range__expanded_part_usage__under_two"
+    ],
+    "part-multiplicity/unresolved_bound": [
+      "part-multiplicity__unresolved_bound__expanded_part_usage",
+      "part-multiplicity__unresolved_bound__expanded_part_usage__lower",
+      "part-multiplicity__unresolved_bound__expanded_part_usage__referenced",
+      "part-multiplicity__unresolved_bound__expanded_part_usage__under_two"
+    ]
+  },
+  "unwitnessed": {
+    "sysml_codegen/elaboration/occurrence.py::_multiplicity_indices::coded::SI_MULTIPLICITY_UNSUPPORTED::2": "The nonunique multiplicity site. SysIDE rejects a nonunique part usage before elaboration, so no loadable model reaches it; part-multiplicity/nonunique left the records in Item 2a P2.1 for the same reason.",
+    "sysml_codegen/elaboration/occurrence.py::_multiplicity_indices::coded::SI_MULTIPLICITY_INVALID::1": "The negative-bound site. SysIDE rejects a negative multiplicity bound before elaboration, so no loadable model reaches it; part-multiplicity/negative_bound left the records in Item 2a P2.1 for the same reason.",
+    "agentic_mbse/sysml/executable_profile.py::_evaluate_usage_against_definition::shared-profile::block_unresolved_definition::1": "No model reaches it in either half: a definition-typed assertion always resolves to a ConstraintDefinition (agentic-mbse scanner.toml [[unwitnessed_site]]).",
+    "agentic_mbse/sysml/reference_use.py::require_exact_reference_use::shared-evidence::INDEXED_REFERENCE_UNSUPPORTED::1": "No model reaches it in either half: only decompose_aggregation_expression calls it, and nothing under either src/ tree calls that (agentic-mbse scanner.toml [[unwitnessed_site]])."
+  }
+}

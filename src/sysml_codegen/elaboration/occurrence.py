@@ -843,6 +843,7 @@ def _multiplicity_indices(
             f"nonunique multiplicity on {name!r} is outside the supported occurrence model",
             reference=reference,
             location=location,
+            reason=SiteReason.OCCURRENCE_MULTIPLICITY_NONUNIQUE,
         )
     upper = getattr(multiplicity, "upper_bound", None)
     lower = getattr(multiplicity, "lower_bound", None)
@@ -867,6 +868,7 @@ def _multiplicity_indices(
             f"upper multiplicity on {name!r} is not a known finite integer",
             reference=reference,
             location=location,
+            reason=SiteReason.OCCURRENCE_MULTIPLICITY_UPPER_UNRESOLVED,
         )
     if count < 0:
         reference, location = _multiplicity_diagnostic_context(
@@ -877,6 +879,7 @@ def _multiplicity_indices(
             f"negative multiplicity on {name!r}",
             reference=reference,
             location=location,
+            reason=SiteReason.OCCURRENCE_MULTIPLICITY_NEGATIVE,
         )
     if lower is not None:
         lower_count = _modeled_integer_bound(
@@ -894,6 +897,7 @@ def _multiplicity_indices(
                 f"lower multiplicity on {name!r} is not a known finite integer",
                 reference=reference,
                 location=location,
+                reason=SiteReason.OCCURRENCE_MULTIPLICITY_LOWER_UNRESOLVED,
             )
         if lower_count != count:
             reference, location = _multiplicity_diagnostic_context(usage, multiplicity)
@@ -902,6 +906,7 @@ def _multiplicity_indices(
                 f"range multiplicity on {name!r} is outside the supported occurrence model",
                 reference=reference,
                 location=location,
+                reason=SiteReason.OCCURRENCE_MULTIPLICITY_RANGE,
             )
     return tuple(range(count))
 

@@ -823,6 +823,7 @@ class _ExactElaborator:
             f"{reference or '<unnamed owner>'}",
             reference=reference,
             location=location,
+            reason=SiteReason.ELABORATION_CONSTRAINT_OWNER_UNMAPPED,
         )
 
     def _display_path(self, scope: ScopeId, name: str) -> str:
@@ -1640,6 +1641,7 @@ class _ExactElaborator:
                 f"attachment: {record.disposition.reason}",
                 reference=record.usage_qualified_name,
                 location=(record.source_file, record.source_line),
+                reason=SiteReason.ELABORATION_ASSERTED_CONSTRAINT_UNATTACHED,
             )
 
     @staticmethod
