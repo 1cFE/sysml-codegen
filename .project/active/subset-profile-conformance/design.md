@@ -1,6 +1,6 @@
 # Design: Independent conformance corpus and per-site codes (EXEC-SUBSET-CONTRACT Item 2a)
 
-**Status:** Draft, revision 2 (2026-10-18). Revised after design review (verdict Rework, [design-review.md](design-review.md)) and spike S1 ([spikes/s1/findings.md](spikes/s1/findings.md)). Next: a fresh `/_my_design_review`, since the review's fired smell needs a new judgment.
+**Status:** Draft, revision 3 (2026-10-18). Revision 2 answered the round-1 review (Rework) and spike S1 ([spikes/s1/findings.md](spikes/s1/findings.md)). Revision 3 answers the round-2 review (Revise, four Majors, [design-review.md](design-review.md)), which needs no third round. Next: the orchestrator checks the Majors against this text, then `/_my_plan`.
 **Owner:** Reid Westwood
 **Created:** 2026-10-18 · **Revised:** 2026-10-18
 **Branch / base:** sysml-codegen `subset-conformance` at `07fd2374` (spec base `b5663c07`); agentic-mbse sibling `subset-conformance`, base `ccd57d83` (Item 1 merge), spike run at `882edc6a`
@@ -42,6 +42,14 @@ All **[AGENT] (orchestrator, 2026-10-18)**, made on the design review and spike 
 | O9 | Group E gets an estimate so the split can trigger; the E5 rescan moves to the final phase. | § E, Handoff |
 | O10–O13 | Spike amendments: D5 neutralizes the statement that emits a site, with 4 hand patches; mutations compare reasons and stub causes, so reasons come first and shadowing sites get distinct reasons; shared agentic-mbse site mutations are not independent evidence; the spike's unchecked shapes are known limits. | D5, D8, § Independence limits |
 | O14 | D12 (no version bump, A2 in ADR 0016 form) stands; the review found no harm. | D12 |
+| O15 | (R2-M1) The receipt hashes every file under `src/agentic_mbse/sysml/` plus `src/agentic_mbse/errors.py`, found by glob, not a hand list, so a new module is covered without anyone adding it. | D13 |
+| O16 | (R2-M2) The runtime loader checks only the `case:<id>` form. Whether the case exists is checked by an agentic-mbse test. `tests/helpers/subset_records.py` keeps working. | D4, D14 |
+| O17 | (R2-M3) The per-site `reason` survives the rebuild in `orchestration/elaborated_pipeline.py` (`:289-356`, `:446`). `ExactTypeError` and `ExpressionInventoryError` gain the field. A test checks that a reason set at the raise site reaches the harness. | D8 |
+| O18 | (R2-M4) The receipt test lands in P7. | D13, Handoff |
+| O19 | (round 2, phasing) The two group A tests that need P2's cases land in P2. The split trigger becomes a count an agent can evaluate. | § A, § E, Handoff |
+| O20 | (round 2, minors) The receipt records the codegen revision, and a `pre_pr` check ties it to the merging codegen commit. A P-0001 amendment is staged beside the ADR 0001 one; filing both is the owner's at merge (RG-3). The concurrent Item 4 session is a merge-order risk for covered files. | D13, Decision records, Risks |
+
+O15–O20 come from the round-2 review ("Revise", [design-review.md](design-review.md) round 2), which also asked for the minor fixes m2, m3, m5 and m8. Those are applied in place.
 
 ## Research Findings
 
@@ -50,7 +58,8 @@ Verified at sysml-codegen `07fd2374` and agentic-mbse `subset-conformance`. Path
 **The generator route**
 - `run_codegen` (`sysml_codegen/cli/__init__.py:1144`) is the one entry point. It returns `bool` and logs every refusal at ERROR as text (`:1189-1230`). The name-safety refusal already passes structured data with `extra={"constraint_name_safety": ...}` (`:1208`), read back in `tests/unit/test_cli_generation.py:348`.
 - Refusal carriers: `ElaborationError.findings` of `ReadinessFinding` (`extraction/source_evidence.py:40`); `ElaborationDiagnosticError.diagnostics` of `Diagnostic` (`elaboration/graph.py:74`); `CodeGenerationError` (`core/errors.py:33`), whose code is only a message prefix such as `REGISTRY_CLASS_NAME_COLLISION:` or `PREDICATE_COMPILE_FAILED:`. None has a reason field.
-- `Diagnostic` is part of the v6 snapshot encoding with a fixed key set (`snapshot/instance_graph.py:947-995`). But `InstanceGraph.validate` raises on any diagnostic (`elaboration/graph.py:925-926`), so a sealed graph, and every committed snapshot, has an empty diagnostics list.
+- `Diagnostic` is part of the v6 snapshot encoding with a fixed key set (`snapshot/instance_graph.py:947-995`). But `InstanceGraph.require_projectable` raises on any diagnostic (`elaboration/graph.py:922-926`) and runs before sealing (`snapshot/envelope.py:310`), so a sealed graph, and every committed snapshot, has an empty diagnostics list.
+- The live route rebuilds every refusal before `run_codegen` sees it (`orchestration/elaborated_pipeline.py:289-356`). It converts `SemanticEvidenceError`, `ExpressionInventoryError`, `ExactTypeError`, `ElaborationInvariantError` and `GraphValidationError` into new `Diagnostic`s, and `ElaborationError` findings into new `ReadinessFinding`s (`_readiness_with_referent`, `:399`). `_diagnostic_with_referent` (`:438-455`) copies a `Diagnostic` field by field, so a new field is dropped there unless it is copied.
 - A calc def output the renderer cannot compile becomes `MANUAL_REQUIRED` (`extraction/expression_compiler.py:291`); its cause is free text and is dropped at `elaboration/elaborate.py:1266`. Compilation happens once per calc def at `elaborate.py:704`.
 - The generated `model_contract.json` embeds the constraint catalog, whose `usage_records` carry a closed disposition (`resolution/models.py:303`, vocabulary `elaboration/graph.py:262`).
 
@@ -64,7 +73,9 @@ Verified at sysml-codegen `07fd2374` and agentic-mbse `subset-conformance`. Path
 - The loader accepts `probe:` and `corpus:` citations and checks form only (`subset_profile.py:396-409`). `SUBSET_PROFILE_VERSION` is pinned to a digest of the records and the allowlist only (`tests/test_sysml/test_subset_profile_version.py`), not to extractor or evaluator code.
 - Real-model screen tests: `tests/test_sysml/test_subset_profile_rules_instantiation.py` and `test_subset_profile_rules_modelwide.py` read the 80 probe models through `tests/helpers/subset_probe_judge.py`.
 - `scripts/subset_profile/codegen_suite.py` runs codegen's pytest suite against a chosen agentic-mbse revision in an isolated tree. It imports `build_tree`, `child_env`, `read_identity`, `read_license_key`, `resolve_rev`, `sibling_state` and `IsolationBreachError` from `probe.py`, and `PINNED_CODEGEN_REV` from `subset_probe_judge.py`. Its output directory is hardcoded to the Item 1 archive (`:43-50`).
-- agentic-mbse ships package data through hatch (`pyproject.toml:49-63`); `extraction/check_corpus/` is a precedent for shipped test inputs.
+- agentic-mbse ships package data through hatch (`pyproject.toml:49-63`). `extraction/check_corpus/` is shipped data, but it is runtime data for `agentic-mbse extract --check` (`extraction/check.py:120`), not test inputs for another repository.
+- Both halves import agentic-mbse modules well beyond the subset-profile files: codegen uses `sysml/expression_ir`, `syside_adapter`, `expression`, `constraint_extraction`, `constraint_facts`, `data_models`, `expression_facts`, `qualified_names`, `helpers`, `types` and `agentic_mbse.errors`. The screen uses `subset_facts`, `occurrence_facts`, `fact_refs`, `expression` and `constraint_extraction` (round-2 review, H5).
+- `tests/helpers/subset_records.py:85, :101` builds synthetic records that cite `probe:<pair>` for every pair and loads them with `load_rule_records`, which is pure over text (`subset_profile.py:587-596`).
 - Neither repository has CI configuration. codegen depends on the sibling checkout by editable path (`pyproject.toml:122`).
 
 **Spike S1** (`spikes/s1/findings.md`)
@@ -87,7 +98,7 @@ Verified at sysml-codegen `07fd2374` and agentic-mbse `subset-conformance`. Path
 4. **Everything else checks against the corpus.** Records cite cases. The mapping must be witnessed by cases. A mutation disables one detector and must break agreement with, or the match to, the stored generator answer.
 
 **Where each fact lives: a fact lives in the repository that can check it live.**
-- **Screen facts live in agentic-mbse's package.** A case that a record cites, or that tests a shared rule's recognizer, keeps its model and its stored screen answer as package data. agentic-mbse's own tests run the screen on those real models, and its loader checks that each `case:` citation exists and shows its pair. codegen reads them through the package it already depends on.
+- **Screen facts live in agentic-mbse's package.** A case that a record cites, or that tests a shared rule's recognizer, keeps its model and its stored screen answer as package data. agentic-mbse's own tests run the screen on those real models, and check that each `case:` citation exists and shows its pair. codegen reads them through the package it already depends on.
 - **Generator facts live in sysml-codegen.** Every case's stored generator answer, the cases that exist only for codegen observations (site witnesses with no rule, stub causes), the codegen half of the site account and the occurrence seed.
 - **Each model has one copy.** Nothing is duplicated, so nothing has to be kept in sync by hand. The rule applies to facts; a test input sits with the fact it serves.
 
@@ -122,7 +133,7 @@ Because neither repo has CI, one link is procedural: a change to the screen is c
 - **D1. One JSON answer file per case, following the `tests/expectations` idiom.** Codegen's stored generator answers sit at `tests/expectations/subset_profile/cases/<case_id>.json`, one per case wherever its model lives. Case IDs keep Item 1's form `<rule>__<shape>__<context>[__<variant>]` for rule cases and `<row-or-family>__<variant>` otherwise. Schema in Appendix A. *Rejected: one table for all cases (the phase audit reviews per-case diffs); TOML (codegen has no TOML expectation store).*
 - **D2. The generator half calls `run_codegen` and observes through structured log data.** Each refusal log call in `run_codegen` gains `extra={"refusal": …}`. The `except Exception` branches carry the converted `unexpected_public_failure` error, so the harness sees what users see. The snapshot and parse branches carry their own exceptions. For seams the harness spies on `elaborate_model_paths` as `exact_pipeline_context` calls it, and reads `model_contract.json` from the output. Nothing is reimplemented. *Rejected: stage calls in order (they skip `run_codegen`'s error mapping); parsing ERROR text (codes also occur inside detail text).*
 - **D3. The disagreement record is one hand-edited JSON file, equal to the computed set.** `tests/expectations/subset_profile/disagreements.json`. Entry fields: subject (`case:<id>` or `fixture:<path>`), kind (`generator_refuses_screen_silent`, `screen_refuses_generator_builds`, `code_unmapped`), generator codes, screen refused reasons, resolution (`codegen_owned`, `reproduced_gap`, `rg1_pending`, `rg2_pending`), R3 row, owner, reason. A test requires the computed set to equal the record on (subject, kind, codes, reasons). **No tool writes this file.** A pure test fails if any Python file under `src/`, `tests/` or `scripts/` other than the reader (`tests/helpers/subset_profile/cases.py`) and that test names `disagreements.json`, or if the reader contains a write call. Limit: a path built from pieces evades the text check; the phase audit is the backstop. The test also rejects an entry with an empty owner or reason, and an `rg1_pending` entry with no `RG1-<n>`. `REASON_MAPPING` is code and is edited by hand. Any capture helper for stored answers writes only the generator and screen blocks, and refuses to write a screen answer that fails agreement unless a matching disagreement entry already exists. *Rejected: a flag inside each case (fixtures have no case file).*
-- **D4. Records cite cases as `case:<id>`, and enforcement of ADR 0001 invariant 1 is split by what each repo can see.** agentic-mbse's loader accepts `case:` for every outcome and requires three things: the ID starts with the pair it backs, the case exists in the package, and its stored screen answer contains that (rule, shape, context, outcome). codegen's tests require the case's stored generator answer to exist, pass live, and agree with the screen answer. Every non-`unconfirmed` pair cites at least one case or `corpus:` fixture; codegen checks `corpus:` citations the same way. `probe:` citations are removed: cases replace probes. *Rejected: probe citations beside cases (two live authorities, against ADR 0001 invariant 5); a citation file written by codegen and read by agentic-mbse (reverse dependency).*
+- **D4. Records cite cases as `case:<id>`, and enforcement of ADR 0001 invariant 1 is split by what each repo can see.** agentic-mbse's loader accepts `case:` for every outcome and checks only the form: the kind is `case:` and the ID starts with the pair it backs. It reads no package data and stays pure over text, as it is for `probe:` today (O16). An agentic-mbse test, `test_subset_case_citations.py`, checks the rest: each cited case exists in the package, and its stored screen answer contains that (rule, shape, context, outcome). So synthetic records in `tests/helpers/subset_records.py` keep loading; they switch to `case:<pair>` citations, which need no packaged case. codegen's tests require the case's stored generator answer to exist, pass live, and agree with the screen answer. Every non-`unconfirmed` pair cites at least one case or `corpus:` fixture; codegen checks `corpus:` citations the same way. `probe:` citations are removed: cases replace probes. *Rejected: probe citations beside cases (two live authorities, against ADR 0001 invariant 5); a citation file written by codegen and read by agentic-mbse (reverse dependency).*
 - **D5. A generator mutation neutralizes the one statement that emits a site, chosen by site ID. It passes when the witness's observed reasons or stub causes differ from its stored generator answer.**
   - *Mechanism (S1).* The helper finds the innermost statement containing the site's line. It rewrites `raise …` → `pass`, a recorder call (`self._diagnose(…)`, `self._record_readiness(…)`, `diagnostics.append(…)`) → `pass`, and `return [finding]` → `return []`. It recompiles the owning top-level function or method and assigns the new code to the existing function's `__code__`, then restores it. Function identity is kept, so by-name imports see the change.
   - *Hand patches.* Four named sites, in `mutate.py`: agentic-mbse `executable_profile._evaluate_usage_against_definition`'s three `_non_executable_block`/`_missing_body_block` returns, and codegen `expression_evidence._indexed_refusal`, patched at its caller's raise.
@@ -139,8 +150,10 @@ Because neither repo has CI, one link is procedural: a change to the screen is c
   - *Rejected: a frozen copy of the codegen rows in agentic-mbse.* Limit: a codegen row naming a nonexistent tracked-gap row ID is not caught.
 - **D8. A stable site reason is a member of one closed codegen enum, `SiteReason`, carried off the snapshot-encoded types.**
   - `SiteReason` lives beside `ElaborationCode` in `elaboration/diagnostics.py`. It is snake_case, disjoint from `SUBSET_REASON_CODES` (tested), and distinct for sites that can shadow each other (ES-002 vs ES-009; `calc_compat_renderer.py:78` vs `:81`).
-  - *Carriers.* `ReadinessFinding`, `ElaborationInvariantError`, `CodeGenerationError` and `CompilationError` gain `reason: SiteReason | None`. `Diagnostic` gains the same field with default `None`.
-  - *Snapshot stability (O5).* `Diagnostic` is in the v6 encoding, so its encoder and decoder are unchanged and stay byte-stable. The encoder also refuses a `Diagnostic` whose `reason` is set, so a reason is never silently dropped. That cannot happen on a valid graph: `InstanceGraph.validate` raises on any diagnostic, so sealed graphs carry none. A pure test asserts all 22 committed snapshots have an empty diagnostics list.
+  - *Carriers.* `ReadinessFinding`, `ElaborationInvariantError`, `CodeGenerationError`, `CompilationError`, `ExactTypeError` (`extraction/errors.py`) and `ExpressionInventoryError` gain `reason: SiteReason | None`. `Diagnostic` gains the same field with default `None`.
+  - *The live-route rebuild copies it (O17).* Every converter in `orchestration/elaborated_pipeline.py` passes `reason` on: the `except` branches at `:289-356`, `_readiness_with_referent` (`:399`), `_semantic_evidence_diagnostic` (`:419`, from the `SemanticEvidenceCode` table below) and `_diagnostic_with_referent` (`:438-455`). The `CodeGenerationError` branch (`:357`) re-raises the same object, so it keeps its fields.
+  - *Reach test.* A licensed test, `test_site_reason_reaches_harness.py`, takes one witness per carrier type and per converter branch. It requires the `reason` set at the raise site to appear in the harness's `extra={"refusal": …}` observation. A future rebuild that drops the field then fails by name, rather than showing up later as mutations that seem to survive.
+  - *Snapshot stability (O5).* `Diagnostic` is in the v6 encoding, so its encoder and decoder are unchanged and stay byte-stable. The encoder also refuses a `Diagnostic` whose `reason` is set, so a reason is never silently dropped. That cannot happen on a valid graph: `InstanceGraph.require_projectable` (`graph.py:922-926`) raises on any diagnostic before sealing (`snapshot/envelope.py:310`), so sealed graphs carry none. A pure test asserts all 22 committed snapshots have an empty diagnostics list.
   - *Relayed agentic-mbse sites* get their reason from a total table keyed by `SemanticEvidenceCode`.
   - *Rendering.* Messages end in ` (reason: <id>)`.
   - *Rejected: per-site `ElaborationCode` members (spec Non-Goal); encoding `reason` in the snapshot (a format change, 2b's).*
@@ -150,14 +163,25 @@ Because neither repo has CI, one link is procedural: a change to the screen is c
 - **D12. No agentic-mbse version bump; the contract is identified by `SUBSET_PROFILE_VERSION`, following ADR 0016** (O14). `_upstream_pins.py` gains the pin, and the adapter checks it at import. The requirement stays `agentic-mbse>=0.1.3,<0.2`. Criterion A2 is met in that form: the evidence states that no package version identifies the contract. One bump, `subset-profile/v1` → `v2`, covers all of 2a's record changes. No publish. *Rejected: 0.1.4 with a `>=0.1.4` bound (invalidates the 22 snapshots, 2b's work).*
 - **D13. A required pre-merge run carries the generator check to agentic-mbse changes, and a receipt makes skipping it fail a test** (O1).
   - *The run.* `scripts/subset_profile/codegen_suite.py` is kept. It gains `--codegen-rev` (replacing `PINNED_CODEGEN_REV`), `--out` (replacing the archive path) and `--select` (default `tests/conformance/subset_profile`). The probe helpers it imports move to `scripts/subset_profile/isolated_tree.py`. It runs codegen's licensed subset-profile tests against the agentic-mbse revision in an isolated tree. It fails on any failure, and on any skip of a license-gated test.
-  - *When.* Required before any agentic-mbse merge that touches `sysml/subset_profile*.py`, `subset_profile_rules.toml`, `subset_extraction.py`, `occurrence_extraction.py`, `invocation_allowlist.py`, `executable_profile.py`, `reference_use.py` or the packaged cases.
-  - *The receipt.* A passing run writes `tests/fixtures/subset_profile/codegen_gate.json`. It holds the sha256 of those files, the codegen revision and the outcome. An agentic-mbse pure test recomputes the digest and fails when it differs or the outcome is not a pass. So editing any covered file without rerunning the gate fails agentic-mbse's own suite. Limit: a hand-forged receipt passes. It is a deliberate act and visible in the diff.
+  - *Covered files (O15).* Every file under `src/agentic_mbse/sysml/` (code, the records TOML and `subset_cases/`) plus `src/agentic_mbse/errors.py`, found by glob in sorted path order. *Rejected: a hand-written list.* Revision 2's list already missed `expression_ir.py`, `syside_adapter.py` and nine other modules both halves import. A missed file gives a valid receipt for an ungated change, which is worse than no receipt. The cost is that more agentic-mbse edits need a gate run. That cost is real, because codegen uses those modules.
+  - *When.* Required before any agentic-mbse merge that changes a covered file.
+  - *The receipt.* A passing run writes `tests/fixtures/subset_profile/codegen_gate.json`. It holds:
+    - `digest`: sha256 over the covered files' paths and bytes, taken from the tree exported at `--agentic-rev`, not the working tree, so uncommitted edits can never enter a receipt;
+    - `codegen_rev`: the full codegen commit the run tested;
+    - `agentic_rev`: the agentic-mbse commit exported;
+    - `case_ids`: the packaged case IDs whose parametrized codegen tests passed.
+    - no outcome field, because only a passing run writes the receipt. A failing run writes its report to `--out` and leaves the receipt alone.
+  - *The receipt test* (`tests/test_subset_gate_receipt.py`, pure). It recomputes the digest over the working tree and fails when it differs. It also fails when a packaged case ID is missing from `case_ids`. Its failure message names the command to run (`uv run python scripts/subset_profile/codegen_suite.py run --agentic-rev HEAD --label gate --codegen-rev <rev> --out <dir>`; `run`, `--agentic-rev` and `--label` exist today, `codegen_suite.py:167-173`). So editing any covered file without rerunning the gate fails agentic-mbse's own suite. It lands in P7 (O18), see below.
+  - *Tying the codegen revision to the merge (O20).* The receipt names the codegen commit it ran against. A `pre_pr` step for the coordinated merge checks that `codegen_rev` is the head of the codegen branch being merged, or an ancestor whose later commits touch nothing under `tests/conformance/subset_profile/`, `tests/expectations/subset_profile/` or `src/`. Without that step, a receipt from an older codegen commit would pass agentic-mbse's test. That limit is listed beside the forged-receipt one.
+  - *Limits.* A forged receipt cannot be told apart from a real one. Recomputing only the digest by hand is not enough, because `case_ids` must also list every packaged case. But a deliberate forger who writes both still passes. The `pre_pr` check is procedural: it runs only when `pre_pr` runs.
+  - *Why the test waits for P7 (O18).* During 2a, codegen's tests already run against the live agentic-mbse sibling tree through the editable path dependency, so a receipt would guard nothing. A receipt test landed in P1 would turn agentic-mbse red on every edit in P2–P6 and teach re-stamping as a reflex. P1 lands the gate script, because the baseline run uses it. P7 lands the receipt test and the first receipt, written by a gate run at the final revisions of both repositories. The receipt is regenerated on the result of each coordinated merge, so it applies from merge onward.
   - *What only this run catches.* An extractor or evaluator change is checked against the generator only by this run. agentic-mbse's own tests catch it only as a change from the stored screen answers, and editing those answers to match passes them. The run also guards L6 and guidance (Items 3 and 5, which read agentic-mbse directly) between an agentic-mbse change and its merge. Nothing guards them if the run is skipped and the receipt forged.
   - *Rejected: relying on "codegen CI" (none exists); a check in codegen alone (it runs only when someone runs codegen).*
 - **D14. Cases that test the screen keep their models and screen answers as agentic-mbse package data; every other case lives in codegen. One copy of each model** (O2).
-  - *Layout.* Screen-tested cases live at `src/agentic_mbse/sysml/subset_cases/<id>/{*.sysml, case.json}`. `case.json` holds the construct, the stored screen answer, `agentic_site_witnesses` and provenance (the Item 1 probe ID). These are cases a record cites, or that test a shared rule's recognizer: near-neighbors, variations, controls and rule-candidate reproductions. Item 1's probe models move here; `observation*.json` and the generator-judging fields retire. Codegen-only cases (site witnesses with no rule, stub causes, naming collisions) live at `tests/fixtures/subset_profile/<id>/`, with their screen answer in the codegen expectation file.
-  - *Checks.* agentic-mbse's `test_subset_profile_rules_{instantiation,modelwide}.py` are kept and repointed. They run the screen on every packaged case and compare with its `case.json`. A codegen pure test requires every case, in either home, to have exactly one stored generator answer, and no ID to exist in both homes. The loader requiring cited cases to be packaged (D4) enforces the placement.
-  - *Why (b) over (a).* Option (a), models in agentic-mbse's `tests/` read by codegen through the sibling path, breaks the [HARD] boundary that codegen reads agentic-mbse only through its package (spec Boundaries). Models in codegen read by agentic-mbse would make agentic-mbse's suite depend on its downstream checkout. Package data is the one place both can read. It has precedent (`extraction/check_corpus/`), and it costs a few hundred small files in the wheel. The hash-guarded copy stays unused.
+  - *Layout.* Screen-tested cases live at `src/agentic_mbse/sysml/subset_cases/<id>/{*.sysml, case.json}`. `case.json` holds a `schema` field (`subset-case/1`), since codegen reads its layout across repositories, then the construct, the stored screen answer, `agentic_site_witnesses` and provenance (the Item 1 probe ID). These are cases a record cites, or that test a shared rule's recognizer: near-neighbors, variations, controls and rule-candidate reproductions. Item 1's probe models move here; `observation*.json` and the generator-judging fields retire. Codegen-only cases (site witnesses with no rule, stub causes, naming collisions) live at `tests/fixtures/subset_profile/<id>/`, with their screen answer in the codegen expectation file.
+  - *Checks.* agentic-mbse's `test_subset_profile_rules_{instantiation,modelwide}.py` are kept and repointed. They run the screen on every packaged case and compare with its `case.json`. A codegen pure test requires every case, in either home, to have exactly one stored generator answer, and no ID to exist in both homes. agentic-mbse's citation test (D4) requires every cited case to be packaged, which enforces the placement.
+  - *Why (b) over (a).* Option (a), models in agentic-mbse's `tests/` read by codegen through the sibling path, breaks the [HARD] boundary that codegen reads agentic-mbse only through its package (spec Boundaries). Models in codegen read by agentic-mbse would make agentic-mbse's suite depend on its downstream checkout. Package data is the one place both can read. Two other options were weighed. Excluding `subset_cases/` from the wheel works only for editable installs, so codegen's tests would break silently on a wheel install. A separate test-data distribution adds a second package and version relation for about 100 KB. The hash-guarded copy stays unused.
+  - *What wheel users get.* Inert minimal models, each with the screen's verdict. They are not run by any product command. That is acceptable: the files are small (the 80 probe models are 25 KB) and they document the contract, which Item 5's guidance may use. `extraction/check_corpus/` is not a precedent for this; it is runtime data for `extract --check`.
   - The packaged cases are not in the version digest, since adding a case changes no decision. They are covered by the gate receipt (D13).
 - **D15. A generation-stage refusal carries a closed code, and the mapping never contains one** (O6). `CodeGenerationError` gains `code: GenerationCode`. That is a closed `StrEnum` of today's message prefixes (`DUPLICATE_OUTPUT_PATH`, `REGISTRY_CLASS_NAME_COLLISION`, `PREDICATE_COMPILE_FAILED`, …), set at each raise; message text is unchanged. The harness adds it to the case's codes. `REASON_MAPPING` holds only `ElaborationCode` and `ReadinessCode` values, by type, since no shared rule describes generation-stage output facts (ADR 0007; Item 1 D11). A refusal with no code at all is a harness failure, not a disagreement: every `CodeGenerationError` raise must pass a code (checked by the E1 scan), and unclassified failures already become `SI_INTERNAL_DEFECT`.
 
@@ -167,8 +191,8 @@ Because neither repo has CI, one link is procedural: a change to the screen is c
  agentic-mbse package                           sysml-codegen tests
  sysml/subset_cases/<id>/ model + case.json ──┐  tests/fixtures/subset_profile/<id>/ (codegen-only cases)
  subset_profile_rules.toml (cites case:<id>)  │           │
-        │ loader: cited case exists,          ▼           ▼
-        │ screen answer shows the pair   generator half (run_codegen, screen patched to raise)
+        │ loader: citation form only;         ▼           ▼
+        │ test: case exists, shows pair  generator half (run_codegen, screen patched to raise)
         ▼                                 observe: log extra refusal / manual_stub, spied graph, model_contract.json
  agentic-mbse tests: screen on every            │ compare
  packaged case vs case.json                     ▼
@@ -190,7 +214,8 @@ Today agentic-mbse alone enforces that a record outcome rests on retained eviden
 
 | Check | Where it runs |
 |---|---|
-| Citation form, cited case exists, its stored screen answer shows the pair | agentic-mbse loader and tests |
+| Citation form | agentic-mbse loader |
+| Cited case exists in the package, and its stored screen answer shows the pair | agentic-mbse test (`test_subset_case_citations.py`) |
 | The screen reproduces every packaged case's stored answer | agentic-mbse tests |
 | The case's stored generator answer exists, matches the generator live, and agrees with the screen answer | sysml-codegen tests |
 | An agentic-mbse change was run through the codegen check | agentic-mbse receipt test (D13) |
@@ -199,10 +224,12 @@ Today agentic-mbse alone enforces that a record outcome rests on retained eviden
 - cases replace probes as evidence;
 - a `case:<id>` citation resolves to the packaged case `agentic_mbse/sysml/subset_cases/<id>/` plus `sysml-codegen tests/expectations/subset_profile/cases/<id>.json`;
 - generator backing is enforced in sysml-codegen;
-- the pre-merge run and its receipt are required for contract changes;
+- the pre-merge run and its receipt are required for changes to covered files (D13);
 - invariant 6's "codegen CI" reads "the codegen parity test, run by the pre-merge gate".
 
 It replaces the spec's staged text ("cases admissible alongside probes"), which is `[INFERRED]` and too weak once probes retire.
+
+`p0001-amendment.md`, written beside it in P1 (O20), amends agentic-mbse `.project/product/0001-executable-subset-contract.md:3, :17`. That promise says a shape is "refused only when a retained probe of the pinned generator observed that refusal", which D4 makes false. The amended wording says a shape is refused only when a retained conformance case shows the generator refusing it, checked live in sysml-codegen and carried to agentic-mbse changes by the pre-merge gate. Filing both amendments is the owner's, at merge (RG-3).
 
 ## Design by criterion group
 
@@ -214,10 +241,10 @@ It replaces the spec's staged text ("cases admissible alongside probes"), which 
   - The keys equal `SUBSET_REASON_CODES`.
   - An entry is `NO_REFUSAL` exactly when no record refuses that reason's shape in any context.
   - Each record's `expected_code` is among its reason's codes.
-  - Every (reason, code) pair has a case whose generator codes include the code and whose screen answer refuses a finding with that reason.
+  - Every (reason, code) pair has a case whose generator codes include the code and whose screen answer refuses a finding with that reason. This test needs P2's cases, so it lands in P2 (O19).
 - **Renderer.** `render_finding(finding, rules) -> SubsetDiagnostic`, a frozen dataclass in the adapter: `code`, `subset_reason`, `remedy` (the record's text) and location. It is deliberately not a `Diagnostic`, so `Diagnostic.reason` keeps one meaning; how a `SubsetDiagnostic` joins a refusal is 2b's. Unit tests cover every reason. An import-boundary test pins that nothing on the generate route imports the adapter.
-- **Occurrence parity** (D6). One licensed test over the seed, the 37 v6 corpus fixtures and every case whose summary has nodes. A missing input fails by name. A companion test patches `_multiplicity_indices` (`elaboration/occurrence.py:812`) to drop one index and requires a difference.
-- **ADR drafts** (RG-3). `adr-0012-amendment.md`, from the archived draft, with its "until Item 2 lands" invariant naming `tests/conformance/subset_profile/test_occurrence_parity.py` and the pre-merge run as what runs it. And `adr-0001-amendment.md` (§ Cross-repo enforcement).
+- **Occurrence parity** (D6). One licensed test over the seed, the 37 v6 corpus fixtures and every case whose summary has nodes. A missing input fails by name. P1 lands it over the seed and the corpus fixtures; P2 extends it to the cases as they arrive (O19). A companion test patches `_multiplicity_indices` (`elaboration/occurrence.py:812`) to drop one index and requires a difference.
+- **ADR drafts** (RG-3). `adr-0012-amendment.md`, from the archived draft, with its "until Item 2 lands" invariant naming `tests/conformance/subset_profile/test_occurrence_parity.py` and the pre-merge run as what runs it. And `adr-0001-amendment.md` with `p0001-amendment.md` (§ Cross-repo enforcement).
 
 ### B. Shared rules against the generator's route
 
@@ -278,7 +305,10 @@ It replaces the spec's staged text ("cases admissible alongside probes"), which 
   - **Head** (reasons and witnesses for sites joined to a shared rule or an R3-routed row, and E4 for those): 3–4 days, in P2 and P5.
   - **Tail** (the other public sites: the 10 naming collisions, the codegen-only follow-ups, and the triage of the remaining unknown sites): 4–6 days, in P6.
   - The tail is defined by the account's `rule` and `matrix_row` columns. It is not defined by disagreement entries, because every codegen-only witness creates one.
-  - The split is taken at P5's close in either case: foundation plus head have used more than 7 engineer-days, or the plan's re-estimate of the tail puts the item past 35 days. The tail then moves to a follow-on item, and the orchestrator surfaces that to the owner.
+  - *Split trigger (O19), counted from the account at P5's close.* The plan records two numbers: H, the head sites, and T, the tail sites (public rows plus unknown sites not joined to a rule or R3 row). At P5's close, count L, the head sites whose `SiteReason` and witness have landed. That means the E3 pure test passes for them. Take the split if either holds:
+    - L < H: the head is not finished, so the tail would start late;
+    - the tail's current count is more than 1.25 × T, because E4 triage in P5 moved unknown sites into the tail.
+  - An agent evaluates both by running the E3 test and counting rows in `site_account.csv` by column. When the split is taken, the tail moves to a follow-on item and the orchestrator tells the owner.
 - **Rescan (E5).** A recorded run of the codegen test and agentic-mbse's narrowed `scan_sites.py` at the final revisions, itemizing added and removed sites. It runs in P7, so taking the split does not drop it.
 
 ### F. Semantics questions and baseline evidence
@@ -312,18 +342,18 @@ These are the places where the evidence is not independent of the screen. They a
 **sysml-codegen, production (`src/sysml_codegen/`)**
 - `_upstream_pins.py`: adds `SUBSET_PROFILE_VERSION`.
 - `subset_profile_adapter.py` (new): `REASON_MAPPING`, `SubsetDiagnostic`, `render_finding`, the import-time profile check. Off the generate route in 2a.
-- `elaboration/diagnostics.py`: `SiteReason`. `core/errors.py`: `GenerationCode`, plus `code` and `reason` on `CodeGenerationError`. The carriers gain `reason`; the renderers at `elaboration/elaborate.py:133, :194` append it. `snapshot/instance_graph.py:947`: the encoder refuses a reason-carrying `Diagnostic`, and its output is otherwise unchanged.
+- `elaboration/diagnostics.py`: `SiteReason`. `core/errors.py`: `GenerationCode`, plus `code` and `reason` on `CodeGenerationError`. The carriers gain `reason`, `ExactTypeError` and `ExpressionInventoryError` included. `orchestration/elaborated_pipeline.py:289-455`: every converter copies `reason`; the renderers at `elaboration/elaborate.py:133, :194` append it. `snapshot/instance_graph.py:947`: the encoder refuses a reason-carrying `Diagnostic`, and its output is otherwise unchanged.
 - `cli/__init__.py`: `extra={"refusal": …}` on each refusal log call.
 - `extraction/expression_compiler.py`, `extraction/calc_compat_renderer.py`, `elaboration/elaborate.py`: `CompilationError` carries a `SiteReason`; `ManualStubNotice`.
 
 **sysml-codegen, tests**
 - `tests/helpers/subset_profile/`: `cases.py` (answer schema, loading, agreement, disagreement reader; pure), `observe.py` (both halves, seams), `mutate.py` (statement neutralizer, the 4 hand patches, screen recognizer patches, the patched-name table), `site_scan.py`, `occurrence_parity.py`.
-- `tests/conformance/subset_profile/`: the test modules for groups A–E. `test_diagnostic_provenance_sites.py`'s scanner folds into `site_scan.py`.
+- `tests/conformance/subset_profile/`: the test modules for groups A–E, including `test_site_reason_reaches_harness.py` (D8). `test_diagnostic_provenance_sites.py`'s scanner folds into `site_scan.py`.
 - Data: `tests/fixtures/subset_profile/<id>/` (codegen-only cases), `tests/fixtures/subset_profile_occurrence_seed/<case>/`, and `tests/expectations/subset_profile/{cases/<id>.json, disagreements.json, fixture_classes.json, site_account.csv}`.
 
 **agentic-mbse (coordinated merge).** Appendix B lists every file.
 
-**This folder:** `rg1-recommendations.md`, `rg2-string-policy.md`, `adr-0012-amendment.md`, `adr-0001-amendment.md`, `evidence/`.
+**This folder:** `rg1-recommendations.md`, `rg2-string-policy.md`, `adr-0012-amendment.md`, `adr-0001-amendment.md`, `p0001-amendment.md`, `evidence/`.
 
 ## Non-Goals
 
@@ -351,11 +381,13 @@ These are the places where the evidence is not independent of the screen. They a
 
 | Risk | Mitigation |
 |---|---|
-| The pre-merge run is skipped | The receipt test fails agentic-mbse's own suite; only a forged receipt passes |
+| The pre-merge run is skipped after 2a merges | The receipt test fails agentic-mbse's own suite; only a forged receipt (digest and `case_ids` both) passes |
+| The receipt names an older codegen commit than the one merging | The `pre_pr` revision check (D13); procedural, listed as a limit |
+| A red receipt test is "fixed" by re-stamping without a run | The test lands only in P7, so it is not red through 2a; it requires `case_ids`, which a hash-only re-stamp cannot supply |
 | Shared-site mutations are mistaken for independent evidence | Tagged `shared` and counted apart (§ Independence limits) |
 | Two shadowing sites cannot be given distinct reasons (B6) | Recorder observable for that pair, listed by name |
-| Concurrent Item 4 work in agentic-mbse touches covered files | The receipt forces a gate run on each change. Keep agentic-mbse edits in few commits and rebase at each phase gate |
-| Shipping case models in the agentic-mbse wheel grows it | A few hundred small files; the precedent is `extraction/check_corpus/` |
+| Merge order with the concurrent Item 4 session (O20). Item 4 runs in `/home/reid/src/agentic-mbse` and may change covered files under `sysml/` | If Item 4 merges first, 2a rebases onto it, and 2a's final gate run on the merged tree covers its changes. If 2a merges first, Item 4's later edits hit the receipt test and need their own gate run. Either way the receipt is regenerated on the result of each coordinated merge. Keep agentic-mbse edits in few commits and rebase at each phase gate |
+| Shipping case models in the agentic-mbse wheel grows it | About 25 KB of models plus `case.json` files; wheel users get inert examples (D14) |
 | A new rule (D11) needs facts with no heuristic-free extraction | The row becomes a reproduced gap; the criterion decides |
 | Added reasons change stored refusal text (`public_package_oracle/baseline.json`) | Listed in the evidence and updated as reviewed changes |
 
@@ -368,15 +400,15 @@ These are the places where the evidence is not independent of the screen. They a
 ## Validation Approach
 
 - **Pure, codegen:** answer schema, agreement, record equality, the disagreement writer guard, citation resolution, mapping, candidate marks, fixture classification, account drift, scanner mutations, renderer, empty diagnostics in the committed snapshots.
-- **Pure, agentic-mbse:** loader (cited cases exist and show the pair), the receipt digest, agentic-mbse account witnesses.
-- **Licensed, codegen:** both halves for every case, tripwire, fixture classes and screen, occurrence parity with its mutation, generator and screen mutations.
+- **Pure, agentic-mbse:** loader (citation form), citation test (cited cases exist and show the pair), the receipt digest and `case_ids` (from P7), agentic-mbse account witnesses.
+- **Licensed, codegen:** both halves for every case, the reason-reach test, tripwire, fixture classes and screen, occurrence parity with its mutation, generator and screen mutations.
 - **Licensed, agentic-mbse:** the screen on every packaged case.
 - **Recorded runs:** baseline (P1), gate receipts, E5 rescan, dc3 re-run, `kerml-expert` checks, repository checks against the baseline. The evidence names licensed runs and skips.
 - Each phase's `/_my_audit` reviews diffs to stored answers, the record and the mapping, as the named reviewer.
 
 ## Next-Stage Handoff
 
-**Fixed:** D1–D15; the fact-placement rule; the agreement rule; the split-point definition and trigger.
+**Fixed:** D1–D15; the fact-placement rule; the agreement rule; the split-point definition and its counted trigger (the plan supplies H and T).
 
 **Open for the plan:**
 - the final case list and IDs, and which cases are packaged and which are codegen-only;
@@ -389,23 +421,26 @@ These are the places where the evidence is not independent of the screen. They a
 
 | Phase | Content | Depends on |
 |---|---|---|
-| P1 | Baseline in both repos. Group A. Harness. `SiteReason`/`GenerationCode` mechanism and the snapshot guard. Scanner port, account move, E1, E2. Gate script, receipt test and the probe-helper move | — |
-| P2 | Group B: packaged cases, records → `case:`, `v2`, reasons and mutations for shared-rule sites | P1 |
+| P1 | Baseline in both repos. Group A, except the mapping-witness test and occurrence parity over cases. Harness. `SiteReason`/`GenerationCode` mechanism, the converter copies, the reason-reach test and the snapshot guard. Scanner port, account move, E1, E2. Gate script (no receipt test yet) and the probe-helper move. ADR 0001, P-0001 and ADR 0012 amendment drafts | — |
+| P2 | Group B: packaged cases, records → `case:`, citation test, `v2`, reasons and mutations for shared-rule sites. The mapping-witness test, and occurrence parity extended to cases | P1 |
 | P3 | Group C | P2 |
 | P4 | Group D, RG-2 recommendation, docs | P2 |
 | P5 | Group E head: R3-row site reasons and witnesses, E4 for those | P2 |
 | — | **Split point** at P5's close (§ E trigger) | P5 |
 | P6 | Group E tail | P5 |
-| P7 | Group F; E5 rescan; final repository checks against the baseline | P3–P5, and P6 unless split |
+| P7 | Group F; E5 rescan; the receipt test and the first receipt, from a gate run at both final revisions; final repository checks against the baseline | P3–P5, and P6 unless split |
 
 **Decision records to file once the design is approved** (none filed yet):
 - the fact-placement rule with packaged screen cases, and the split enforcement of invariant 1 (cross-repo; a future agent would plausibly re-add copies or re-centralize checks). It is filed in both registers as each binds; the agentic-mbse half is the staged ADR 0001 amendment.
 - the pre-merge gate and receipt, as part of that amendment;
+- agentic-mbse P-0001, the staged `p0001-amendment.md` (product promise: refusal backed by a retained conformance case, not a probe);
 - D12, as an amendment of ADR 0016.
+
+Filing all of them is the owner's, at merge (RG-3).
 
 ---
 
-Next Step: a fresh `/_my_design_review`, then `/_my_plan`.
+Next Step: the orchestrator verifies R2-M1 to R2-M4 against this revision, then `/_my_plan`.
 
 ## Appendix A — Stored answer schema
 
@@ -431,7 +466,7 @@ The packaged `case.json` holds `construct: {file, lines}`, `screen: {verdict, fi
 
 | File | Change |
 |---|---|
-| `src/agentic_mbse/sysml/subset_profile.py` | `case:` evidence, loader checks against packaged cases, `candidate_refusal`, `unobservable`, retired shapes removed, D11 rules, `v2` |
+| `src/agentic_mbse/sysml/subset_profile.py` | `case:` evidence checked by form only (the loader stays pure over text), `candidate_refusal`, `unobservable`, retired shapes removed, D11 rules, `v2` |
 | `src/agentic_mbse/sysml/subset_profile_rules.toml` | citations → `case:`, 2a outcomes, `verified_against` |
 | `src/agentic_mbse/sysml/subset_extraction.py` | facts for any D11 rule |
 | `src/agentic_mbse/sysml/subset_cases/` (new) | the packaged cases, moved from `tests/fixtures/subset_profile/probes/` and added to |
@@ -446,13 +481,15 @@ The packaged `case.json` holds `construct: {file, lines}`, `screen: {verdict, fi
 | `tests/test_sysml/test_subset_profile_records.py` | updated: `case:`, `unobservable`, `candidate_refusal`, SA-1 wording |
 | `tests/test_sysml/test_subset_profile_vocabulary.py`, `…_version.py` | updated for retired shapes and `v2` |
 | `tests/test_sysml/test_occurrence_parity.py` | removed (D6) |
-| `tests/test_subset_probe_evidence.py`, `tests/test_subset_probe_judge.py` | removed; replaced by loader checks and the kept rule tests |
+| `tests/test_subset_probe_evidence.py`, `tests/test_subset_probe_judge.py` | removed; replaced by the citation test and the kept rule tests |
+| `tests/test_subset_case_citations.py` (new, P2) | each cited case exists in the package and its `case.json` shows the pair (D4) |
 | `tests/test_subset_matrix.py`, `tests/test_subset_site_account.py` | updated for D7 |
-| `tests/test_subset_gate_receipt.py` (new) | the receipt digest test |
+| `tests/test_subset_gate_receipt.py` (new, P7) | the receipt digest and `case_ids` test (D13) |
 | `tests/helpers/subset_probe_judge.py`, `occurrence_oracle_schema.py` | removed |
 | `tests/helpers/subset_matrix.py`, `subset_site_account.py` | updated for D7 |
-| `tests/helpers/subset_records.py`, `subset_synthetic.py`; other `test_sysml` subset, occurrence, invocation and conditional tests | unchanged |
-| `scripts/subset_profile/codegen_suite.py` | kept; `--codegen-rev`, `--out`, `--select`, receipt writing |
+| `tests/helpers/subset_records.py` | updated: synthetic citations `probe:<pair>` → `case:<pair>`, which load by form with no packaged case (`:85`, `:101`) |
+| `tests/helpers/subset_synthetic.py`; other `test_sysml` subset, occurrence, invocation and conditional tests | unchanged |
+| `scripts/subset_profile/codegen_suite.py` | kept; `--codegen-rev`, `--out`, `--select`, glob-covered digest from the exported tree, receipt writing |
 | `scripts/subset_profile/isolated_tree.py` (new) | the helpers `codegen_suite.py` imports, moved from `probe.py` |
 | `scripts/subset_profile/probe.py`, `occurrence_oracle.py`, `occurrence_parity.py`, `occurrence_port_run.py` | removed |
 | `scripts/subset_profile/run_trees.py`, `render_matrix.py`, `validate_diff.py` | output path becomes a parameter |
