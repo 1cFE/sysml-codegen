@@ -11,7 +11,10 @@
 - **Contract version before and after.** `SUBSET_PROFILE_VERSION = "subset-profile/v1"` in `src/agentic_mbse/sysml/subset_profile.py` at `ccd57d83` and at `186d7ff3`; the installed module reports the same value. The pin test in `tests/conformance/test_upstream_pins.py` checks the pin against the installed value.
 - **Tags.** `git tag --list 'v*'` in agentic-mbse returns nothing. The only tags are `archive/...` and `stop-parser/agentic-final`; none is a release tag.
 
+## Later: the `v2` bump (Step 2.1)
+
+The one bump D12 allows, `subset-profile/v1` → `v2`, landed in Step 2.1 with the first record change (agentic-mbse `e4bb619c`; codegen's pin in `_upstream_pins.py` moved in the same step). Later record changes re-pin the `v2` digest in agentic-mbse's `test_subset_profile_version.py` and keep the name `v2` (PD13). The package version is still 0.1.3. The findings above, taken at Step 1.5, describe `v1` and are otherwise unchanged.
+
 ## Not checked
 
 - The package index. Nothing in 2a publishes (D12), and no index was queried.
-- The `v1` → `v2` bump. D12 makes it one bump covering all of 2a's record changes; it lands with those changes in a later phase, not here.

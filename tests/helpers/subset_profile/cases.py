@@ -176,6 +176,8 @@ class DisagreementEntry:
     disagreement: Disagreement
     resolution: Resolution
     r3_row: str | None
+    #: The person accountable for the disagreement until it closes (spec § Problem's
+    #: "recorded disagreement"). A work item or phase is not an owner: it ends, the entry may not.
     owner: str
     reason: str
     rg1: str | None

@@ -1,6 +1,6 @@
 # Implementation Plan: Independent conformance corpus and per-site codes (EXEC-SUBSET-CONTRACT Item 2a)
 
-**Status:** Implementation in progress (Phase 1)
+**Status:** Implementation in progress (Phases 1–2 done, audited mid-run; Phase 3 next)
 **Created:** 2026-10-18
 **Last Updated:** 2026-10-18
 
@@ -348,7 +348,7 @@ def test_disabling_recognizer_breaks_agreement(rule_shape):
 
 ### What we know works after Phase 2
 
-Every record pair rests on a packaged case, checked live in both repos. The generator half never runs the screen. Every shared-rule detector, on either side, is tied to a witness that a mutation breaks, except the shared tables, whose limit is recorded.
+Every record pair rests on a packaged case, checked live in both repos. In codegen, each case's generator half and screen half are both run live and compared with the stored answers (`test_generator_half.py`, `test_screen_half.py`, the latter added by the mid-run audit fix), so an extractor or evaluator change fails codegen's suite, the pre-merge gate, and not only agentic-mbse's. The generator half never runs the screen. Every shared-rule detector, on either side, is tied to a witness that a mutation breaks, except the shared tables, whose limit is recorded. A screen mutation judges an unmutated live run against a mutated live run.
 
 ---
 
@@ -751,6 +751,15 @@ Phase 1 notes are below, per step. Later phases add their own sections.
   - The plan's stencil asserts each witness flips. The stored-set form is stricter: it fixes the whole changed set, which also records "other cases flipped" (none today).
 - **Found, for P3: an anonymous assertion by reference splits both checks.** `assert positive;` (an `AssertConstraintUsage` with no name) is refused by the generator as `SI_ID_UNSTABLE` before the profile runs, while the screen reports every rule unverified, which is a `generator_refuses_screen_silent` disagreement. Occurrence parity also fails on it: codegen's occurrence index builds, while agentic-mbse's port aborts at its writers stage with `SI_ID_UNSTABLE`, so ADR 0001 invariant 6 does not hold on this input. The case was not packaged, because keeping it would need an exception in the parity test, which is the owner's call. The named spelling witnesses the site instead. Model: a `constraint positive : Positive { in observed = x; }` in a part def, then `assert positive;`.
 - **Found, for P3: three spellings refuse with an unmapped code.** The screen refuses each as `constraint-predicate/blocked_predicate` (`SI_CONSTRAINT_BLOCKED`), but the generator refuses with `SI_EDGE_DANGLING`, carrying no reason. They are an untyped `assert constraint bare;`, `assert constraint check : Constraints::ConstraintCheck;` and a sum of two quantities with different units (`len + mass <= 3.0 [m]`). In the last one the `SI_CONSTRAINT_BLOCKED` site fires, but the logged refusal is `SI_EDGE_DANGLING`. None is packaged; each would be a `code_unmapped` disagreement. A Real-plus-Boolean sum agrees and witnesses the same site.
+
+#### Mid-run audit fixes (2026-10-18, before Phase 3)
+Fixes for `audit.md` (Phases 1–2, Needs Work). Experiment plugins are committed in `evidence/experiments/` so each proof can be rerun.
+- **Blocker 1 (B6, lens F1/F2).** New licensed `tests/conformance/subset_profile/test_screen_half.py`: the live screen answer equals the stored screen answer for every case, in either home (124 tests, about 2 s together with the screen mutations). `test_screen_mutations.py` now runs the unmutated screen live first and counts a case only when it agreed before and disagrees after, which also folds in Advisory 6 (a change of disagreement kind no longer counts). The stored `mutations.json` screen sets are unchanged and still match.
+  - Proof: `PYTHONPATH=.project/active/subset-profile-conformance/evidence/experiments uv run --extra dev pytest -p drift_screen_range tests/conformance/subset_profile/ -q` (licensed) switches off `part-multiplicity/range` for the whole session. Result: 8 failed, 1517 passed. The failures are the 7 range cases in `test_screen_half.py` and `test_screen_mutations.py[part-multiplicity/range]`. The audit's run of the same drift before the fix: 0 failed. Without the plugin the suite is green; nothing to restore, since the plugin patches in memory only.
+- **Advisory 1 (reach test).** The patched `ExpressionInventoryError` raise now carries `constraint_profile_blocked`, a reason the catch-all never assigns, and each patched witness asserts its (code, reason) pair: `SI_EVIDENCE_INCOMPLETE` for the inventory converter, `SI_INTERNAL_DEFECT` + `internal_failure_unclassified` for the catch-all. A pure test checks the two pairs and reasons differ.
+  - Proof: `PYTHONPATH=… uv run --extra dev pytest -p drop_inventory_converter tests/conformance/subset_profile/test_site_reason_reaches_harness.py -q` (licensed) rebinds the converter's exception name so the branch never matches. Result: 1 failed (`[ExpressionInventoryError__diagnostic_with_referent]`), 10 passed. Before the fix the audit saw 0 failed.
+- **Advisory 8 (stale text).** `evidence/versioning.md` records that `v2` landed in Step 2.1. agentic-mbse `test_subset_case_citations.py::test_a_reproduction_is_refused_by_no_rule` no longer lists an anonymous assertion by reference (it was not packaged then). This plan's status line is current.
+- **Advisory 5 (disagreement `owner`).** Every entry's `owner` is now `Reid Westwood`, and the field keeps its name. Why a person and not a rename: the spec defines a recorded disagreement as having an owner, and an entry can outlive the phase or work item that wrote it, so a work item cannot be accountable for it. The field's comment in `tests/helpers/subset_profile/cases.py` says so. Which phase decides an entry is in its `reason` text.
 
 ### Phase 3 Completion
 

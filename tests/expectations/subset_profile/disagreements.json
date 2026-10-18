@@ -8,7 +8,7 @@
       "screen_reasons": [],
       "resolution": "reproduced_gap",
       "r3_row": "CALC-DEF-BARE-RESULT",
-      "owner": "EXEC-SUBSET-CONTRACT Item 2a P3 (rule or reproduced gap, design D11)",
+      "owner": "Reid Westwood",
       "reason": "No rule recognizes a calc def whose result is a bare expression; the generator refuses it for having zero output attributes. P3 decides by the rule criterion whether the contract gains a rule."
     },
     {
@@ -18,7 +18,7 @@
       "screen_reasons": [],
       "resolution": "reproduced_gap",
       "r3_row": "CALC-DEF-BARE-RESULT",
-      "owner": "EXEC-SUBSET-CONTRACT Item 2a P3 (rule or reproduced gap, design D11)",
+      "owner": "Reid Westwood",
       "reason": "The max spelling of the calc def bare result: same refusal, same open decision as the arithmetic case."
     },
     {
@@ -28,7 +28,7 @@
       "screen_reasons": [],
       "resolution": "reproduced_gap",
       "r3_row": "CALC-DEF-BARE-RESULT",
-      "owner": "EXEC-SUBSET-CONTRACT Item 2a P3 (rule or reproduced gap, design D11)",
+      "owner": "Reid Westwood",
       "reason": "A bare conditional result with literal branches: the calc def is refused for having zero output attributes before the conditional matters, so the record marks the pair unobservable."
     },
     {
@@ -38,7 +38,7 @@
       "screen_reasons": [],
       "resolution": "reproduced_gap",
       "r3_row": "CALC-DEF-BARE-RESULT",
-      "owner": "EXEC-SUBSET-CONTRACT Item 2a P3 (rule or reproduced gap, design D11)",
+      "owner": "Reid Westwood",
       "reason": "The conditional spelling of the calc def bare result (Appendix C): refused for having zero output attributes, so the record marks the conditional-expression pair unobservable."
     },
     {
@@ -48,7 +48,7 @@
       "screen_reasons": [],
       "resolution": "reproduced_gap",
       "r3_row": "CALC-DEF-BARE-RESULT",
-      "owner": "EXEC-SUBSET-CONTRACT Item 2a P3 (rule or reproduced gap, design D11)",
+      "owner": "Reid Westwood",
       "reason": "An indexed bare result: refused for having zero output attributes before the index matters, so the record marks the indexed-reference pair unobservable."
     },
     {
@@ -58,7 +58,7 @@
       "screen_reasons": [],
       "resolution": "reproduced_gap",
       "r3_row": "CALC-DEF-BARE-RESULT",
-      "owner": "EXEC-SUBSET-CONTRACT Item 2a P3 (rule or reproduced gap, design D11)",
+      "owner": "Reid Westwood",
       "reason": "A bare result calling an unsupported callable: refused for having zero output attributes before the callable matters, so the record marks the invocation-callable pair unobservable."
     },
     {
@@ -68,7 +68,7 @@
       "screen_reasons": [],
       "resolution": "reproduced_gap",
       "r3_row": null,
-      "owner": "EXEC-SUBSET-CONTRACT Item 2a P3 (rule or reproduced gap, design D11)",
+      "owner": "Reid Westwood",
       "reason": "Found in P2.2: a constraint owned by an item def attaches to nothing, and the generator refuses it as unattached. calc-owned-assertion recognizes only calc def and calc usage owners, so the screen is silent. No R3 row routes it; P3 decides by the rule criterion whether calc-owned-assertion widens to every owner the occurrence facts cannot attach."
     },
     {
@@ -78,7 +78,7 @@
       "screen_reasons": [],
       "resolution": "reproduced_gap",
       "r3_row": null,
-      "owner": "EXEC-SUBSET-CONTRACT Item 2a P3 (rule or reproduced gap, design D11)",
+      "owner": "Reid Westwood",
       "reason": "The non-asserted spelling of the item def owner case: the same refusal and the same open decision."
     },
     {
@@ -88,7 +88,7 @@
       "screen_reasons": [],
       "resolution": "reproduced_gap",
       "r3_row": "ES-002",
-      "owner": "EXEC-SUBSET-CONTRACT Item 2a P3 (rule or reproduced gap, design D11)",
+      "owner": "Reid Westwood",
       "reason": "A constraint binding a calc usage's input is refused at elaboration/occurrence.py:180, a site wider than the shape. No rule recognizes it; P3 decides by the rule criterion."
     },
     {
@@ -98,7 +98,7 @@
       "screen_reasons": [],
       "resolution": "reproduced_gap",
       "r3_row": "ES-008",
-      "owner": "EXEC-SUBSET-CONTRACT Item 2a P3 (rule or reproduced gap, design D11)",
+      "owner": "Reid Westwood",
       "reason": "Nested named subsets that each redefine a value are refused in this spelling. No rule recognizes it; P3 covers the other four spellings and decides by the rule criterion."
     },
     {
@@ -108,7 +108,7 @@
       "screen_reasons": [],
       "resolution": "reproduced_gap",
       "r3_row": "ES-009",
-      "owner": "EXEC-SUBSET-CONTRACT Item 2a P3 (rule or reproduced gap, design D11)",
+      "owner": "Reid Westwood",
       "reason": "Composition by subsetting a top-level usage is refused at elaboration/elaborate.py:2345, a site wider than the shape. No rule recognizes it; P3 decides by the rule criterion."
     },
     {
@@ -118,7 +118,7 @@
       "screen_reasons": [],
       "resolution": "codegen_owned",
       "r3_row": "ES-010",
-      "owner": "sysml-codegen; String policy is the owner's (RG-2)",
+      "owner": "Reid Westwood",
       "reason": "A String value bound to a calc input is refused at projection. Entry-point membership is an output fact codegen owns (ADR 0007), so no shared rule can describe it; the contract reports String values omitted."
     }
   ]

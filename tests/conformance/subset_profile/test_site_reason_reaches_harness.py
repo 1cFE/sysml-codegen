@@ -22,7 +22,9 @@ Two branches have no model that reaches them:
   reach it.
 
 Each is witnessed instead by a raise patched in at the inventory call, which proves the
-converter carries the reason when the branch is reached.
+converter carries the reason when the branch is reached. The two patched witnesses carry
+different reasons and expect different codes, so losing the inventory converter (its error
+then falls to ``except Exception``) fails its witness rather than passing as the catch-all.
 """
 
 from __future__ import annotations
@@ -36,7 +38,7 @@ import pytest
 from agentic_mbse.sysml.conformance_case import packaged_case_dir
 
 from sysml_codegen.cli.refusal import RefusalKind
-from sysml_codegen.elaboration.diagnostics import SiteReason
+from sysml_codegen.elaboration.diagnostics import ElaborationCode, SiteReason
 from sysml_codegen.elaboration.expression_evidence import ExpressionInventoryError
 from sysml_codegen.orchestration import elaborated_pipeline
 from tests.conftest import FIXTURES_DIR, requires_license
@@ -144,35 +146,58 @@ def test_reason_set_at_site_reaches_harness(witness, tmp_path):
     assert witness.reason in {item.reason for item in obs.refusals}
 
 
+#: A reason the catch-all branch never assigns, so the inventory witness cannot pass by
+#: falling through to it. No real inventory raise carries a reason; this one only travels.
+_PATCHED_INVENTORY_REASON = SiteReason.CONSTRAINT_PROFILE_BLOCKED
+
+
 def _raise_inventory_error(_model: object) -> None:
-    raise ExpressionInventoryError(
-        "patched consistency failure", reason=SiteReason.INTERNAL_FAILURE_UNCLASSIFIED
-    )
+    raise ExpressionInventoryError("patched consistency failure", reason=_PATCHED_INVENTORY_REASON)
 
 
 def _raise_unclassified(_model: object) -> None:
     raise RuntimeError("patched unclassified failure")
 
 
-@pytest.mark.parametrize(
-    "raise_at_inventory",
-    [_raise_inventory_error, _raise_unclassified],
-    ids=[
+@dataclass(frozen=True)
+class PatchedBranch:
+    branch: str
+    raise_at_inventory: Callable[[object], None]
+    code: ElaborationCode
+    reason: SiteReason
+
+
+PATCHED_BRANCHES = (
+    PatchedBranch(
         "ExpressionInventoryError__diagnostic_with_referent",
+        _raise_inventory_error,
+        ElaborationCode.SI_EVIDENCE_INCOMPLETE,
+        _PATCHED_INVENTORY_REASON,
+    ),
+    PatchedBranch(
         "Exception__unexpected_public_failure",
-    ],
+        _raise_unclassified,
+        ElaborationCode.SI_INTERNAL_DEFECT,
+        SiteReason.INTERNAL_FAILURE_UNCLASSIFIED,
+    ),
 )
-def test_reason_reaches_harness_from_branch_no_model_reaches(
-    raise_at_inventory, tmp_path, monkeypatch
-):
+
+
+def test_patched_branches_are_told_apart():
+    assert len({(b.code, b.reason) for b in PATCHED_BRANCHES}) == len(PATCHED_BRANCHES)
+    assert len({b.reason for b in PATCHED_BRANCHES}) == len(PATCHED_BRANCHES)
+
+
+@pytest.mark.parametrize("patched", PATCHED_BRANCHES, ids=lambda b: b.branch)
+def test_reason_reaches_harness_from_branch_no_model_reaches(patched, tmp_path, monkeypatch):
     monkeypatch.setattr(
-        elaborated_pipeline, "build_expression_evidence_inventory", raise_at_inventory
+        elaborated_pipeline, "build_expression_evidence_inventory", patched.raise_at_inventory
     )
     obs = observe.generator_half(_inline(_GENERATING_MODEL)(tmp_path))
     assert not obs.generated
     assert obs.refusal is not None
     assert obs.refusal.kind is RefusalKind.DIAGNOSTIC
-    assert [item.reason for item in obs.refusals] == [SiteReason.INTERNAL_FAILURE_UNCLASSIFIED]
+    assert [(item.code, item.reason) for item in obs.refusals] == [(patched.code, patched.reason)]
 
 
 def test_generating_model_logs_no_refusal(tmp_path):
