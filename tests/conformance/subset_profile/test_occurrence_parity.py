@@ -2,9 +2,11 @@
 
 The screen decides instantiation-dependent rules from ``extract_occurrence_structure``, a port
 of codegen's occurrence logic. This test holds the port to codegen live, on the same loaded
-model: the 34-model parity seed (``tests/fixtures/subset_profile_occurrence_seed/``) and the
-37 corpus fixtures that ``tests/fixtures/v6_recapture_batch/batch.json`` lists. A missing input
-fails by name rather than shrinking the set.
+model: the 34-model parity seed (``tests/fixtures/subset_profile_occurrence_seed/``), the
+37 corpus fixtures that ``tests/fixtures/v6_recapture_batch/batch.json`` lists, and every
+conformance case in either home. A case with no instantiation compares two empty summaries,
+which is cheap and keeps the set total. A missing input fails by name rather than shrinking
+the set.
 
 The companion test drops one occurrence index inside codegen's ``_multiplicity_indices`` and
 requires the comparison to see it, so a normalizer that renders both sides alike regardless of
@@ -22,6 +24,7 @@ from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.elaboration import occurrence as cg_occurrence
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.subset_profile import cases
 from tests.helpers.subset_profile.occurrence_parity import (
     differences,
     normalize_agentic,
@@ -38,9 +41,11 @@ MUTATION_CASE = "es004_admitted_exact_redefinition"
 
 
 def _roots() -> list[tuple[str, Path]]:
-    return [(f"seed/{name}", SEED_DIR / name) for name in SEED] + [
-        (f"corpus/{name}", FIXTURES_DIR / name) for name in CORPUS
-    ]
+    return (
+        [(f"seed/{name}", SEED_DIR / name) for name in SEED]
+        + [(f"corpus/{name}", FIXTURES_DIR / name) for name in CORPUS]
+        + [(f"case/{a.case_id}", cases.model_root(a)) for a in cases.all_answers()]
+    )
 
 
 def _load(root: Path):

@@ -1,8 +1,7 @@
 """The reason mapping and the finding renderer agree with agentic-mbse's records (Item 2a § A).
 
-Pure: reads the packaged rule records through agentic-mbse's public API. That every
-(reason, code) pair has a case where the generator emitted the code needs P2's cases, so it
-lands there.
+Pure: reads the packaged rule records through agentic-mbse's public API, and, for the
+witness test, the stored answers of every conformance case.
 """
 
 from __future__ import annotations
@@ -31,6 +30,7 @@ from sysml_codegen.subset_profile_adapter import (
     render_finding,
 )
 from tests.conftest import REPO_ROOT
+from tests.helpers.subset_profile import cases
 
 SHAPES = [(rule.rule_id, shape) for rule in PACKAGED_RULES.rules for shape in rule.shapes]
 
@@ -70,6 +70,31 @@ def test_every_shape_with_a_refusal_code_is_refused_somewhere():
         if shape.expected_code is not None and not shape.contexts_with(Outcome.REFUSED)
     ]
     assert undecided == []
+
+
+REASON_OF = {(rule_id, shape.shape_id): shape.reason for rule_id, shape in SHAPES}
+MAPPED_PAIRS = sorted(
+    (reason, code)
+    for reason, mapping in REASON_MAPPING.items()
+    if isinstance(mapping, ReasonMapping)
+    for code in mapping.codes()
+)
+
+
+@pytest.mark.parametrize("pair", MAPPED_PAIRS, ids="/".join)
+def test_every_mapping_pair_has_a_witnessing_case(pair):
+    """Some case refuses with the code where its screen answer refuses with the reason (O19)."""
+    reason, code = pair
+    witnesses = [
+        answer.case_id
+        for answer in cases.all_answers()
+        if code in answer.generator.run.codes
+        and any(
+            f.outcome is Outcome.REFUSED and REASON_OF[(f.rule, f.shape)] == reason
+            for f in cases.screen_of(answer).findings
+        )
+    ]
+    assert witnesses, f"no case shows {reason} refused with {code}"
 
 
 @pytest.mark.parametrize("item", [i for i in SHAPES if i[1].expected_code], ids=_id)

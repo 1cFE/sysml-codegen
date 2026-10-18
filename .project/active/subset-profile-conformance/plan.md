@@ -305,10 +305,10 @@ def test_every_case_has_exactly_one_generator_answer_and_one_home():
 
 **Repo:** codegen.
 
-- [ ] `test_tripwire.py` (licensed): the three screen entry points patched to raise wherever bound; every case's generator half still yields its stored outcome. 2b inherits it.
-- [ ] `tests/expectations/subset_profile/fixture_classes.json` and `test_fixture_classes.py` (pure): every directory under `tests/fixtures/` is a model root, inside one, or a container, with exactly one class source (design.md § B).
-- [ ] `test_reason_mapping.py::test_every_mapping_pair_has_a_witnessing_case` (O19).
-- [ ] Occurrence parity extended to every case whose summary has nodes.
+- [x] `test_tripwire.py` (licensed): the three screen entry points patched to raise wherever bound; every case's generator half still yields its stored outcome. 2b inherits it.
+- [x] `tests/expectations/subset_profile/fixture_classes.json` and `test_fixture_classes.py` (pure): every directory under `tests/fixtures/` is a model root, inside one, or a container, with exactly one class source (design.md § B).
+- [x] `test_reason_mapping.py::test_every_mapping_pair_has_a_witnessing_case` (O19).
+- [x] Occurrence parity extended to every case whose summary has nodes.
 
 **Done when:** licensed `uv run --extra dev pytest tests/conformance/subset_profile/ -rs` passes.
 
@@ -708,6 +708,21 @@ Phase 1 notes are below, per step. Later phases add their own sections.
   - dc3 `proto3`, `proto4nest` and `conv` were dc3 session scratch and are in no dc3 revision. dc3 `60b44d53` keeps only their descriptions (U5, U2, U6 in `.project/active/toolkit-upstream-findings.md`). The minimal models already exist as `candidate-es-002/008/009`, so their provenance now names the dc3 revision and finding, and no new model was built.
   - Constraint-predicate `owner_other` cases use a calc usage owner, where the screen and generator agree through calc-owned-assertion. The item def owner is the reproduction instead.
   - The two reproductions locate their construct on the whole item def (lines 4–7), because the generator places the refusal on the owner.
+
+#### Step 2.3 (2026-10-18)
+- `test_tripwire.py` (licensed, 110 tests): every case ends as its stored answer says with the three screen entry points rebound to raise (`observe.screen_tripwire`, made public for this test). Two checks show the tripwire works: a call through the defining module, and one through a by-name import, each fails the observation even when the caller swallows the raise. Each check also shows the originals come back afterwards.
+- Fixture classes: `tests/expectations/subset_profile/fixture_classes.json` (164 entries) and its reader `tests/helpers/subset_profile/fixture_classes.py`. The 37 corpus fixtures take their class from `batch.json`, and codegen-home cases from their stored answers (none yet). `test_fixture_classes.py` (pure, 203 tests) checks:
+  - every directory under `tests/fixtures/` is classed, lies inside a classed model, or lies under something classed `not_a_model`;
+  - no path has two class sources;
+  - each class fits the directory (a model root has `.sysml` files; `not_a_model` has none; a container holds no model files of its own).
+- The 155 model roots outside the batch were classed by one generator-half run each and read before storing: 77 generating, 78 refusing. Four refuse at parsing with no code (`source_identity_absent_referent`, `source_identity_binding_forms`, `two_same_leaf_producers` and the seed's `f1_invalid_redefinition_family`); each says so in a note. Three containers: `constraint_occurrence_demand` (seven independent models), the occurrence seed, and `study_station`. Six `not_a_model` entries.
+- `test_reason_mapping.py::test_every_mapping_pair_has_a_witnessing_case`: each of the 11 (reason, code) pairs has a case that refuses with the code where its screen answer refuses with the reason.
+- Occurrence parity now also runs on every case in either home (179 tests). 103 of the 106 cases have occurrences; the other three compare two empty summaries, which keeps the set total without a filter that needs the license at collection time.
+- Verification: licensed `tests/conformance/subset_profile/` plus the answer and oracle tests: 1276 passed, no skips. mypy clean; ruff 94 (baseline 94).
+- Deviations:
+  - `fixture_classes.json` gives `note` only where it is needed: required for containers, `not_a_model` and a refusal with no code, and absent for a plain generating or refusing root. Appendix A lists `note` on every entry; 155 copies of "classified by one run" would say nothing.
+  - The four parse refusals have no code. P3's fixture agreement test must decide how such a fixture agrees, since the screen cannot load it either.
+  - Found: the constraint population oracle treats `constraint_occurrence_demand` as one fixture (it is in its refused-by-design set), though it holds seven independent models. That is the same shape P1 fixed for the occurrence seed. It passes today and is out of 2.3's scope, so it is recorded here, not changed.
 
 ### Phase 3 Completion
 

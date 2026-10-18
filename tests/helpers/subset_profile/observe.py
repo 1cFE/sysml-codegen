@@ -111,7 +111,7 @@ def _rebind_everywhere(original: object, replacement: object) -> list[tuple[obje
 
 
 @contextmanager
-def _screen_tripwire() -> Iterator[None]:
+def screen_tripwire() -> Iterator[None]:
     """Fail the run, after it ends, if the generator called the screen.
 
     The tripwire records the call and raises; ``run_codegen`` turns that raise into an
@@ -199,7 +199,7 @@ def generator_half(model_root: Path) -> GeneratorObservation:
         _refusal_capture() as capture,
         _elaboration_spy(graphs),
         _entry_point_spy(minted),
-        _screen_tripwire(),
+        screen_tripwire(),
     ):
         package_dir = Path(out) / "pkg"
         generated = run_codegen(GenerationConfig(output_path=package_dir, models_path=model_root))
