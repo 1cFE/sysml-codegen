@@ -219,11 +219,11 @@ def test_agentic_summary_equals_codegen_index(root):
     assert normalize_agentic(root) == normalize_codegen(root)
 ```
 
-- [ ] `_upstream_pins.py`: `SUBSET_PROFILE_VERSION` (still `v1` here); `tests/conformance/test_upstream_pins.py` extended.
-- [ ] `src/sysml_codegen/subset_profile_adapter.py` (new): `REASON_MAPPING`, `SubsetDiagnostic`, `render_finding`, the import-time profile check (design.md § A, D12). Tests: keys, `NO_REFUSAL` exactly when no record refuses the shape, `expected_code` membership, renderer unit test per reason, import-boundary test (nothing on the generate route imports the adapter).
-- [ ] Occurrence parity (D6): move the 34 seed models to `tests/fixtures/subset_profile_occurrence_seed/<case>/`; `tests/helpers/subset_profile/occurrence_parity.py` normaliser; the licensed test over seed plus the 37 corpus fixtures, failing by name on a missing input; the companion mutation test patching `_multiplicity_indices` (`elaboration/occurrence.py:812`).
-- [ ] agentic: remove `tests/test_sysml/test_occurrence_parity.py`, `tests/fixtures/subset_profile/occurrence/`, `tests/helpers/occurrence_oracle_schema.py`, `scripts/subset_profile/occurrence_oracle.py`, `occurrence_parity.py`, `occurrence_port_run.py`.
-- [ ] `evidence/versioning.md`: no version identifies the contract; `SUBSET_PROFILE_VERSION` does (D12, criterion A2). State how it was checked (`agentic_mbse.__version__` before and after; tags and package index not checked unless done here).
+- [x] `_upstream_pins.py`: `SUBSET_PROFILE_VERSION` (still `v1` here); `tests/conformance/test_upstream_pins.py` extended.
+- [x] `src/sysml_codegen/subset_profile_adapter.py` (new): `REASON_MAPPING`, `SubsetDiagnostic`, `render_finding`, the import-time profile check (design.md § A, D12). Tests: keys, `NO_REFUSAL` exactly when no record refuses the shape, `expected_code` membership, renderer unit test per reason, import-boundary test (nothing on the generate route imports the adapter).
+- [x] Occurrence parity (D6): move the 34 seed models to `tests/fixtures/subset_profile_occurrence_seed/<case>/`; `tests/helpers/subset_profile/occurrence_parity.py` normaliser; the licensed test over seed plus the 37 corpus fixtures, failing by name on a missing input; the companion mutation test patching `_multiplicity_indices` (`elaboration/occurrence.py:812`).
+- [x] agentic: remove `tests/test_sysml/test_occurrence_parity.py`, `tests/fixtures/subset_profile/occurrence/`, `tests/helpers/occurrence_oracle_schema.py`, `scripts/subset_profile/occurrence_oracle.py`, `occurrence_parity.py`, `occurrence_port_run.py`.
+- [x] `evidence/versioning.md`: no version identifies the contract; `SUBSET_PROFILE_VERSION` does (D12, criterion A2). State how it was checked (`agentic_mbse.__version__` before and after; tags and package index not checked unless done here).
 
 **Done when:** codegen licensed `uv run --extra dev pytest tests/conformance/subset_profile/ tests/conformance/test_upstream_pins.py -rs` passes, and agentic `uv run pytest tests/test_sysml/ -q` passes.
 
@@ -637,6 +637,20 @@ See design.md § Potential Risks. Phase-specific:
 - Deviations:
   - PD4 puts `matrix_row` on `explicit_follow_up` rows, which both loaders had refused ("matrix_row iff in scope"). The rule is now: an in-scope row needs a matrix row, a row handled elsewhere has none, and an explicit follow-up may name the row it is routed to. agentic's account test pins the four routed rows.
   - The matrix gains a site status, `codegen_account`, for the 13 rows whose sites are all sysml-codegen sites (12 that were `listed`, plus `PUSH-DOWN-AGG-PROFILE-SUM-SHAPE` from PD4). Without it, those rows would be `listed` with no sites, which the matrix loader refuses. `listed` rows keep only their agentic-mbse sites; ES-007 and INDEXED-REFERENCE also have codegen sites in codegen's account. `render_matrix.py` renders the new status.
+
+#### Step 1.5 (2026-10-18)
+- `SUBSET_PROFILE_VERSION = "subset-profile/v1"` is pinned in `_upstream_pins.py`, and `test_upstream_pins.py` checks it against the installed screen. `subset_profile_adapter.py` raises `ImportError` at import when they differ. Nothing under `src/` imports the adapter; `test_reason_mapping.py` checks that over the AST.
+- `REASON_MAPPING` has 16 entries, one per `SUBSET_REASON_CODES` member. Three map to `NO_REFUSAL`: `conditional_expression_resolved_branches`, `constraint_predicate_non_numerical` and `string_value_not_generated`. No entry has per-context codes, because every refused pair Item 1 observed carries its record's `expected_code`.
+- `render_finding` sets a code only on a refused finding. A refused finding whose reason maps to `NO_REFUSAL` raises `ValueError`, since that means the records and the mapping disagree.
+- Occurrence parity now lives in codegen. The 34 seed models are in `tests/fixtures/subset_profile_occurrence_seed/`; the normaliser is `tests/helpers/subset_profile/occurrence_parity.py`; the licensed test compares agentic-mbse's `extract_occurrence_structure` with codegen's live index on the same loaded model, over 71 roots (34 seed plus the 37 `batch.json` fixtures). A missing root fails by name. All 71 agree: 285 occurrences, 209 writers, 7 unexpandable usages and 4 fatal aborts. The mutation test drops the last index from `_multiplicity_indices` (now `elaboration/occurrence.py:818`) on `es004_admitted_exact_redefinition`, and parity fails.
+- agentic-mbse's parity test, seed directory, oracle schema and the three occurrence scripts are removed; `occurrence_extraction.py`'s docstring points to codegen's test. `tests/test_sysml/` plus `test_subset_profile_scripts.py`: 1022 passed, 1 skipped.
+- The adapter adds two sites to codegen's site account, which E1 caught: the import-time `ImportError` (`environment`) and the renderer's `ValueError` (`internal_invariant`, no caller under `src/`). The account is 492 rows.
+- `evidence/versioning.md` records criterion A2: agentic-mbse stays 0.1.3, there are no release tags, and the package index was not checked.
+- Verification: the done-when command passes (202 tests with the provenance test, no skips). mypy `src/` is clean; ruff `src/ tests/` reports the baseline 94 in codegen and 118 in agentic-mbse; agentic-mbse mypy reports the baseline 98.
+- Deviations:
+  - The plan's `NO_REFUSAL` rule is "exactly when no record refuses the shape". Two shapes (`part_multiplicity_nonunique`, `part_multiplicity_negative_bound`) have no decided context yet, so no record refuses them, but each record names an `expected_code`. They map to that code, and the test uses the record's `expected_code` as the rule: `NO_REFUSAL` exactly when the record has none. The two undecided shapes are pinned by name.
+  - The oracle's `full_crosscheck` step is not ported. It ran codegen's full `elaborate_model_paths` and checked that its occurrences and calc nodes matched the oracle's partial run, which stops after the writers. That compares codegen with itself, not with agentic-mbse, and the old parity script only printed it as a summary column. A writer error the normaliser does not expect now raises instead of being recorded.
+  - Two agentic-mbse test files (`test_subset_extraction.py`, `test_conditional_operator_spelling.py`) loaded four models from the retired seed directory. Those models moved to `tests/fixtures/subset_profile/cases/` (`recursive_containment`, `range_multiplicity_parts`, `product_invocation`, `conditional_operator`), and the tests point there. The plan did not list them.
 
 ### Phase 2 Completion
 

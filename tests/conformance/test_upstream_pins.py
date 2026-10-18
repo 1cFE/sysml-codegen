@@ -15,6 +15,7 @@ from agentic_mbse.cli.installation import INSTALLER_API_VERSION
 from agentic_mbse.sysml.constraint_facts import CONSTRAINT_FACTS_SCHEMA_VERSION
 from agentic_mbse.sysml.executable_profile import PROFILE_SEMANTIC_VERSION
 from agentic_mbse.sysml.expression_ir import EXPRESSION_IR_SCHEMA_VERSION
+from agentic_mbse.sysml.subset_profile import SUBSET_PROFILE_VERSION
 
 from sysml_codegen import _upstream_pins
 
@@ -28,6 +29,7 @@ from sysml_codegen import _upstream_pins
         ("EXPRESSION_IR_SCHEMA_VERSION", EXPRESSION_IR_SCHEMA_VERSION),
         ("INSTALLER_API_VERSION", INSTALLER_API_VERSION),
         ("PROFILE_SEMANTIC_VERSION", PROFILE_SEMANTIC_VERSION),
+        ("SUBSET_PROFILE_VERSION", SUBSET_PROFILE_VERSION),
     ],
 )
 def test_pin_matches_installed_upstream(name: str, upstream: str) -> None:
@@ -48,5 +50,6 @@ def test_every_pin_is_covered_by_this_test() -> None:
         "INSTALLER_API_VERSION",
         "PROFILE_SEMANTIC_VERSION",
         "SEMANTIC_EVIDENCE_API_VERSION",
+        "SUBSET_PROFILE_VERSION",
     }
     assert set(_upstream_pins.__all__) == covered
