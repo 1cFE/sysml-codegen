@@ -187,12 +187,12 @@ def test_every_scanned_site_has_one_row_and_every_row_a_site():
 def test_synthetic_site_detected_or_reported_unrecognized(snippet, tmp_path): ...
 ```
 
-- [ ] `tests/helpers/subset_profile/site_scan.py`: port of `scan_sites/1` codegen half, plus `unrecognized` for every other `raise` under `src/sysml_codegen/`, plus agentic-mbse site-ID resolution from the installed package source (design.md D7, § E).
-- [ ] `tests/expectations/subset_profile/site_account.csv`: the 441 codegen rows, plus a `reason` column, plus a row for each `unrecognized` site with its role. Apply PD4's `matrix_row` fills. The header lists the remaining blind spots.
-- [ ] Fold `tests/conformance/test_diagnostic_provenance_sites.py:44-95` into a query over `site_scan.py` output.
-- [ ] `tests/conformance/subset_profile/test_site_reasons.py` (PD5, first form): every row with a `reason` is passed by its raise. It covers the P1.3 reach witnesses.
-- [ ] agentic: `site_account.csv` drops the 441 codegen rows and gains PD4's `matrix_row` fills for its 4 chain-segment sites; `matrix.toml` drops codegen `sites` lists; `scanner.toml` and `scan_sites.py` cover agentic-mbse only; `tests/test_subset_matrix.py`, `tests/test_subset_site_account.py`, `tests/helpers/subset_matrix.py`, `subset_site_account.py` updated (Appendix B).
-- [ ] **Record the split counts' denominators** (§ Split point): H and T from the moved accounts, in Implementation Notes.
+- [x] `tests/helpers/subset_profile/site_scan.py`: port of `scan_sites/1` codegen half, plus `unrecognized` for every other `raise` under `src/sysml_codegen/`, plus agentic-mbse site-ID resolution from the installed package source (design.md D7, § E).
+- [x] `tests/expectations/subset_profile/site_account.csv`: the 441 codegen rows, plus a `reason` column, plus a row for each `unrecognized` site with its role. Apply PD4's `matrix_row` fills. The header lists the remaining blind spots.
+- [x] Fold `tests/conformance/test_diagnostic_provenance_sites.py:44-95` into a query over `site_scan.py` output.
+- [x] `tests/conformance/subset_profile/test_site_reasons.py` (PD5, first form): every row with a `reason` is passed by its raise. It covers the P1.3 reach witnesses.
+- [x] agentic: `site_account.csv` drops the 441 codegen rows and gains PD4's `matrix_row` fills for its 4 chain-segment sites; `matrix.toml` drops codegen `sites` lists; `scanner.toml` and `scan_sites.py` cover agentic-mbse only; `tests/test_subset_matrix.py`, `tests/test_subset_site_account.py`, `tests/helpers/subset_matrix.py`, `subset_site_account.py` updated (Appendix B).
+- [x] **Record the split counts' denominators** (§ Split point): H and T from the moved accounts, in Implementation Notes.
 
 **Done when:** codegen `uv run --extra dev pytest tests/conformance/subset_profile/test_site_account.py tests/conformance/subset_profile/test_site_scan_mutations.py tests/conformance/subset_profile/test_site_reasons.py tests/conformance/test_diagnostic_provenance_sites.py -q` and agentic `uv run pytest tests/test_subset_matrix.py tests/test_subset_site_account.py -q` pass.
 
@@ -600,7 +600,7 @@ See design.md § Potential Risks. Phase-specific:
 ### Phase 1 Completion
 **Completed:** 
 **Actual Changes:** 
-**Split denominators (H, T) after P1.4:** 
+**Split denominators (H, T) after P1.4:** codegen account H = 31, T = 86 (47 `unknown`, 39 `public_capability`); agentic-mbse account H = 29, T = 10. Counted by PD4's rule: head is a row with a `rule` or `matrix_row`, plus the 10 rows in `extraction/calc_compat_renderer.py`; tail is every other `public_capability` or `unknown` row. Codegen's T includes 13 `unknown` rows added at the move for unrecognized raises (see Step 1.4 notes).
 **Issues:** 
 **Deviations:** 
 
@@ -625,6 +625,18 @@ See design.md § Potential Risks. Phase-specific:
   - `_readiness_with_referent` and `_diagnostic_with_referent` now use `dataclasses.replace`, so a field added later is carried without editing them.
   - The refusal payload is also attached in `_generate_package_from_graph`, with a `PACKAGE_WRITE` kind (carrying no code) for write and seal failures. The plan named only `cli/__init__.py:1189-1230`, but a generation-stage refusal is logged there, and the harness needs it.
   - `test_elaboration_payload_identity.py::test_profile_block_halts_exact_route_before_projection` round-trips a non-strict graph that holds a blocked diagnostic. With the encoder refusal it now asserts the refusal first, then strips the reasons and round-trips as before. Production encodes only after `require_projectable`, so D8's premise holds.
+
+#### Step 1.4 (2026-10-18)
+- `tests/helpers/subset_profile/site_scan.py` reproduces `scan_sites/1` exactly: run on this tree it gives the 441 moved IDs, apart from three changes step 1.3 made. One site is new: the encoder's `ValueError` in `_diagnostic_to_data`. Two relay rows are gone, because `_readiness_with_referent` and `_diagnostic_with_referent` now use `dataclasses.replace` and no longer rebuild the carrier with `code=…code`.
+- The `unrecognized` channel adds 50 rows. Each row's role comes from reading the raise. 27 are relays (re-raises, catch-all conversions, raises of a site built elsewhere). 5 are public generation refusals raised through a factory: name safety ×2, class-name collision, exit-point type, and predicate function-name collision. 3 are snapshot integrity (the receipt failure ×2 and the envelope's duplicate-key refusal). 2 are internal invariants with a cited guard: the registry's class-name backstop and `CONSTRAINT_DOMAIN_INCOMPLETE`. The other 13 are `unknown` / `explicit_follow_up`, owner "EXEC-SUBSET-CONTRACT Item 2a (E4 triage)", because valid-input reachability was not traced at the move: `MODULE_KIND_UNRENDERABLE` ×5, `PREDICATE_IR_INCONSISTENT` ×3, `GENERATION_METADATA_MISSING` ×2, `PREDICATE_SCOPE_MISMATCH` ×2 and `PREDICATE_INPUT_UNRECONCILED`.
+- The codegen account is 490 rows. Each moved row's `line` and first evidence pointer were refreshed to this tree. The header says later evidence pointers still cite `b5663c07`. The scan is the authority for location; E1 compares IDs only, so a line move does not break it.
+- Six rows carry a `reason`, the ones step 1.3 set at a scanned site. `test_site_reasons.py` checks both directions: a recorded reason is the one the site passes, and a reason a site passes is recorded. Two reasons are set off a scanned site, so no row carries them: the relayed `evidence_*` table, and `generation_constraint_name_unsafe`, set inside the `constraint_name_safety_error` factory.
+- The provenance guard in `test_diagnostic_provenance_sites.py` is now a query over the scan. It covers 38 sites, where the old AST walk counted 40. The two dropped calls are the `super().__init__` calls inside `InvalidRedefinitionFamilyError` and `RecursiveContainmentError` themselves, which are not refusal sites.
+- Found while narrowing agentic-mbse's scanner: `scan_sites/1` found executable_profile's `_diagnostic` factory only because sysml-codegen has a function of the same name (`elaboration/project.py:127`), since its factory search ran over both trees. Scanned alone, agentic-mbse would have lost 34 of its 61 sites. `scan_sites/2` declares `_diagnostic` as a form (`scanner.toml` `shared_profile_factory`), and its 61 IDs and lines are identical to before. The dependence the other way is real and kept: codegen calls agentic-mbse's `evidence_error`, so codegen's scan still searches for factories over both trees.
+- agentic `site_account.csv` keeps its 61 rows. Its header drops the sysml-codegen revision and points to codegen's account. PD4 joins the four `reference_use.py` chain-segment sites to `PUSH-DOWN-EXPR-PROFILE-CHAIN-SEGMENTS`. That matrix row becomes `listed`, and its statement says why.
+- Deviations:
+  - PD4 puts `matrix_row` on `explicit_follow_up` rows, which both loaders had refused ("matrix_row iff in scope"). The rule is now: an in-scope row needs a matrix row, a row handled elsewhere has none, and an explicit follow-up may name the row it is routed to. agentic's account test pins the four routed rows.
+  - The matrix gains a site status, `codegen_account`, for the 13 rows whose sites are all sysml-codegen sites (12 that were `listed`, plus `PUSH-DOWN-AGG-PROFILE-SUM-SHAPE` from PD4). Without it, those rows would be `listed` with no sites, which the matrix loader refuses. `listed` rows keep only their agentic-mbse sites; ES-007 and INDEXED-REFERENCE also have codegen sites in codegen's account. `render_matrix.py` renders the new status.
 
 ### Phase 2 Completion
 
