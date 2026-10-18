@@ -4,7 +4,7 @@
 
 ## Active Work
 
-None recorded.
+- `subset-profile-conformance` (EXEC-SUBSET-CONTRACT Item 2a, epic in agentic-mbse): spec in progress.
 
 The backlog holds separately scoped capabilities, diagnostics, model work, and assurance limits.
 
