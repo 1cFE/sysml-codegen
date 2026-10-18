@@ -97,7 +97,20 @@ Nothing material.
 
 ## Resolutions
 
-*(None yet. Record the owner's decisions here, keyed by finding ID, for the spec agent to incorporate.)*
+Decided 2026-10-18 by the orchestrator (`[AGENT]`, not owner-grade), and incorporated into `spec.md` the same day. Each is recorded in the spec as `[INFERRED] ([AGENT] orchestrator, spec review <id>)`.
+
+- **L3-1:** added a per-case agreement criterion over every conformance case (spec group C). The spec now names the reviewer of expectation changes: the phase's `/_my_audit`, then the owner at merge.
+- **L2-1:** the shared-table limit for `invocation-callable` and `constraint-predicate` is recorded in Independence, in place of a mutation on the shared table.
+- **L1-1:** the six further calc-def-output stub causes join one stub family, with a case per cause.
+- **L3-2:** a stable reason or diagnostic on a stub site or plain-exception site is not RG-1. Turning a stub or omission into a refusal is RG-1.
+- **L1-2:** 2a drafts an ADR 0001 invariant 1 amendment, staged in the item folder; the owner files it at merge (RG-3).
+- **L2-2:** scope kept; re-estimated at 25–35 engineer-days. Group E's tail goes last behind an explicit split point, taken only if E overruns, and surfaced to the owner.
+- **L3-6:** the default is to narrow the contract; doubtful generator acceptance goes through `kerml-expert`, a recorded disagreement and RG-1.
+- **L3-3:** the 2b part of B1 moved to Non-Goals; B1 is now the tripwire test 2a delivers.
+- **L3-4:** every `omitted`/`excluded` record outcome needs contract, catalog or runtime evidence, not text search.
+- **L3-5:** the version bump and publish are a design question.
+- **L1-3** (spec agent): the CALC-USAGE-BARE-RESULT-DROP deferral now names an owner.
+- **L5-1** (spec agent): SA-1 is defined with a citation, and A3 is split into separate tests.
 
 ---
 
