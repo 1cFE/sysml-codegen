@@ -1,0 +1,54 @@
+elaborate.py:1353 _ExactElaborator._build_constraint_nodes [constraint-predicate]
+    "self._diagnose(ElaborationCode.SI_CONSTRAINT_BLOCKED, node.node_id, node.display_path, No
+elaborate.py:1624 _ExactElaborator._halt_on_error_dispositions [calc-owned-assertion]
+    "self._diagnose(ElaborationCode.SI_CONSTRAINT_UNATTACHED, None, record.usage_qualified_nam
+elaborate.py:1939 _ExactElaborator._collect_bound_members [binding-source;indexed-reference]
+    'self._record_readiness(consumer, port, unsupported, evidence)'
+expression_evidence.py:210 _indexed_refusal [indexed-reference]
+    "return SemanticEvidenceError(SemanticEvidenceCode.INDEXED_REFERENCE_UNSUPPORTED, operatio
+project.py:213 _float_default [ES-010-REFUSAL]
+    "_fail(ElaborationCode.SI_RENDERING_COLLISION, f'the public EntryPoint seam cannot carry n
+executable_profile.py:542 _walk_arithmetic [constraint-predicate]
+    "return [_diagnostic(derived, 'arithmetic', identity, location)]"
+executable_profile.py:563 _walk_value [constraint-predicate]
+    "return [_diagnostic('block_feature_chain', 'feature_chain', identity, location, _feature_
+executable_profile.py:585 _walk_value [constraint-predicate]
+    "return [_diagnostic('block_invocation', 'invocation', identity, location)]"
+executable_profile.py:589 _walk_value [constraint-predicate]
+    "return [_diagnostic('block_unsupported_node', node.node_kind, identity, location, node.di
+executable_profile.py:597 _walk_value [constraint-predicate]
+    "return [_diagnostic(f'block_{operator}', operator, identity, location)]"
+executable_profile.py:599 _walk_value [constraint-predicate]
+    "return [_diagnostic('block_non_predicate_root', 'comparison', identity, location)]"
+executable_profile.py:601 _walk_value [constraint-predicate]
+    "return [_diagnostic('block_non_predicate_root', operator, identity, location)]"
+executable_profile.py:660 _walk_comparison [constraint-predicate]
+    "diagnostics.append(_diagnostic(reason, 'comparison', identity, location, message, force='
+executable_profile.py:711 _walk_comparison [constraint-predicate]
+    "diagnostics.append(_diagnostic(reason, 'comparison', identity, location, message))"
+executable_profile.py:738 _walk_proposition [constraint-predicate]
+    "diagnostics.append(_diagnostic('block_feature_chain', 'feature_chain', identity, location
+executable_profile.py:749 _walk_proposition [constraint-predicate]
+    "diagnostics.append(_diagnostic('warn_non_numerical_predicate', 'feature_ref', identity, l
+executable_profile.py:760 _walk_proposition [constraint-predicate]
+    "diagnostics.append(_diagnostic('block_non_predicate_root', 'feature_ref', identity, locat
+executable_profile.py:767 _walk_proposition [constraint-predicate]
+    "diagnostics.append(_diagnostic('warn_non_numerical_predicate', 'literal', identity, locat
+executable_profile.py:777 _walk_proposition [constraint-predicate]
+    "diagnostics.append(_diagnostic('block_non_predicate_root', 'literal', identity, location)
+executable_profile.py:782 _walk_proposition [constraint-predicate]
+    "diagnostics.append(_diagnostic('block_non_predicate_root', 'unit_annotation', identity, l
+executable_profile.py:787 _walk_proposition [constraint-predicate]
+    "diagnostics.append(_diagnostic('block_invocation', 'invocation', identity, location))"
+executable_profile.py:792 _walk_proposition [constraint-predicate]
+    "diagnostics.append(_diagnostic('block_unsupported_node', node.node_kind, identity, locati
+executable_profile.py:813 _walk_proposition [constraint-predicate]
+    "diagnostics.append(_diagnostic(f'warn_non_numerical_{operator}', operator, identity, loca
+executable_profile.py:852 _walk_proposition [constraint-predicate]
+    "diagnostics.append(_diagnostic('block_non_predicate_root', 'arithmetic', identity, locati
+executable_profile.py:993 _evaluate_usage_against_definition [constraint-predicate]
+    "return _non_executable_block(usage, _diagnostic('block_assert_by_reference', 'assert_by_r
+executable_profile.py:1014 _evaluate_usage_against_definition [constraint-predicate]
+    "return _missing_body_block(usage, _diagnostic('block_unresolved_definition', 'definition_
+executable_profile.py:1022 _evaluate_usage_against_definition [constraint-predicate]
+    "return _missing_body_block(usage, _diagnostic('block_missing_predicate', 'missing_predica

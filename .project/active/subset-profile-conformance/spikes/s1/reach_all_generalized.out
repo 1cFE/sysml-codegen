@@ -1,0 +1,19 @@
+by result: {'elided': 478, 'not-raise:Return': 18, 'not-raise:Assign': 6}
+
+by (role, linked to a rule or matrix row, result):
+    54  ('environment', 'unlinked', 'elided')
+     4  ('environment', 'unlinked', 'not-raise:Assign')
+   154  ('internal_invariant', 'unlinked', 'elided')
+    15  ('malformed_input', 'unlinked', 'elided')
+    38  ('public_capability', 'rule-or-row', 'elided')
+     4  ('public_capability', 'rule-or-row', 'not-raise:Return')
+    49  ('public_capability', 'unlinked', 'elided')
+    32  ('relay_plumbing', 'unlinked', 'elided')
+     2  ('relay_plumbing', 'unlinked', 'not-raise:Assign')
+     9  ('relay_plumbing', 'unlinked', 'not-raise:Return')
+    92  ('snapshot_integrity', 'unlinked', 'elided')
+     3  ('snapshot_integrity', 'unlinked', 'not-raise:Return')
+    44  ('unknown', 'unlinked', 'elided')
+     2  ('unknown', 'unlinked', 'not-raise:Return')
+
+failures:

@@ -1,0 +1,69 @@
+
+### module function, imported by name into elaborate.py
+  site sysml_codegen/elaboration/occurrence.py::build_containment_address::coded::SI_OCCURRENCE_MISSING::1
+  elided `raise OccurrenceResolutionError(ElaborationCode.SI_OCCURRENCE_MISSING, f'semantic owner kind {type(current).__name__!r} cannot anchor containment')` in sysml_codegen.elaboration.occurrence.build_containment_address
+  WITNESS candidate-es-002__constraint_binds_calc_input__binding_value: gen same (False, ('SI_OCCURRENCE_MISSING',), ()) -> (False, ('SI_OCCURRENCE_MISSING',), ())
+  all cases under mutation: 0.26s
+
+### module function (private)
+  site sysml_codegen/elaboration/occurrence.py::_multiplicity_indices::coded::SI_MULTIPLICITY_UNSUPPORTED::3
+  elided `raise MultiplicityExpansionError(ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED, f'range multiplicity on {name!r} is outside the supported occurrence model', reference=reference, location=location)` in sysml_codegen.elaboration.occurrence._multiplicity_indices
+  WITNESS part-multiplicity__range__expanded_part_usage: gen FLIP (False, ('SI_MULTIPLICITY_UNSUPPORTED',), ()) -> (True, (), ())
+          now: 
+  all cases under mutation: 0.30s
+
+### _ExactElaborator staticmethod
+  site sysml_codegen/elaboration/elaborate.py::_ExactElaborator._require_one_writer::coded::SI_REDEFINITION_INVALID::1
+  elided `raise ElaborationInvariantError(ElaborationCode.SI_REDEFINITION_INVALID, f'exact scope {scope!r} has incomparable value writers {_group_names(candidates)}', reference=reference, location=location)` in sysml_codegen.elaboration.elaborate._ExactElaborator._require_one_writer
+  WITNESS candidate-es-008__nested_named_subset__part_usage: gen FLIP (False, ('SI_REDEFINITION_INVALID',), ()) -> (True, (), ())
+          now: 
+  all cases under mutation: 0.34s
+
+### _ExactElaborator method
+  site sysml_codegen/elaboration/elaborate.py::_ExactElaborator._resolve_semantic_reference::coded::SI_OCCURRENCE_MISSING::4
+  elided `raise _ReferenceResolutionError(ElaborationCode.SI_OCCURRENCE_MISSING, f'exact owner address has no target for leaf {reference.leaf_id.to_wire()}')` in sysml_codegen.elaboration.elaborate._ExactElaborator._resolve_semantic_reference
+  WITNESS candidate-es-009__composition_by_subsetting__part_usage: gen FLIP (False, ('SI_OCCURRENCE_MISSING',), ()) -> (False, ('SI_OCCURRENCE_AMBIGUOUS',), ())
+          now: Model failed exact-route validation: SI_OCCURRENCE_AMBIGUOUS: fx__site__double: reference='facility.area': exact owner address has 0 targets for leaf a339ea2b-63fb-5013-9
+  all cases under mutation: 0.26s
+
+### nested function (build_occurrence_index.add_usage)
+  site sysml_codegen/elaboration/occurrence.py::build_occurrence_index.add_usage::coded-fixed::SI_CONTAINMENT_RECURSIVE::1
+  elided `raise RecursiveContainmentError(f'containment re-enters definition {definition_reference or type_id.to_wire()} at {usage_reference or usage_id.to_wire()}', reference=usage_reference or definition_reference, location=usage_location or definition_location)` in sysml_codegen.elaboration.occurrence.build_occurrence_index
+  WITNESS recursive_containment: gen FLIP (False, ('SI_CONTAINMENT_RECURSIVE',), ()) -> (False, ('SI_INTERNAL_DEFECT',), ())
+          now: Model failed exact-route validation: SI_INTERNAL_DEFECT: <internal defect>: unexpected internal failure: RecursionError: maximum recursion depth exceeded
+  all cases under mutation: 0.95s
+
+### agentic-mbse reference_use site
+  site agentic_mbse/sysml/reference_use.py::_require_supported_invocation::shared-evidence::EXPRESSION_KIND_UNSUPPORTED::1
+  elided `raise SemanticEvidenceError(SemanticEvidenceCode.EXPRESSION_KIND_UNSUPPORTED, operation='inspect_reference_uses', detail=f'invocation of {function_name!r} is valid SysML but is not supported by this executable subset; only NumericalFunctions::sum is supported', location=SysideAdapter.get_source_location(node), reference=reference)` in agentic_mbse.sysml.reference_use._require_supported_invocation
+  WITNESS invocation-callable__unsupported_callable__attribute_value: gen FLIP (False, ('SI_EXPRESSION_SOURCE_UNSUPPORTED',), ()) -> (False, ('SI_EDGE_DANGLING',), ())
+          now: Model failed exact-route validation: SI_EDGE_DANGLING: fx__site__eff: computed calculation contains unsupported typed IR
+          screen FLIP refused_incomplete(('invocation-callable', 'unsupported_callable', 'attribute_value', 'refused'),) -> refused(('invocation-callable', 'unsupported_callable', 'attribute_value', 'refused'),)
+  all cases under mutation: 0.26s
+
+### calc_compat_renderer stub site
+  site sysml_codegen/extraction/calc_compat_renderer.py::_render_operator::free-text::CompilationError::1
+  elided `raise CompilationError(f'unsupported operator: {node.operator}')` in sysml_codegen.extraction.calc_compat_renderer._render_operator
+  WITNESS calc_stub_gt: gen FLIP (True, (), (('fx::Rem', 'manual_required'),)) -> (True, (), ())
+          now: 
+  all cases under mutation: 0.26s
+
+### calc_compat_renderer stub site (UnsupportedNode)
+  site sysml_codegen/extraction/calc_compat_renderer.py::_render::free-text::CompilationError::2
+  elided `raise CompilationError(f'Cannot compile unsupported node: {node.source_text} (reason: {node.diagnostic})')` in sysml_codegen.extraction.calc_compat_renderer._render
+  WITNESS calc_stub_operator: gen same (True, (), (('fx::Rem', 'manual_required'),)) -> (True, (), (('fx::Rem', 'manual_required'),))
+  all cases under mutation: 0.26s
+
+### non-raise site: coded-returned
+  site sysml_codegen/elaboration/elaborate.py::_ExactElaborator._collect_bound_members::coded-returned::SI_SELF_BINDING|SI_INDEXED_SOURCE_UNSUPPORTED|SI_EXPRESSION_SOURCE_UNSUPPORTED::1
+  ELISION REFUSED: sysml_codegen/elaboration/elaborate.py::_ExactElaborator._collect_bound_members::coded-returned::SI_SELF_BINDING|SI_INDEXED_SOURCE_UNSUPPORTED|SI_EXPRESSION_SOURCE_UNSUPPORTED::1: site statement is Expr, not Raise: 'self._record_readiness(consumer, port, unsupported, evidence)'
+
+### non-raise site: codegen indexed refusal
+  site sysml_codegen/elaboration/expression_evidence.py::_indexed_refusal::coded::INDEXED_REFERENCE_UNSUPPORTED::1
+  ELISION REFUSED: sysml_codegen/elaboration/expression_evidence.py::_indexed_refusal::coded::INDEXED_REFERENCE_UNSUPPORTED::1: site statement is Return, not Raise: "return SemanticEvidenceError(SemanticEvidenceCode.INDEXED_REFERENCE_UNSUPPORTED, operation='expression_evidence', detail"
+
+restore check: all all cases back to baseline = True
+
+real	0m5.460s
+user	0m5.442s
+sys	0m0.828s
