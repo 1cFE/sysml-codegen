@@ -18,6 +18,11 @@
     "codes": [
       "SI_ID_UNSTABLE"
     ],
-    "reasons": []
+    "reasons": [
+      "identity_qualified_name_missing"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/identity.py::declaration_id_for::coded-fixed::SI_ID_MISSING|SI_ID_UNSTABLE::1"
+    ]
   }
 }

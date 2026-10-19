@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sysml_codegen.core.errors import CodeGenerationError
+    from sysml_codegen.elaboration.diagnostics import SiteReason
     from sysml_codegen.generation.constraint_name_safety import ConstraintNameViolation
     from sysml_codegen.resolution.models import (
         ComputationGraph,
@@ -16,34 +17,44 @@ if TYPE_CHECKING:
 
 def constraint_name_safety_error(
     violation: ConstraintNameViolation,
+    *,
+    reason: SiteReason,
 ) -> CodeGenerationError:
-    """Adapt one pure name-safety record to the package's public error."""
+    """Adapt one pure name-safety record to the package's public error.
+
+    ``reason`` names the caller's site: the graph preflight and the per-module render check
+    report the same kind of violation from different places.
+    """
     from sysml_codegen.core.errors import GenerationCode
-    from sysml_codegen.elaboration.diagnostics import SiteReason
     from sysml_codegen.generation import CodeGenerationError
     from sysml_codegen.generation.constraint_name_safety import format_name_safety_violation
 
     return CodeGenerationError(
         format_name_safety_violation(violation),
         code=GenerationCode.CONSTRAINT_NAME_UNSAFE,
-        reason=SiteReason.GENERATION_CONSTRAINT_NAME_UNSAFE,
+        reason=reason,
         name_safety_violation=violation,
     )
 
 
 def validate_constraint_graph_or_raise(graph: ComputationGraph) -> None:
     """Raise the public package error for the selected graph violation."""
+    from sysml_codegen.elaboration.diagnostics import SiteReason
     from sysml_codegen.generation.constraint_name_safety import (
         select_graph_name_safety_violation,
     )
 
     violation = select_graph_name_safety_violation(graph)
     if violation is not None:
-        raise constraint_name_safety_error(violation)
+        raise constraint_name_safety_error(
+            violation, reason=SiteReason.GENERATION_CONSTRAINT_NAME_UNSAFE
+        )
 
 
 def residual_class_name_collision_error(
     residual: dict[str, list[str]],
+    *,
+    reason: SiteReason,
 ) -> CodeGenerationError:
     """The refusal for registry class names that survive parent-segment aliasing.
 
@@ -60,6 +71,7 @@ def residual_class_name_collision_error(
         + "; ".join(f"{name!r} <- {sorted(mts)}" for name, mts in sorted(residual.items()))
         + ". The parent-segment alias cannot disambiguate these; rename one scope.",
         code=GenerationCode.REGISTRY_CLASS_NAME_COLLISION,
+        reason=reason,
     )
 
 

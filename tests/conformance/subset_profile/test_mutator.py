@@ -230,6 +230,23 @@ def test_a_statement_sharing_its_line_cannot_be_recorded(sample: ModuleType) -> 
             pass
 
 
+def test_a_package_init_site_imports_the_package_itself() -> None:
+    """A site in ``pkg/__init__.py`` targets ``pkg``, the module its callers run.
+
+    Importing ``pkg.__init__`` would load a second copy whose functions nothing calls, so a
+    recorder or rewrite there would see nothing.
+    """
+    assert mutate.module_name("sysml_codegen/cli/__init__.py") == "sysml_codegen.cli"
+    assert mutate.module_name("sysml_codegen/elaboration/graph.py") == (
+        "sysml_codegen.elaboration.graph"
+    )
+    target = mutate.site_target(
+        "sysml_codegen/cli/__init__.py::_check_duplicate_output_paths::free-text::"
+        "CodeGenerationError::1"
+    )
+    assert target.module is sys.modules["sysml_codegen.cli"]
+
+
 # ---- the mutations the licensed tests apply ---------------------------------------------------
 
 

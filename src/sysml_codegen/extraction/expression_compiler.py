@@ -238,7 +238,8 @@ def compile_calc_def_exact(
                 if reference_id not in all_member_ids:
                     raise CompilationError(
                         f"expression member {member_names[member_id]!r} references "
-                        f"undeclared exact member {reference_id}"
+                        f"undeclared exact member {reference_id}",
+                        reason=SiteReason.COMPILE_REFERENCE_OUTSIDE_CALC_DEF,
                     )
                 dependencies.add(reference_id)
                 if reference_id not in output_id_set:

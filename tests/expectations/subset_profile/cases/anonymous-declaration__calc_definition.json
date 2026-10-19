@@ -18,6 +18,11 @@
     "codes": [
       "SI_ID_MISSING"
     ],
-    "reasons": []
+    "reasons": [
+      "elaboration_calc_def_id_missing"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._index_calculation_payloads::coded::SI_ID_MISSING::1"
+    ]
   }
 }

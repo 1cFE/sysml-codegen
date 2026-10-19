@@ -143,8 +143,16 @@ def site_target(site_id: str) -> Target:
     found = _sites().get(site_id)
     if found is None:
         raise MutationError(f"no site {site_id!r} in either source tree")
-    module = importlib.import_module(found.file.removesuffix(".py").replace("/", "."))
-    return Target(module, found.function, found.line)
+    return Target(importlib.import_module(module_name(found.file)), found.function, found.line)
+
+
+def module_name(file: str) -> str:
+    """The import name of a scanned source file; a package's ``__init__.py`` is the package.
+
+    Importing ``pkg.__init__`` would load a second copy of the package's module, whose
+    functions the code under test never calls, so a recorder or rewrite there sees nothing.
+    """
+    return file.removesuffix(".py").removesuffix("/__init__").replace("/", ".")
 
 
 def _parse(module: ModuleType) -> tuple[Path, ast.Module]:

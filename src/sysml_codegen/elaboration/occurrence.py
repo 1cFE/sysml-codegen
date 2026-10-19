@@ -343,6 +343,7 @@ class FeatureSlotIndex:
                     "redefinition declaration "
                     f"{reference or declaration.to_wire()} has unrelated roots: "
                     + self._named(roots),
+                    reason=SiteReason.OCCURRENCE_REDEFINITION_ROOTS_UNRELATED,
                     reference=reference,
                     location=location,
                 )
@@ -577,12 +578,14 @@ class OccurrenceIndex:
                 ElaborationCode.SI_OCCURRENCE_MISSING,
                 f"consumer domain has no {address.anchor_kind} anchor "
                 f"{address.anchor_id.to_wire()}",
+                reason=SiteReason.OCCURRENCE_ANCHOR_SCOPE_MISSING,
             )
         if address.anchor_kind == "part_definition" and len(anchor_scopes) != 1:
             raise OccurrenceResolutionError(
                 ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
                 f"consumer domain has {len(anchor_scopes)} concrete scopes for definition "
                 f"{address.anchor_id.to_wire()}",
+                reason=SiteReason.OCCURRENCE_ANCHOR_DEFINITION_AMBIGUOUS,
             )
         states = anchor_scopes
         shared_prefix = True
@@ -621,6 +624,7 @@ class OccurrenceIndex:
                 raise OccurrenceResolutionError(
                     ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
                     f"exact containment step {slot!r} has {len(selected)} concrete occurrences",
+                    reason=SiteReason.OCCURRENCE_CONTAINMENT_STEP_AMBIGUOUS,
                 )
             states = tuple(item.occurrence_id for item in selected)
         if not plural and len(states) != 1:
@@ -693,6 +697,7 @@ def _effective_type(
         raise InvalidRedefinitionFamilyError(
             f"part usage {reference or "<anonymous>"} has incomparable exact "
             "user-definition typings",
+            reason=SiteReason.OCCURRENCE_PART_TYPING_AMBIGUOUS,
             reference=reference,
             location=location,
         )

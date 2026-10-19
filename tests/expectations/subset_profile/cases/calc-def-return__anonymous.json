@@ -1,0 +1,28 @@
+{
+  "id": "calc-def-return__anonymous",
+  "home": "codegen",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "a calc def with an anonymous return `return : Real = x * 2;`"
+  },
+  "screen": {
+    "verdict": "clear",
+    "findings": []
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EVIDENCE_INCOMPLETE"
+    ],
+    "reasons": [
+      "extraction_calc_def_return_unnamed"
+    ],
+    "witnesses": [
+      "sysml_codegen/extraction/extractor.py::SysMLDataExtractor._extract_calculation_definition::coded-fixed::SI_EVIDENCE_INCOMPLETE::1"
+    ]
+  }
+}

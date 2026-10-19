@@ -1,0 +1,28 @@
+{
+  "id": "reference-leaf__library_constant",
+  "home": "codegen",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "a computed attribute reading the library constant TrigFunctions::pi"
+  },
+  "screen": {
+    "verdict": "clear",
+    "findings": []
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_OCCURRENCE_MISSING"
+    ],
+    "reasons": [
+      "elaboration_reference_leaf_unindexed"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._resolve_semantic_reference::coded::SI_OCCURRENCE_MISSING::1"
+    ]
+  }
+}

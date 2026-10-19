@@ -27,6 +27,8 @@
     "codes": [
       "SI_ID_UNSTABLE"
     ],
-    "reasons": []
+    "reasons": [
+      "identity_qualified_name_missing"
+    ]
   }
 }

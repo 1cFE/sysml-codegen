@@ -214,6 +214,7 @@ def _check_duplicate_output_paths(modules: list[PipelineModule]) -> None:
     usages of one calc def legitimately derive the same path.
     """
     from sysml_codegen.core.errors import GenerationCode
+    from sysml_codegen.elaboration.diagnostics import SiteReason
     from sysml_codegen.generation import CodeGenerationError
 
     module_paths: dict[str, str] = {}
@@ -227,6 +228,7 @@ def _check_duplicate_output_paths(modules: list[PipelineModule]) -> None:
                 f"derive modules/{path}. Rename one, or this would silently "
                 f"overwrite.{_module_source(module)}",
                 code=GenerationCode.DUPLICATE_OUTPUT_PATH,
+                reason=SiteReason.GENERATION_MODULE_PATH_COLLISION,
             )
         module_paths[path] = raw
 
@@ -243,6 +245,7 @@ def _check_duplicate_output_paths(modules: list[PipelineModule]) -> None:
                 f"derive schemas/{schema_file}. Rename one, or this would silently "
                 f"overwrite.{_module_source(module)}",
                 code=GenerationCode.DUPLICATE_OUTPUT_PATH,
+                reason=SiteReason.GENERATION_SCHEMA_PATH_COLLISION,
             )
         schema_sources[schema_file] = raw
 
@@ -284,12 +287,15 @@ def _preflight_registry_class_names(graph: ComputationGraph) -> None:
     anything is written — is what makes it fail-before-mutate, and the error is
     the package's own so the operator reads a refusal rather than a traceback.
     """
+    from sysml_codegen.elaboration.diagnostics import SiteReason
     from sysml_codegen.generation.errors import residual_class_name_collision_error
     from sysml_codegen.generation.registry import residual_class_name_collisions
 
     residual = residual_class_name_collisions(graph)
     if residual:
-        raise residual_class_name_collision_error(residual)
+        raise residual_class_name_collision_error(
+            residual, reason=SiteReason.GENERATION_REGISTRY_CLASS_NAME_COLLISION
+        )
 
 
 def _preflight_exit_point_types(graph: ComputationGraph) -> None:

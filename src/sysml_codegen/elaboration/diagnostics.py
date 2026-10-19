@@ -74,6 +74,53 @@ class SiteReason(StrEnum):
     PROJECTION_DEFAULT_NON_NUMERIC = "projection_default_non_numeric"
     PROJECTION_SUM_ARGUMENT_COUNT = "projection_sum_argument_count"
     EXTRACTION_CALC_DEF_NO_OUTPUT = "extraction_calc_def_no_output"
+    # Codegen-only refusals of a valid model: no shared rule or R3 row names the shape, so the
+    # contract is silent and the reason is what a conformance case pins (Item 2a P6).
+    EXTRACTION_CALC_DEF_RETURN_UNNAMED = "extraction_calc_def_return_unnamed"
+    EXTRACTION_PARAMETER_TYPING_COUNT = "extraction_parameter_typing_count"
+    IDENTITY_QUALIFIED_NAME_MISSING = "identity_qualified_name_missing"
+    OCCURRENCE_REDEFINITION_ROOTS_UNRELATED = "occurrence_redefinition_roots_unrelated"
+    OCCURRENCE_ANCHOR_SCOPE_MISSING = "occurrence_anchor_scope_missing"
+    OCCURRENCE_ANCHOR_DEFINITION_AMBIGUOUS = "occurrence_anchor_definition_ambiguous"
+    OCCURRENCE_CONTAINMENT_STEP_AMBIGUOUS = "occurrence_containment_step_ambiguous"
+    OCCURRENCE_PART_TYPING_AMBIGUOUS = "occurrence_part_typing_ambiguous"
+    ELABORATION_CALC_DEF_ID_MISSING = "elaboration_calc_def_id_missing"
+    ELABORATION_CALC_PARAMETER_ID_MISSING = "elaboration_calc_parameter_id_missing"
+    ELABORATION_DEEP_OVERRIDE_TARGET_MISSING = "elaboration_deep_override_target_missing"
+    ELABORATION_DEEP_OVERRIDE_TARGET_COMPUTED = "elaboration_deep_override_target_computed"
+    ELABORATION_CALC_DEF_PAYLOAD_MISSING = "elaboration_calc_def_payload_missing"
+    ELABORATION_USAGE_DEFINITION_TYPING_COUNT = "elaboration_usage_definition_typing_count"
+    ELABORATION_CONSTRAINT_DEFINITION_DISAGREES = "elaboration_constraint_definition_disagrees"
+    ELABORATION_CALC_OUTPUT_METADATA_MISSING = "elaboration_calc_output_metadata_missing"
+    ELABORATION_BOUND_INPUT_DEFINITION_MISSING = "elaboration_bound_input_definition_missing"
+    ELABORATION_FEATURE_TYPING_COUNT = "elaboration_feature_typing_count"
+    ELABORATION_FEATURE_TYPE_UNSUPPORTED = "elaboration_feature_type_unsupported"
+    ELABORATION_BOUND_INPUT_FORMAL_MISSING = "elaboration_bound_input_formal_missing"
+    ELABORATION_REFERENCE_LEAF_UNINDEXED = "elaboration_reference_leaf_unindexed"
+    ELABORATION_BARE_REFERENCE_PREFIX_REQUIRED = "elaboration_bare_reference_prefix_required"
+    ELABORATION_CALCULATION_OUTPUT_AMBIGUOUS = "elaboration_calculation_output_ambiguous"
+    ELABORATION_LITERAL_BINDING_EMPTY = "elaboration_literal_binding_empty"
+    GRAPH_COMPUTED_IR_UNSUPPORTED = "graph_computed_ir_unsupported"
+    PROJECTION_MODULE_NAME_COLLISION = "projection_module_name_collision"
+    PROJECTION_CHANNEL_NAME_COLLISION = "projection_channel_name_collision"
+    PROJECTION_GROUP_PACKAGE_UNNAMED = "projection_group_package_unnamed"
+    PROJECTION_ENTRY_POINT_NAME_COLLISION = "projection_entry_point_name_collision"
+    PROJECTION_ENTRY_POINT_METADATA_CONFLICT = "projection_entry_point_metadata_conflict"
+    PROJECTION_PARAMETER_NAME_COLLISION = "projection_parameter_name_collision"
+    PROJECTION_EXPRESSION_PARAMETER_COLLISION = "projection_expression_parameter_collision"
+    PROJECTION_OUTPUT_ALIAS_COLLISION = "projection_output_alias_collision"
+    COMPILE_REFERENCE_OUTSIDE_CALC_DEF = "compile_reference_outside_calc_def"
+    GENERATION_MODULE_PATH_COLLISION = "generation_module_path_collision"
+    GENERATION_SCHEMA_PATH_COLLISION = "generation_schema_path_collision"
+    GENERATION_REGISTRY_CLASS_NAME_COLLISION = "generation_registry_class_name_collision"
+    GENERATION_PARAM_FIELD_COLLISION = "generation_param_field_collision"
+    GENERATION_PREDICATE_FUNCTION_NAME_COLLISION = "generation_predicate_function_name_collision"
+    # Re-checks behind a preflight that already refused the same condition: no valid model
+    # reaches them, but each factory caller still names its own site.
+    GENERATION_REGISTRY_RENDER_CLASS_NAME_COLLISION = (
+        "generation_registry_render_class_name_collision"
+    )
+    GENERATION_PREDICATE_BINDING_NAME_UNSAFE = "generation_predicate_binding_name_unsafe"
     # Stub causes: a calc def output the compiler cannot render becomes a ``MANUAL_REQUIRED``
     # stub on a successful run. One per renderer site (``extraction/calc_compat_renderer.py``)
     # and per compiler path that stubs without raising (``extraction/expression_compiler.py``).

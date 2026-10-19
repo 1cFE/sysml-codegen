@@ -108,9 +108,34 @@ def r3_row_sites() -> tuple[str, ...]:
     )
 
 
+def tail_sites() -> tuple[str, ...]:
+    """The public codegen account rows with a reason that no rule or R3 row names (plan P6).
+
+    The group E tail: valid models reach these sites, the contract is silent on the shape,
+    and the reason tells the refusing site apart.
+    """
+    return tuple(
+        sorted(
+            r.site_id
+            for r in site_scan.load_account().rows
+            if r.role is site_scan.Role.PUBLIC_CAPABILITY
+            and r.reason is not None
+            and not r.rules
+            and not r.matrix_rows
+            and r.file != STUB_RENDERER
+        )
+    )
+
+
 def mutated_sites() -> tuple[str, ...]:
     """Every site the generator mutation test neutralizes: codegen's, then the shared ones."""
-    return (*shared_rule_sites(), *stub_cause_sites(), *r3_row_sites(), *sorted(mutate.SHARED))
+    return (
+        *shared_rule_sites(),
+        *stub_cause_sites(),
+        *r3_row_sites(),
+        *tail_sites(),
+        *sorted(mutate.SHARED),
+    )
 
 
 def codegen_witnesses() -> dict[str, frozenset[str]]:

@@ -1,6 +1,6 @@
 # Implementation Plan: Independent conformance corpus and per-site codes (EXEC-SUBSET-CONTRACT Item 2a)
 
-**Status:** Implementation in progress (Phases 1–5 done; Phases 1–2 audited mid-run; Phases 3–5 not yet audited; group E split taken by the count at P5's close, P6 waits on the owner, see Phase 5 Completion)
+**Status:** Implementation in progress (Phases 1–6 done; Phases 1–2 audited mid-run; Phases 3–6 not yet audited; group E split not taken by the orchestrator's ruling at P5's close, see Phase 5 Completion; Phase 7 next)
 **Created:** 2026-10-18
 **Last Updated:** 2026-10-19
 
@@ -525,10 +525,10 @@ def test_public_row_has_reason_and_witness(row):
 
 **Repos:** codegen; agentic for its 7 public and 3 unknown tail sites.
 
-- [ ] The 10 naming-collision sites (`cli/__init__.py:224, :239`; `project.py:363, :386, :479, :679, :724, :1083`; `generation/entry_point.py:37`; `generation/predicate_compiler.py:319`): reasons (generation-stage ones also carry `GenerationCode`), codegen-home cases, witnesses, mutations.
-- [ ] The other tail public sites: same treatment. O8 applies; **RG-1 stop** per candidate, then continue.
-- [ ] E4 for every tail unknown site.
-- [ ] agentic: witnesses for its 7 tail public rows; widen the account test to all public rows.
+- [x] The 10 naming-collision sites (`cli/__init__.py:224, :239`; `project.py:363, :386, :479, :679, :724, :1083`; `generation/entry_point.py:37`; `generation/predicate_compiler.py:319`): reasons (generation-stage ones also carry `GenerationCode`), codegen-home cases, witnesses, mutations.
+- [x] The other tail public sites: same treatment. O8 applies; **RG-1 stop** per candidate, then continue.
+- [x] E4 for every tail unknown site.
+- [x] agentic: witnesses for its 7 tail public rows; widen the account test to all public rows.
 
 **Done when:** licensed `uv run --extra dev pytest tests/conformance/subset_profile/ -rs` passes, including `test_site_account_completeness.py`; agentic `uv run pytest tests/test_subset_site_account.py -q` passes.
 
@@ -912,8 +912,50 @@ Counted from both accounts after P5, by the plan's definitions (head = a row wit
 - P1.4 recorded "H = 31" (codegen) and "H = 29" (agentic-mbse). Those equal the head row counts of every role, not the public ones the plan's table calls H, so they are not used here.
 - **Verdict as the plan states it: split taken (L < H).** The seven head public rows without a witness are the ones no model can reach, each already recorded `unwitnessed` with its reason and checked live to stay unreached: codegen `_multiplicity_indices` nonunique and negative (SysIDE rejects the shapes at load), the renderer's not-Python check, feature-chain check and unary-operator check (P4: shadowed or refused upstream); agentic-mbse `executable_profile.py` 1014 and `reference_use.py` 702 (scanner.toml `[[unwitnessed_site]]`). Every reachable head site has a reason, a witness and a mutation.
 - **Premise conflict, surfaced (capture-fidelity law 4).** The first arm exists because "the head is not finished, so the tail would start late" (design § E). Here the head work is finished; L < H only because the count puts unreachable public rows in H. Counting those seven as landed gives L = H, and with the tail arm not firing, P6 would run in this item. That is the owner's call, not this run's. If the split stands, P6 becomes a follow-on item, `test_site_account_completeness.py` and the all-rows agentic-mbse witness check go with it, and P7 still runs, including E5.
+- **Ruling: split not taken.** [AGENT] (orchestrator, 2026-10-19, `briefs/implement_p6.md`). The trigger stands in for group E overrunning its effort. The whole L < H gap (46 vs 53) is the seven head rows no valid model reaches, each recorded unwitnessed with a guard that fails if a case reaches it. That is a completed disposition, so those rows count toward L: L = H = 53. The tail (94) is under 1.25 × T (120), so Phase 6 runs in this item as planned.
 
 ### Phase 6 Completion
+**Completed:** 2026-10-19. Phase gate below; the audit is the orchestrator's to run (`/_my_audit`).
+**Actual Changes:** one commit in each repo, named in the final report of `briefs/implement_p6.md`'s run.
+**Tail size:** 94 rows (codegen 84, agentic-mbse 10), unchanged from the P5 count and under the 1.25 × T bound (120) throughout. No tail row was added mid-phase; three codegen site IDs were renamed by the code changes below.
+
+#### Phase gate (2026-10-19)
+- Snapshots: `git diff --exit-code d73a4fc5` over the 22 committed `instance_graph_snapshot.json` files exits 0.
+- Accept/refuse: `test_public_package_oracle.py` and `test_v6_recapture_batch.py` pass inside the full licensed run; `baseline.json` and `batch.json` are unchanged since `d73a4fc5`. The one outcome-level change is a code, not an outcome: an untyped calc usage was refused `SI_INTERNAL_DEFECT` and is now refused `SI_TYPE_INVALID` (O8).
+- Regressions: codegen licensed suite (`uv run --extra dev pytest tests/ -q -rfEs`, `.env` sourced) 6644 passed, 9 failed, 9 skipped, 124 deselected (the `execution` lane, excluded by `addopts`); the 9 failures are the baseline IDs. The first full run had a tenth failure, `tests/unit/test_sc11_recheck.py`, which called `residual_class_name_collision_error` without the reason it now requires; fixed before the second run. Subset suite alone: passes, no skips. agentic-mbse (`uv run --all-extras pytest tests/ -q -rfEs`) 3953 passed, 5 failed, 8 skipped, 1 xfailed; the 5 are the all-extras baseline IDs.
+- Merge order: `git log subset-conformance..main` is empty in both repos (local refs; nothing fetched), so no rebase.
+- Static checks: codegen mypy clean (87 files), ruff `src/ tests/` 94 (baseline 94); agentic-mbse ruff `src/ tests/` 118 (baseline 118), mypy 88 (baseline 88).
+- Audit: not run here.
+
+#### Reasons, witnesses and mutations (codegen)
+- 41 new `SiteReason` members (`elaboration/diagnostics.py`), each passed literally at one raise: the 39 tail public sites that lacked one, plus two re-checks behind a preflight (`generate_registry`'s class-name re-check and `render_constraint_module`'s binding check, both role `internal_invariant`). `generation_constraint_name_unsafe` moved from inside `constraint_name_safety_error` to its caller, so it is no longer set off-site (`test_site_reasons.py` `SET_OFF_SITE` keeps only the relayed `evidence_*` reasons).
+- Carriers: `IdentityBoundaryError` gained `reason`; `constraint_name_safety_error` and `residual_class_name_collision_error` take it from the caller; `_generation_error` (`generation/modules.py`) passes it; elaboration's relay of a `CompilationError` copies it; `graph.py` gained `UnsupportedExpressionIRError` (a `TypeError` subclass) so the unsupported-IR reason reaches `validate()`'s diagnostic. Output effects are in `evidence/changed-outputs.md` § P6.
+- 43 new codegen-home cases (`tests/fixtures/subset_profile/`, answers in `tests/expectations/subset_profile/cases/`): 14 output-naming cases (`output-naming__*`, `constraint-naming__*`, `codegen_owned`) and 29 model-shape cases (`reproduced_gap`). Constructs, screen blocks and witnesses were written from live runs and read before storing; generator blocks came from the capture helper after each disagreement entry was written. 13 existing answers re-captured (reason only, codes unchanged) and 7 existing answers gained a tail witness. `disagreements.json` grows by 46 entries (43 codegen-home, 3 packaged), owner Reid Westwood, `r3_row` null.
+- `witnesses.tail_sites()` adds every public row with a reason and no rule or R3 row to `mutated_sites()`; `mutations.json` records 41 tail sites, each changing exactly its witness cases (and, for `_feature_python_type::3`, the two `blocked-predicate-unmapped-code__quantity_operands_*` cases that reach it).
+- `test_site_account_completeness.py` (new, pure): every public row has a reason (its column, or the relay's `_EVIDENCE_REASONS` member for a `SemanticEvidenceError` site) and either a witness or an `unwitnessed` entry in `mutations.json`.
+- `test_generator_half.py`: two constructs widened so the projection refusal's location (the calc def, the shared attribute) falls inside them; three refusals gained a source location instead of joining `UNLOCATED_CODES`.
+
+#### E4 verdicts (codegen tail, 84 rows)
+- 41 `public_capability`, each with a reason, a case and a mutation (32 already public, 9 moved from `unknown`).
+- 25 `internal_invariant`, each citing its `.py:` guard (18 from `unknown`, 7 from `public_capability`: the three constraint re-checks behind the name-safety preflight, the exit-point type check, the owner-address and resolve-address count checks, and the extracted-versus-live output set check).
+- 2 `relay_plumbing` (`graph.py` `_dangling`, `_graph_failure`), 1 `environment` (`_resolve_semantic_reference` leaf with no slot: SysIDE refuses a non-feature referent).
+- 15 stay `unknown`, owner sysml-codegen, each with its attempts and limit in the note.
+
+#### agentic-mbse
+- Three packaged reproduction cases (`candidate-expression-depth__attribute_value`, `…__constraint_predicate`, `candidate-chain-head__conditional_head`) witness five tail public sites in the screen half: `reference_use.py` `_walk`, `_invocations`, `_chain_head_segments`; `subset_extraction.py` `_conditionals`; `constraint_extraction.py` `_expression_ir`.
+- `expression.py` `traverse_expression` and `reconstruct_expression` stay public and are recorded in `scanner.toml` `[[unwitnessed_site]]` with why no screen or generator path reaches them.
+- The three unknown rows keep role `unknown` with an E4 note.
+- `test_every_public_site_has_a_packaged_witness_or_says_why_none_can` (was: linked rows only) now covers every public row.
+
+#### Deviations
+- **More naming sites than planned.** The plan names 10 naming-collision sites; 14 codegen-owned naming refusals were found reachable and each got a case. `generation/predicate_compiler.py:319`, which the plan lists among the 10, is a re-check behind the constraint name-safety preflight (no model reaches it), so it is `internal_invariant`; the preflight it shadows (`generation/errors.py:49`) is the witnessed site.
+- **The completeness test accepts a reach guard instead of a witness.** The plan's stencil asks for a witness on every public row. Five codegen public rows have none because no valid model reaches them (P4/P5); the P5 split ruling counts their `unwitnessed` record, which fails as soon as a case reaches one, as done. The test follows the ruling.
+- **Mutator fix.** `mutate.site_target` imported `pkg/__init__.py` sites as `pkg.__init__`, a second copy of the module, so recorders on `cli/__init__.py` saw nothing. It now imports the package (`mutate.module_name`), with a pure test in `test_mutator.py`.
+
+#### Other findings
+- **O8 / RG-1:** one O8 conversion (`_typed_definition`, `ValueError` → `SI_TYPE_INVALID`); no RG-1 candidate.
+- **Possible silent loss, not changed:** the registry deduplicates calc modules by simple calc def name (`generation/registry.py` `_registry_class_entries`, `seen_names`), so two calc defs named `Twice` in different packages both generate but may register one class. Not probed further; a backlog candidate.
+- **Message quality, not changed:** the `_typed_definition` refusal prints the usage name as `syside.core.QualifiedName([...])` (the message body predates P6).
 
 ### Phase 7 Completion
 **Receipt codegen_rev:** 

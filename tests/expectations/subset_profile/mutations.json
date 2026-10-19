@@ -191,6 +191,144 @@
     ],
     "sysml_codegen/elaboration/project.py::_Projection._compile_computed_expression.render::coded::SI_SNAPSHOT_INVALID::5": [
       "push-down-sum-shape__zero_arguments"
+    ],
+    "sysml_codegen/cli/__init__.py::_check_duplicate_output_paths::free-text::CodeGenerationError::1": [
+      "output-naming__module_path_collision"
+    ],
+    "sysml_codegen/cli/__init__.py::_check_duplicate_output_paths::free-text::CodeGenerationError::2": [
+      "output-naming__schema_path_collision"
+    ],
+    "sysml_codegen/cli/__init__.py::_preflight_registry_class_names::unrecognized::residual_class_name_collision_error::1": [
+      "output-naming__registry_class_collision"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._apply_deep_literal_redefinitions::coded::OVERRIDE_TARGET_MISSING::1": [
+      "deep-override__reference_part_target"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._apply_deep_literal_redefinitions::coded::OVERRIDE_TARGET_MISSING::2": [
+      "deep-override__computed_target"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._build_calculation_nodes::coded::SI_EDGE_DANGLING::1": [
+      "calc-usage-typing__library_calc_def"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._collect_bound_members::coded::SI_EDGE_DANGLING::1": [
+      "constraint-typing__untyped_with_bound_input"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._constraint_metadata::coded::SI_EDGE_DANGLING::1": [
+      "constraint-typing__inherited_by_subsetting"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._effective_formal_for_member::coded::SI_EDGE_DANGLING::1": [
+      "calc-usage-binding__undeclared_input"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._feature_python_type::coded::SI_EDGE_DANGLING::2": [
+      "feature-type__subsetting_without_typing"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._feature_python_type::coded::SI_EDGE_DANGLING::3": [
+      "blocked-predicate-unmapped-code__quantity_operands_mixed_units",
+      "blocked-predicate-unmapped-code__quantity_operands_same_units",
+      "feature-type__quantity_value",
+      "feature-type__untyped_attribute"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._index_calculation_payloads::coded::SI_ID_MISSING::1": [
+      "anonymous-declaration__calc_definition",
+      "calc-def-identity__duplicate_name"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._index_calculation_payloads::coded::SI_ID_MISSING::2": [
+      "calc-def-identity__anonymous_parameter"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._output_ports::coded::SI_EDGE_DANGLING::1": [
+      "calc-def-output__part_usage"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._resolve_bindings::coded::SI_EDGE_DANGLING::1": [
+      "literal-binding__null",
+      "literal-binding__unbounded"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._resolve_calculation_output::coded::SI_OCCURRENCE_AMBIGUOUS::1": [
+      "calc-output-reference__definition_member"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._resolve_semantic_reference::coded::SI_OCCURRENCE_MISSING::1": [
+      "reference-leaf__library_constant",
+      "reference-leaf__library_constant_alias"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._resolve_semantic_reference::coded::SI_OCCURRENCE_MISSING::2": [
+      "bare-reference__imported_nested_feature"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._typed_definition::coded::SI_TYPE_INVALID::1": [
+      "calc-usage-typing__subsetting_only",
+      "calc-usage-typing__untyped"
+    ],
+    "sysml_codegen/elaboration/graph.py::InstanceGraph._expression_reference_count::unrecognized::UnsupportedExpressionIRError::1": [
+      "push-down-sum-shape__sequence_argument"
+    ],
+    "sysml_codegen/elaboration/identity.py::declaration_id_for::coded-fixed::SI_ID_MISSING|SI_ID_UNSTABLE::1": [
+      "anonymous-declaration__calc_usage",
+      "anonymous-declaration__named_part_in_anonymous_action",
+      "anonymous-declaration__package",
+      "anonymous-declaration__part_usage",
+      "anonymous-declaration__requirement_definition",
+      "blocked-predicate-unmapped-code__anonymous_assert_by_reference",
+      "candidate-anonymous-constraint__inline_assert__owner_instantiated",
+      "candidate-anonymous-constraint__inline_constraint__owner_instantiated"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::FeatureSlotIndex._root_of::coded-fixed::SI_REDEFINITION_INVALID::2": [
+      "multiple-redefinition__unrelated_roots"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::OccurrenceIndex.resolve_address::coded::SI_OCCURRENCE_AMBIGUOUS::1": [
+      "reference-anchor__definition_twice_in_lineage"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::OccurrenceIndex.resolve_address::coded::SI_OCCURRENCE_AMBIGUOUS::2": [
+      "scalar-reference__multi_occurrence_part"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::OccurrenceIndex.resolve_address::coded::SI_OCCURRENCE_MISSING::1": [
+      "reference-anchor__definition_not_in_lineage"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::_effective_type::coded-fixed::SI_REDEFINITION_INVALID::1": [
+      "candidate-ambiguous-typing__incomparable_typings__part_usage",
+      "part-typing__two_definitions"
+    ],
+    "sysml_codegen/elaboration/project.py::_Projection._build_output_aliases::coded::SI_RENDERING_COLLISION::1": [
+      "output-naming__output_alias_collision"
+    ],
+    "sysml_codegen/elaboration/project.py::_Projection._claim_channel::coded::SI_RENDERING_COLLISION::1": [
+      "output-naming__channel_name_collision"
+    ],
+    "sysml_codegen/elaboration/project.py::_Projection._claim_module::coded::SI_RENDERING_COLLISION::1": [
+      "output-naming__module_name_collision"
+    ],
+    "sysml_codegen/elaboration/project.py::_Projection._computed_inputs::coded::SI_RENDERING_COLLISION::1": [
+      "output-naming__expression_parameter_collision"
+    ],
+    "sysml_codegen/elaboration/project.py::_Projection._declaring_package::coded::SI_RENDERING_COLLISION::1": [
+      "output-naming__package_scoped_group_in_model_file"
+    ],
+    "sysml_codegen/elaboration/project.py::_Projection._entry_source::coded::SI_RENDERING_COLLISION::1": [
+      "output-naming__entry_point_name_collision"
+    ],
+    "sysml_codegen/elaboration/project.py::_Projection._entry_source::coded::SI_RENDERING_COLLISION::2": [
+      "output-naming__entry_point_metadata_conflict"
+    ],
+    "sysml_codegen/elaboration/project.py::_Projection._require_unique_params::coded::SI_RENDERING_COLLISION::1": [
+      "output-naming__parameter_name_collision"
+    ],
+    "sysml_codegen/extraction/expression_compiler.py::compile_calc_def_exact.add_node::free-text::CompilationError::1": [
+      "calc-def-reference__package_attribute"
+    ],
+    "sysml_codegen/extraction/extractor.py::SysMLDataExtractor._extract_attribute::coded-fixed::SI_TYPE_INVALID::1": [
+      "calc-def-parameter__untyped"
+    ],
+    "sysml_codegen/extraction/extractor.py::SysMLDataExtractor._extract_attribute::coded-fixed::SI_TYPE_INVALID::2": [
+      "calc-def-parameter__quantity_typed"
+    ],
+    "sysml_codegen/extraction/extractor.py::SysMLDataExtractor._extract_calculation_definition::coded-fixed::SI_EVIDENCE_INCOMPLETE::1": [
+      "calc-def-return__anonymous"
+    ],
+    "sysml_codegen/generation/entry_point.py::_refuse_colliding_field_names::free-text::CodeGenerationError::1": [
+      "output-naming__param_field_collision"
+    ],
+    "sysml_codegen/generation/errors.py::validate_constraint_graph_or_raise::unrecognized::constraint_name_safety_error::1": [
+      "constraint-naming__generated_binding_overlap"
+    ],
+    "sysml_codegen/generation/modules.py::assert_unique_predicate_function_names::unrecognized::_generation_error::1": [
+      "constraint-naming__predicate_function_collision"
     ]
   },
   "screen": {

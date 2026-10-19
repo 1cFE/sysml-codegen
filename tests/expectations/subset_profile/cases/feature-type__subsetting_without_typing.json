@@ -1,0 +1,28 @@
+{
+  "id": "feature-type__subsetting_without_typing",
+  "home": "codegen",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "attribute `a :> b` with no typing of its own, read in a computed expression"
+  },
+  "screen": {
+    "verdict": "clear",
+    "findings": []
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EDGE_DANGLING"
+    ],
+    "reasons": [
+      "elaboration_feature_typing_count"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._feature_python_type::coded::SI_EDGE_DANGLING::2"
+    ]
+  }
+}

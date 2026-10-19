@@ -900,6 +900,466 @@
       "r3_row": "CALC-DEF-BARE-RESULT",
       "owner": "Reid Westwood",
       "reason": "A calc def with zero output attributes (SI_EVIDENCE_INCOMPLETE). The screen refuses the model for a self-referencing binding source, which the generator never reaches because it stops at the zero-output calc. Same extractor condition as CALC-DEF-BARE-RESULT."
+    },
+    {
+      "subject": "case:output-naming__module_path_collision",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["DUPLICATE_OUTPUT_PATH"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "Two calc defs whose names sanitize to one modules/ path are refused before writing. Codegen derives this public name from the model's names, and the output naming is codegen's own fact (ADR 0007), so no shared rule describes it."
+    },
+    {
+      "subject": "case:output-naming__schema_path_collision",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["DUPLICATE_OUTPUT_PATH"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "Two multi-output calc defs with one simple name in different packages share a schemas/<name>_output.py file, refused before writing. Codegen derives this public name from the model's names, and the output naming is codegen's own fact (ADR 0007), so no shared rule describes it."
+    },
+    {
+      "subject": "case:output-naming__registry_class_collision",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["REGISTRY_CLASS_NAME_COLLISION"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "Two formula modules with the same class name and parent segment in different grandparent packages keep one registry class name after aliasing, refused before writing. Codegen derives this public name from the model's names, and the output naming is codegen's own fact (ADR 0007), so no shared rule describes it."
+    },
+    {
+      "subject": "case:output-naming__param_field_collision",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["PARAM_FIELD_COLLISION"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "An indexed parameter key and a declared name spelling its sanitized form render one schema field in one parameter group. Codegen derives this public name from the model's names, and the output naming is codegen's own fact (ADR 0007), so no shared rule describes it."
+    },
+    {
+      "subject": "case:output-naming__module_name_collision",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["PROJECTION_FAILED", "SI_RENDERING_COLLISION"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "Two calc usages whose display paths differ only in case render one public module name at projection. Codegen derives this public name from the model's names, and the output naming is codegen's own fact (ADR 0007), so no shared rule describes it."
+    },
+    {
+      "subject": "case:output-naming__channel_name_collision",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["PROJECTION_FAILED", "SI_RENDERING_COLLISION"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "Two outputs of one calc def whose names sanitize alike render one public channel at projection. Codegen derives this public name from the model's names, and the output naming is codegen's own fact (ADR 0007), so no shared rule describes it."
+    },
+    {
+      "subject": "case:output-naming__package_scoped_group_in_model_file",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["PROJECTION_FAILED", "SI_RENDERING_COLLISION"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A package-scoped entry point in a file named model.sysml has no root occurrence to name its parameter group after, so projection refuses rather than guess a group. Codegen derives this public name from the model's names, and the output naming is codegen's own fact (ADR 0007), so no shared rule describes it."
+    },
+    {
+      "subject": "case:output-naming__entry_point_name_collision",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["PROJECTION_FAILED", "SI_RENDERING_COLLISION"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "Two modelled attributes whose names sanitize alike render one entry-point key at projection. Codegen derives this public name from the model's names, and the output naming is codegen's own fact (ADR 0007), so no shared rule describes it."
+    },
+    {
+      "subject": "case:output-naming__entry_point_metadata_conflict",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["PROJECTION_FAILED", "SI_RENDERING_COLLISION"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "One modelled attribute read by formals of two scalar types projects one entry point with conflicting types. The entry point's projected metadata is codegen's output fact (ADR 0007), so no shared rule describes it."
+    },
+    {
+      "subject": "case:output-naming__parameter_name_collision",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["PROJECTION_FAILED", "SI_RENDERING_COLLISION"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "Two inputs of one calc def whose names sanitize alike render one module parameter at projection. Codegen derives this public name from the model's names, and the output naming is codegen's own fact (ADR 0007), so no shared rule describes it."
+    },
+    {
+      "subject": "case:output-naming__expression_parameter_collision",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["PROJECTION_FAILED", "SI_RENDERING_COLLISION"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A computed attribute reading two features whose names sanitize alike renders one formula parameter at projection. Codegen derives this public name from the model's names, and the output naming is codegen's own fact (ADR 0007), so no shared rule describes it."
+    },
+    {
+      "subject": "case:output-naming__output_alias_collision",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["PROJECTION_FAILED", "SI_RENDERING_COLLISION"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "Two alias attributes on distinct calc outputs whose names sanitize alike render one output alias at projection. Codegen derives this public name from the model's names, and the output naming is codegen's own fact (ADR 0007), so no shared rule describes it."
+    },
+    {
+      "subject": "case:constraint-naming__generated_binding_overlap",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["CONSTRAINT_NAME_UNSAFE"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A constraint formal named like a binding the generated predicate scope reserves (`value`) is refused by the name-safety preflight. The generated scope is codegen's own output (ADR 0007), so no shared rule describes it."
+    },
+    {
+      "subject": "case:constraint-naming__predicate_function_collision",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["PREDICATE_FUNCTION_NAME_COLLISION"],
+      "screen_reasons": [],
+      "resolution": "codegen_owned",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "Two constraint defs whose qualified names normalize to one predicate function name are refused before writing. Codegen derives this public name from the model's names, and the output naming is codegen's own fact (ADR 0007), so no shared rule describes it."
+    },
+    {
+      "subject": "case:calc-def-identity__duplicate_name",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_ID_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "Two calc defs with one qualified name load without a SysIDE error, but neither gets a reload-stable UUIDv5, so calc payload indexing refuses SI_ID_MISSING. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:calc-def-identity__anonymous_parameter",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_ID_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A calc def parameter with no name has no declaration UUID, so calc payload indexing refuses SI_ID_MISSING. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:deep-override__reference_part_target",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["OVERRIDE_TARGET_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A deep literal redefinition through a reference part has no occurrence target, so elaboration refuses OVERRIDE_TARGET_MISSING. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:deep-override__computed_target",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["OVERRIDE_TARGET_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A deep literal redefinition of a computed attribute targets a computed value, not an attribute node, so elaboration refuses OVERRIDE_TARGET_MISSING. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:calc-usage-typing__library_calc_def",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EDGE_DANGLING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A calc usage typed by a library calc def has no extracted payload (codegen extracts model calc defs only), so elaboration refuses SI_EDGE_DANGLING. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:calc-usage-typing__untyped",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_TYPE_INVALID"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A calc usage with no calc def typing is refused SI_TYPE_INVALID when its calculation node is built. Before Item 2a P6 the same raise was a plain ValueError reported as SI_INTERNAL_DEFECT (evidence/changed-outputs.md). No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:calc-usage-typing__subsetting_only",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_TYPE_INVALID"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A calc usage that only subsets another has no calc def typing of its own (its typing is inherited, not owned), so it is refused SI_TYPE_INVALID, formerly SI_INTERNAL_DEFECT (evidence/changed-outputs.md). No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:constraint-typing__inherited_by_subsetting",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EDGE_DANGLING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "An asserted constraint that inherits its definition by subsetting: the shared constraint profile selects the inherited definition while codegen reads no owned typing, and elaboration refuses the disagreement SI_EDGE_DANGLING. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:calc-def-output__part_usage",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EDGE_DANGLING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A calc def out parameter that is a part usage has no extracted output metadata (extraction keeps attribute and reference parameters), so elaboration refuses SI_EDGE_DANGLING. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:constraint-typing__untyped_with_bound_input",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EDGE_DANGLING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "An untyped constraint usage binding an input has no definition to take the formal from, so elaboration refuses SI_EDGE_DANGLING. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:feature-type__subsetting_without_typing",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EDGE_DANGLING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "An attribute typed only through subsetting has no owned feature typing, so elaboration refuses SI_EDGE_DANGLING when it is read in an expression. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:feature-type__untyped_attribute",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EDGE_DANGLING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "An attribute with no declared type gets its one typing from SysIDE, which is not a ScalarValues primitive, so elaboration refuses SI_EDGE_DANGLING when it is read in an expression. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:feature-type__quantity_value",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EDGE_DANGLING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A quantity-typed attribute read in a computed expression has no ScalarValues primitive type, so elaboration refuses SI_EDGE_DANGLING. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:calc-usage-binding__undeclared_input",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EDGE_DANGLING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A calc usage that binds an input its calc def does not declare has no effective formal for it, so elaboration refuses SI_EDGE_DANGLING. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:reference-leaf__library_constant",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A computed attribute reading a library-declared constant names a leaf outside the model element index, so elaboration refuses SI_OCCURRENCE_MISSING. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:reference-leaf__library_constant_alias",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "An alias attribute on a library-declared constant names a leaf outside the model element index, so elaboration refuses SI_OCCURRENCE_MISSING. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:bare-reference__imported_nested_feature",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A bare (imported) reference to a feature nested in another root part has no modelled containment prefix from the consumer, so elaboration refuses SI_OCCURRENCE_MISSING. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:calc-output-reference__definition_member",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_AMBIGUOUS"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A reference to a calc def's result through the definition, with two calc usages of that def in scope, matches two producers, so elaboration refuses SI_OCCURRENCE_AMBIGUOUS. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:literal-binding__null",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EDGE_DANGLING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A calc input bound to `null` is a literal binding with no value, so elaboration refuses SI_EDGE_DANGLING at wiring. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:literal-binding__unbounded",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EDGE_DANGLING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A calc input bound to `*` is a literal binding with no value codegen reads, so elaboration refuses SI_EDGE_DANGLING at wiring. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:multiple-redefinition__unrelated_roots",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_REDEFINITION_INVALID"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "One attribute redefining two features with unrelated roots has no single feature slot, so the slot index refuses SI_REDEFINITION_INVALID. The screen's verdict is incomplete with no refused finding. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:reference-anchor__definition_not_in_lineage",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A reference anchored at a part definition that no occurrence in the consumer's lineage instantiates has no anchor scope, so elaboration refuses SI_OCCURRENCE_MISSING. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:reference-anchor__definition_twice_in_lineage",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_AMBIGUOUS"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A reference anchored at a part definition that two occurrences in the consumer's lineage instantiate has two anchor scopes, so elaboration refuses SI_OCCURRENCE_AMBIGUOUS. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:scalar-reference__multi_occurrence_part",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_AMBIGUOUS"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A scalar (non-aggregating) read through a part with two occurrences selects two scopes, so elaboration refuses SI_OCCURRENCE_AMBIGUOUS. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:part-typing__two_definitions",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_REDEFINITION_INVALID"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A part usage typed by two unrelated part definitions has no one most-specific type, so the occurrence index refuses SI_REDEFINITION_INVALID. The screen's verdict is incomplete with no refused finding. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:calc-def-reference__package_attribute",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EDGE_DANGLING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A calc def expression reading a feature that is neither its member nor its input fails exact compilation, which elaboration refuses SI_EDGE_DANGLING (not a stub). No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:calc-def-return__anonymous",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EVIDENCE_INCOMPLETE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A calc def with an anonymous return has no output name, so extraction refuses SI_EVIDENCE_INCOMPLETE at its own site, before the zero-output check CALC-DEF-BARE-RESULT names. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:calc-def-parameter__untyped",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_TYPE_INVALID"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A calc def parameter with no typing is refused SI_TYPE_INVALID at extraction. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:calc-def-parameter__quantity_typed",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_TYPE_INVALID"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A calc def parameter typed by a quantity rather than a ScalarValues primitive is refused SI_TYPE_INVALID at extraction. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:candidate-expression-depth__attribute_value",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EVIDENCE_INCOMPLETE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "An expression nested past the shared 100-level traversal depth (a 120-term sum in a computed attribute) is refused SI_EVIDENCE_INCOMPLETE at the shared reference walk. The screen hits the same budget in its own walks, so its verdict is incomplete with no refused finding. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:candidate-expression-depth__constraint_predicate",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EVIDENCE_INCOMPLETE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A constraint predicate nested past the shared 100-level traversal depth is refused SI_EVIDENCE_INCOMPLETE at the shared reference walk. The screen hits the same budget, including in constraint expression IR extraction, so its verdict is incomplete with no refused finding. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+    },
+    {
+      "subject": "case:candidate-chain-head__conditional_head",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EXPRESSION_SOURCE_UNSUPPORTED"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "A feature chain whose head is a conditional expression (`(if true ? w else v).r`) is refused SI_EXPRESSION_SOURCE_UNSUPPORTED at the shared chain-head check. The screen meets the same check, so its verdict is incomplete with no refused finding. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
     }
   ]
 }

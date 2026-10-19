@@ -68,3 +68,25 @@ Examples, from `sysml-codegen generate` on the cases named (paths shortened):
 - unchanged: `Code generation failed: exact graph projection failed: SI_SNAPSHOT_INVALID: sum on 'fx__site__t' must have one argument` (`push-down-sum-shape__zero_arguments`)
 
 Checked at the phase gate: snapshots, oracle baseline and batch (Implementation Notes, Phase 5).
+
+## P6: reasons at the tail sites, one O8 conversion, three new locations
+
+Forty-one raises now pass a new site reason (the tail's public sites, plus two re-checks behind a preflight), and `generation_constraint_name_unsafe` moved from inside the `constraint_name_safety_error` factory to its caller's raise. Elaboration-stage refusals print the P1.3 suffix ` (reason: <id>)`; projection- and generation-stage refusals (`ProjectionError`, `CodeGenerationError`) print unchanged text and carry the reason as structured data only. Every new member is in `SiteReason` (`src/sysml_codegen/elaboration/diagnostics.py`); the account's `reason` column names the site of each.
+
+Three changes go past a suffix. None changes what is generated or which models are accepted or refused.
+
+- **O8: an untyped calc usage now refuses with a code.** `_typed_definition` (`elaboration/elaborate.py`) raised a plain `ValueError`, which reached the user as `SI_INTERNAL_DEFECT`. It now raises `ElaborationInvariantError(SI_TYPE_INVALID)` with the same message, a source location and reason `elaboration_usage_definition_typing_count`. O8 permits this: the plain exception reached users as `SI_INTERNAL_DEFECT` with it in the cause chain. Outcome (refused) is unchanged; the code changes from `SI_INTERNAL_DEFECT` to `SI_TYPE_INVALID`. Its site ID changes from `…::_typed_definition::builtin::ValueError::1` to `…::_typed_definition::coded::SI_TYPE_INVALID::1`.
+- **Three refusals gain a source location.** The `_typed_definition` refusal and both deep-literal-override refusals (`_apply_deep_literal_redefinitions`, `OVERRIDE_TARGET_MISSING`) now name the authored line, as other elaboration refusals do.
+- **The unsupported-IR check raises its own exception class.** `InstanceGraph._expression_reference_count` (`elaboration/graph.py`) raised a plain `TypeError` for an `UnsupportedNode`, which `validate()` caught and reported as `SI_EDGE_DANGLING`. It now raises `UnsupportedExpressionIRError`, a `TypeError` subclass that carries reason `graph_computed_ir_unsupported`, and `validate()` passes the reason into the same diagnostic. The code, outcome and text are unchanged apart from the suffix. Site IDs: the unsupported-IR raise is now `…::_expression_reference_count::unrecognized::UnsupportedExpressionIRError::1`, and the invalid-IR raise (an internal invariant) moves from `builtin::TypeError::2` to `builtin::TypeError::1`.
+
+Plumbing that carries the reasons, with no output effect: `IdentityBoundaryError` gained `reason`; `constraint_name_safety_error` and `residual_class_name_collision_error` (`generation/errors.py`) take the reason from their caller; `_generation_error` (`generation/modules.py`) passes an optional reason to `CodeGenerationError`; elaboration's relay of a `CompilationError` copies its reason.
+
+Examples, from `sysml-codegen generate` on the cases named (paths shortened):
+
+- `SI_TYPE_INVALID: <model>: syside.core.QualifiedName(['fx', 'Site', 'c']) has 0 exact CalculationDefinition typings [root-0/model.sysml:6] (reason: elaboration_usage_definition_typing_count)` (`calc-usage-typing__untyped`; was `SI_INTERNAL_DEFECT` with the same message body)
+- `OVERRIDE_TARGET_MISSING: fx__site: deep literal override does not target an attribute node [root-0/model.sysml:9] (reason: elaboration_deep_override_target_computed)` (`deep-override__computed_target`; gains the location and the suffix)
+- `SI_EDGE_DANGLING: fx__site__t: computed calculation contains unsupported typed IR (reason: graph_computed_ir_unsupported)` (`push-down-sum-shape__sequence_argument`)
+- `SI_ID_UNSTABLE: <model>: CalculationUsage has no reload-stable qualified declaration identity (reason: identity_qualified_name_missing)` (`anonymous-declaration__calc_usage`)
+- unchanged: `Code generation failed: DUPLICATE_OUTPUT_PATH: SysML names "fx::'Twice-x'" and 'fx::Twice_x' both derive modules/fx/twice_x.py. …` (`output-naming__module_path_collision`)
+
+The site account changed with this code: line numbers refreshed below each edit, three site IDs renamed as above, and the 84 tail rows given their Phase 6 verdicts. These are test expectations, not generator output. Checked at the phase gate: snapshots, oracle baseline and batch (Implementation Notes, Phase 6).

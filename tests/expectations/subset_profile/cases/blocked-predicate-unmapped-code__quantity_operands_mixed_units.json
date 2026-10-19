@@ -27,7 +27,9 @@
     "codes": [
       "SI_EDGE_DANGLING"
     ],
-    "reasons": [],
+    "reasons": [
+      "elaboration_feature_type_unsupported"
+    ],
     "witnesses": [
       "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._build_constraint_nodes::coded::SI_CONSTRAINT_BLOCKED::1"
     ]

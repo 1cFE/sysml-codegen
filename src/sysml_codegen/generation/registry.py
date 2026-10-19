@@ -256,6 +256,7 @@ def generate_registry(
     Returns:
         Generated Python code
     """
+    from sysml_codegen.elaboration.diagnostics import SiteReason
     from sysml_codegen.generation.errors import (
         residual_class_name_collision_error,
         validate_constraint_graph_or_raise,
@@ -371,7 +372,9 @@ def generate_registry(
     # clearing the output tree; this is the backstop for a direct caller.
     residual = _residual_collisions(all_modules)
     if residual:
-        raise residual_class_name_collision_error(residual)
+        raise residual_class_name_collision_error(
+            residual, reason=SiteReason.GENERATION_REGISTRY_RENDER_CLASS_NAME_COLLISION
+        )
 
     # Sort module entries by module_type for deterministic output
     all_modules.sort(key=lambda m: m["module_type"])

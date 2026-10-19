@@ -1,0 +1,29 @@
+{
+  "id": "output-naming__channel_name_collision",
+  "home": "codegen",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      3
+    ],
+    "description": "a calc def with outputs 'r x' and r_x, whose channel names sanitize to one"
+  },
+  "screen": {
+    "verdict": "clear",
+    "findings": []
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "PROJECTION_FAILED",
+      "SI_RENDERING_COLLISION"
+    ],
+    "reasons": [
+      "projection_channel_name_collision"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/project.py::_Projection._claim_channel::coded::SI_RENDERING_COLLISION::1"
+    ]
+  }
+}

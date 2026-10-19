@@ -18,6 +18,11 @@
     "codes": [
       "SI_EDGE_DANGLING"
     ],
-    "reasons": []
+    "reasons": [
+      "graph_computed_ir_unsupported"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/graph.py::InstanceGraph._expression_reference_count::unrecognized::UnsupportedExpressionIRError::1"
+    ]
   }
 }

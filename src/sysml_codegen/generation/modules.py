@@ -20,6 +20,7 @@ import jinja2
 from sysml_codegen.core.errors import CodeGenerationError, GenerationCode
 from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
 from sysml_codegen.core.qualified_names import sanitize_qualified_name
+from sysml_codegen.elaboration.diagnostics import SiteReason
 
 if TYPE_CHECKING:
     from sysml_codegen.generation.coverage import CoverageAccountData
@@ -133,7 +134,8 @@ def assert_unique_predicate_function_names(catalog: ConstraintCatalog) -> None:
         GenerationCode.PREDICATE_FUNCTION_NAME_COLLISION,
         "Predicate function-name collision: raw definition keys "
         f"{keys!r} all normalize to {function_name!r}. "
-        "Rename one; generation cannot emit them safely."
+        "Rename one; generation cannot emit them safely.",
+        reason=SiteReason.GENERATION_PREDICATE_FUNCTION_NAME_COLLISION,
     )
 
 
@@ -313,7 +315,9 @@ def render_constraint_module(
         )
         violation = select_name_safety_violation(violations)
     if violation is not None:
-        raise constraint_name_safety_error(violation)
+        raise constraint_name_safety_error(
+            violation, reason=SiteReason.GENERATION_PREDICATE_BINDING_NAME_UNSAFE
+        )
 
     input_names = [inp.param_name for inp in module.inputs]
     missing = [a for a in args if a not in input_names]
@@ -399,10 +403,12 @@ def render_report_aggregator(
     return code
 
 
-def _generation_error(code: GenerationCode, message: str) -> Exception:
+def _generation_error(
+    code: GenerationCode, message: str, *, reason: SiteReason | None = None
+) -> Exception:
     from sysml_codegen.generation import CodeGenerationError
 
-    return CodeGenerationError(message, code=code)
+    return CodeGenerationError(message, code=code, reason=reason)
 
 
 def generate_teax_module(

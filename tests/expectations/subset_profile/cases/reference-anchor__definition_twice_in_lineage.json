@@ -1,0 +1,28 @@
+{
+  "id": "reference-anchor__definition_twice_in_lineage",
+  "home": "codegen",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "attribute t in part inner : A, inside site : B :> A, reading r; both occurrences in the lineage are typed by A"
+  },
+  "screen": {
+    "verdict": "clear",
+    "findings": []
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_OCCURRENCE_AMBIGUOUS"
+    ],
+    "reasons": [
+      "occurrence_anchor_definition_ambiguous"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/occurrence.py::OccurrenceIndex.resolve_address::coded::SI_OCCURRENCE_AMBIGUOUS::1"
+    ]
+  }
+}

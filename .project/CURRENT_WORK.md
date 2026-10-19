@@ -4,7 +4,7 @@
 
 ## Active Work
 
-- `subset-profile-conformance` (EXEC-SUBSET-CONTRACT Item 2a, epic in agentic-mbse): implementing. Phases 1–5 of 7 are done and their gates passed (2026-10-19); Phases 1–2 were audited mid-run, Phases 3–5 are not yet audited. Phase 5 gave every R3-row refusal site its own reason, witness and mutation, classified the head's unknown sites, and found that neither the anonymous-declaration rule nor an ES-002 rule meets the rule criterion (boundaries in `evidence/r3-closure.md`). The group E split count at P5's close says split (L < H), only because seven unreachable head rows count against L; the owner decides whether Phase 6 runs in this item. Plan: `.project/active/subset-profile-conformance/plan.md`.
+- `subset-profile-conformance` (EXEC-SUBSET-CONTRACT Item 2a, epic in agentic-mbse): implementing. Phases 1–6 of 7 are done and their gates passed (2026-10-19); Phases 1–2 were audited mid-run, Phases 3–6 are not yet audited. The orchestrator ruled the group E split not taken, so Phase 6 ran here: every public site in both accounts now has a reason and a witness (or a recorded reason no model reaches it), and every tail unknown site has a verdict. 46 new cases (43 codegen-home, 3 agentic-mbse packaged), one O8 conversion (an untyped calc usage now refuses `SI_TYPE_INVALID` instead of `SI_INTERNAL_DEFECT`), no RG-1 candidate. Phase 7 (rescan, receipt, final checks) is next. Plan: `.project/active/subset-profile-conformance/plan.md`.
 
 The backlog holds separately scoped capabilities, diagnostics, model work, and assurance limits.
 

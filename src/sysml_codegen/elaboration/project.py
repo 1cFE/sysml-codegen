@@ -372,6 +372,7 @@ class _Projection:
                 else f"distinct semantic modules render as public name {name!r}",
                 reference=reference,
                 location=location,
+                reason=SiteReason.PROJECTION_MODULE_NAME_COLLISION,
             )
         self.public_module_names[name] = semantic
 
@@ -395,6 +396,7 @@ class _Projection:
                 else f"distinct semantic outputs render as public channel {channel!r}",
                 reference=reference,
                 location=location,
+                reason=SiteReason.PROJECTION_CHANNEL_NAME_COLLISION,
             )
         self.public_channels[channel] = semantic
 
@@ -453,6 +455,7 @@ class _Projection:
                 "to take a parameter-group identity from",
                 reference=reference,
                 location=location,
+                reason=SiteReason.PROJECTION_GROUP_PACKAGE_UNNAMED,
             )
         root = self.graph.occurrences[OccurrenceId(steps=owner.scope.steps[:1])]
         if not root.package_display:
@@ -486,6 +489,7 @@ class _Projection:
                 f"distinct semantic sources render as entry point {qualified_name!r}",
                 reference=owner_reference,
                 location=owner_location,
+                reason=SiteReason.PROJECTION_ENTRY_POINT_NAME_COLLISION,
             )
         existing = self.entry_points.get(qualified_name)
         candidate = EntryPoint(
@@ -509,6 +513,7 @@ class _Projection:
                 f"entry point {qualified_name!r} has conflicting projected metadata",
                 reference=owner_reference,
                 location=owner_location,
+                reason=SiteReason.PROJECTION_ENTRY_POINT_METADATA_CONFLICT,
             )
         self.entry_semantics[qualified_name] = semantic
         self.entry_points[qualified_name] = candidate
@@ -688,6 +693,7 @@ class _Projection:
                 consumer_display=node.display_path,
                 reference=reference,
                 location=location,
+                reason=SiteReason.PROJECTION_PARAMETER_NAME_COLLISION,
             )
 
     def _computed_inputs(
@@ -735,6 +741,7 @@ class _Projection:
                         param_name=param_name,
                         reference=reference,
                         location=location,
+                        reason=SiteReason.PROJECTION_EXPRESSION_PARAMETER_COLLISION,
                     )
                 param_by_port[port] = param_name
                 if prior is not None:
@@ -1091,6 +1098,7 @@ class _Projection:
                     f"distinct aliases render as {instance_path!r}/{node.display_name!r}",
                     reference=reference,
                     location=location,
+                    reason=SiteReason.PROJECTION_OUTPUT_ALIAS_COLLISION,
                 )
             rendered[key] = node.alias_target.target
             aliases.append(

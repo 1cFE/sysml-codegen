@@ -28,6 +28,7 @@ def _refuse_colliding_field_names(group_label: str, fields: list[dict[str, Any]]
     ambiguity the operator has to resolve in the model.
     """
     from sysml_codegen.core.errors import CodeGenerationError, GenerationCode
+    from sysml_codegen.elaboration.diagnostics import SiteReason
 
     seen: dict[str, str] = {}
     for field in fields:
@@ -39,6 +40,7 @@ def _refuse_colliding_field_names(group_label: str, fields: list[dict[str, Any]]
                 f"{prior!r} and {alias!r} both "
                 f"render as the schema field {name!r} — rename one in the model",
                 code=GenerationCode.PARAM_FIELD_COLLISION,
+                reason=SiteReason.GENERATION_PARAM_FIELD_COLLISION,
             )
         seen[name] = alias
 

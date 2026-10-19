@@ -7,10 +7,8 @@ witness a stored answer or packaged case names is a scanned site; that each one 
 every public row to have a reason and a witness is ``test_site_account_completeness.py``'s job
 (P6), so this test stays green while reasons land.
 
-Two kinds of reason are set off a scanned site, so no row carries them: the relayed
-``evidence_*`` reasons, read from ``_EVIDENCE_REASONS`` at the relay, and
-``generation_constraint_name_unsafe``, set inside the ``constraint_name_safety_error``
-factory whose callers' raises are the rows.
+One kind of reason is set off a scanned site, so no row carries it: the relayed
+``evidence_*`` reasons, read from ``_EVIDENCE_REASONS`` at the relay.
 """
 
 from __future__ import annotations
@@ -23,9 +21,7 @@ _OCCURRENCE = "sysml_codegen/elaboration/occurrence.py"
 _ELABORATE = "sysml_codegen/elaboration/elaborate.py"
 SCAN = site_scan.scan()
 ACCOUNT = site_scan.load_account()
-SET_OFF_SITE = {SiteReason.GENERATION_CONSTRAINT_NAME_UNSAFE} | {
-    reason for reason in SiteReason if reason.name.startswith("EVIDENCE_")
-}
+SET_OFF_SITE = {reason for reason in SiteReason if reason.name.startswith("EVIDENCE_")}
 
 
 def test_every_recorded_reason_is_a_site_reason():
