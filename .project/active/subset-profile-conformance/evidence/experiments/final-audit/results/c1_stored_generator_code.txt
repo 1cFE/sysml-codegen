@@ -1,0 +1,7 @@
+edited sysml-codegen/tests/expectations/subset_profile/cases/binding-source__expression_source__owner_instantiated.json (1 matches, replaced 1)
+FAILED tests/conformance/subset_profile/test_agreement.py::test_a_case_agrees_or_its_disagreement_is_recorded[binding-source__expression_source__owner_instantiated]
+FAILED tests/conformance/subset_profile/test_agreement.py::test_the_records_case_entries_are_exactly_the_computed_disagreements
+FAILED tests/conformance/subset_profile/test_case_store.py::test_a_cited_case_shows_the_generator_doing_what_the_record_says[binding-source__expression_source__owner_instantiated]
+FAILED tests/conformance/subset_profile/test_generator_half.py::test_live_run_equals_the_stored_answer[binding-source__expression_source__owner_instantiated]
+FAILED tests/conformance/subset_profile/test_screen_mutations.py::test_disabling_a_recognizer_breaks_agreement_on_exactly_the_stored_cases[binding-source/expression_source]
+================== 5 failed, 3856 passed in 224.39s (0:03:44) ==================

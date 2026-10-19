@@ -1,0 +1,13 @@
+edited agentic-mbse/src/agentic_mbse/sysml/subset_profile_rules.toml (1 matches, replaced 1)
+edited agentic-mbse/src/agentic_mbse/sysml/subset_cases/binding-source__expression_source__owner_uninstantiated/case.json (1 matches, replaced 1)
+edited agentic-mbse/src/agentic_mbse/sysml/subset_cases/binding-source__expression_source__owner_uninstantiated/case.json (1 matches, replaced 1)
+FAILED tests/conformance/subset_profile/test_agreement.py::test_a_case_agrees_or_its_disagreement_is_recorded[binding-source__expression_source__owner_uninstantiated]
+FAILED tests/conformance/subset_profile/test_agreement.py::test_the_records_case_entries_are_exactly_the_computed_disagreements
+FAILED tests/conformance/subset_profile/test_case_store.py::test_a_cited_case_shows_the_generator_doing_what_the_record_says[binding-source__expression_source__owner_uninstantiated]
+FAILED tests/conformance/subset_profile/test_record_coverage.py::test_a_refused_pair_cites_a_case_the_generator_refuses[binding-source/expression_source/owner_uninstantiated]
+================== 4 failed, 3858 passed in 226.99s (0:03:46) ==================
+FAILED tests/test_subset_case_citations.py::test_each_rule_example_is_a_cited_case_the_generator_runs
+FAILED tests/test_subset_gate_receipt.py::test_receipt_digest_matches_covered_files
+FAILED tests/test_sysml/test_subset_profile_version.py::test_version_pins_the_records_and_the_allowlist
+FAILED tests/test_sysml/test_subset_profile_rules_instantiation.py::test_narrowed_roots_report_incomplete_scope
+======================== 4 failed, 535 passed in 3.06s =========================

@@ -1,6 +1,6 @@
 # Spec: Independent conformance corpus and per-site codes (EXEC-SUBSET-CONTRACT Item 2a)
 
-**Status:** Implemented, awaiting audit (Phases 1–7 complete, 2026-10-19). Owner gates RG-1, RG-2 and RG-3 pending.
+**Status:** Implemented; final audit Needs Work (2026-10-19, `audit.md`): C4, E3 and E4 open on two record Blockers. Owner gates RG-1, RG-2 and RG-3 pending.
 **Owner:** Reid Westwood
 **Created:** 2026-10-18
 **Complexity:** HIGH
@@ -48,40 +48,40 @@ The criteria fall into six groups, A–F. Each group can be audited without the 
 - [x] For every (rule, shape, context) the records decide as `refused`, a case shows the generator refusing it.
 - [x] For every refused shape, a case shows a context where it is `admitted`, `omitted` or `excluded`. The exception is a shape the generator refuses in every context the rule can compute: Item 1's SA-1 change lets such a shape carry a `no_admitted_context` statement instead (agentic-mbse Item 1 `spec.md` Change Log, 2026-10-15), and then it needs a refusing case for each context the rule can compute.
 - [x] Where they apply to a rule, the cases cover: inherited and redefined contexts, alternate spellings, template versus instance, and the dc3 `proto3`, `proto4nest` and `conv` shapes rebuilt as minimal retained models. A case built from an Item 1 probe names the probe ID.
-- [ ] Every directory under `tests/fixtures/` is classed as generating, refusing or not a model, and a test fails on an unclassed one. On every generating fixture the screen reports zero `refused`, or the fixture is a recorded disagreement under Known Requirements → Gates (screen refuses what the generator builds).
-- [ ] For each refusal site that witnesses a shared rule, disabling that site in the generator makes its case report a mismatch. For each rule and shape, disabling the screen's recognition makes its cases report a mismatch. These mutation checks run in the default licensed suite. For `invocation-callable` and `constraint-predicate` the shared decision table is not mutated; Known Requirements → Independence records that limit.
-- [ ] Every record outcome `omitted` or `excluded` rests on a case that observes the omission or exclusion in the generated contract or catalog, or in a runtime value. A text or literal search over emitted files does not count. This includes the three site rules' `omitted` contexts (`other_expression_site`), which Item 1 certified by literal absence.
+- [x] Every directory under `tests/fixtures/` is classed as generating, refusing or not a model, and a test fails on an unclassed one. On every generating fixture the screen reports zero `refused`, or the fixture is a recorded disagreement under Known Requirements → Gates (screen refuses what the generator builds).
+- [x] For each refusal site that witnesses a shared rule, disabling that site in the generator makes its case report a mismatch. For each rule and shape, disabling the screen's recognition makes its cases report a mismatch. These mutation checks run in the default licensed suite. For `invocation-callable` and `constraint-predicate` the shared decision table is not mutated; Known Requirements → Independence records that limit.
+- [x] Every record outcome `omitted` or `excluded` rests on a case that observes the omission or exclusion in the generated contract or catalog, or in a runtime value. A text or literal search over emitted files does not count. This includes the three site rules' `omitted` contexts (`other_expression_site`), which Item 1 certified by literal absence.
 - [x] Every `unconfirmed` pair r3-proposal § 3 routes to Item 2 (listed in Known Requirements → R3 rows) has a case, and its record moves to the observed outcome. A pair that cannot be observed keeps `unconfirmed`, and its record gives the reason.
 - [x] `part-multiplicity/nonunique` and `part-multiplicity/negative_bound`, retired by the owner, are gone from the records and the reason vocabulary.
 
 **C. Agreement and the R3 gaps**
 
-- [ ] For every conformance case, wherever it lives, the stored screen outcome and the stored generator outcome agree under the reason-to-code mapping, or the case is a recorded disagreement. A test fails on a case that is neither.
-- [ ] Every refusing fixture under `tests/fixtures/` ends in either a screen `refused` finding whose reason maps to the generator's code, or a recorded disagreement. A test fails on a refusal that has neither. With the previous criterion, this catches a model the contract calls fine and the generator refuses.
-- [ ] A recorded disagreement that appears or disappears without a change to the record fails a test.
+- [x] For every conformance case, wherever it lives, the stored screen outcome and the stored generator outcome agree under the reason-to-code mapping, or the case is a recorded disagreement. A test fails on a case that is neither.
+- [x] Every refusing fixture under `tests/fixtures/` ends in either a screen `refused` finding whose reason maps to the generator's code, or a recorded disagreement. A test fails on a refusal that has neither. With the previous criterion, this catches a model the contract calls fine and the generator refuses.
+- [x] A recorded disagreement that appears or disappears without a change to the record fails a test.
 - [ ] Every R3 row routed to Item 2 has the closing outcome given for it in Known Requirements → R3 rows, and the evidence has one line per row.
 
 **D. Silent losses and String metadata**
 
-- [ ] Every family in Known Requirements → Silent-loss families has a case asserting the construct's presence or absence at a semantic seam (an instance-graph node by declaration identity, a computation-graph entry point, the generated catalog or contract, or a runtime value), and a control case where the carried form is present at the same seam. A name or literal search over emitted text does not count on its own. A family with several causes has a case per cause.
-- [ ] Each family's case states whether today's loss is an accepted omission or a loss that should block. For a loss that should block, the contract record and the case both mark it as a candidate refusal pending RG-1, so neither reads as an accepted outcome, and a written RG-1 recommendation exists for it. This includes every `MANUAL_REQUIRED` stub cause.
-- [ ] String fixtures cover both spellings (`attribute x = "…"`, `:>> x = "…"`), a String on an uninstantiated template, on an instantiated part, bound to a calc input, and read by another attribute. A recommendation for RG-2 states the options, what each does to generated output and to native consumers, and a recommended choice.
-- [ ] `docs/architecture/modeling-assumptions.md` describes what the generator does today with String values, NON_NUMERICAL constraints, calc-usage bare results and calc def outputs that become stubs, citing the cases. It links POSITIONAL-FORMAL-REDEFINITION's hazard entry as pending until Item 4 supplies it, without changing that item's status.
+- [x] Every family in Known Requirements → Silent-loss families has a case asserting the construct's presence or absence at a semantic seam (an instance-graph node by declaration identity, a computation-graph entry point, the generated catalog or contract, or a runtime value), and a control case where the carried form is present at the same seam. A name or literal search over emitted text does not count on its own. A family with several causes has a case per cause.
+- [x] Each family's case states whether today's loss is an accepted omission or a loss that should block. For a loss that should block, the contract record and the case both mark it as a candidate refusal pending RG-1, so neither reads as an accepted outcome, and a written RG-1 recommendation exists for it. This includes every `MANUAL_REQUIRED` stub cause.
+- [x] String fixtures cover both spellings (`attribute x = "…"`, `:>> x = "…"`), a String on an uninstantiated template, on an instantiated part, bound to a calc input, and read by another attribute. A recommendation for RG-2 states the options, what each does to generated output and to native consumers, and a recommended choice.
+- [x] `docs/architecture/modeling-assumptions.md` describes what the generator does today with String values, NON_NUMERICAL constraints, calc-usage bare results and calc def outputs that become stubs, citing the cases. It links POSITIONAL-FORMAL-REDEFINITION's hazard entry as pending until Item 4 supplies it, without changing that item's status.
 
 **E. Per-site codes and the inventory**
 
-- [ ] A sysml-codegen test scans `src/sysml_codegen/` with the site scanner's recognized forms and fails on a raise site with no account row, or an account row whose site is gone.
-- [ ] The inventory test detects, or reports as unrecognized by name, a synthetic new raise of each recognized form, a new exception class, a new raising helper and a computed code mapping. The account lists the blind spots that remain.
+- [x] A sysml-codegen test scans `src/sysml_codegen/` with the site scanner's recognized forms and fails on a raise site with no account row, or an account row whose site is gone.
+- [x] The inventory test detects, or reports as unrecognized by name, a synthetic new raise of each recognized form, a new exception class, a new raising helper and a computed code mapping. The account lists the blind spots that remain.
 - [ ] Every site the account classes `public_capability` (including the 39 follow-ups and the 10 naming-collision sites) carries a stable reason that tells it apart from other sites with the same `ElaborationCode` or the same stub outcome, per site or per justified family, and has a witness that fails when the site is disabled. Stub sites and plain-exception sites get their reason under Known Requirements → Gates without changing accept/refuse.
 - [ ] Each of the 46 `unknown` sites is classed reachable (and then meets the previous criterion), internal invariant with a cited guard, or still unknown with a recorded attempt, an owner and a stated limit.
 - [x] A recorded rescan of both trees at the final revisions reports zero unaccounted sites and zero orphan rows, and itemizes each added or removed site with its cause.
 
 **F. Semantics questions and baseline evidence**
 
-- [ ] A case reproduces G2 at the pinned generator and records what it does.
-- [ ] For G1, G2 and every case routed to it under Known Requirements → Gates, the `kerml-expert` agent (`.claude/agents/kerml-expert.md`) is asked what SysML v2 / KerML semantics require, with the case models attached. The evidence records each question, the answer, the spec sections cited, and whether the generator's current behavior agrees.
+- [x] A case reproduces G2 at the pinned generator and records what it does.
+- [x] For G1, G2 and every case routed to it under Known Requirements → Gates, the `kerml-expert` agent (`.claude/agents/kerml-expert.md`) is asked what SysML v2 / KerML semantics require, with the case models attached. The evidence records each question, the answer, the spec sections cited, and whether the generator's current behavior agrees.
 - [x] A recorded run evaluates dc3 baseline `808464df` and repaired `60b44d53` with the 2a contract, compares the findings with Item 1's `evidence/acceptance.md`, and itemizes each difference with its cause. The generator still generates dc3 repaired at the 2a codegen revision.
-- [ ] `pytest`, `mypy` and `ruff` pass in both repositories by each repository's commands. The evidence comes from a run with `SYSIDE_LICENSE_KEY` set, lists skips, and names checks not run.
+- [x] `pytest`, `mypy` and `ruff` pass in both repositories by each repository's commands. The evidence comes from a run with `SYSIDE_LICENSE_KEY` set, lists skips, and names checks not run.
 
 ## Known Requirements
 

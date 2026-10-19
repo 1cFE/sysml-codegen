@@ -1,0 +1,5 @@
+edited sysml-codegen/src/sysml_codegen/elaboration/occurrence.py (1 matches, replaced 1)
+FAILED tests/conformance/subset_profile/test_site_account.py::test_every_scanned_site_has_one_row_and_every_row_a_site
+FAILED tests/conformance/subset_profile/test_site_reasons.py::test_every_row_with_a_reason_is_passed_by_its_raise
+FAILED tests/conformance/subset_profile/test_site_reasons.py::test_every_reason_a_site_passes_is_recorded
+======================== 3 failed, 198 passed in 14.14s ========================
