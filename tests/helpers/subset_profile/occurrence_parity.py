@@ -51,7 +51,12 @@ from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.elaboration import elaborate as cg_elaborate
 from sysml_codegen.elaboration import occurrence as cg_occurrence
-from sysml_codegen.elaboration.identity import OccurrenceId, PackageScopeId, declaration_id_for
+from sysml_codegen.elaboration.identity import (
+    IdentityBoundaryError,
+    OccurrenceId,
+    PackageScopeId,
+    declaration_id_for,
+)
 
 #: ``elaboration/occurrence.py`` ``_multiplicity_indices``: the code it raises for each
 #: multiplicity the port classes as unexpandable.
@@ -281,7 +286,12 @@ def normalize_codegen(model: Any) -> dict[str, Any]:
     counts: dict[str, int] = defaultdict(int)
     for occurrence in index.occurrences():
         counts[_uuid(occurrence.effective_usage_id)] += 1
-    writers, writers_status, attachment = _codegen_writers(model, slots, index)
+    try:
+        writers, writers_status, attachment = _codegen_writers(model, slots, index)
+    except IdentityBoundaryError as error:
+        # A calc usage with no qualified name stops writer selection, as agentic-mbse's
+        # writers stage aborts on it (case anonymous-declaration__calc_usage).
+        return {"fatal": {"stage": "writers", "code": _error_code(error)}}
     return {
         "roots": sorted({usage for usage, parent in visits if parent is None}),
         "visits": sorted(visits, key=lambda c: (c[0], c[1] or "")),

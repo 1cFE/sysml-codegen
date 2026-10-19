@@ -227,6 +227,7 @@ class SysMLDataExtractor:
                 "(An anonymous 'return' is reported separately.)",
                 reference=qualified_name,
                 location=(str(source_file), source_line),
+                reason=SiteReason.EXTRACTION_CALC_DEF_NO_OUTPUT,
             )
 
         return CalculationDefinitionData(

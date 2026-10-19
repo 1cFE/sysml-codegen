@@ -21,6 +21,11 @@ message and no source, and the ``SI_EDGE_DANGLING`` raises those cases reach (a
 dangling definition UUID or feature, a producer cycle) name a subject but pass no source.
 A located refusal with either code is still held to the construct.
 
+Item 2a P5 added two more. ``SI_ID_MISSING``: an anonymous calc def is refused at calc payload
+indexing (``_index_calculation_payloads`` in ``elaboration/elaborate.py``), which passes no
+source. ``SI_SNAPSHOT_INVALID``: projection's computed-expression renderer refuses a ``sum`` with
+no argument (``elaboration/project.py``) naming the attribute's display path, not a source.
+
 Licensed.
 """
 
@@ -46,6 +51,8 @@ UNLOCATED_CODES = frozenset(
         ElaborationCode.SI_CONSTRAINT_BLOCKED.value,
         ElaborationCode.SI_EDGE_DANGLING.value,
         ElaborationCode.SI_ID_UNSTABLE.value,
+        ElaborationCode.SI_ID_MISSING.value,
+        ElaborationCode.SI_SNAPSHOT_INVALID.value,
     }
     | {code.value for code in GenerationCode}
 )

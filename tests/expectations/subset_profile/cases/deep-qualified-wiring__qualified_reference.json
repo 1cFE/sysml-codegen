@@ -18,6 +18,11 @@
     "codes": [
       "SI_OCCURRENCE_MISSING"
     ],
-    "reasons": []
+    "reasons": [
+      "elaboration_calculation_output_unproduced"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._resolve_calculation_output::coded::SI_OCCURRENCE_MISSING::1"
+    ]
   }
 }

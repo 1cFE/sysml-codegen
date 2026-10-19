@@ -146,6 +146,51 @@
     "sysml_codegen/extraction/calc_compat_renderer.py::_render_reference::free-text::CompilationError::2": [
       "calc-def-output-stub__library_constant",
       "calc-def-output-stub__python_keyword_member"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._feature_python_type::coded::SI_EDGE_DANGLING::1": [
+      "candidate-es-011__return_result_arithmetic__attribute_value"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._require_one_writer::coded::SI_REDEFINITION_INVALID::1": [
+      "candidate-es-008__nested_named_subset__part_usage",
+      "candidate-es-008__nested_named_subset__part_usage__single_rack",
+      "candidate-es-008__sibling_subsets_redefine__part_usage"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._resolve_calculation_output::coded::SI_OCCURRENCE_MISSING::1": [
+      "deep-qualified-wiring__qualified_reference"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._resolve_semantic_reference::coded::SI_OCCURRENCE_MISSING::4": [
+      "candidate-es-002__calc_input_through_part__attribute_value",
+      "candidate-es-009__composition_by_subsetting__part_usage",
+      "candidate-es-009__composition_by_subsetting__root_part_usage"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::OccurrenceIndex.resolve_address::coded::SI_OCCURRENCE_MISSING::2": [
+      "candidate-es-009__reference_through_ref_part__attribute_value"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::build_containment_address::coded::SI_OCCURRENCE_MISSING::1": [
+      "candidate-es-002__attribute_reads_calc_input__attribute_value",
+      "candidate-es-002__attribute_usage_feature__attribute_value",
+      "candidate-es-002__calc_binds_calc_input__binding_value",
+      "candidate-es-002__calc_definition_intermediate__attribute_value",
+      "candidate-es-002__constraint_binds_calc_input__binding_value",
+      "candidate-es-002__item_usage_feature__attribute_value"
+    ],
+    "sysml_codegen/elaboration/project.py::_float_default::coded::SI_RENDERING_COLLISION::1": [
+      "candidate-es-010-refusal__string_to_calc_input__binding_value",
+      "candidate-es-010-refusal__string_to_calc_input__binding_value__attribute_declaration",
+      "candidate-es-010-refusal__string_usage_literal__binding_value"
+    ],
+    "sysml_codegen/extraction/extractor.py::SysMLDataExtractor._extract_calculation_definition::coded-fixed::SI_EVIDENCE_INCOMPLETE::2": [
+      "candidate-calc-result-expression__bare_result__calc_result_expression__arithmetic",
+      "candidate-calc-result-expression__bare_result__calc_result_expression__declared_return",
+      "candidate-calc-result-expression__bare_result__calc_result_expression__max",
+      "candidate-calc-result-expression__bare_result__calc_result_expression__unused",
+      "conditional-expression__conditional_resolved_branches__calc_result_expression",
+      "conditional-expression__conditional_unresolved_branch__calc_result_expression",
+      "indexed-reference__indexed_reference__calc_result_expression",
+      "invocation-callable__unsupported_callable__calc_result_expression"
+    ],
+    "sysml_codegen/elaboration/project.py::_Projection._compile_computed_expression.render::coded::SI_SNAPSHOT_INVALID::5": [
+      "push-down-sum-shape__zero_arguments"
     ]
   },
   "screen": {

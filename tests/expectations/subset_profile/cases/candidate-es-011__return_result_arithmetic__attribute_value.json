@@ -6,6 +6,11 @@
     "codes": [
       "SI_EDGE_DANGLING"
     ],
-    "reasons": []
+    "reasons": [
+      "elaboration_feature_declaration_unindexed"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._feature_python_type::coded::SI_EDGE_DANGLING::1"
+    ]
   }
 }

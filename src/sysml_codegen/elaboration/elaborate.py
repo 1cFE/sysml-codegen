@@ -263,9 +263,12 @@ def _group_names(elements: Sequence[Any]) -> str:
 
 
 class _ReferenceResolutionError(Exception):
-    def __init__(self, code: ElaborationCode, detail: str) -> None:
+    def __init__(
+        self, code: ElaborationCode, detail: str, *, reason: SiteReason | None = None
+    ) -> None:
         self.code = code
         self.detail = detail
+        self.reason = reason
         super().__init__(detail)
 
 
@@ -987,6 +990,7 @@ class _ExactElaborator:
                 f"{_group_names(candidates)}",
                 reference=reference,
                 location=location,
+                reason=SiteReason.ELABORATION_VALUE_WRITERS_INCOMPARABLE,
             )
         return candidates[0]
 
@@ -2103,6 +2107,7 @@ class _ExactElaborator:
             raise ElaborationInvariantError(
                 ElaborationCode.SI_EDGE_DANGLING,
                 f"feature {root_id.to_wire()} has no exact live declaration",
+                reason=SiteReason.ELABORATION_FEATURE_DECLARATION_UNINDEXED,
             )
         type_targets = [
             target
@@ -2367,7 +2372,9 @@ class _ExactElaborator:
         try:
             address = self._reference_address(reference, leaf)
         except OccurrenceResolutionError as error:
-            raise _ReferenceResolutionError(error.code, error.detail) from error
+            raise _ReferenceResolutionError(
+                error.code, error.detail, reason=error.reason
+            ) from error
         if no_prefix and self._no_prefix_needs_modeled_prefix(address, consumer_scope):
             raise _ReferenceResolutionError(
                 ElaborationCode.SI_OCCURRENCE_MISSING,
@@ -2381,7 +2388,9 @@ class _ExactElaborator:
             )
             slot = self._slots.slot_of(reference.leaf_id)
         except OccurrenceResolutionError as error:
-            raise _ReferenceResolutionError(error.code, error.detail) from error
+            raise _ReferenceResolutionError(
+                error.code, error.detail, reason=error.reason
+            ) from error
         except KeyError:
             raise _ReferenceResolutionError(
                 ElaborationCode.SI_OCCURRENCE_MISSING,
@@ -2394,6 +2403,7 @@ class _ExactElaborator:
             raise _ReferenceResolutionError(
                 ElaborationCode.SI_OCCURRENCE_MISSING,
                 f"exact owner address has no target for leaf {reference.leaf_id.to_wire()}",
+                reason=SiteReason.ELABORATION_OWNER_ADDRESS_TARGET_MISSING,
             )
         if not plural and len(edges) != 1:
             raise _ReferenceResolutionError(
@@ -2478,7 +2488,9 @@ class _ExactElaborator:
                     plural=plural,
                 )
             except OccurrenceResolutionError as error:
-                raise _ReferenceResolutionError(error.code, error.detail) from error
+                raise _ReferenceResolutionError(
+                    error.code, error.detail, reason=error.reason
+                ) from error
         matches: dict[
             tuple[ScopeId, NodeId, OutputPortId, DeclarationId],
             _CalculationOutputProducer,
@@ -2523,6 +2535,7 @@ class _ExactElaborator:
             raise _ReferenceResolutionError(
                 ElaborationCode.SI_OCCURRENCE_MISSING,
                 f"exact output {output_id.to_wire()} has no producer in the consumer domain",
+                reason=SiteReason.ELABORATION_CALCULATION_OUTPUT_UNPRODUCED,
             )
         if not plural and len(records) != 1:
             identities = [
@@ -2576,6 +2589,7 @@ class _ExactElaborator:
                     error.detail,
                     reference=use.authored_text,
                     location=use.location,
+                    reason=error.reason,
                 )
                 continue
             pending.node.alias_target = edges[0]
@@ -2597,6 +2611,7 @@ class _ExactElaborator:
                     pending.node.display_name,
                     error.detail,
                     location=pending.location,
+                    reason=error.reason,
                 )
         for pending in self._pending_aliases:
             if pending.node.node_id in resolved_aliases:
@@ -2649,6 +2664,7 @@ class _ExactElaborator:
                         error.detail,
                         reference=use.authored_text,
                         location=use.location,
+                        reason=error.reason,
                     )
                     continue
                 leaf_fact = path.leaf
@@ -2699,6 +2715,7 @@ class _ExactElaborator:
                             error.detail,
                             reference=use.authored_text,
                             location=use.location,
+                            reason=error.reason,
                         )
                         continue
             if isinstance(pending.consumer, CalcNode):
@@ -2750,6 +2767,7 @@ class _ExactElaborator:
                     error.detail,
                     reference=use.authored_text,
                     location=pending.location,
+                    reason=error.reason,
                 )
                 continue
             pending.consumer.inputs[pending.port] = edge

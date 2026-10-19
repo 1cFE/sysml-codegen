@@ -63,6 +63,17 @@ class SiteReason(StrEnum):
     ELABORATION_NO_EXECUTABLE_CONTENT = "elaboration_no_executable_content"
     GENERATION_CONSTRAINT_NAME_UNSAFE = "generation_constraint_name_unsafe"
     INTERNAL_FAILURE_UNCLASSIFIED = "internal_failure_unclassified"
+    # Sites an R3 row of the subset contract names: the generator refuses there and no shared
+    # rule describes the shape, so the reason is how a conformance case tells them apart.
+    OCCURRENCE_CONTAINMENT_UNANCHORED = "occurrence_containment_unanchored"
+    OCCURRENCE_CONTAINMENT_STEP_MISSING = "occurrence_containment_step_missing"
+    ELABORATION_VALUE_WRITERS_INCOMPARABLE = "elaboration_value_writers_incomparable"
+    ELABORATION_OWNER_ADDRESS_TARGET_MISSING = "elaboration_owner_address_target_missing"
+    ELABORATION_CALCULATION_OUTPUT_UNPRODUCED = "elaboration_calculation_output_unproduced"
+    ELABORATION_FEATURE_DECLARATION_UNINDEXED = "elaboration_feature_declaration_unindexed"
+    PROJECTION_DEFAULT_NON_NUMERIC = "projection_default_non_numeric"
+    PROJECTION_SUM_ARGUMENT_COUNT = "projection_sum_argument_count"
+    EXTRACTION_CALC_DEF_NO_OUTPUT = "extraction_calc_def_no_output"
     # Stub causes: a calc def output the compiler cannot render becomes a ``MANUAL_REQUIRED``
     # stub on a successful run. One per renderer site (``extraction/calc_compat_renderer.py``)
     # and per compiler path that stubs without raising (``extraction/expression_compiler.py``).

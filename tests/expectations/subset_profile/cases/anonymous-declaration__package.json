@@ -1,0 +1,23 @@
+{
+  "id": "anonymous-declaration__package",
+  "home": "codegen",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      3
+    ],
+    "description": "an anonymous nested package holding a part def"
+  },
+  "screen": {
+    "verdict": "incomplete",
+    "findings": []
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_ID_UNSTABLE"
+    ],
+    "reasons": []
+  }
+}

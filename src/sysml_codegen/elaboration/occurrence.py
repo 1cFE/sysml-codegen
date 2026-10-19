@@ -186,6 +186,7 @@ def build_containment_address(
             raise OccurrenceResolutionError(
                 ElaborationCode.SI_OCCURRENCE_MISSING,
                 f"semantic owner kind {type(current).__name__!r} cannot anchor containment",
+                reason=SiteReason.OCCURRENCE_CONTAINMENT_UNANCHORED,
             )
         try:
             current_id = declaration_id_for(current)
@@ -600,6 +601,7 @@ class OccurrenceIndex:
                 raise OccurrenceResolutionError(
                     ElaborationCode.SI_OCCURRENCE_MISSING,
                     f"exact containment step {slot!r} has no concrete occurrence",
+                    reason=SiteReason.OCCURRENCE_CONTAINMENT_STEP_MISSING,
                 )
             selected = candidates
             consumer_scope = consumer_domain.scope

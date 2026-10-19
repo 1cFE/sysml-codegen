@@ -6,6 +6,11 @@
     "codes": [
       "SI_OCCURRENCE_MISSING"
     ],
-    "reasons": []
+    "reasons": [
+      "occurrence_containment_step_missing"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/occurrence.py::OccurrenceIndex.resolve_address::coded::SI_OCCURRENCE_MISSING::2"
+    ]
   }
 }

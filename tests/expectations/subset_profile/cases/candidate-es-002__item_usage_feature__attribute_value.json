@@ -6,6 +6,11 @@
     "codes": [
       "SI_OCCURRENCE_MISSING"
     ],
-    "reasons": []
+    "reasons": [
+      "occurrence_containment_unanchored"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/occurrence.py::build_containment_address::coded::SI_OCCURRENCE_MISSING::1"
+    ]
   }
 }

@@ -93,9 +93,24 @@ def stub_cause_sites() -> tuple[str, ...]:
     )
 
 
+def r3_row_sites() -> tuple[str, ...]:
+    """The codegen account rows with a reason that an R3 row names and no shared rule links to.
+
+    These are the reproduced gaps (``evidence/r3-closure.md``): the generator refuses there,
+    the contract has no rule for the shape, and the reason tells the refusing site apart.
+    """
+    return tuple(
+        sorted(
+            r.site_id
+            for r in site_scan.load_account().rows
+            if r.matrix_rows and not r.rules and r.reason is not None
+        )
+    )
+
+
 def mutated_sites() -> tuple[str, ...]:
     """Every site the generator mutation test neutralizes: codegen's, then the shared ones."""
-    return (*shared_rule_sites(), *stub_cause_sites(), *sorted(mutate.SHARED))
+    return (*shared_rule_sites(), *stub_cause_sites(), *r3_row_sites(), *sorted(mutate.SHARED))
 
 
 def codegen_witnesses() -> dict[str, frozenset[str]]:

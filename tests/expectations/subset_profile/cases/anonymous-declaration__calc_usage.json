@@ -1,0 +1,23 @@
+{
+  "id": "anonymous-declaration__calc_usage",
+  "home": "codegen",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "an anonymous calc usage `calc : Twice { in v = x; }`"
+  },
+  "screen": {
+    "verdict": "incomplete",
+    "findings": []
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_ID_UNSTABLE"
+    ],
+    "reasons": []
+  }
+}

@@ -7,6 +7,11 @@
       "PROJECTION_FAILED",
       "SI_RENDERING_COLLISION"
     ],
-    "reasons": []
+    "reasons": [
+      "projection_default_non_numeric"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/project.py::_float_default::coded::SI_RENDERING_COLLISION::1"
+    ]
   }
 }

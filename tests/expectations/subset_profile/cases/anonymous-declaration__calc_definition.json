@@ -1,0 +1,23 @@
+{
+  "id": "anonymous-declaration__calc_definition",
+  "home": "codegen",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      3
+    ],
+    "description": "an anonymous calc def"
+  },
+  "screen": {
+    "verdict": "clear",
+    "findings": []
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_ID_MISSING"
+    ],
+    "reasons": []
+  }
+}

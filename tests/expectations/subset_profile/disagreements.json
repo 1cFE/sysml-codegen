@@ -2,6 +2,66 @@
   "schema": "subset-disagreements/1",
   "entries": [
     {
+      "subject": "case:anonymous-declaration__calc_definition",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_ID_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "Anonymous-declaration family (P5 boundary): an anonymous calc def is refused SI_ID_MISSING at calc payload indexing (elaborate.py _index_calculation_payloads), not at the identity boundary. P5 tried a shared rule and the criterion fails: which QN-less declarations reach an identity check is decided by filters inside codegen's Feature-wide loops, not by a closed list of kinds (evidence/r3-closure.md)."
+    },
+    {
+      "subject": "case:anonymous-declaration__calc_usage",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_ID_UNSTABLE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "Anonymous-declaration family (P5 boundary): an anonymous calc usage is refused SI_ID_UNSTABLE at the identity boundary; the screen's occurrence copy aborts on the same declaration, so its verdict is incomplete with no refused finding. No shared rule (evidence/r3-closure.md)."
+    },
+    {
+      "subject": "case:anonymous-declaration__named_part_in_anonymous_action",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_ID_UNSTABLE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "Anonymous-declaration family (P5 boundary): a named part usage inside an anonymous action usage has no qualified name, so it is refused SI_ID_UNSTABLE like an anonymous part usage. The condition is a missing qualified name on a declaration codegen indexes, not anonymity of the declaration itself. No shared rule (evidence/r3-closure.md)."
+    },
+    {
+      "subject": "case:anonymous-declaration__package",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_ID_UNSTABLE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "Anonymous-declaration family (P5 boundary): an anonymous nested package is refused SI_ID_UNSTABLE; the screen is incomplete with no refused finding. No shared rule (evidence/r3-closure.md)."
+    },
+    {
+      "subject": "case:anonymous-declaration__part_usage",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_ID_UNSTABLE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "Anonymous-declaration family (P5 boundary): an anonymous part usage is refused SI_ID_UNSTABLE, in an instantiated part def, an uninstantiated one or at package level alike; the screen is incomplete with no refused finding. No shared rule (evidence/r3-closure.md)."
+    },
+    {
+      "subject": "case:anonymous-declaration__requirement_definition",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_ID_UNSTABLE"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": null,
+      "owner": "Reid Westwood",
+      "reason": "Anonymous-declaration family (P5 boundary): an anonymous requirement def is refused SI_ID_UNSTABLE (requirement defs are in codegen's constraint-owner map), while the screen reports the model clear. No shared rule (evidence/r3-closure.md)."
+    },
+    {
       "subject": "case:blocked-predicate-unmapped-code__anonymous_assert_by_reference",
       "kind": "code_unmapped",
       "generator_codes": ["SI_ID_UNSTABLE"],
@@ -130,6 +190,36 @@
       "r3_row": "ES-002",
       "owner": "Reid Westwood",
       "reason": "ES-002 family: an attribute reading a calc usage's input is refused SI_OCCURRENCE_MISSING. The site refuses any reference into a feature owned by a calc usage, item usage or attribute usage, except calc outputs (_calculation_output_producers). The reaching set depends on codegen's _reference_address and _calculation_output_producers, which no shared fact carries, so the row closes as a reproduced gap."
+    },
+    {
+      "subject": "case:candidate-es-002__calc_definition_intermediate__attribute_value",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "ES-002",
+      "owner": "Reid Westwood",
+      "reason": "ES-002 boundary (P5): reading c.t, a calc def attribute that is neither the return nor an out attribute, is refused like a calc input. Only declared outputs are exempt, and no shared fact carries a reference leaf's direction, so this is part of why the row has no rule (evidence/r3-closure.md)."
+    },
+    {
+      "subject": "case:candidate-es-002__calc_input_through_part__attribute_value",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_OCCURRENCE_MISSING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "ES-002",
+      "owner": "Reid Westwood",
+      "reason": "ES-002 boundary (P5): the same calc-input read written through a part segment (p.c.v) is refused at a different site, the owner-address raise that also refuses ES-009 (reason elaboration_owner_address_target_missing), because codegen's _reference_address anchors at the first part segment. The site depends on the path form, which no shared fact carries (evidence/r3-closure.md)."
+    },
+    {
+      "subject": "case:candidate-es-002__part_inside_item_usage__attribute_value",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EDGE_DANGLING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "ES-002",
+      "owner": "Reid Westwood",
+      "reason": "ES-002 boundary (P5): reading it.rk.cap, an attribute of a part nested in an item usage, fires the containment-anchor site (occurrence.py build_containment_address) but ends in SI_EDGE_DANGLING from graph validation (graph.py _graph_failure), so the broad shape does not even keep one code (evidence/r3-closure.md)."
     },
     {
       "subject": "case:candidate-es-002__attribute_usage_feature__attribute_value",
@@ -320,6 +410,26 @@
       "r3_row": "CALC-DEF-BARE-RESULT",
       "owner": "Reid Westwood",
       "reason": "A bare result calling an unsupported callable: refused for having zero output attributes before the callable matters, so the record marks the invocation-callable pair unobservable."
+    },
+    {
+      "subject": "case:push-down-sum-shape__sequence_argument",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["SI_EDGE_DANGLING"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "PUSH-DOWN-AGG-PROFILE-SUM-SHAPE",
+      "owner": "Reid Westwood",
+      "reason": "Found in P5 while classifying project.py's sum-arity site: `sum((a, b))` in a computed attribute value is refused SI_EDGE_DANGLING, because the sequence literal becomes unsupported expression IR and graph validation refuses it (elaboration/graph.py, _expression_reference_count). The screen admits it. Which argument shapes codegen's expression IR carries is not a shared fact, so no rule; reproduced gap for Item 3's sum-shape row. In a calc def output the same call is a manual stub instead (calc-def-output-stub__invocation)."
+    },
+    {
+      "subject": "case:push-down-sum-shape__zero_arguments",
+      "kind": "generator_refuses_screen_silent",
+      "generator_codes": ["PROJECTION_FAILED", "SI_SNAPSHOT_INVALID"],
+      "screen_reasons": [],
+      "resolution": "reproduced_gap",
+      "r3_row": "PUSH-DOWN-AGG-PROFILE-SUM-SHAPE",
+      "owner": "Reid Westwood",
+      "reason": "P5 E4 verdict for project.py's sum-arity site: `attribute t : NumericalValue = sum();` reaches it and is refused at projection (reason projection_sum_argument_count). SysIDE refuses two or more positional arguments itself, so zero is the one reachable count. The code SI_SNAPSHOT_INVALID is misleading on a live model; changing it is a code change, not made here. The screen admits it; argument count is checked by no shared fact, so no rule; reproduced gap for Item 3's sum-shape row."
     },
     {
       "subject": "fixture:anonymous_return",

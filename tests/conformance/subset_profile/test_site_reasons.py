@@ -19,6 +19,8 @@ from sysml_codegen.elaboration.diagnostics import SiteReason
 from tests.conformance.subset_profile.test_site_reason_reaches_harness import REACH_WITNESSES
 from tests.helpers.subset_profile import site_scan, witnesses
 
+_OCCURRENCE = "sysml_codegen/elaboration/occurrence.py"
+_ELABORATE = "sysml_codegen/elaboration/elaborate.py"
 SCAN = site_scan.scan()
 ACCOUNT = site_scan.load_account()
 SET_OFF_SITE = {SiteReason.GENERATION_CONSTRAINT_NAME_UNSAFE} | {
@@ -62,3 +64,26 @@ def test_every_witness_names_a_scanned_site():
 
 def test_every_codegen_witness_names_an_accounted_site():
     assert sorted(set(witnesses.codegen_witnesses()) - ACCOUNT.ids()) == []
+
+
+def test_no_two_sites_share_a_reason():
+    """A reason names one site, so a shadowing site never passes for the one it shadows (B6).
+
+    The pair the plan names, ES-002's ``build_containment_address`` and ES-009's owner-address
+    raise, both refuse ``SI_OCCURRENCE_MISSING``; only their reasons tell them apart.
+    """
+    by_reason: dict[str, list[str]] = {}
+    for row in ACCOUNT.rows:
+        if row.reason is not None:
+            by_reason.setdefault(row.reason, []).append(row.site_id)
+    assert {r: s for r, s in by_reason.items() if len(s) > 1} == {}
+
+
+def test_es002_and_es009_reasons_distinct():
+    rows = {row.site_id: row for row in ACCOUNT.rows}
+    es002 = rows[f"{_OCCURRENCE}::build_containment_address::coded::SI_OCCURRENCE_MISSING::1"]
+    es009 = rows[
+        f"{_ELABORATE}::_ExactElaborator._resolve_semantic_reference::coded::SI_OCCURRENCE_MISSING::4"
+    ]
+    assert es002.reason is not None and es009.reason is not None
+    assert es002.reason != es009.reason

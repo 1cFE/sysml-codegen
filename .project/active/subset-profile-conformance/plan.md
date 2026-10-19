@@ -1,8 +1,8 @@
 # Implementation Plan: Independent conformance corpus and per-site codes (EXEC-SUBSET-CONTRACT Item 2a)
 
-**Status:** Implementation in progress (Phases 1–4 done; Phases 1–2 audited mid-run; Phases 3–4 not yet audited; Phase 5 next)
+**Status:** Implementation in progress (Phases 1–5 done; Phases 1–2 audited mid-run; Phases 3–5 not yet audited; group E split taken by the count at P5's close, P6 waits on the owner, see Phase 5 Completion)
 **Created:** 2026-10-18
-**Last Updated:** 2026-10-18
+**Last Updated:** 2026-10-19
 
 ## Source Documents
 
@@ -467,10 +467,10 @@ def test_es002_and_es009_reasons_distinct():
 
 **Repos:** codegen; agentic for the 4 chain-segment sites.
 
-- [ ] Reasons and witnesses for the 6 R3-row codegen sites: `occurrence.py:180` (ES-002), `elaborate.py:946` (ES-008), `:2345` (ES-009), `:2474` (DEEP-QUALIFIED-WIRING), `project.py:213` (ES-010 refusal), `extractor.py:221` (CALC-DEF-BARE-RESULT). Witnesses are P3's cases. Mutations for each.
-- [ ] E4 for the head's unknown sites: `binding_source.py:236, :243, :251`, `project.py:812`, agentic `reference_use.py:545, :557, :594, :618` (and `calc_compat_renderer.py:117` if P4 left it). Each is reachable (then reason, witness and mutation), internal invariant with a cited guard, or unknown with attempt, owner and limit. Verdicts for the PUSH-DOWN chain-segment and sum-shape rows go to `evidence/r3-closure.md` for Item 3.
-- [ ] O8: a plain-exception head site becomes a coded refusal only if its witness shows `SI_INTERNAL_DEFECT` with that exception in the cause chain today. Otherwise **RG-1 stop**: pin current behavior, `RG1-<n>`, `kerml-expert` question. Continue. Every changed code goes to `evidence/changed-outputs.md`.
-- [ ] Finish `evidence/r3-closure.md` for the rows P3 left open.
+- [x] Reasons and witnesses for the 6 R3-row codegen sites: `occurrence.py:180` (ES-002), `elaborate.py:946` (ES-008), `:2345` (ES-009), `:2474` (DEEP-QUALIFIED-WIRING), `project.py:213` (ES-010 refusal), `extractor.py:221` (CALC-DEF-BARE-RESULT). Witnesses are P3's cases. Mutations for each.
+- [x] E4 for the head's unknown sites: `binding_source.py:236, :243, :251`, `project.py:812`, agentic `reference_use.py:545, :557, :594, :618` (and `calc_compat_renderer.py:117` if P4 left it). Each is reachable (then reason, witness and mutation), internal invariant with a cited guard, or unknown with attempt, owner and limit. Verdicts for the PUSH-DOWN chain-segment and sum-shape rows go to `evidence/r3-closure.md` for Item 3.
+- [x] O8: a plain-exception head site becomes a coded refusal only if its witness shows `SI_INTERNAL_DEFECT` with that exception in the cause chain today. Otherwise **RG-1 stop**: pin current behavior, `RG1-<n>`, `kerml-expert` question. Continue. Every changed code goes to `evidence/changed-outputs.md`.
+- [x] Finish `evidence/r3-closure.md` for the rows P3 left open.
 
 **Done when:** licensed `uv run --extra dev pytest tests/conformance/subset_profile/ -rs` passes, including `test_site_reasons.py` for every head row.
 
@@ -857,7 +857,61 @@ Fixes for `audit.md` (Phases 1–2, Needs Work). Experiment plugins are committe
 [AGENT] 2026-10-18: Phase 5 attempts shared rules for (a) anonymous declarations codegen must index (`SI_ID_UNSTABLE`) and (b) ES-002's broad shape (reference into a feature of a calc/item/attribute usage other than a calc output). Each becomes a rule if it can be stated from shared agentic-mbse facts with codegen's indexed-declaration set pinned by cases; otherwise it stays a reproduced gap with its exact boundary written in `r3-closure.md` for Item 5's guidance.
 
 ### Phase 5 Completion
-**Split count:** H = , L = , T = , tail count = , split taken: 
+**Completed:** 2026-10-19. Phase gate below; the audit is the orchestrator's to run (`/_my_audit`).
+**Actual Changes:** sysml-codegen `76b82055` (backlog rows, committed separately) and the P5 commit; agentic-mbse the P5 commit (chain-segment verdict notes only). Both named in the final report of `briefs/implement_p5.md`'s run.
+**Split count:** H = 53, L = 46, T = 96, tail count = 94, split taken: **yes, by the first arm (L < H)**. See "Split point evaluation" below; the verdict rests only on head rows no model can reach, which is a premise conflict surfaced for the owner.
+
+#### Phase gate (2026-10-19)
+- Snapshots: `git diff --exit-code d73a4fc5` over the 22 committed `instance_graph_snapshot.json` files exits 0.
+- Accept/refuse: `test_public_package_oracle.py` and `test_v6_recapture_batch.py` pass inside the full licensed run; `baseline.json` and `batch.json` are unchanged since `d73a4fc5`.
+- Regressions: codegen licensed suite (`uv run --extra dev pytest tests/ -q -rfEs`, `.env` sourced) 5916 passed, 9 failed, 9 skipped; the 9 failures are the baseline IDs (`test_study_cli.py` bogus-tool and the 8 `test_check_ledger_4a.py` tests). The first run had a tenth failure, the round-trip test under "Other findings", fixed before this run. Subset suite alone: 3133 passed, no skips. agentic-mbse (`uv run --all-extras pytest tests/ -q -rfEs`) 3947 passed, 5 failed, 8 skipped, 1 xfailed; the 5 are the all-extras baseline IDs.
+- Merge order: `git log subset-conformance..main` is empty in both repos (local refs; nothing fetched), so no rebase.
+- Static checks: codegen mypy clean (87 files), ruff `src/ tests/` 94 (baseline 94); agentic-mbse ruff 118 (baseline 118), mypy 88 (baseline 88).
+- Audit: not run here.
+
+#### R3-row site reasons (B6)
+- Nine `SiteReason` members (`elaboration/diagnostics.py`), each passed at one raise: `occurrence_containment_unanchored` (ES-002, `build_containment_address`), `occurrence_containment_step_missing` (ES-009 through a `ref part`, `OccurrenceIndex.resolve_address`), `elaboration_value_writers_incomparable` (ES-008), `elaboration_owner_address_target_missing` (ES-009), `elaboration_calculation_output_unproduced` (DEEP-QUALIFIED-WIRING), `elaboration_feature_declaration_unindexed` (ES-011, `_feature_python_type`), `projection_default_non_numeric` (ES-010 refusal side), `projection_sum_argument_count` (PUSH-DOWN-AGG-PROFILE-SUM-SHAPE) and `extraction_calc_def_no_output` (CALC-DEF-BARE-RESULT).
+- Carrying them: `_ReferenceResolutionError` gained `reason`; its three re-raises from `OccurrenceResolutionError` and the five `_diagnose` calls that report it pass it on (`elaboration/elaborate.py`). Projection's `_diagnostic` and `_fail` gained the same optional field (`elaboration/project.py`). Six messages gain the reason suffix; the two projection refusals print unchanged text (`evidence/changed-outputs.md` § P5).
+- Account: `reason` filled on the nine rows; line and first evidence pointer refreshed on the rows touched. Two rows joined the head because P3 recorded their cases under an R3 row: `resolve_address::2` (`matrix_row` ES-009) and `_feature_python_type::1` (`matrix_row` ES-011, role `unknown` → `public_capability`).
+- Witnesses and mutations: 24 existing stored answers re-captured (reasons only, each the expected member); they and three of the new cases name their witness site; `witnesses.r3_row_sites()` adds the nine sites to `mutated_sites()`, and `mutations.json` records, for each, exactly the cases whose answer changes. Every mutation changes its witnesses and nothing else, except that `candidate-es-002__part_inside_item_usage__attribute_value` fires the ES-002 site without changing (the raise is caught and the run ends `SI_EDGE_DANGLING`).
+- `test_site_reasons.py` gains `test_no_two_sites_share_a_reason` (B6 in general) and the plan's `test_es002_and_es009_reasons_distinct`. ES-002 and ES-009 are told apart by reason alone, so no recorder observable was needed.
+
+#### E4 for the head's unknown sites
+- `project.py` sum-arity raise (`:817` now): **reachable**. `attribute t : NumericalValue = sum();` reaches it; SysIDE refuses two or more positional arguments, and an empty `sum()` into a `Real` is a SysIDE type error. Role `public_capability`, reason, witness `push-down-sum-shape__zero_arguments`, mutation.
+- `binding_source.py:236` (index segment) and `:243` (non-Feature segment): **unreachable under SysIDE 0.8.4**, recorded as role `environment` with the guard in the note (`rack#(1).cap` in a redefinition is a parse error; `chaining_features` is typed `LazyIterator[Feature]`, `syside/core/__init__.pyi:7481`). `matrix_row` cleared, so both left the head. Deviation: the plan names "internal invariant with a cited guard"; the account's internal-invariant test requires a `.py:` code pointer as the guard, and these guards are the pinned parser, which is what role `environment` already means (as for `identity.py`'s UUIDv5 row).
+- `binding_source.py:251` and agentic-mbse `reference_use.py:545, :557, :594, :618`: **unknown**, with attempts, owner and limit in each row's note: unresolved names are SysIDE reference-errors at load; chains inside anonymous owners are refused `SI_ID_UNSTABLE` or leave the screen incomplete before the chain is read.
+- `calc_compat_renderer.py` `_render_operator::2` (no operands): stays `unknown` with P4's attempt in its note; `:117` (feature chain) is `public_capability` and stays unwitnessed (P4's reason).
+- Both PUSH-DOWN rows' verdicts are in `evidence/r3-closure.md` § "Closed in Phase 5" for Item 3.
+
+#### Orchestrator calls (rule attempts)
+- **Anonymous declarations codegen must index: no rule.** Probed 32 scratch models (not committed; the boundary cases are). Refused `SI_ID_UNSTABLE`: part usages, part defs, packages, calc usages, constraint usages, requirement defs, and any declaration of those kinds with no qualified name (a named part in an anonymous action). Refused otherwise: anonymous calc def (`SI_ID_MISSING`), anonymous constraint def or a constraint in an anonymous item def (`SI_EVIDENCE_INCOMPLETE`). Admitted: anonymous attribute, item, port, action and occurrence usages and defs. Which QN-less declarations reach an identity check is decided by filters inside codegen's Feature-wide loops (64 `declaration_id_for` calls), and the code varies by owner, so a screen-side kind list would copy codegen's filters: the heuristic D11 excludes. Eight codegen-home cases pin the boundary (`anonymous-declaration__*`), six with `reproduced_gap` entries.
+- **ES-002 broad shape: no rule.** The exemption is codegen's calc-output registry (an intermediate calc def attribute `c.t` is refused, `c.r` admitted), which no shared fact carries; and the site and code depend on codegen's path walk (direct read: ES-002 site; through a part: ES-009's site; through a part in an item usage: `SI_EDGE_DANGLING`). Four codegen-home cases pin the boundary, three with `reproduced_gap` entries.
+- Both boundaries are written in `evidence/r3-closure.md` as guidance text for Item 5.
+
+#### Cases and records
+- 14 new codegen-home cases: `push-down-sum-shape__*` (2), `candidate-es-002__*` boundary (4), `anonymous-declaration__*` (8). Screen blocks were taken from live runs and read before storing; generator blocks came from the capture helper after each disagreement entry was written by hand. `disagreements.json` grows from 78 to 89 entries (11 `generator_refuses_screen_silent`, all `reproduced_gap`, owner Reid Westwood).
+- `test_generator_half.py`: `SI_ID_MISSING` and `SI_SNAPSHOT_INVALID` join `UNLOCATED_CODES` (the anonymous calc def and sum-arity raises pass no source), with the reason in the module docstring.
+- `occurrence_parity.py`: codegen's writer stage raising `IdentityBoundaryError` is now reported as `fatal` at stage `writers`, matching agentic-mbse's abort on the same model (`anonymous-declaration__calc_usage`).
+
+#### Other findings
+- **`sum((a, b))` in a computed attribute is refused `SI_EDGE_DANGLING`** while the screen admits it; in a calc def output the same call stubs. Case `push-down-sum-shape__sequence_argument`, `reproduced_gap` under SUM-SHAPE.
+- **`_index_calculation_payloads` `SI_ID_MISSING` is reachable** (anonymous calc def). A tail row; role `unknown` → `public_capability` with its case in evidence, no reason yet (tail work).
+- **Corrected in `r3-closure.md`:** P3 said the `blocked-predicate-unmapped-code__*` mapping "waits on P5's SiteReason". A site reason cannot map those pairs, because `REASON_MAPPING` maps screen reasons to generator codes. They stay `code_unmapped`; their sites are tail rows.
+- **O8:** no head site raises a plain exception, so no O8 RG-1 candidate.
+- **Round-trip test met the codec's reason refusal.** `tests/conformance/test_elaboration_graph_roundtrip.py` encodes an unsealed graph (`deep_cross_scope_probe`, non-strict), whose `SI_OCCURRENCE_MISSING` diagnostic now carries `elaboration_calculation_output_unproduced`. The v6 encoder refuses a reason by design (design.md D8, O5), so the test failed. The test now asserts that refusal, then strips reasons and compares the round trip as before. No codec or snapshot change.
+- **Broken agent links (for the owner, not changed).** All four links in this worktree's `.claude/agents/` (`kerml-expert.md`, `syside-expert.md`, `sysml-expert.md`, `sysmlv2-validator.md`) point at `/home/reid/1cfe/agentic-mbse/agents/…`, which does not exist here. They are tracked repo content, so they were left as they are. P4's semantics checks ran a general-purpose agent with agentic-mbse's `agents/kerml-expert.md` as its role for this reason; P5 asked no `kerml-expert` question.
+
+#### Backlog (committed separately, `76b82055`)
+- `[CALC-USAGE-BINDING-LOST-WITH-RESULT-EXPRESSION]`, citing `calc-usage-result__bare_result__other_expression_site`, whose `contract_parameter` and `entry_point` seams pin today's lost binding; cause stated as unconfirmed.
+- `[CALC-DEF-KEYWORD-MEMBER-STUB]` (RG1-8), citing `calc-def-output-stub__python_keyword_member`. It links `[SANITIZER-MERGE]`: the divergence that row calls deliberate is what makes the lookup miss.
+
+#### Split point evaluation
+Counted from both accounts after P5, by the plan's definitions (head = a row with `rule` or `matrix_row`, plus every `calc_compat_renderer.py` row; H = head rows with role `public_capability`; L = those with a reason and at least one witness; tail = every other `public_capability` or `unknown` row).
+- codegen: 31 head rows, H = 28, L = 23. agentic-mbse: 29 head rows, H = 25, L = 23. **H = 53, L = 46.** codegen's L counts `expression_evidence.py` `_indexed_refusal`, whose reason is relayed (`evidence_indexed_reference_unsupported`, P2.4) and so is not in its row; counted strictly, codegen L = 22 and L = 45.
+- Tail: codegen 84 (45 `unknown`, 39 `public_capability`), agentic-mbse 10: **94**. T from P1.4 = 86 + 10 = **96**; 1.25 × T = 120. 94 ≤ 120, so the second arm does not fire.
+- P1.4 recorded "H = 31" (codegen) and "H = 29" (agentic-mbse). Those equal the head row counts of every role, not the public ones the plan's table calls H, so they are not used here.
+- **Verdict as the plan states it: split taken (L < H).** The seven head public rows without a witness are the ones no model can reach, each already recorded `unwitnessed` with its reason and checked live to stay unreached: codegen `_multiplicity_indices` nonunique and negative (SysIDE rejects the shapes at load), the renderer's not-Python check, feature-chain check and unary-operator check (P4: shadowed or refused upstream); agentic-mbse `executable_profile.py` 1014 and `reference_use.py` 702 (scanner.toml `[[unwitnessed_site]]`). Every reachable head site has a reason, a witness and a mutation.
+- **Premise conflict, surfaced (capture-fidelity law 4).** The first arm exists because "the head is not finished, so the tail would start late" (design § E). Here the head work is finished; L < H only because the count puts unreachable public rows in H. Counting those seven as landed gives L = H, and with the tail arm not firing, P6 would run in this item. That is the owner's call, not this run's. If the split stands, P6 becomes a follow-on item, `test_site_account_completeness.py` and the all-rows agentic-mbse witness check go with it, and P7 still runs, including E5.
 
 ### Phase 6 Completion
 

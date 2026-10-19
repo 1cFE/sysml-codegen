@@ -33,7 +33,7 @@ from sysml_codegen.core.qualified_names import (
     sanitize_name,
     sanitize_qualified_name,
 )
-from sysml_codegen.elaboration.diagnostics import ElaborationCode
+from sysml_codegen.elaboration.diagnostics import ElaborationCode, SiteReason
 from sysml_codegen.elaboration.graph import (
     AttrNode,
     CalcNode,
@@ -133,6 +133,7 @@ def _diagnostic(
     param_name: str | None = None,
     reference: str | None = None,
     location: tuple[str, int] | None = None,
+    reason: SiteReason | None = None,
 ) -> Diagnostic:
     return Diagnostic(
         code,
@@ -143,6 +144,7 @@ def _diagnostic(
         reference=reference,
         source_file=location[0] if location is not None else None,
         source_line=location[1] if location is not None else None,
+        reason=reason,
     )
 
 
@@ -155,6 +157,7 @@ def _fail(
     param_name: str | None = None,
     reference: str | None = None,
     location: tuple[str, int] | None = None,
+    reason: SiteReason | None = None,
 ) -> NoReturn:
     raise ProjectionError(
         [
@@ -166,6 +169,7 @@ def _fail(
                 param_name=param_name,
                 reference=reference,
                 location=location,
+                reason=reason,
             )
         ]
     )
@@ -215,6 +219,7 @@ def _float_default(
         f"the public EntryPoint seam cannot carry non-numeric default {value!r}",
         reference=reference,
         location=location,
+        reason=SiteReason.PROJECTION_DEFAULT_NON_NUMERIC,
     )
 
 
@@ -812,6 +817,7 @@ class _Projection:
                     _fail(
                         ElaborationCode.SI_SNAPSHOT_INVALID,
                         f"sum on {node.display_path!r} must have one argument",
+                        reason=SiteReason.PROJECTION_SUM_ARGUMENT_COUNT,
                     )
                 return render(expression.arguments[0])
             if isinstance(expression, UnsupportedNode):
