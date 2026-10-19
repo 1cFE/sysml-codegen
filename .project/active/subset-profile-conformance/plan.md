@@ -1,6 +1,6 @@
 # Implementation Plan: Independent conformance corpus and per-site codes (EXEC-SUBSET-CONTRACT Item 2a)
 
-**Status:** Implementation in progress (Phases 1–6 done; Phases 1–2 audited mid-run; Phases 3–6 not yet audited; group E split not taken by the orchestrator's ruling at P5's close, see Phase 5 Completion; Phase 7 next)
+**Status:** Implemented, awaiting audit (Phases 1–7 done; Phases 1–2 audited mid-run; Phases 3–7 not yet audited; group E split not taken by the orchestrator's ruling at P5's close, see Phase 5 Completion). Owner gates RG-1, RG-2 and RG-3 pending.
 **Created:** 2026-10-18
 **Last Updated:** 2026-10-19
 
@@ -560,13 +560,13 @@ def test_receipt_lists_every_packaged_case():
 
 ### Changes
 
-- [ ] **`kerml-expert` completeness:** every `rg1_pending` entry and every candidate has a recorded question and answer in `evidence/semantics-checks.md`.
-- [ ] **E5 rescan:** codegen `test_site_account.py` and agentic `scan_sites.py --out <dir>` at the final revisions; `evidence/rescan.md` itemizes each added or removed site with its cause; zero unaccounted sites, zero orphan rows.
-- [ ] **dc3:** `run_trees.py --out <dir>` on dc3 `808464df` and `60b44d53` with contract v2; `evidence/dc3-rerun.md` itemizes each difference from Item 1's `acceptance.md`; the generator half generates dc3 repaired at the final codegen revision.
-- [ ] agentic `codegen_suite.py` gains receipt writing (digest from the exported tree, `codegen_rev`, `agentic_rev`, `case_ids`), fails on any license-gated skip; `scripts/subset_profile/README.md` rewritten.
-- [ ] agentic `tests/test_subset_gate_receipt.py` (O18). Then the first gate run: commit both repos' final work, run `uv run python scripts/subset_profile/codegen_suite.py run --agentic-rev HEAD --codegen-rev <final codegen HEAD> --label gate --out /tmp/subset-2a/gate`, commit the receipt `tests/fixtures/subset_profile/codegen_gate.json`.
-- [ ] **Final checks:** both repos' licensed suites, mypy and ruff, compared by test ID with `evidence/baseline.md`; `evidence/repository-checks.md` names every skip and every check not run. No failure absent from the baseline's pre-existing table.
-- [ ] Record in Implementation Notes that the receipt names codegen `<rev>`, for the owner's `pre_pr` check (RG-3).
+- [x] **`kerml-expert` completeness:** every `rg1_pending` entry and every candidate has a recorded question and answer in `evidence/semantics-checks.md`.
+- [x] **E5 rescan:** codegen `test_site_account.py` and agentic `scan_sites.py --out <dir>` at the final revisions; `evidence/rescan.md` itemizes each added or removed site with its cause; zero unaccounted sites, zero orphan rows.
+- [x] **dc3:** `run_trees.py --out <dir>` on dc3 `808464df` and `60b44d53` with contract v2; `evidence/dc3-rerun.md` itemizes each difference from Item 1's `acceptance.md`; the generator half generates dc3 repaired at the final codegen revision.
+- [x] agentic `codegen_suite.py` gains receipt writing (digest from the exported tree, `codegen_rev`, `agentic_rev`, `case_ids`), fails on any license-gated skip; `scripts/subset_profile/README.md` rewritten.
+- [x] agentic `tests/test_subset_gate_receipt.py` (O18). Then the first gate run: commit both repos' final work, run `uv run python scripts/subset_profile/codegen_suite.py run --agentic-rev HEAD --codegen-rev <final codegen HEAD> --label gate --out /tmp/subset-2a/gate`, commit the receipt `tests/fixtures/subset_profile/codegen_gate.json`.
+- [x] **Final checks:** both repos' licensed suites, mypy and ruff, compared by test ID with `evidence/baseline.md`; `evidence/repository-checks.md` names every skip and every check not run. No failure absent from the baseline's pre-existing table.
+- [x] Record in Implementation Notes that the receipt names codegen `<rev>`, for the owner's `pre_pr` check (RG-3).
 
 **Done when:** agentic `uv run pytest tests/ -q -rs` and codegen licensed `uv run --extra dev pytest tests/ -q -rs` match the baseline's pre-existing failures and nothing else; the receipt test passes on the committed receipt.
 
@@ -917,7 +917,7 @@ Counted from both accounts after P5, by the plan's definitions (head = a row wit
 ### Phase 6 Completion
 **Completed:** 2026-10-19. Phase gate below; the audit is the orchestrator's to run (`/_my_audit`).
 **Actual Changes:** one commit in each repo, named in the final report of `briefs/implement_p6.md`'s run.
-**Tail size:** 94 rows (codegen 84, agentic-mbse 10), unchanged from the P5 count and under the 1.25 × T bound (120) throughout. No tail row was added mid-phase; three codegen site IDs were renamed by the code changes below.
+**Tail size:** 94 rows (codegen 84, agentic-mbse 10), unchanged from the P5 count and under the 1.25 × T bound (120) throughout. No tail row was added mid-phase; two codegen site IDs were renamed by the code changes below (corrected in P7 from "three"; `evidence/rescan.md`).
 
 #### Phase gate (2026-10-19)
 - Snapshots: `git diff --exit-code d73a4fc5` over the 22 committed `instance_graph_snapshot.json` files exits 0.
@@ -957,9 +957,44 @@ Counted from both accounts after P5, by the plan's definitions (head = a row wit
 - **Possible silent loss, not changed:** the registry deduplicates calc modules by simple calc def name (`generation/registry.py` `_registry_class_entries`, `seen_names`), so two calc defs named `Twice` in different packages both generate but may register one class. Not probed further; a backlog candidate.
 - **Message quality, not changed:** the `_typed_definition` refusal prints the usage name as `syside.core.QualifiedName([...])` (the message body predates P6).
 
+#### Orchestrator rulings on Phase 6 ([AGENT], 2026-10-19, `briefs/implement_p7.md`)
+1. The completeness test accepting a public row with either a witness or an `unwitnessed` record (with its fails-if-reached guard) is accepted; it matches the design.
+2. The registry's possible dedup by simple calc def name gets a backlog row, owner Reid Westwood, marked unconfirmed; probing it is out of 2a's scope. Filed as `[REGISTRY-CALC-DEF-SIMPLE-NAME-DEDUP]`.
+3. The `SI_TYPE_INVALID` message printing `syside.core.QualifiedName([...])` gets a backlog row; not fixed in 2a. Filed as `[SI-TYPE-INVALID-MESSAGE-PRINTS-QN-OBJECT]`.
+
 ### Phase 7 Completion
-**Receipt codegen_rev:** 
+**Completed:** 2026-10-19. Final checks below; the audit is the orchestrator's to run (`/_my_audit`).
+**Receipt codegen_rev:** `fdc1f7849e8356850832a8c30f9194444eef885c` (agentic_rev `db25490c0460416a24adba072fb1e96d36cb7810`, 154 cases), for the owner's `pre_pr` check (RG-3, design D13). The later sysml-codegen P7 commit touches only `.project/`, so `fdc1f784` is an ancestor of the merging head whose later commits touch nothing under `src/`, `tests/conformance/subset_profile/` or `tests/expectations/subset_profile/`, unless something lands after this phase.
+**Actual Changes:** sysml-codegen `fdc1f784` (semantics completeness, E5 rescan, backlog rows) and the P7 close commit after it (dc3 rerun, repository checks, gate report, this plan, `CURRENT_WORK.md`); agentic-mbse `db25490c` (receipt writing, `run_trees.py --codegen-rev`, records `verified_against`, README) and `2b2cbb81` (receipt, receipt test, `CURRENT_WORK.md`).
 
----
+#### Final checks (2026-10-19), detail in `evidence/repository-checks.md`
+- codegen licensed suite: 6644 passed, 9 failed, 9 skipped, 124 deselected. The 9 failures are baseline IDs; the tenth baseline failure (self-binding guidance) still passes. Skips are the baseline's 9 by ID. mypy clean (87 files); ruff `src/ tests/` 94 (baseline 94).
+- agentic-mbse (`--all-extras`): 3960 passed, 5 failed, 8 skipped, 1 xfailed, 17 deselected. The 5 are the all-extras baseline IDs; skips are the baseline's 8 by ID. mypy 88, ruff 118 (baselines).
+- Snapshots byte-stable against `d73a4fc5`; `baseline.json` and `batch.json` unchanged.
+- Merge order: local `main` and last-fetched `origin/main` have no commits beyond `subset-conformance` in either repo, so no rebase. Nothing fetched.
+- Gate run: 3861 codegen subset tests passed, none skipped.
 
-**Status**: Draft
+#### Semantics checks
+All 11 RG-1 candidates (14 marked stored answers) have a question and answer in `evidence/semantics-checks.md`; no `rg1_pending` disagreement and no O8 RG-1 candidate exists. Section "Completeness" added there.
+
+#### E5 rescan (`evidence/rescan.md`)
+Zero unaccounted sites and zero orphan rows in both repos. codegen 494 sites: Item 1's 441, plus 50 from the scanner port's `unrecognized` channel, plus a net 3 from 2a commits (6 added, 4 removed, two of those pairs being P6 renames), each itemized with its commit and cause. agentic-mbse's 61 IDs equal Item 1's. The P6 note's "three renamed site IDs" is two; corrected there. The per-commit scan is `evidence/experiments/rescan.py`.
+
+#### dc3 (`evidence/dc3-rerun.md`)
+With contract v2, both dc3 trees give Item 1's verdicts, counts and findings exactly (dc3 baseline REFUSED_INCOMPLETE, 274 findings, 236 refused, 50 unverified; dc3 repaired CLEAR, 45 findings, 0 refused). The only differences are the version label and added case citations on 15 B3 and 32 (baseline) / 30 (repaired) String findings. dc3 repaired generates at `fdc1f784`: exit 0, no warnings, no manual stubs. The dc3 checkout was only read with `git archive`.
+
+#### Gate and receipt (agentic-mbse)
+- `scripts/subset_profile/gate_receipt.py` (new): covered files by glob (everything under `src/agentic_mbse/sysml/` except `__pycache__/`, plus `errors.py`), the digest, packaged case IDs, the rerun hint. One module, used by both the gate script and the receipt test.
+- `codegen_suite.py`: a run passes only when every selected test passed; a skip fails it (in codegen's subset tests the only skip is `requires_license`). A passing run of the default selection writes the receipt from the exported tree, and refuses if a packaged case has no passed test. A failing run exits 1 and leaves the receipt alone.
+- `tests/test_subset_gate_receipt.py` (5 tests): designed fields only, digest equal to the working tree's, every packaged case listed, the glob covers a new module and `errors.py`, caches are skipped. `tests/test_subset_profile_scripts.py` gains a test of the case-ID rule.
+- `scripts/subset_profile/README.md` rewritten around the gate.
+
+#### Deviations
+- **Two agentic-mbse commits, not one.** The script change had to be committed before the gate run, since the gate exports the named revision; the receipt and its test follow in a second commit, so no commit has a red receipt test.
+- **The records' `verified_against` refreshed** (the P2.1 note promised it for P7): codegen `fdc1f784`, agentic `42798bc0`. A record cannot name the commit that contains it, so `agentic_rev` is the last commit before the refresh, as Item 1 did; the refresh changes no rule. `subset-profile/v2` re-pinned (`02d82855…`).
+- **`run_trees.py` gained `--codegen-rev`**, replacing the pinned `b5663c07` and the self-check that required it. The corpus tree was not rerun (the plan asks for dc3 only).
+- **The first gate run stopped on `IsolationBreachError`**, because evidence files in this worktree were edited during it. Rerun untouched.
+- **Run outputs kept in evidence:** `gate/gate.json`, `dc3/`, `final/` (outcomes by ID).
+
+#### For the owner
+- Two other branches are in flight in the main checkouts: sysml-codegen `/home/reid/src/sysml-codegen` is on `adr-0012-occurrence-summary-amendment`, and agentic-mbse `/home/reid/src/agentic-mbse` on `l6-subset-profile`. Neither is in `main` yet. The first may overlap the staged `adr-0012-amendment.md`; an agentic-mbse branch that touches a covered file needs its own gate run after 2a merges. Not inspected.

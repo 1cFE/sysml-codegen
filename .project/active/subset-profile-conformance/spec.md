@@ -1,6 +1,6 @@
 # Spec: Independent conformance corpus and per-site codes (EXEC-SUBSET-CONTRACT Item 2a)
 
-**Status:** Implementation In Progress (Phases 1–6 of 7 complete, 2026-10-19; group E split not taken, Phase 7 next)
+**Status:** Implemented, awaiting audit (Phases 1–7 complete, 2026-10-19). Owner gates RG-1, RG-2 and RG-3 pending.
 **Owner:** Reid Westwood
 **Created:** 2026-10-18
 **Complexity:** HIGH
@@ -74,13 +74,13 @@ The criteria fall into six groups, A–F. Each group can be audited without the 
 - [ ] The inventory test detects, or reports as unrecognized by name, a synthetic new raise of each recognized form, a new exception class, a new raising helper and a computed code mapping. The account lists the blind spots that remain.
 - [ ] Every site the account classes `public_capability` (including the 39 follow-ups and the 10 naming-collision sites) carries a stable reason that tells it apart from other sites with the same `ElaborationCode` or the same stub outcome, per site or per justified family, and has a witness that fails when the site is disabled. Stub sites and plain-exception sites get their reason under Known Requirements → Gates without changing accept/refuse.
 - [ ] Each of the 46 `unknown` sites is classed reachable (and then meets the previous criterion), internal invariant with a cited guard, or still unknown with a recorded attempt, an owner and a stated limit.
-- [ ] A recorded rescan of both trees at the final revisions reports zero unaccounted sites and zero orphan rows, and itemizes each added or removed site with its cause.
+- [x] A recorded rescan of both trees at the final revisions reports zero unaccounted sites and zero orphan rows, and itemizes each added or removed site with its cause.
 
 **F. Semantics questions and baseline evidence**
 
 - [ ] A case reproduces G2 at the pinned generator and records what it does.
 - [ ] For G1, G2 and every case routed to it under Known Requirements → Gates, the `kerml-expert` agent (`.claude/agents/kerml-expert.md`) is asked what SysML v2 / KerML semantics require, with the case models attached. The evidence records each question, the answer, the spec sections cited, and whether the generator's current behavior agrees.
-- [ ] A recorded run evaluates dc3 baseline `808464df` and repaired `60b44d53` with the 2a contract, compares the findings with Item 1's `evidence/acceptance.md`, and itemizes each difference with its cause. The generator still generates dc3 repaired at the 2a codegen revision.
+- [x] A recorded run evaluates dc3 baseline `808464df` and repaired `60b44d53` with the 2a contract, compares the findings with Item 1's `evidence/acceptance.md`, and itemizes each difference with its cause. The generator still generates dc3 repaired at the 2a codegen revision.
 - [ ] `pytest`, `mypy` and `ruff` pass in both repositories by each repository's commands. The evidence comes from a run with `SYSIDE_LICENSE_KEY` set, lists skips, and names checks not run.
 
 ## Known Requirements

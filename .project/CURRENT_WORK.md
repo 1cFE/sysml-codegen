@@ -1,10 +1,10 @@
 # Current Work
 
-**Updated:** 2026-10-12
+**Updated:** 2026-10-19
 
 ## Active Work
 
-- `subset-profile-conformance` (EXEC-SUBSET-CONTRACT Item 2a, epic in agentic-mbse): implementing. Phases 1–6 of 7 are done and their gates passed (2026-10-19); Phases 1–2 were audited mid-run, Phases 3–6 are not yet audited. The orchestrator ruled the group E split not taken, so Phase 6 ran here: every public site in both accounts now has a reason and a witness (or a recorded reason no model reaches it), and every tail unknown site has a verdict. 46 new cases (43 codegen-home, 3 agentic-mbse packaged), one O8 conversion (an untyped calc usage now refuses `SI_TYPE_INVALID` instead of `SI_INTERNAL_DEFECT`), no RG-1 candidate. Phase 7 (rescan, receipt, final checks) is next. Plan: `.project/active/subset-profile-conformance/plan.md`.
+- `subset-profile-conformance` (EXEC-SUBSET-CONTRACT Item 2a, epic in agentic-mbse): **implemented, awaiting audit** (2026-10-19). All 7 phases are done; Phases 1–2 were audited mid-run, Phases 3–7 are not yet audited. Phase 7 closed the evidence: semantics checks complete for all 11 RG-1 candidates, the E5 rescan (zero unaccounted sites, zero orphan rows), the dc3 rerun (same findings as Item 1; dc3 repaired still generates) and the first pre-merge gate receipt in agentic-mbse. Owner gates pending: **RG-1** (11 candidates, `rg1-recommendations.md`), **RG-2** (String policy, `rg2-string-policy.md`) and **RG-3** (the coordinated merge, and filing the staged ADR 0001, ADR 0012, ADR 0016 and P-0001 amendments). Plan: `.project/active/subset-profile-conformance/plan.md`.
 
 The backlog holds separately scoped capabilities, diagnostics, model work, and assurance limits.
 
