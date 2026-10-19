@@ -1,6 +1,6 @@
 # Implementation Plan: Independent conformance corpus and per-site codes (EXEC-SUBSET-CONTRACT Item 2a)
 
-**Status:** Implemented; final audit Needs Work, two record Blockers (`audit.md`, 2026-10-19) (Phases 1–7 done; group E split not taken by the orchestrator's ruling at P5's close, see Phase 5 Completion). Owner gates RG-1, RG-2 and RG-3 pending.
+**Status:** Implemented; final audit Needs Work, two record Blockers (`audit.md`, 2026-10-19), fixed and awaiting re-audit (§ Final-audit fixes) (Phases 1–7 done; group E split not taken by the orchestrator's ruling at P5's close, see Phase 5 Completion). Owner gates RG-1, RG-2 and RG-3 pending.
 **Created:** 2026-10-18
 **Last Updated:** 2026-10-19
 
@@ -998,3 +998,46 @@ With contract v2, both dc3 trees give Item 1's verdicts, counts and findings exa
 
 #### For the owner
 - Two other branches are in flight in the main checkouts: sysml-codegen `/home/reid/src/sysml-codegen` is on `adr-0012-occurrence-summary-amendment`, and agentic-mbse `/home/reid/src/agentic-mbse` on `l6-subset-profile`. Neither is in `main` yet. The first may overlap the staged `adr-0012-amendment.md`; an agentic-mbse branch that touches a covered file needs its own gate run after 2a merges. Not inspected.
+
+### Final-audit fixes
+**Completed:** 2026-10-19, per `briefs/implement_auditfix.md`. The re-audit is the orchestrator's to run (`/_my_audit`); spec C4, E3 and E4 are left open for it.
+**Actual Changes:** sysml-codegen `7a4c268e` (code, tests, records) and the commit after it (this section, `.project` only); agentic-mbse `e78bae08` (backlog row) and `a3c992b6` (gate receipt, `CURRENT_WORK.md`).
+
+#### Orchestrator rulings ([AGENT], 2026-10-19, `briefs/implement_auditfix.md`)
+1. Reclassify `elaborate.py:684` and `graph.py:614`, give each a reason, witness and mutation, and correct their disagreement reasons. Add a structural test that a reached site cannot be recorded unreached and that a reached public site carries a reason, and show it fails on the pre-fix records.
+2. `graph.py:614` firing on a valid model is a suspected defect: an RG-1 candidate with a recommendation and a sysml-codegen backlog row; no generator change.
+3. Complete `r3-closure.md` (four rows, C4) and `changed-outputs.md` (P2.4, invariant 10).
+4. One agentic-mbse backlog row, owner Reid Westwood, routed to epic Item 3, for the disagreement entries the screen could likely judge; entries point at it.
+5. Fix the mislabelled entries; record that resolutions were agent-assigned, by the smallest honest change; fix stale text in `modeling-assumptions.md`, `rg2-string-policy.md`, `rescan.md`.
+6. Leave RG1-5 and RG1-10 as they are, but state each tension beside it.
+7. Rerun the gate only if a covered agentic-mbse file changed.
+
+#### Blocker 1: reached sites recorded unreached
+- `_index_constraint_associations` (`elaborate.py:684`): role `unknown` → `public_capability`, reason `elaboration_constraint_definition_unindexed`, witnesses `blocked-predicate-unmapped-code__untyped_assert` and `…__constraint_check_typed`, mutation (changes exactly those two). The shared profile selects a library constraint definition codegen does not index.
+- Graph validation's root-package check (`graph.py:616` now): it built its diagnostic through the `_graph_failure` factory, so the factory row was the site. It now builds its own `Diagnostic` (same code, display and detail, plus reason `graph_root_occurrence_package_missing`) and is a new public row, `…::InstanceGraph._validate_occurrences::coded::SI_EDGE_DANGLING::1`, witness `candidate-es-002__part_inside_item_usage__attribute_value`, mutation. The factory row is now `snapshot_integrity` (only a decoded graph can meet its remaining checks), which the new test guards.
+- Three stored answers re-captured (reasons only) and given their witness.
+- **Structural test, `test_site_reach.py`.** (a) Licensed: no case fires a site whose role is `internal_invariant`, `environment`, `snapshot_integrity` or `unknown` (`witnesses.UNREACHED_ROLES`; `generator_firing` now records those rows too). (b) Pure: every refused case carries a site reason, so a reached refusing site without one fails, and a `reproduced_gap` cannot lack its reason. On the pre-fix records (`f9ef7d8b`), (a) fails on `:684` and (b) on exactly the three Blocker cases (`evidence/experiments/audit-fixes/site_reach_before_fix.txt`). A role check alone would not have caught `graph.py`, because the factory was recorded `relay_plumbing`, a role reached sites legitimately carry; (b) catches it.
+- **Recorder cache.** Tracing every account site made `generator_firing` parse each module once per site per case (9 minutes for the new test). `mutate._recordable_lines` caches the statement lines per target; the whole subset suite now runs in about 67 s (203 s at P7).
+
+#### RG1-12 (ruling 2)
+- Probed: a part usage owned by an item usage or item def refuses the whole model, even unread, and even when the item def is never used (`evidence/experiments/audit-fixes/probes/`). Cause, from the code and not confirmed by a fix: roots are part usages not owned by a part def or part usage (`occurrence.py:935-942`), and only package-owned roots get package metadata (`occurrence.py:1021-1031`).
+- Semantics check (run as P4's were, `evidence/semantics-checks.md` RG1-12): well formed, named directly by S:17953-17970.
+- `rg1-recommendations.md` RG1-12 recommends accepting by leaving item-owned parts out of the occurrence roots. The disagreement entry is `rg1_pending`, `rg1` RG1-12. Backlog `[ITEM-OWNED-PART-REFUSED]`.
+
+#### Blocker 2 and the advisories
+- `r3-closure.md`: lines for the `unconfirmed` pairs, the retired shapes, the two by-design contexts and the 85 follow-up sites; the ES-002 boundary, tail section and RG-1 section corrected. `changed-outputs.md`: § P2.4 (seven reasons, examples), § Final-audit fixes, and the stub-notice sentence (it also appears on runs refused later).
+- Disagreement record (`subset-disagreements/2`): top-level `resolutions_decided_by: "agent"`, required by the reader (`cases.Decider`) and checked by `test_the_record_says_the_agent_assigned_its_resolutions`; unit tests for a missing or invalid value. Five entries `codegen_owned` → `reproduced_gap` (non-finite literal, namespace probe, three ES-010 paths); `item4_require` and `elab_constraint_formal_identity` reasons corrected; 20 entries point at agentic-mbse `[SUBSET-PROFILE-TYPING-AND-LITERAL-CANDIDATES]`. Now 102 `reproduced_gap`, 33 `codegen_owned`, 1 `rg1_pending`.
+- `rg1-recommendations.md`: header covers RG1-12 and states which cases carry a `loss` block; tension paragraphs beside RG1-5 and RG1-10.
+- Stale text fixed: `modeling-assumptions.md` § literal values (the String library default does become a null entry point) and § formal redefinition order (links Item 4's hazard entry); `rg2-string-policy.md` short version (the template position was not compared); `rescan.md` (7 added, the sum, P2.2/P2.3 did not touch `src/`, and a section for the one site added after P7, 495).
+- Account header: the reachability blind spot now names the test that guards it; `sites: 495`.
+
+#### Checks (2026-10-19)
+- codegen licensed suite: 7169 passed, 9 failed, 9 skipped, 124 deselected; the 9 failures and 9 skips are the baseline IDs. Subset suite plus answer tests: 4427 passed, no skips. mypy clean (87 files); ruff `src/ tests/` 94 (baseline).
+- agentic-mbse (`--all-extras`): 3960 passed, 5 failed, 8 skipped, 1 xfailed; the 5 are the all-extras baseline IDs.
+- Snapshots byte-stable against `d73a4fc5` (22 files); `baseline.json` and `batch.json` unchanged.
+- Gate: 4382 codegen subset tests passed, none skipped, at codegen `7a4c268e`, agentic `e78bae08`; receipt for 154 cases committed in `a3c992b6`.
+
+#### Deviations
+- **Gate rerun although no covered file changed.** The brief conditions the rerun on a covered agentic-mbse file. But this change touches codegen `src/` and the subset test directories after the old receipt's `codegen_rev` (`fdc1f784`), so the owner's `pre_pr` check would have failed on it. The receipt now names `7a4c268e`; later codegen commits touch only `.project/`.
+- **The `graph.py` entry is `rg1_pending`, not `reproduced_gap`.** A fix changes acceptance and the model is valid, which is the `rg1_pending` meaning.
+- **Not done (outside the brief):** the audit's other stale-text items: `evidence/independence.md` (stale at HEAD), `adr-0012-amendment.md` (understates the parity test's coverage). Advisories 4–6 and 9–12 of the audit were not in the brief and are unchanged.
