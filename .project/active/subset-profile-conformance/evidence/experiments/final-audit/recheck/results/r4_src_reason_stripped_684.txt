@@ -1,0 +1,6 @@
+edited sysml-codegen/src/sysml_codegen/elaboration/elaborate.py (1 matches, replaced 1)
+FAILED tests/conformance/subset_profile/test_generator_half.py::test_live_run_equals_the_stored_answer[blocked-predicate-unmapped-code__constraint_check_typed]
+FAILED tests/conformance/subset_profile/test_generator_half.py::test_live_run_equals_the_stored_answer[blocked-predicate-unmapped-code__untyped_assert]
+FAILED tests/conformance/subset_profile/test_generator_mutations.py::test_neutralizing_a_site_changes_exactly_the_stored_cases[agentic_mbse/sysml/executable_profile.py::_evaluate_usage_against_definition::shared-profile::block_missing_predicate::1]
+FAILED tests/conformance/subset_profile/test_site_reasons.py::test_every_row_with_a_reason_is_passed_by_its_raise
+================== 4 failed, 4423 passed in 66.57s (0:01:06) ===================

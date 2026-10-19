@@ -1,0 +1,6 @@
+was ['elaboration_constraint_definition_unindexed']
+FAILED tests/conformance/subset_profile/test_generator_half.py::test_live_run_equals_the_stored_answer[blocked-predicate-unmapped-code__untyped_assert]
+FAILED tests/conformance/subset_profile/test_generator_mutations.py::test_neutralizing_a_site_changes_exactly_the_stored_cases[agentic_mbse/sysml/executable_profile.py::_evaluate_usage_against_definition::shared-profile::block_missing_predicate::1]
+FAILED tests/conformance/subset_profile/test_generator_mutations.py::test_neutralizing_a_site_changes_exactly_the_stored_cases[sysml_codegen/elaboration/elaborate.py::_ExactElaborator._index_constraint_associations::coded::SI_EDGE_DANGLING::6]
+FAILED tests/conformance/subset_profile/test_site_reach.py::test_every_refused_case_carries_a_site_reason[blocked-predicate-unmapped-code__untyped_assert]
+================== 4 failed, 4423 passed in 66.49s (0:01:06) ===================

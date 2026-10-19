@@ -2,6 +2,8 @@
 
 A mutation turns one detector off and checks that some case notices. This file says which detectors were turned off, what that shows, and where the evidence is not independent of the screen (design § Independence limits). Recorded 2026-10-18 at the P2.4 commits.
 
+**Counts at the end of Item 2a (2026-10-19, after the final-audit fixes).** This file was written at P2.4, and its counts below are that phase's. P4–P6 and the final-audit fixes added generator mutations for stub causes, R3-row sites and tail sites. `tests/expectations/subset_profile/mutations.json` now holds 70 generator mutations (66 codegen sites, 4 shared agentic-mbse sites), 11 screen mutations and 9 unwitnessed sites (7 codegen: the two retired multiplicity shapes and five `calc_compat_renderer.py` sites P4 found unreachable; 2 agentic-mbse, as listed below). The method, the shared-table limit and the limits of the method are unchanged. `mutations.json` is the current list.
+
 ## What was mutated
 
 - **Generator, codegen sites: 9 mutated, 2 unwitnessed.** The 11 codegen sites the account links to a shared rule (`site_account.csv` rows with a `rule`). Each of the 9 reachable sites is neutralized by `tests/helpers/subset_profile/mutate.py`, and every case that fires it in the generator half changes outcome or site reasons. The changed set equals the site's witnesses in each case, so no other case flips (`tests/expectations/subset_profile/mutations.json`, `generator`).

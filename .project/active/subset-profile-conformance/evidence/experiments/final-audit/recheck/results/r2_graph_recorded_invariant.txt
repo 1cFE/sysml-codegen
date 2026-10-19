@@ -1,0 +1,4 @@
+row edited sysml_codegen/elaboration/graph.py::InstanceGraph._validate_occurrences::coded::SI_EDGE_DANGLING::1 {'role': 'internal_invariant'}
+FAILED tests/conformance/subset_profile/test_mutation_record.py::test_every_mutated_site_is_recorded_once
+FAILED tests/conformance/subset_profile/test_site_reach.py::test_no_case_reaches_a_site_recorded_unreached[sysml_codegen/elaboration/graph.py::InstanceGraph._validate_occurrences::coded::SI_EDGE_DANGLING::1]
+================== 2 failed, 4424 passed in 66.42s (0:01:06) ===================

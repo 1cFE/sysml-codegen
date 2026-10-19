@@ -1,11 +1,43 @@
 # Audit: Independent conformance corpus and per-site codes (EXEC-SUBSET-CONTRACT Item 2a), final
 
-**Verdict:** Needs Work (two Blockers, both corrections to records; no code behavior is wrong)
-**Audited:** 2026-10-19
+**Verdict:** Certify (re-check 2026-10-19: both Blockers fixed and verified; the first pass said Needs Work)
+**Audited:** 2026-10-19 (first pass at `b6320119`; re-check at `fa3b80ab`)
 **Branch:** sysml-codegen `subset-conformance` (base `b5663c07`); agentic-mbse `subset-conformance` (rebased on `main` with Item 4)
-**Commit:** sysml-codegen `b6320119`; agentic-mbse `2b2cbb81`
+**Commit:** first pass sysml-codegen `b6320119`, agentic-mbse `2b2cbb81`; re-check sysml-codegen `fa3b80ab` (fixes in `7a4c268e`), agentic-mbse `a3c992b6` (backlog row `e78bae08`, fresh receipt)
 
-Scope: the whole item, Phases 1–7, against `spec.md`, `design.md` rev 3 and `plan.md`. This supersedes the mid-run audit of Phases 1–2, which is kept unchanged at the end of this file. Experiment scripts and their results are in `evidence/experiments/final-audit/`.
+Scope: the whole item, Phases 1–7, against `spec.md`, `design.md` rev 3 and `plan.md`. This supersedes the mid-run audit of Phases 1–2, which is kept unchanged at the end of this file. Experiment scripts and their results are in `evidence/experiments/final-audit/` (first pass) and `evidence/experiments/final-audit/recheck/` (re-check).
+
+## Re-check of the final-audit fixes (2026-10-19)
+
+**Both Blockers are fixed, and the fix holds under perturbation. Verdict: Certify.** The sections below this one are the first pass, unchanged; where they say a Blocker is open, this section supersedes them.
+
+**Blocker 1, fixed.** Both sites are now public with a reason, named witnesses and a mutation: `elaborate.py:684` passes `elaboration_constraint_definition_unindexed`, and graph validation's root-package check (`graph.py:616`) now builds its own diagnostic with `graph_root_occurrence_package_missing`, so it is its own site in the account. The three disagreement entries carry the correct reasons. The `graph.py` case is now `rg1_pending` as RG1-12 (a valid model refused: a part owned by an item), with a semantics check, a recommendation to accept and backlog row `[ITEM-OWNED-PART-REFUSED]`; no generator change, which is right under RG-1. The new `tests/conformance/subset_profile/test_site_reach.py` holds the account to the corpus in two ways: no case may fire a site whose role says nothing reaches it (licensed, traced), and every refused case must carry a site reason (pure). I perturbed it in a throwaway worktree pair; each edit was reverted:
+
+| Edit | Red |
+|---|---|
+| `:684` row set back to role `unknown`, reason cleared (the original mistake) | 3, including `test_site_reach` for that site |
+| `graph.py` row set to `internal_invariant`, reason kept | 2, including `test_site_reach` for that site |
+| reason stripped from the stored answer of `blocked-predicate-unmapped-code__untyped_assert` | 4, including `test_every_refused_case_carries_a_site_reason` |
+| `reason=` removed from the `:684` raise in `src/` | 4 (generator half on both witnesses, site reasons, a mutation) |
+| `reason=` removed from the `graph.py` diagnostic in `src/` | 3 (generator half, site reasons, a mutation) |
+
+The test's stated limit is real: only cases are traced, so a fixture that alone reaches a site recorded unreached is not seen. Advisory 5 (a reason is required only where a site is labelled public) is narrowed by the pure half, since a refused case without a reason now fails, but carriers still accept `reason=None`.
+
+**Accept/refuse still unchanged after `7a4c268e`.** I reran all 472 roots from a fresh HEAD export with the first pass's script and compared with the base run: 177 generated and 295 refused on both sides, identical per root, and all 177 generated packages byte-identical. Against the first pass's HEAD run, exactly three roots changed, and only by the new ` (reason: …)` suffix: the two `:684` witnesses and the `graph.py` witness. The `graph.py` diagnostic keeps the code, display and detail the `_graph_failure` factory built (`graph.py:1009-1016`).
+
+**Blocker 2, fixed.** `evidence/r3-closure.md` now has lines for the `unconfirmed` pairs, the retired shapes, the two by-design contexts and the 85 follow-up sites, so every R3 row has a line (C4). `evidence/changed-outputs.md` has a P2.4 section listing the seven reasons and their codes, and a section for the fixes (invariant 10).
+
+**Advisories.**
+- Advisory 1: agentic-mbse backlog row `[SUBSET-PROFILE-TYPING-AND-LITERAL-CANDIDATES]` (owner Reid Westwood, routed to epic Item 3); the 20 entries point at it. Done.
+- Advisory 2: `non_finite_literal`, `elab_namespace_distinguishability_probe` and the three ES-010 entries are now `reproduced_gap`; `item4_require` and `elab_constraint_formal_identity` reasons corrected. Checked by reading each entry. Nothing yet tests that a resolution fits its entry, beyond the new site-reason requirement. Partly done.
+- Advisory 3: the record is `subset-disagreements/2` with `resolutions_decided_by: "agent"`, required by the reader and tested. Done.
+- Advisory 7: tension paragraphs beside RG1-5 and RG1-10, and the header now says which cases carry a `loss` block. Done.
+- Advisory 8: fixed in `modeling-assumptions.md` (String default entry point; Item 4's hazard entry linked), `rg2-string-policy.md`, `rescan.md` (the sum now adds up to 494, then 495 after the fixes), and the `changed-outputs.md` stub-notice sentence. I fixed the two items the implementer left, both text only: `evidence/independence.md` now states the end-of-item counts (70 generator mutations, 11 screen, 9 unwitnessed; `mutations.json`), and `adr-0012-amendment.md` says the parity test also runs every conformance case (`test_occurrence_parity.py:43-49`). `CURRENT_WORK.md` now lists `adr-fact-placement-draft.md` among the staged texts.
+- Advisories 4, 5 (in part), 6, 9, 10, 11 and 12 are unchanged and remain advisory.
+
+**Spec.** C4, E3 and E4 are now met and ticked. Every success criterion in `spec.md` is checked.
+
+**Not checked in the re-check:** the full suites (the implementer's run is in `plan.md` § Final-audit fixes → Checks; I ran the codegen subset suite with `tests/unit/test_subset_case_answers.py`, 4427 tests in about 67 s, only under each perturbation, not once clean; the implementer's clean run of the same set is 4427 passed); the RG1-12 probes and semantics answer beyond reading them; the fresh receipt's contents beyond its commit; the 20-row backlog list entry by entry.
 
 ---
 
@@ -158,7 +190,7 @@ Checked:
 
 Marked in `spec.md`: B5, B6, B7, C1, C2, C3, D1, D2, D3, D4, E1, E2, F1, F2, F4. Left open: C4 and E3, E4 (Blockers 2 and 1). Plan: no change; the phase boxes were already ticked and the open boxes are the gate template. `CURRENT_WORK.md`: "needs work".
 
-**Not checked:** the full suites of either repository (I ran the codegen subset suite and agentic-mbse's subset tests only; the full-suite figures are the implementer's `evidence/repository-checks.md`); 104 of the 136 disagreement entries; every stored answer's seams and witnesses beyond their tests; from-snapshot generation; the `execution` lane (needs TEAx); log records below WARNING and the structured `extra=` fields on base; whether the receipt's `codegen_rev` matches the merging head (the owner's `pre_pr` step); the agentic-mbse wheel contents; the internals of `mutate.py`'s rewrite engine and `site_scan.py` beyond their tests; the 154 internal-invariant guards Item 1 cited (spec Non-Goal).
+**Not checked (first pass):** the full suites of either repository (I ran the codegen subset suite and agentic-mbse's subset tests only; the full-suite figures are the implementer's `evidence/repository-checks.md`); 104 of the 136 disagreement entries; every stored answer's seams and witnesses beyond their tests; from-snapshot generation; the `execution` lane (needs TEAx); log records below WARNING and the structured `extra=` fields on base; whether the receipt's `codegen_rev` matches the merging head (the owner's `pre_pr` step); the agentic-mbse wheel contents; the internals of `mutate.py`'s rewrite engine and `site_scan.py` beyond their tests; the 154 internal-invariant guards Item 1 cited (spec Non-Goal).
 
 ---
 ---

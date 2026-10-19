@@ -1,0 +1,5 @@
+row edited sysml_codegen/elaboration/elaborate.py::_ExactElaborator._index_constraint_associations::coded::SI_EDGE_DANGLING::6 {'role': 'unknown', 'reason': ''}
+FAILED tests/conformance/subset_profile/test_mutation_record.py::test_every_mutated_site_is_recorded_once
+FAILED tests/conformance/subset_profile/test_site_reach.py::test_no_case_reaches_a_site_recorded_unreached[sysml_codegen/elaboration/elaborate.py::_ExactElaborator._index_constraint_associations::coded::SI_EDGE_DANGLING::6]
+FAILED tests/conformance/subset_profile/test_site_reasons.py::test_every_reason_a_site_passes_is_recorded
+================== 3 failed, 4423 passed in 67.64s (0:01:07) ===================

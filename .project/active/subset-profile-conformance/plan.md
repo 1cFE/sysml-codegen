@@ -1,6 +1,6 @@
 # Implementation Plan: Independent conformance corpus and per-site codes (EXEC-SUBSET-CONTRACT Item 2a)
 
-**Status:** Implemented; final audit Needs Work, two record Blockers (`audit.md`, 2026-10-19), fixed and awaiting re-audit (§ Final-audit fixes) (Phases 1–7 done; group E split not taken by the orchestrator's ruling at P5's close, see Phase 5 Completion). Owner gates RG-1, RG-2 and RG-3 pending.
+**Status:** Implemented and certified (final audit re-check, 2026-10-19, `audit.md`; the first pass's two record Blockers fixed in § Final-audit fixes) (Phases 1–7 done; group E split not taken by the orchestrator's ruling at P5's close, see Phase 5 Completion). Owner gates RG-1, RG-2 and RG-3 pending.
 **Created:** 2026-10-18
 **Last Updated:** 2026-10-19
 

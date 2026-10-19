@@ -1,6 +1,6 @@
 # Spec: Independent conformance corpus and per-site codes (EXEC-SUBSET-CONTRACT Item 2a)
 
-**Status:** Implemented; final audit Needs Work (2026-10-19, `audit.md`): C4, E3 and E4 open on two record Blockers, fixed 2026-10-19 (plan § Final-audit fixes) and awaiting re-audit. Owner gates RG-1, RG-2 and RG-3 pending.
+**Status:** Implemented and certified (final audit re-check, 2026-10-19, `audit.md`): every success criterion met. Owner gates RG-1 (12 candidates), RG-2 and RG-3 pending.
 **Owner:** Reid Westwood
 **Created:** 2026-10-18
 **Complexity:** HIGH
@@ -59,7 +59,7 @@ The criteria fall into six groups, A–F. Each group can be audited without the 
 - [x] For every conformance case, wherever it lives, the stored screen outcome and the stored generator outcome agree under the reason-to-code mapping, or the case is a recorded disagreement. A test fails on a case that is neither.
 - [x] Every refusing fixture under `tests/fixtures/` ends in either a screen `refused` finding whose reason maps to the generator's code, or a recorded disagreement. A test fails on a refusal that has neither. With the previous criterion, this catches a model the contract calls fine and the generator refuses.
 - [x] A recorded disagreement that appears or disappears without a change to the record fails a test.
-- [ ] Every R3 row routed to Item 2 has the closing outcome given for it in Known Requirements → R3 rows, and the evidence has one line per row.
+- [x] Every R3 row routed to Item 2 has the closing outcome given for it in Known Requirements → R3 rows, and the evidence has one line per row.
 
 **D. Silent losses and String metadata**
 
@@ -72,8 +72,8 @@ The criteria fall into six groups, A–F. Each group can be audited without the 
 
 - [x] A sysml-codegen test scans `src/sysml_codegen/` with the site scanner's recognized forms and fails on a raise site with no account row, or an account row whose site is gone.
 - [x] The inventory test detects, or reports as unrecognized by name, a synthetic new raise of each recognized form, a new exception class, a new raising helper and a computed code mapping. The account lists the blind spots that remain.
-- [ ] Every site the account classes `public_capability` (including the 39 follow-ups and the 10 naming-collision sites) carries a stable reason that tells it apart from other sites with the same `ElaborationCode` or the same stub outcome, per site or per justified family, and has a witness that fails when the site is disabled. Stub sites and plain-exception sites get their reason under Known Requirements → Gates without changing accept/refuse.
-- [ ] Each of the 46 `unknown` sites is classed reachable (and then meets the previous criterion), internal invariant with a cited guard, or still unknown with a recorded attempt, an owner and a stated limit.
+- [x] Every site the account classes `public_capability` (including the 39 follow-ups and the 10 naming-collision sites) carries a stable reason that tells it apart from other sites with the same `ElaborationCode` or the same stub outcome, per site or per justified family, and has a witness that fails when the site is disabled. Stub sites and plain-exception sites get their reason under Known Requirements → Gates without changing accept/refuse.
+- [x] Each of the 46 `unknown` sites is classed reachable (and then meets the previous criterion), internal invariant with a cited guard, or still unknown with a recorded attempt, an owner and a stated limit.
 - [x] A recorded rescan of both trees at the final revisions reports zero unaccounted sites and zero orphan rows, and itemizes each added or removed site with its cause.
 
 **F. Semantics questions and baseline evidence**

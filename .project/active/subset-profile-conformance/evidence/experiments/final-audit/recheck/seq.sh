@@ -1,0 +1,1 @@
+for p in r1_684_recorded_unknown r2_graph_recorded_invariant r3_stored_reason_stripped r4_src_reason_stripped_684 r5_src_reason_stripped_graph; do /tmp/audit2a-recheck/perturb/run.sh /tmp/audit2a-recheck $p /tmp/audit2a-recheck/perturb/$p.py tests/conformance/subset_profile/ tests/unit/test_subset_case_answers.py; done
