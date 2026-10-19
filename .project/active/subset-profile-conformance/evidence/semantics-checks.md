@@ -48,3 +48,12 @@ Each candidate in `rg1-recommendations.md` gets a `kerml-expert` question and it
 | RG1-11 | `out attribute o : Real;` with no value | Well formed and unconstrained (S:6289-6291, S:7867-7868, S:7932-7934; K:2512). |
 
 Not checked for any cause: what SysIDE reports.
+
+## Completeness (Phase 7, 2026-10-19)
+
+Every item design § F routes to a semantics check has a question and an answer above. Checked by hand against the stored answers and the record, not by a test (a test reading this file would break when the folder moves at close).
+
+- **Candidate refusals:** 11 ids carry a `candidate_refusal` loss mark across 14 stored answers (`tests/expectations/subset_profile/cases/*.json`): RG1-1 (2 cases), RG1-2, RG1-3, RG1-4, RG1-5, RG1-6 (2), RG1-7, RG1-8, RG1-9 (2), RG1-10, RG1-11. Each id has an entry in `rg1-recommendations.md` and a question and answer here. No mark names an id outside RG1-1 to RG1-11.
+- **G1 and G2:** RG1-1 and RG1-2 above, asked together with both case models (PD10).
+- **`rg1_pending` disagreements:** none. `tests/expectations/subset_profile/disagreements.json` has 136 entries, 98 `reproduced_gap` and 38 `codegen_owned`.
+- **O8 RG-1 candidates:** none. Phase 5 found no head site raising a plain exception, and Phase 6's one O8 conversion (`_typed_definition`, `ValueError` → `SI_TYPE_INVALID`) was refused before and after, so it was not a candidate.
