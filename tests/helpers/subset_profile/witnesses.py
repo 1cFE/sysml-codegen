@@ -138,6 +138,35 @@ def mutated_sites() -> tuple[str, ...]:
     )
 
 
+#: Roles that say no case reaches the site: no live model can (an internal invariant, a guard
+#: the pinned SysIDE makes unreachable, a check only a hand-edited snapshot meets), or none
+#: was found that does (``unknown``, whose E4 note lists the attempts). A case is a live model,
+#: so a site any case fires may keep none of them.
+UNREACHED_ROLES = frozenset(
+    {
+        site_scan.Role.INTERNAL_INVARIANT,
+        site_scan.Role.ENVIRONMENT,
+        site_scan.Role.SNAPSHOT_INTEGRITY,
+        site_scan.Role.UNKNOWN,
+    }
+)
+
+
+def recorded_unreached_sites() -> tuple[str, ...]:
+    """The codegen account rows whose role says no case reaches them.
+
+    A module-level site runs when its module is imported, before any case runs, so a case
+    cannot reach it and it is left out.
+    """
+    return tuple(
+        sorted(
+            r.site_id
+            for r in site_scan.load_account().rows
+            if r.role in UNREACHED_ROLES and "::<module>::" not in r.site_id
+        )
+    )
+
+
 def codegen_witnesses() -> dict[str, frozenset[str]]:
     found: dict[str, set[str]] = {}
     for answer in cases.all_answers():
@@ -162,11 +191,14 @@ def witnesses_of(site_id: str) -> frozenset[str]:
 
 @functools.cache
 def generator_firing() -> dict[str, frozenset[str]]:
-    """Each case's generator half, run once with every mutated or witnessed site recorded.
+    """Each case's generator half, run once with every mutated, witnessed or unreached site
+    recorded.
 
     Licensed.
     """
-    recorded = sorted(set(mutated_sites()) | set(codegen_witnesses()))
+    recorded = sorted(
+        set(mutated_sites()) | set(codegen_witnesses()) | set(recorded_unreached_sites())
+    )
     fired = {}
     for answer in cases.all_answers():
         with mutate.recording_sites(recorded) as seen:

@@ -235,6 +235,10 @@
     "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._index_calculation_payloads::coded::SI_ID_MISSING::2": [
       "calc-def-identity__anonymous_parameter"
     ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._index_constraint_associations::coded::SI_EDGE_DANGLING::6": [
+      "blocked-predicate-unmapped-code__constraint_check_typed",
+      "blocked-predicate-unmapped-code__untyped_assert"
+    ],
     "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._output_ports::coded::SI_EDGE_DANGLING::1": [
       "calc-def-output__part_usage"
     ],
@@ -258,6 +262,9 @@
     ],
     "sysml_codegen/elaboration/graph.py::InstanceGraph._expression_reference_count::unrecognized::UnsupportedExpressionIRError::1": [
       "push-down-sum-shape__sequence_argument"
+    ],
+    "sysml_codegen/elaboration/graph.py::InstanceGraph._validate_occurrences::coded::SI_EDGE_DANGLING::1": [
+      "candidate-es-002__part_inside_item_usage__attribute_value"
     ],
     "sysml_codegen/elaboration/identity.py::declaration_id_for::coded-fixed::SI_ID_MISSING|SI_ID_UNSTABLE::1": [
       "anonymous-declaration__calc_usage",

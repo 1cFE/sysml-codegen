@@ -136,7 +136,7 @@ Design attributes may contain several kinds of expressions, each with different 
 
 ### Literal Values
 
-Pure constants that become entry points. This includes numeric literals and boolean literals. A string literal does not become an entry point today: a String value that reaches a calc input, as an attribute value or as a literal in a calc usage binding, is refused ([Section 10](#10-what-generates-but-is-not-carried-through)).
+Pure constants that become entry points. This includes numeric literals and boolean literals. A String value does not become a usable entry point today. A String value that reaches a calc input, as an attribute value or as a literal in a calc usage binding, is refused. A calc def's String default that the usage leaves unbound does become an entry point, typed `str` with a `null` default, so the model's value is lost ([Section 10](#10-what-generates-but-is-not-carried-through)).
 
 ### True Static Expressions
 
@@ -713,9 +713,9 @@ A part usage typed by two definitions where neither specializes the other, and b
 - A redefinition that gives no multiplicity (`part :>> servers;` over `servers : Server[2]`) expands to one unindexed occurrence, and an `ordered` flag on the redefined part is dropped. The language gives the redefinition the inherited `[2]`. Cases `g1__redefinition_drops_ordered_bounds`, `part-multiplicity__redefinition_drops_bounds__expanded_part_usage`; control `part-multiplicity__exact_redefinition__expanded_part_usage`. Restate the multiplicity on the redefinition. RG1-1.
 - When a multiplicity bound reads a `default` attribute, a specializing definition's override of that default is used, but a part usage's override is ignored. Cases `g2__usage_override_of_referenced_bound` (ignored), `g2__definition_override_of_referenced_bound` (used). Override the default in a specializing definition. RG1-2.
 
-### Formal redefinition order (pending)
+### Formal redefinition order
 
-How a skipped formal is diagnosed when a calc usage redefines formals out of order is backlog item `POSITIONAL-FORMAL-REDEFINITION` (`.project/backlog/BACKLOG.md`). Its hazard entry is pending until EXEC-SUBSET-CONTRACT Item 4 supplies it.
+How a skipped formal is diagnosed when a calc usage redefines formals out of order is backlog item `POSITIONAL-FORMAL-REDEFINITION` (`.project/backlog/BACKLOG.md`). Its hazard entry, supplied by EXEC-SUBSET-CONTRACT Item 4, is agentic-mbse `docs/patterns/semantic-hazards.md`, positional input binding (anchor `positional-input-binding`).
 
 ---
 

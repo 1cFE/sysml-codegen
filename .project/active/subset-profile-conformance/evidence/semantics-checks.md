@@ -49,11 +49,21 @@ Each candidate in `rg1-recommendations.md` gets a `kerml-expert` question and it
 
 Not checked for any cause: what SysIDE reports.
 
+## RG1-12: a part usage owned by an item usage (final-audit fixes, 2026-10-19)
+
+Run as the Phase 4 checks were: a general-purpose agent given agentic-mbse's `agents/kerml-expert.md` as its role, read-only tools, specification paths under agentic-mbse `docs/sysmlv2/`.
+
+**Asked.** In `part def Site { item it : Thing { part rk : Rack; } attribute y : Real = it.rk.cap * 2.0; }` with `part site : Site;` (case `candidate-es-002__part_inside_item_usage__attribute_value`): may an item usage own a part usage, and what is `rk`'s featuring type? Is `it.rk.cap` well formed, and what does it denote for each `Site`? Does anything make the model ill formed?
+
+**Answer.** Well formed. An item usage or item def owning a composite part usage is named directly: such a part specializes `Items::Item::subparts` (S:17953-17970; `Items.sysml:112, 123`); nested usages take the containing usage as context (S:3150-3153, S:16056). `rk` is composite because it is not `ref` (S:3603-3608), and its owner `it` is its featuring type (K:4465, K:5062). Item and part usages default to `1..1` (S:4497), so each `site` has one `it` with one `rk`. `it.rk.cap` is a feature chain expression (K:2437), resolved step by step from each `Site` instance (K:1699, K:1703, K:2070), giving one `cap` per site. Nothing found that makes the model ill formed. Noted gap: no rule makes `rk` a direct subpart of `site`; it is part of `site`'s structure one level down, through `it`. Not read: § 7.6.3, and the other constraints in § 7.6 and § 7.10.
+
+**Against today's generator.** It refuses a well-formed model at an internal consistency check. Not checked: what SysIDE reports beyond loading the model without error.
+
 ## Completeness (Phase 7, 2026-10-19)
 
 Every item design § F routes to a semantics check has a question and an answer above. Checked by hand against the stored answers and the record, not by a test (a test reading this file would break when the folder moves at close).
 
 - **Candidate refusals:** 11 ids carry a `candidate_refusal` loss mark across 14 stored answers (`tests/expectations/subset_profile/cases/*.json`): RG1-1 (2 cases), RG1-2, RG1-3, RG1-4, RG1-5, RG1-6 (2), RG1-7, RG1-8, RG1-9 (2), RG1-10, RG1-11. Each id has an entry in `rg1-recommendations.md` and a question and answer here. No mark names an id outside RG1-1 to RG1-11.
 - **G1 and G2:** RG1-1 and RG1-2 above, asked together with both case models (PD10).
-- **`rg1_pending` disagreements:** none. `tests/expectations/subset_profile/disagreements.json` has 136 entries, 98 `reproduced_gap` and 38 `codegen_owned`.
+- **`rg1_pending` disagreements:** one since the final-audit fixes, RG1-12 (`candidate-es-002__part_inside_item_usage__attribute_value`), with its question and answer above. `tests/expectations/subset_profile/disagreements.json` has 136 entries: 102 `reproduced_gap`, 33 `codegen_owned`, 1 `rg1_pending` (at Phase 7: 98, 38, none).
 - **O8 RG-1 candidates:** none. Phase 5 found no head site raising a plain exception, and Phase 6's one O8 conversion (`_typed_definition`, `ValueError` → `SI_TYPE_INVALID`) was refused before and after, so it was not a candidate.

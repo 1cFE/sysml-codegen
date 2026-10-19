@@ -18,6 +18,7 @@ from sysml_codegen.elaboration.diagnostics import SiteReason
 from tests.helpers.subset_profile.cases import (
     CaseAnswerError,
     CaseHome,
+    Decider,
     Disagreement,
     DisagreementKind,
     GeneratorOutcome,
@@ -29,6 +30,7 @@ from tests.helpers.subset_profile.cases import (
     load_stored_answer,
     read_disagreements,
     recorded,
+    resolutions_decided_by,
 )
 
 CASE_ID = "binding-source__expression_source__owner_instantiated"
@@ -232,7 +234,15 @@ ENTRY = {
 
 def _record(tmp_path: Path, *entries: dict) -> Path:
     path = tmp_path / "record.json"
-    path.write_text(json.dumps({"schema": "subset-disagreements/1", "entries": list(entries)}))
+    path.write_text(
+        json.dumps(
+            {
+                "schema": "subset-disagreements/2",
+                "resolutions_decided_by": "agent",
+                "entries": list(entries),
+            }
+        )
+    )
     return path
 
 
@@ -270,6 +280,34 @@ def test_an_rg1_pending_entry_loads_with_its_recommendation(tmp_path):
         _record(tmp_path, ENTRY | {"resolution": "rg1_pending", "rg1": "RG1-1"})
     )
     assert entry.rg1 == "RG1-1"
+
+
+def test_record_states_who_decided_its_resolutions(tmp_path):
+    assert resolutions_decided_by(_record(tmp_path, ENTRY)) is Decider.AGENT
+
+
+@pytest.mark.parametrize(
+    ("document", "message"),
+    [
+        (
+            {"schema": "subset-disagreements/2", "entries": []},
+            "missing \\['resolutions_decided_by'\\]",
+        ),
+        (
+            {"schema": "subset-disagreements/2", "resolutions_decided_by": "x", "entries": []},
+            "not a Decider",
+        ),
+        (
+            {"schema": "subset-disagreements/1", "resolutions_decided_by": "agent", "entries": []},
+            "unknown schema",
+        ),
+    ],
+)
+def test_record_refuses_a_malformed_document(tmp_path, document, message):
+    path = tmp_path / "record.json"
+    path.write_text(json.dumps(document))
+    with pytest.raises(CaseAnswerError, match=message):
+        read_disagreements(path)
 
 
 def test_record_refuses_a_subject_listed_twice(tmp_path):

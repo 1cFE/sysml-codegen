@@ -685,6 +685,7 @@ class _ExactElaborator:
                         ElaborationCode.SI_EDGE_DANGLING,
                         "constraint profile selected an unrecognized definition UUID "
                         f"{item.effective_definition_id}",
+                        reason=SiteReason.ELABORATION_CONSTRAINT_DEFINITION_UNINDEXED,
                     )
             result[raw_usage_id] = _ConstraintAssociation(
                 usage_id=stable_usage_ids[raw_usage_id],

@@ -115,6 +115,10 @@ class SiteReason(StrEnum):
     GENERATION_REGISTRY_CLASS_NAME_COLLISION = "generation_registry_class_name_collision"
     GENERATION_PARAM_FIELD_COLLISION = "generation_param_field_collision"
     GENERATION_PREDICATE_FUNCTION_NAME_COLLISION = "generation_predicate_function_name_collision"
+    # Two sites the corpus reaches that Item 2a first recorded as reached by no model (final
+    # audit, Blocker 1). The second refuses a valid model: a suspected defect, RG1-12.
+    ELABORATION_CONSTRAINT_DEFINITION_UNINDEXED = "elaboration_constraint_definition_unindexed"
+    GRAPH_ROOT_OCCURRENCE_PACKAGE_MISSING = "graph_root_occurrence_package_missing"
     # Re-checks behind a preflight that already refused the same condition: no valid model
     # reaches them, but each factory caller still names its own site.
     GENERATION_REGISTRY_RENDER_CLASS_NAME_COLLISION = (

@@ -1,6 +1,6 @@
 # E5 rescan at the final revisions (Item 2a P7, 2026-10-19)
 
-**Result: zero unaccounted sites and zero orphan rows in both repositories.** sysml-codegen has 494 sites, 53 more than Item 1's final scan: 50 come from the scanner port's new `unrecognized` channel, and 3 net from 2a's own code changes (6 added, 4 removed, 2 of those pairs being renames). agentic-mbse's 61 site IDs are identical to Item 1's.
+**Result: zero unaccounted sites and zero orphan rows in both repositories.** sysml-codegen has 494 sites, 53 more than Item 1's final scan: 50 come from the scanner port's new `unrecognized` channel, and 3 net from 2a's own code changes (7 added, 4 removed, 2 of those pairs being renames). agentic-mbse's 61 site IDs are identical to Item 1's.
 
 ## How it was run
 
@@ -23,11 +23,15 @@
 | P6 | `bec70d04` | rename | `elaboration/elaborate.py::_ExactElaborator._typed_definition`: `builtin::ValueError::1` → `coded::SI_TYPE_INVALID::1` | The O8 conversion: an untyped calc usage was refused `SI_INTERNAL_DEFECT` through a plain `ValueError`, and is now refused `SI_TYPE_INVALID`. Same raise, new channel and code. Role `public_capability`. |
 | P6 | `bec70d04` | rename | `elaboration/graph.py::InstanceGraph._expression_reference_count`: `builtin::TypeError::2` → `unrecognized::UnsupportedExpressionIRError::1` | The raise now uses `UnsupportedExpressionIRError` (a `TypeError` subclass) so its reason reaches `validate()`'s diagnostic. Role `public_capability`. |
 
-P2.4, P5 and the P2.2 and P2.3 steps changed `src/` without adding or removing a site: they added reasons and carriers at existing raises.
+P2.4 and P5 changed `src/` without adding or removing a site: they added reasons and carriers at existing raises. P2.2 and P2.3 did not change `src/`.
 
-Total: 441 + 50 − 2 + 2 + 1 + 1 + 0 = 494, the account's `sites:` header.
+Total, by step: 441 + 50 (port) − 1 (P1.3: one added, two removed) + 2 (P1.5) + 1 (P2.1) + 1 (P4) + 0 (P6: two renames) = 494, the account's `sites:` header at P7. The first version of this sum read 493 and the count above read "6 added"; both were corrected by the final-audit fixes. The site IDs listed were right.
 
 **Correction.** The Phase 6 notes say "three codegen site IDs were renamed". The rescan finds two: the P6 commit's account diff removes and adds exactly the four IDs in the last two rows above. The third was not a site ID change.
+
+## After P7: the final-audit fixes (2026-10-19)
+
+One site added, none removed: 495. `elaboration/graph.py::InstanceGraph._validate_occurrences::coded::SI_EDGE_DANGLING::1`, the root-package check, which used to build its diagnostic through the `_graph_failure` factory and now builds its own, with reason `graph_root_occurrence_package_missing` (RG1-12). `elaborate.py` `_index_constraint_associations` gained a reason at an existing raise. `test_site_account.py` (E1) passes at the fix commit: zero unaccounted, zero orphan. agentic-mbse's `src/` did not change.
 
 ## agentic-mbse
 

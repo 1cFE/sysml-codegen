@@ -27,6 +27,11 @@
     "codes": [
       "SI_EDGE_DANGLING"
     ],
-    "reasons": []
+    "reasons": [
+      "elaboration_constraint_definition_unindexed"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._index_constraint_associations::coded::SI_EDGE_DANGLING::6"
+    ]
   }
 }

@@ -1,0 +1,51 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /home/reid/src/subset-conformance/sysml-codegen
+configfile: pyproject.toml
+plugins: cov-7.0.0
+collected 509 items
+
+tests/conformance/subset_profile/test_site_reach.py .................... [  3%]
+...................................F.................................... [ 18%]
+........................................................................ [ 32%]
+........................................................................ [ 46%]
+........................................................................ [ 60%]
+......................................................F..F.............. [ 74%]
+.....................F.................................................. [ 88%]
+.........................................................                [100%]
+
+=================================== FAILURES ===================================
+_ test_no_case_reaches_a_site_recorded_unreached[sysml_codegen/elaboration/elaborate.py::_ExactElaborator._index_constraint_associations::coded::SI_EDGE_DANGLING::6] _
+tests/conformance/subset_profile/test_site_reach.py:35: in test_no_case_reaches_a_site_recorded_unreached
+    assert witnesses.fired_in_generator(site_id) == ()
+E   AssertionError: assert ('blocked-pre...typed_assert') == ()
+E     
+E     Left contains 2 more items, first extra item: 'blocked-predicate-unmapped-code__constraint_check_typed'
+E     Use -v to get more diff
+_ test_every_refused_case_carries_a_site_reason[blocked-predicate-unmapped-code__constraint_check_typed] _
+tests/conformance/subset_profile/test_site_reach.py:40: in test_every_refused_case_carries_a_site_reason
+    assert answer.generator.run.reasons != ()
+E   AssertionError: assert () != ()
+E    +  where () = GeneratorRun(outcome=<GeneratorOutcome.REFUSED: 'refused'>, codes=('SI_EDGE_DANGLING',), reasons=()).reasons
+E    +    where GeneratorRun(outcome=<GeneratorOutcome.REFUSED: 'refused'>, codes=('SI_EDGE_DANGLING',), reasons=()) = GeneratorAnswer(run=GeneratorRun(outcome=<GeneratorOutcome.REFUSED: 'refused'>, codes=('SI_EDGE_DANGLING',), reasons=()), witnesses=(), stubs=(), seams=()).run
+E    +      where GeneratorAnswer(run=GeneratorRun(outcome=<GeneratorOutcome.REFUSED: 'refused'>, codes=('SI_EDGE_DANGLING',), reasons=()), witnesses=(), stubs=(), seams=()) = StoredAnswer(case_id='blocked-predicate-unmapped-code__constraint_check_typed', home=<CaseHome.CODEGEN: 'codegen'>, ge...TIATED: 'owner_instantiated'>, outcome=<Outcome.REFUSED: 'refused'>, subject='fx::Site::check', line=5),))), loss=None).generator
+_ test_every_refused_case_carries_a_site_reason[blocked-predicate-unmapped-code__untyped_assert] _
+tests/conformance/subset_profile/test_site_reach.py:40: in test_every_refused_case_carries_a_site_reason
+    assert answer.generator.run.reasons != ()
+E   AssertionError: assert () != ()
+E    +  where () = GeneratorRun(outcome=<GeneratorOutcome.REFUSED: 'refused'>, codes=('SI_EDGE_DANGLING',), reasons=()).reasons
+E    +    where GeneratorRun(outcome=<GeneratorOutcome.REFUSED: 'refused'>, codes=('SI_EDGE_DANGLING',), reasons=()) = GeneratorAnswer(run=GeneratorRun(outcome=<GeneratorOutcome.REFUSED: 'refused'>, codes=('SI_EDGE_DANGLING',), reasons=()), witnesses=(), stubs=(), seams=()).run
+E    +      where GeneratorAnswer(run=GeneratorRun(outcome=<GeneratorOutcome.REFUSED: 'refused'>, codes=('SI_EDGE_DANGLING',), reasons=()), witnesses=(), stubs=(), seams=()) = StoredAnswer(case_id='blocked-predicate-unmapped-code__untyped_assert', home=<CaseHome.CODEGEN: 'codegen'>, generator=...NTIATED: 'owner_instantiated'>, outcome=<Outcome.REFUSED: 'refused'>, subject='fx::Site::bare', line=5),))), loss=None).generator
+_ test_every_refused_case_carries_a_site_reason[candidate-es-002__part_inside_item_usage__attribute_value] _
+tests/conformance/subset_profile/test_site_reach.py:40: in test_every_refused_case_carries_a_site_reason
+    assert answer.generator.run.reasons != ()
+E   AssertionError: assert () != ()
+E    +  where () = GeneratorRun(outcome=<GeneratorOutcome.REFUSED: 'refused'>, codes=('SI_EDGE_DANGLING',), reasons=()).reasons
+E    +    where GeneratorRun(outcome=<GeneratorOutcome.REFUSED: 'refused'>, codes=('SI_EDGE_DANGLING',), reasons=()) = GeneratorAnswer(run=GeneratorRun(outcome=<GeneratorOutcome.REFUSED: 'refused'>, codes=('SI_EDGE_DANGLING',), reasons=()), witnesses=(), stubs=(), seams=()).run
+E    +      where GeneratorAnswer(run=GeneratorRun(outcome=<GeneratorOutcome.REFUSED: 'refused'>, codes=('SI_EDGE_DANGLING',), reasons=()), witnesses=(), stubs=(), seams=()) = StoredAnswer(case_id='candidate-es-002__part_inside_item_usage__attribute_value', home=<CaseHome.CODEGEN: 'codegen'>, ...a part usage nested in an item usage'), screen=ScreenAnswer(verdict=<Verdict.CLEAR: 'clear'>, findings=())), loss=None).generator
+=========================== short test summary info ============================
+FAILED tests/conformance/subset_profile/test_site_reach.py::test_no_case_reaches_a_site_recorded_unreached[sysml_codegen/elaboration/elaborate.py::_ExactElaborator._index_constraint_associations::coded::SI_EDGE_DANGLING::6]
+FAILED tests/conformance/subset_profile/test_site_reach.py::test_every_refused_case_carries_a_site_reason[blocked-predicate-unmapped-code__constraint_check_typed]
+FAILED tests/conformance/subset_profile/test_site_reach.py::test_every_refused_case_carries_a_site_reason[blocked-predicate-unmapped-code__untyped_assert]
+FAILED tests/conformance/subset_profile/test_site_reach.py::test_every_refused_case_carries_a_site_reason[candidate-es-002__part_inside_item_usage__attribute_value]
+================== 4 failed, 505 passed in 535.40s (0:08:55) ===================

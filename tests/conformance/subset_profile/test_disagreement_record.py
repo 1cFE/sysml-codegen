@@ -46,6 +46,13 @@ def test_the_record_loads():
     assert cases.read_disagreements()
 
 
+def test_the_record_says_the_agent_assigned_its_resolutions():
+    """Every entry names the owner as accountable, but the implementing agent assigned each
+    resolution (final audit, Advisory 3), so an entry is not an owner ruling. When the owner
+    ratifies the resolutions at RG-3, the record and this test change together."""
+    assert cases.resolutions_decided_by() is cases.Decider.AGENT
+
+
 def test_only_the_reader_and_this_test_name_the_record():
     naming = [
         str(path.relative_to(REPO_ROOT))

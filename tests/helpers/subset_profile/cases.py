@@ -96,6 +96,16 @@ class DisagreementKind(StrEnum):
     CODE_UNMAPPED = "code_unmapped"
 
 
+class Decider(StrEnum):
+    """Who assigned the record's resolutions. An entry's ``owner`` is who is accountable."""
+
+    #: The implementing agent assigned every resolution, by family; the owner has not ratified
+    #: them, so none is an owner ruling.
+    AGENT = "agent"
+    #: The owner ratified every resolution (RG-3).
+    OWNER = "owner"
+
+
 class Resolution(StrEnum):
     #: The generator's refusal is an output fact codegen owns; no shared rule can describe it.
     CODEGEN_OWNED = "codegen_owned"
@@ -191,6 +201,8 @@ class DisagreementEntry:
     r3_row: str | None
     #: The person accountable for the disagreement until it closes (spec § Problem's
     #: "recorded disagreement"). A work item or phase is not an owner: it ends, the entry may not.
+    #: Accountable is not decided: who assigned the resolution is the record's
+    #: ``resolutions_decided_by`` (``resolutions_decided_by()``).
     owner: str
     reason: str
     rg1: str | None
@@ -510,16 +522,31 @@ def _entry(value: Any, where: str) -> DisagreementEntry:
     )
 
 
-def read_disagreements(path: Path = DISAGREEMENTS_PATH) -> tuple[DisagreementEntry, ...]:
-    """Read the hand-edited disagreement record. Nothing writes it."""
+RECORD_SCHEMA = "subset-disagreements/2"
+
+
+def _record_document(path: Path) -> Mapping[str, Any]:
     where = str(path)
     data = _fields(
         json.loads(path.read_text(encoding="utf-8")),
         where,
-        required=frozenset({"schema", "entries"}),
+        required=frozenset({"schema", "resolutions_decided_by", "entries"}),
     )
-    if data["schema"] != "subset-disagreements/1":
+    if data["schema"] != RECORD_SCHEMA:
         raise CaseAnswerError(f"{where}.schema: unknown schema {data['schema']!r}")
+    _member(Decider, data["resolutions_decided_by"], f"{where}.resolutions_decided_by")
+    return data
+
+
+def resolutions_decided_by(path: Path = DISAGREEMENTS_PATH) -> Decider:
+    """Who assigned the record's resolutions, as the record states it."""
+    return Decider(_record_document(path)["resolutions_decided_by"])
+
+
+def read_disagreements(path: Path = DISAGREEMENTS_PATH) -> tuple[DisagreementEntry, ...]:
+    """Read the hand-edited disagreement record. Nothing writes it."""
+    where = str(path)
+    data = _record_document(path)
     entries = tuple(
         _entry(item, f"{where}.entries[{i}]")
         for i, item in enumerate(_list(data["entries"], f"{where}.entries"))

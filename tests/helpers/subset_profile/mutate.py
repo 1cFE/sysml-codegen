@@ -252,6 +252,22 @@ def _free_tool_id() -> int:
     raise MutationError("every sys.monitoring tool id is in use")
 
 
+@functools.cache
+def _recordable_lines(target: Target) -> range:
+    """The source lines of the target's statement, refused if a line event cannot isolate it.
+
+    Cached, because a recording over every site in every case would otherwise parse each
+    module once per site per case; the source does not change during a run.
+    """
+    owner, stmt = _statement(target)
+    if any(s is not stmt and s.lineno == stmt.lineno for _, s in _statements(owner)):
+        raise MutationError(
+            f"{target.function}, line {target.line}: its statement shares its first line "
+            "with another"
+        )
+    return range(stmt.lineno, (stmt.end_lineno or stmt.lineno) + 1)
+
+
 @contextmanager
 def recording_fired(targets: Mapping[str, Target]) -> Iterator[set[str]]:
     """Record, into the yielded set, the key of each target whose statement runs in the block.
@@ -261,13 +277,11 @@ def recording_fired(targets: Mapping[str, Target]) -> Iterator[set[str]]:
     """
     watched: dict[CodeType, dict[int, set[str]]] = {}
     for key, target in targets.items():
-        owner, stmt = _statement(target)
-        if any(s is not stmt and s.lineno == stmt.lineno for _, s in _statements(owner)):
-            raise MutationError(f"{key}: its statement shares its first line with another")
+        statement_lines = _recordable_lines(target)
         function = _live_function(target.module, target.function)
         for code in _code_tree(function.__code__):
             lines = watched.setdefault(code, {})
-            for line in range(stmt.lineno, (stmt.end_lineno or stmt.lineno) + 1):
+            for line in statement_lines:
                 lines.setdefault(line, set()).add(key)
 
     fired: set[str] = set()

@@ -29,9 +29,33 @@ Examples, from `run_codegen` on the reach witnesses in `tests/conformance/subset
 
 What was checked: the public package oracle (`tests/conformance/test_public_package_oracle.py`) and the v6 recapture batch (`tests/conformance/test_v6_recapture_batch.py`) pass unchanged, so no oracle or batch text depends on these messages. No existing test asserted a full message that gained a suffix; the full licensed suite shows no new failure from the text change.
 
+## P2.4: reasons at the shared-rule sites
+
+Seven raises gained a site reason in `0a17b82b` (the shared-rule occurrence and constraint-owner sites). Each refusal now ends in the P1.3 suffix ` (reason: <id>)`. Nothing else in a message changes, and no code or outcome changes. This section was missing until the final-audit fixes (design invariant 10).
+
+| Site reason | Site | Code |
+|---|---|---|
+| `occurrence_multiplicity_nonunique` | `_multiplicity_indices`, `elaboration/occurrence.py` (nonunique) | `SI_MULTIPLICITY_UNSUPPORTED` |
+| `occurrence_multiplicity_upper_unresolved` | the same function, upper bound not a known integer | `SI_MULTIPLICITY_UNRESOLVED` |
+| `occurrence_multiplicity_negative` | the same function, negative bound | `SI_MULTIPLICITY_INVALID` |
+| `occurrence_multiplicity_lower_unresolved` | the same function, lower bound not a known integer | `SI_MULTIPLICITY_UNRESOLVED` |
+| `occurrence_multiplicity_range` | the same function, a range | `SI_MULTIPLICITY_UNSUPPORTED` |
+| `elaboration_constraint_owner_unmapped` | `_owner_kind`, `elaboration/elaborate.py` | `SI_CONSTRAINT_UNATTACHED` |
+| `elaboration_asserted_constraint_unattached` | `_halt_on_error_dispositions`, `elaboration/elaborate.py` | `SI_CONSTRAINT_UNATTACHED` |
+
+`SI_CONSTRAINT_UNATTACHED` is the code on dc3's 164 asserted constraints, so this is the change dc3 users see most. The nonunique and negative-bound raises print the suffix too, but no loadable model reaches them (SysIDE rejects both shapes first).
+
+Examples, from `sysml-codegen generate` on the cases named (paths shortened):
+
+- `SI_MULTIPLICITY_UNSUPPORTED: <model>: reference='fx::Rack::servers': range multiplicity on 'servers' is outside the supported occurrence model [root-0/model.sysml:5] (reason: occurrence_multiplicity_range)` (`part-multiplicity__range__expanded_part_usage`)
+- `SI_CONSTRAINT_UNATTACHED: fx::Eff2::f1: reference='fx::Eff2::f1': constraint fx::Eff2::f1 (2029e523-…) is asserted (definition_typed) but its owner fx::Eff2 (calc_def) provides no attachment: owner_kind_unattachable [root-0/model.sysml:6] (reason: elaboration_asserted_constraint_unattached)` (`calc-owned-assertion__asserted_constraint__calc_definition_owner`)
+- `SI_CONSTRAINT_UNATTACHED: <model>: reference='fx::Box': constraint owner does not match a supported mapped metatype: fx::Box [root-0/model.sysml:4] (reason: elaboration_constraint_owner_unmapped)` (`calc-owned-assertion__asserted_constraint__unmapped_owner_kind`)
+
+Checked at the Phase 2 gate: snapshots, oracle baseline and batch unchanged (Implementation Notes, Phase 2). The final audit's base-against-HEAD comparison counts these among the 231 messages that gained the suffix.
+
 ## P4: the manual-stub notice
 
-A successful live run now logs one WARNING per calc def output that compiles to a `MANUAL_REQUIRED` stub. Before P4 a stub was silent. The record is `ManualStubNotice` (`src/sysml_codegen/elaboration/diagnostics.py`), logged by `_announce_stubs` in `src/sysml_codegen/elaboration/elaborate.py` with `extra={"manual_stub": notice}`, right after each calc def compiles. A from-snapshot run compiles nothing and logs nothing new.
+A live run now logs one WARNING per calc def output that compiles to a `MANUAL_REQUIRED` stub. Before P4 a stub was silent. The warning is logged when the calc def compiles, before the run is known to succeed, so it also appears on runs that are refused later (the final audit counted 20 of 46 such records on refused runs). The record is `ManualStubNotice` (`src/sysml_codegen/elaboration/diagnostics.py`), logged by `_announce_stubs` in `src/sysml_codegen/elaboration/elaborate.py` with `extra={"manual_stub": notice}`, right after each calc def compiles. A from-snapshot run compiles nothing and logs nothing new.
 
 Example, from `sysml-codegen generate` on `tests/fixtures/subset_profile/calc-def-output-stub__invocation`:
 
@@ -90,3 +114,21 @@ Examples, from `sysml-codegen generate` on the cases named (paths shortened):
 - unchanged: `Code generation failed: DUPLICATE_OUTPUT_PATH: SysML names "fx::'Twice-x'" and 'fx::Twice_x' both derive modules/fx/twice_x.py. …` (`output-naming__module_path_collision`)
 
 The site account changed with this code: line numbers refreshed below each edit, three site IDs renamed as above, and the 84 tail rows given their Phase 6 verdicts. These are test expectations, not generator output. Checked at the phase gate: snapshots, oracle baseline and batch (Implementation Notes, Phase 6).
+
+## Final-audit fixes: two reasons at sites recorded as reached by no model
+
+Two raises gained a site reason (2026-10-19). Both refusals print the P1.3 suffix; nothing else in either message changes, and no code or outcome changes.
+
+| Site reason | Site | Code |
+|---|---|---|
+| `elaboration_constraint_definition_unindexed` | `_index_constraint_associations`, `elaboration/elaborate.py` | `SI_EDGE_DANGLING` |
+| `graph_root_occurrence_package_missing` | `InstanceGraph._validate_occurrences`, `elaboration/graph.py` | `SI_EDGE_DANGLING` |
+
+The second check used to build its diagnostic through the `_graph_failure` factory. It now builds its own `Diagnostic` with the same code, consumer display and detail, plus the reason, so it is a site of its own (`…::InstanceGraph._validate_occurrences::coded::SI_EDGE_DANGLING::1`); the factory's other checks are unchanged.
+
+Examples, from `sysml-codegen generate` (paths shortened):
+
+- `SI_EDGE_DANGLING: <model>: constraint profile selected an unrecognized definition UUID 88ee1ede-… (reason: elaboration_constraint_definition_unindexed)` (`blocked-predicate-unmapped-code__untyped_assert`)
+- `SI_EDGE_DANGLING: <instance-graph>: root occurrence has no package display metadata (reason: graph_root_occurrence_package_missing)` (`candidate-es-002__part_inside_item_usage__attribute_value`)
+
+The site account changed with this code: line numbers refreshed below each edit, one new row, and two rows reclassified (`site_account.csv`). These are test expectations, not generator output. Checked: the 22 v6 snapshots byte-identical to `d73a4fc5`, and `baseline.json` and `batch.json` unchanged (plan, final-audit fixes).

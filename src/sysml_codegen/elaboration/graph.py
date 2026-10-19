@@ -610,8 +610,17 @@ class InstanceGraph:
                         self._graph_failure("non-root occurrence has no parent record")
                     )
                 if not record.package_display:
+                    # Reached by a valid model: a part usage owned by an item usage becomes a
+                    # root occurrence with no package (RG1-12).
                     failures.append(
-                        self._graph_failure("root occurrence has no package display metadata")
+                        Diagnostic(
+                            code=ElaborationCode.SI_EDGE_DANGLING,
+                            consumer=None,
+                            consumer_display="<instance-graph>",
+                            param_name=None,
+                            detail="root occurrence has no package display metadata",
+                            reason=SiteReason.GRAPH_ROOT_OCCURRENCE_PACKAGE_MISSING,
+                        )
                     )
             else:
                 if record.parent_id not in self.occurrences:

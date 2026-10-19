@@ -8,9 +8,9 @@ The generator treats a String attribute value like any other attribute value, ex
 
 - **Refused:** a String bound to a calc input, in either spelling, and a String literal written in a calc usage binding. All three are refused at projection (`PROJECTION_FAILED` + `SI_RENDERING_COLLISION`).
 - **Silent loss:** a calc def input with a String default that the usage leaves unbound. It generates as a `str` entry point with a null default. The model's value never reaches the generated output.
-- **Same as a number:** everywhere else (a String on an instantiated part, on an uninstantiated template, read by another attribute), the String behaves exactly as a Real does in the same position.
+- **Same as a number, where compared:** a String on an instantiated part and a String read by another attribute behave as a Real does in the same position. A String on an uninstantiated template has no numeric control, so that position was not compared (table below).
 
-The contract's `string-value-omission` rule reports every String attribute value `omitted`. That is true, but for the "same as a number" paths it is not String-specific: an unconsumed Real value is not in the output either.
+The contract's `string-value-omission` rule reports every String attribute value `omitted`. That is true, but for the paths compared with a number it is not String-specific: an unconsumed Real value is not in the output either.
 
 ## What each path does today
 

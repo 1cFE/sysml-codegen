@@ -1,8 +1,8 @@
-# RG-1 recommendations: losses and stubs that may need to block
+# RG-1 recommendations: losses and stubs that may need to block, and a refusal that may not
 
-Written in Item 2a Phase 4 (2026-10-18). Each entry is a construct the generator accepts today while losing part of the model, or replacing part of it with a manual stub. Under RG-1 (`briefs/align.md`) only the owner may change what the generator accepts or refuses, so nothing here changes behavior. Each entry pins today's behavior in a case, gives the semantics check, and recommends. The recommendations are `[AGENT]`; none is decided.
+Written in Item 2a Phase 4 (2026-10-18); RG1-12 added by the final-audit fixes (2026-10-19). RG1-1 to RG1-11 are constructs the generator accepts today while losing part of the model, or replacing part of it with a manual stub. RG1-12 is the reverse: a valid model the generator refuses. Under RG-1 (`briefs/align.md`) only the owner may change what the generator accepts or refuses, so nothing here changes behavior. Each entry pins today's behavior in a case, gives the semantics check, and recommends. The recommendations are `[AGENT]`; none is decided.
 
-Each case named here carries a `loss` block with disposition `candidate_refusal` and this entry's id (`tests/expectations/subset_profile/cases/<case>.json`). `test_candidate_refusal_marks.py` holds that mark equal to the record's `candidate_refusal` qualification wherever a record cites the case. Only RG1-3 has a record mark. G1, G2 and the stub causes have no shared rule that isolates them, so only the case carries the mark (design D10). The semantics answers are in `evidence/semantics-checks.md`; SysIDE's own behavior was not checked for any of them.
+Each case an entry RG1-1 to RG1-11 names under **Case** or **Cases** (not its control) carries a `loss` block with disposition `candidate_refusal` and the entry's id (`tests/expectations/subset_profile/cases/<case>.json`); RG1-3's "four earlier `*__other_expression_site` cases" show the finding but carry no `loss` block. RG1-12's case is a refusal, so it carries no `loss` block; its disagreement entry is `rg1_pending` with `rg1` RG1-12. `test_candidate_refusal_marks.py` holds that mark equal to the record's `candidate_refusal` qualification wherever a record cites the case. Only RG1-3 has a record mark. G1, G2 and the stub causes have no shared rule that isolates them, so only the case carries the mark (design D10). The semantics answers are in `evidence/semantics-checks.md`; SysIDE's own behavior was not checked for any of them.
 
 How to read "recommend refuse": a refusal fails closed, so a modeller learns the construct is not supported. "Recommend keep the stub": the stub is the designed manual path, the run now announces it with a `ManualStubNotice` warning naming the cause, and the candidate mark can be withdrawn.
 
@@ -21,6 +21,7 @@ How to read "recommend refuse": a refusal fails closed, so a modeller learns the
 | RG1-9 | comparison (`>`) or `not` in a calc def output | manual stub | keep the stub |
 | RG1-10 | dependency cycle among calc def members | manual stub | refuse |
 | RG1-11 | calc def `out` attribute with no expression | manual stub | keep the stub |
+| RG1-12 | part usage owned by an item usage or item def | whole model refused at an internal graph check | accept: leave item-owned parts out of the occurrence roots |
 
 ## RG1-1
 
@@ -87,6 +88,8 @@ How to read "recommend refuse": a refusal fails closed, so a modeller learns the
 
 **Recommendation.** Keep the stub. The model's meaning is unclear, and the stub hands the decision to the person writing the implementation, with the cause named.
 
+**Tension, for the owner.** The semantics answer says the library defines no Real `%`, so the model asks for an operation the language does not define. P-0003 follows the language, which points toward refusing rather than handing an undefined operation to a stub. The recommendation keeps the stub because it fails safe and names the cause; that is a generator-side reason, not the language's.
+
 ## RG1-6
 
 **Question.** A calc def result is a Boolean or String literal (`return r : Boolean = true;`, `return r : String = "liter";`).
@@ -147,6 +150,8 @@ How to read "recommend refuse": a refusal fails closed, so a modeller learns the
 
 **Recommendation.** Refuse. There is no evaluation order, and a person writing the stub has nothing to implement that the model supports. A refusal tells the modeller the cycle is the problem.
 
+**Tension, for the owner.** The semantics answer says the construct is not ill formed: KerML bans circular references only in model-level evaluable expressions (K:6095). The reason to refuse is the generator's, that it has no evaluation order for the cycle, not the language's. Under P-0003 a refusal here would be a generator capability limit stated as such, not the language rejecting the model.
+
 ## RG1-11
 
 **Question.** A calc def has an `out` attribute with no expression (`out attribute o : Real;`).
@@ -158,3 +163,15 @@ How to read "recommend refuse": a refusal fails closed, so a modeller learns the
 **Semantics.** Well formed and unconstrained.
 
 **Recommendation.** Keep the stub. This is the designed handwritten-implementation path: the modeller declared an output and left its computation to code.
+
+## RG1-12
+
+**Question.** A part usage is owned by an item usage or an item def (`item it : Thing { part rk : Rack; }` inside `part def Site`). The generator refuses the whole model. Should it?
+
+**Case.** `candidate-es-002__part_inside_item_usage__attribute_value` (codegen home; `attribute y : Real = it.rk.cap * 2.0;`), disagreement `rg1_pending`. Probed and not packaged (`evidence/experiments/audit-fixes/probes/`): the same refusal when nothing reads `rk`, when the part is in an item def that a part def's item usage types, and when the item def is never used at all.
+
+**Today.** Refused `SI_EDGE_DANGLING`: `<instance-graph>: root occurrence has no package display metadata (reason: graph_root_occurrence_package_missing)`, with no source location. The check is graph validation's record-consistency check (`elaboration/graph.py` `_validate_occurrences`). The cause, read from the code and not confirmed by a fix: the occurrence index makes every part usage not owned by a part def or a part usage a root (`elaboration/occurrence.py:935-942`), but gives package metadata only to a root owned by a package (`occurrence.py:1021-1031`), so an item-owned part becomes a root with none. The screen reports these models clear. Item 2a recorded the check as reached by no model until the final audit found this case.
+
+**Semantics.** Well formed (`evidence/semantics-checks.md` RG1-12). The specification names this case directly: a composite part usage owned by an item usage or item def specializes `Items::Item::subparts` (S:17953-17970). `rk` is a composite feature of `it`, featured by it (K:4465, K:5062), and `it.rk.cap` denotes, for each `Site`, the `cap` of that site's own `it.rk` (K:1699, K:1703, K:2437).
+
+**Recommendation.** Accept: leave a part usage owned by an item out of the occurrence roots, as the index already leaves out item usages themselves. Refusing a whole model because an item def anywhere in it owns a part does not follow the language (P-0003), and the refusal names an internal check with no location, so a modeller cannot act on it. With the parts left out, a model that never reads them would generate, and one that reads them (`it.rk.cap`) would be expected to refuse where the generator refuses other item-usage features (the ES-002 boundary, `candidate-es-002__item_usage_feature__attribute_value`); that expectation is not checked. Supporting item-owned parts as occurrences is a separate capability. Either change alters what is accepted, so it is the owner's. Backlog: sysml-codegen `[ITEM-OWNED-PART-REFUSED]`.

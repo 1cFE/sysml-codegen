@@ -18,6 +18,11 @@
     "codes": [
       "SI_EDGE_DANGLING"
     ],
-    "reasons": []
+    "reasons": [
+      "graph_root_occurrence_package_missing"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/graph.py::InstanceGraph._validate_occurrences::coded::SI_EDGE_DANGLING::1"
+    ]
   }
 }

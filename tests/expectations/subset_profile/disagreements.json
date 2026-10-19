@@ -1,5 +1,6 @@
 {
-  "schema": "subset-disagreements/1",
+  "schema": "subset-disagreements/2",
+  "resolutions_decided_by": "agent",
   "entries": [
     {
       "subject": "case:anonymous-declaration__calc_definition",
@@ -79,7 +80,7 @@
       "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "A `Constraints::ConstraintCheck`-typed constraint: the screen refuses it as blocked_predicate; the generator fails earlier with SI_EDGE_DANGLING (constraint profile selected an unrecognized definition UUID). Both refuse; narrowing the rule would make the screen silent on a refused model, so the contract is not narrowed. The generator fails closed, so not RG-1. Mapping waits on P5's SiteReason. The case lives in codegen's home (D14), not agentic-mbse's package: the records cannot cite it for the refused pair, because a cited refused case must show the mapped code (SI_CONSTRAINT_BLOCKED) and this one does not."
+      "reason": "A `Constraints::ConstraintCheck`-typed constraint: the screen refuses it as blocked_predicate; the generator refuses SI_EDGE_DANGLING at constraint association (elaborate.py _index_constraint_associations, reason elaboration_constraint_definition_unindexed), because the shared constraint profile selects the library definition, which codegen does not index. Both refuse; narrowing the rule would make the screen silent on a refused model, so the contract is not narrowed. The generator fails closed, so not RG-1. A site reason does not map the pair, because REASON_MAPPING maps blocked_predicate to SI_CONSTRAINT_BLOCKED. The case lives in codegen's home (D14), not agentic-mbse's package: the records cannot cite it for the refused pair, because a cited refused case must show the mapped code (SI_CONSTRAINT_BLOCKED) and this one does not. Screen-side rule candidate: agentic-mbse backlog [SUBSET-PROFILE-TYPING-AND-LITERAL-CANDIDATES], routed to EXEC-SUBSET-CONTRACT Item 3."
     },
     {
       "subject": "case:blocked-predicate-unmapped-code__quantity_operands_mixed_units",
@@ -89,7 +90,7 @@
       "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "A predicate summing quantities in different units: the screen refuses it as blocked_predicate; the generator refuses SI_EDGE_DANGLING because the operand is quantity-typed (unsupported exact type ISQBase::LengthValue), not because the units differ. Not narrowed and not RG-1, for the same reasons as the ConstraintCheck case. The case lives in codegen's home (D14), not agentic-mbse's package: the records cannot cite it for the refused pair, because a cited refused case must show the mapped code (SI_CONSTRAINT_BLOCKED) and this one does not."
+      "reason": "A predicate summing quantities in different units: the screen refuses it as blocked_predicate; the generator refuses SI_EDGE_DANGLING because the operand is quantity-typed (unsupported exact type ISQBase::LengthValue), not because the units differ. Not narrowed and not RG-1, for the same reasons as the ConstraintCheck case. The case lives in codegen's home (D14), not agentic-mbse's package: the records cannot cite it for the refused pair, because a cited refused case must show the mapped code (SI_CONSTRAINT_BLOCKED) and this one does not. Screen-side rule candidate: agentic-mbse backlog [SUBSET-PROFILE-TYPING-AND-LITERAL-CANDIDATES], routed to EXEC-SUBSET-CONTRACT Item 3."
     },
     {
       "subject": "case:blocked-predicate-unmapped-code__quantity_operands_same_units",
@@ -99,7 +100,7 @@
       "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "The same-unit control for the mixed-unit sum: refused the same way, which shows the cause is the quantity-typed operand. Same decision as the mixed-unit case. The case lives in codegen's home (D14), not agentic-mbse's package: the records cannot cite it for the refused pair, because a cited refused case must show the mapped code (SI_CONSTRAINT_BLOCKED) and this one does not."
+      "reason": "The same-unit control for the mixed-unit sum: refused the same way, which shows the cause is the quantity-typed operand. Same decision as the mixed-unit case. The case lives in codegen's home (D14), not agentic-mbse's package: the records cannot cite it for the refused pair, because a cited refused case must show the mapped code (SI_CONSTRAINT_BLOCKED) and this one does not. Screen-side rule candidate: agentic-mbse backlog [SUBSET-PROFILE-TYPING-AND-LITERAL-CANDIDATES], routed to EXEC-SUBSET-CONTRACT Item 3."
     },
     {
       "subject": "case:blocked-predicate-unmapped-code__untyped_assert",
@@ -109,7 +110,7 @@
       "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "`assert constraint bare;` (an untyped asserted constraint): the screen refuses it as blocked_predicate; the generator fails SI_EDGE_DANGLING (unrecognized definition UUID). Both refuse; not narrowed and not RG-1. Mapping waits on P5's SiteReason. The case lives in codegen's home (D14), not agentic-mbse's package: the records cannot cite it for the refused pair, because a cited refused case must show the mapped code (SI_CONSTRAINT_BLOCKED) and this one does not."
+      "reason": "`assert constraint bare;` (an untyped asserted constraint): the screen refuses it as blocked_predicate; the generator refuses SI_EDGE_DANGLING at constraint association (elaborate.py _index_constraint_associations, reason elaboration_constraint_definition_unindexed), because the shared constraint profile selects a library constraint definition codegen does not index. Both refuse, with codes that do not map: REASON_MAPPING maps blocked_predicate to SI_CONSTRAINT_BLOCKED, and a site reason does not change that. Not narrowed (the screen would go silent on a refused model) and not RG-1 (the generator fails closed). The case lives in codegen's home (D14), not agentic-mbse's package: the records cannot cite it for the refused pair, because a cited refused case must show the mapped code (SI_CONSTRAINT_BLOCKED) and this one does not. Screen-side rule candidate: agentic-mbse backlog [SUBSET-PROFILE-TYPING-AND-LITERAL-CANDIDATES], routed to EXEC-SUBSET-CONTRACT Item 3."
     },
     {
       "subject": "case:candidate-ambiguous-typing__incomparable_typings__part_usage",
@@ -216,10 +217,11 @@
       "kind": "generator_refuses_screen_silent",
       "generator_codes": ["SI_EDGE_DANGLING"],
       "screen_reasons": [],
-      "resolution": "reproduced_gap",
+      "resolution": "rg1_pending",
+      "rg1": "RG1-12",
       "r3_row": "ES-002",
       "owner": "Reid Westwood",
-      "reason": "ES-002 boundary (P5): reading it.rk.cap, an attribute of a part nested in an item usage, fires the containment-anchor site (occurrence.py build_containment_address) but ends in SI_EDGE_DANGLING from graph validation (graph.py _graph_failure), so the broad shape does not even keep one code (evidence/r3-closure.md)."
+      "reason": "ES-002 boundary (P5): reading it.rk.cap, an attribute of a part nested in an item usage. Graph validation refuses SI_EDGE_DANGLING (graph.py _validate_occurrences, reason graph_root_occurrence_package_missing): codegen makes a part usage owned by an item a root occurrence (occurrence.py:935-942) but gives package metadata only to a package-owned root. The model is well formed (evidence/semantics-checks.md RG1-12), so this is a suspected generator defect, not a reproduced gap, and accepting it is the owner's RG-1 call (rg1-recommendations.md RG1-12; sysml-codegen backlog [ITEM-OWNED-PART-REFUSED]). The run also fires the ES-002 containment-anchor site (occurrence.py build_containment_address), whose refusal is caught before graph validation."
     },
     {
       "subject": "case:candidate-es-002__attribute_usage_feature__attribute_value",
@@ -326,30 +328,30 @@
       "kind": "generator_refuses_screen_silent",
       "generator_codes": ["PROJECTION_FAILED", "SI_RENDERING_COLLISION"],
       "screen_reasons": [],
-      "resolution": "codegen_owned",
+      "resolution": "reproduced_gap",
       "r3_row": "ES-010",
       "owner": "Reid Westwood",
-      "reason": "A String value bound to a calc input is refused at projection. Entry-point membership is an output fact codegen owns (ADR 0007), so no shared rule can describe it; the contract reports String values omitted. Policy is RG-2."
+      "reason": "A String value bound to a calc input is refused at projection. Entry-point membership is an output fact codegen owns (ADR 0007), so no shared rule can decide the refusal. The screen reports the String value omitted (string-value-omission/string_value, attribute_value), which is wrong on this path, because the generator refuses at projection (reason projection_default_non_numeric). Spec § R3 rows closes the ES-010 refusal side as a reproduced gap with a codegen-owned reason. Policy is RG-2."
     },
     {
       "subject": "case:candidate-es-010-refusal__string_to_calc_input__binding_value__attribute_declaration",
       "kind": "generator_refuses_screen_silent",
       "generator_codes": ["PROJECTION_FAILED", "SI_RENDERING_COLLISION"],
       "screen_reasons": [],
-      "resolution": "codegen_owned",
+      "resolution": "reproduced_gap",
       "r3_row": "ES-010",
       "owner": "Reid Westwood",
-      "reason": "The declaration spelling of the String-to-calc-input path (`attribute fuel_unit : String = \"liter\"` bound to `in u`) is refused at projection exactly as the instance-valued spelling is. Entry-point membership is an output fact codegen owns (ADR 0007), so no shared rule can describe it; the contract reports String values omitted. Policy is RG-2."
+      "reason": "The declaration spelling of the String-to-calc-input path (`attribute fuel_unit : String = \"liter\"` bound to `in u`) is refused at projection exactly as the instance-valued spelling is. Entry-point membership is an output fact codegen owns (ADR 0007), so no shared rule can decide the refusal. The screen reports the String value omitted (string-value-omission/string_value, attribute_value), which is wrong on this path, because the generator refuses at projection (reason projection_default_non_numeric). Spec § R3 rows closes the ES-010 refusal side as a reproduced gap with a codegen-owned reason. Policy is RG-2."
     },
     {
       "subject": "case:candidate-es-010-refusal__string_usage_literal__binding_value",
       "kind": "generator_refuses_screen_silent",
       "generator_codes": ["PROJECTION_FAILED", "SI_RENDERING_COLLISION"],
       "screen_reasons": [],
-      "resolution": "codegen_owned",
+      "resolution": "reproduced_gap",
       "r3_row": "ES-010",
       "owner": "Reid Westwood",
-      "reason": "ES-010 usage-literal path: a String literal written in a calc usage binding is refused at projection. Entry-point membership is an output fact codegen owns (ADR 0007), so no shared rule can describe it; the contract reports String values omitted. The library-default path generates (codegen-home control). Policy is RG-2."
+      "reason": "ES-010 usage-literal path: a String literal written in a calc usage binding is refused at projection (reason projection_default_non_numeric); the screen reports nothing on this path. Entry-point membership is an output fact codegen owns (ADR 0007), so no shared rule can decide the refusal. Spec § R3 rows closes the ES-010 refusal side as a reproduced gap with a codegen-owned reason. The library-default path generates (codegen-home control). Policy is RG-2."
     },
     {
       "subject": "case:candidate-es-011__return_result_arithmetic__attribute_value",
@@ -619,7 +621,7 @@
       "resolution": "codegen_owned",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "The generated constraint's binding names collide (CONSTRAINT_NAME_UNSAFE). Name safety is a property of codegen's output naming, which the contract does not model."
+      "reason": "The constraint def's formal is the quoted name 'max power', which sanitizes to a different public spelling. The predicate and the wrapper module render the same formal to different binding names, so constraint name-safety refuses it (CONSTRAINT_NAME_UNSAFE, kind cross_scope_binding_disagreement). It is a disagreement between two renderings of one name, not a collision between two names. Name safety of generated bindings is codegen's output fact, which the contract does not model."
     },
     {
       "subject": "fixture:elab_identity_collision_probe",
@@ -636,10 +638,10 @@
       "kind": "generator_refuses_screen_silent",
       "generator_codes": ["SYSML_NAMESPACE_NOT_DISTINGUISHABLE", "SYSML_NAMESPACE_NOT_DISTINGUISHABLE"],
       "screen_reasons": [],
-      "resolution": "codegen_owned",
+      "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "A member name shadows an inherited member, so two namespace paths cannot be told apart (SYSML_NAMESPACE_NOT_DISTINGUISHABLE). Distinguishability is codegen's naming check."
+      "reason": "An owned member shadows an inherited one with no `:>>` redefinition (`array`, `sensor`), so SysIDE reports a namespace-distinguishability violation, a language-level check. Codegen promotes it to SYSML_NAMESPACE_NOT_DISTINGUISHABLE (elaborate.py _blocking_model_validation_diagnostics, role malformed_input); it is not output naming. The refusal carries no codegen site reason. The contract does not read SysIDE validation diagnostics, so it is silent."
     },
     {
       "subject": "fixture:elab_native_plural_scope",
@@ -659,7 +661,7 @@
       "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "A feature with no typing is refused (SI_TYPE_INVALID, 0 typings). The contract has no rule for supported value types."
+      "reason": "A feature with no typing is refused (SI_TYPE_INVALID, 0 typings). The contract has no rule for supported value types. Screen-side rule candidate: agentic-mbse backlog [SUBSET-PROFILE-TYPING-AND-LITERAL-CANDIDATES], routed to EXEC-SUBSET-CONTRACT Item 3."
     },
     {
       "subject": "fixture:item4_require",
@@ -669,17 +671,17 @@
       "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "A requirement-related feature has no exact live declaration (SI_EDGE_DANGLING). No rule recognizes the construct; the SiteReason that would name it is P5's."
+      "reason": "A feature in the requirement shape (a `require constraint` reading the requirement's subject, and a requirement usage) has no exact live declaration (the message names it by UUID only; which feature was not traced): elaboration refuses SI_EDGE_DANGLING with reason elaboration_feature_declaration_unindexed (elaborate.py _feature_python_type, the site ES-011 also reaches). No rule recognizes the construct."
     },
     {
       "subject": "fixture:non_finite_literal",
       "kind": "generator_refuses_screen_silent",
       "generator_codes": ["EXTRACTION_DIAGNOSTIC_BLOCKING"],
       "screen_reasons": [],
-      "resolution": "codegen_owned",
+      "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "A non-finite numeric literal raises a blocking extraction diagnostic in codegen's extractor (EXTRACTION_DIAGNOSTIC_BLOCKING). The diagnostic is codegen's literal policy."
+      "reason": "A non-finite numeric literal (`inf`) is refused EXTRACTION_DIAGNOSTIC_BLOCKING. The blocking diagnostic is agentic-mbse's shared extraction fact (constraint_extraction.py _literal_node, graded blocking in constraint_facts.py EXTRACTION_DIAGNOSTIC_SEVERITY), which codegen relays (extraction_screen.py), not a codegen output policy. The refusal carries no codegen site reason; the diagnostic kind non_finite_literal names it. The contract reports nothing. Screen-side rule candidate: agentic-mbse backlog [SUBSET-PROFILE-TYPING-AND-LITERAL-CANDIDATES], routed to EXEC-SUBSET-CONTRACT Item 3."
     },
     {
       "subject": "fixture:occurrence_calc_domain_derivation",
@@ -719,7 +721,7 @@
       "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "A calc input typed by a user enumeration ('Wall Kind') is refused as an unsupported type (SI_TYPE_INVALID) before the self-referencing binding the screen refuses is reached. The contract has no rule for supported value types."
+      "reason": "A calc input typed by a user enumeration ('Wall Kind') is refused as an unsupported type (SI_TYPE_INVALID) before the self-referencing binding the screen refuses is reached. The contract has no rule for supported value types. Screen-side rule candidate: agentic-mbse backlog [SUBSET-PROFILE-TYPING-AND-LITERAL-CANDIDATES], routed to EXEC-SUBSET-CONTRACT Item 3."
     },
     {
       "subject": "fixture:sibling_formal_cycle",
@@ -1089,7 +1091,7 @@
       "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "A calc usage typed by a library calc def has no extracted payload (codegen extracts model calc defs only), so elaboration refuses SI_EDGE_DANGLING. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+      "reason": "A calc usage typed by a library calc def has no extracted payload (codegen extracts model calc defs only), so elaboration refuses SI_EDGE_DANGLING. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal. Screen-side rule candidate: agentic-mbse backlog [SUBSET-PROFILE-TYPING-AND-LITERAL-CANDIDATES], routed to EXEC-SUBSET-CONTRACT Item 3."
     },
     {
       "subject": "case:calc-usage-typing__untyped",
@@ -1099,7 +1101,7 @@
       "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "A calc usage with no calc def typing is refused SI_TYPE_INVALID when its calculation node is built. Before Item 2a P6 the same raise was a plain ValueError reported as SI_INTERNAL_DEFECT (evidence/changed-outputs.md). No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+      "reason": "A calc usage with no calc def typing is refused SI_TYPE_INVALID when its calculation node is built. Before Item 2a P6 the same raise was a plain ValueError reported as SI_INTERNAL_DEFECT (evidence/changed-outputs.md). No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal. Screen-side rule candidate: agentic-mbse backlog [SUBSET-PROFILE-TYPING-AND-LITERAL-CANDIDATES], routed to EXEC-SUBSET-CONTRACT Item 3."
     },
     {
       "subject": "case:calc-usage-typing__subsetting_only",
@@ -1109,7 +1111,7 @@
       "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "A calc usage that only subsets another has no calc def typing of its own (its typing is inherited, not owned), so it is refused SI_TYPE_INVALID, formerly SI_INTERNAL_DEFECT (evidence/changed-outputs.md). No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+      "reason": "A calc usage that only subsets another has no calc def typing of its own (its typing is inherited, not owned), so it is refused SI_TYPE_INVALID, formerly SI_INTERNAL_DEFECT (evidence/changed-outputs.md). No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal. Screen-side rule candidate: agentic-mbse backlog [SUBSET-PROFILE-TYPING-AND-LITERAL-CANDIDATES], routed to EXEC-SUBSET-CONTRACT Item 3."
     },
     {
       "subject": "case:constraint-typing__inherited_by_subsetting",
@@ -1119,7 +1121,7 @@
       "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "An asserted constraint that inherits its definition by subsetting: the shared constraint profile selects the inherited definition while codegen reads no owned typing, and elaboration refuses the disagreement SI_EDGE_DANGLING. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+      "reason": "An asserted constraint that inherits its definition by subsetting: the shared constraint profile selects the inherited definition while codegen reads no owned typing, and elaboration refuses the disagreement SI_EDGE_DANGLING. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal. Screen-side rule candidate: agentic-mbse backlog [SUBSET-PROFILE-TYPING-AND-LITERAL-CANDIDATES], routed to EXEC-SUBSET-CONTRACT Item 3."
     },
     {
       "subject": "case:calc-def-output__part_usage",
@@ -1139,7 +1141,7 @@
       "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "An untyped constraint usage binding an input has no definition to take the formal from, so elaboration refuses SI_EDGE_DANGLING. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+      "reason": "An untyped constraint usage binding an input has no definition to take the formal from, so elaboration refuses SI_EDGE_DANGLING. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal. Screen-side rule candidate: agentic-mbse backlog [SUBSET-PROFILE-TYPING-AND-LITERAL-CANDIDATES], routed to EXEC-SUBSET-CONTRACT Item 3."
     },
     {
       "subject": "case:feature-type__subsetting_without_typing",
@@ -1149,7 +1151,7 @@
       "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "An attribute typed only through subsetting has no owned feature typing, so elaboration refuses SI_EDGE_DANGLING when it is read in an expression. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+      "reason": "An attribute typed only through subsetting has no owned feature typing, so elaboration refuses SI_EDGE_DANGLING when it is read in an expression. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal. Screen-side rule candidate: agentic-mbse backlog [SUBSET-PROFILE-TYPING-AND-LITERAL-CANDIDATES], routed to EXEC-SUBSET-CONTRACT Item 3."
     },
     {
       "subject": "case:feature-type__untyped_attribute",
@@ -1159,7 +1161,7 @@
       "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "An attribute with no declared type gets its one typing from SysIDE, which is not a ScalarValues primitive, so elaboration refuses SI_EDGE_DANGLING when it is read in an expression. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+      "reason": "An attribute with no declared type gets its one typing from SysIDE, which is not a ScalarValues primitive, so elaboration refuses SI_EDGE_DANGLING when it is read in an expression. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal. Screen-side rule candidate: agentic-mbse backlog [SUBSET-PROFILE-TYPING-AND-LITERAL-CANDIDATES], routed to EXEC-SUBSET-CONTRACT Item 3."
     },
     {
       "subject": "case:feature-type__quantity_value",
@@ -1169,7 +1171,7 @@
       "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "A quantity-typed attribute read in a computed expression has no ScalarValues primitive type, so elaboration refuses SI_EDGE_DANGLING. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+      "reason": "A quantity-typed attribute read in a computed expression has no ScalarValues primitive type, so elaboration refuses SI_EDGE_DANGLING. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal. Screen-side rule candidate: agentic-mbse backlog [SUBSET-PROFILE-TYPING-AND-LITERAL-CANDIDATES], routed to EXEC-SUBSET-CONTRACT Item 3."
     },
     {
       "subject": "case:calc-usage-binding__undeclared_input",
@@ -1229,7 +1231,7 @@
       "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "A calc input bound to `null` is a literal binding with no value, so elaboration refuses SI_EDGE_DANGLING at wiring. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+      "reason": "A calc input bound to `null` is a literal binding with no value, so elaboration refuses SI_EDGE_DANGLING at wiring. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal. Screen-side rule candidate: agentic-mbse backlog [SUBSET-PROFILE-TYPING-AND-LITERAL-CANDIDATES], routed to EXEC-SUBSET-CONTRACT Item 3."
     },
     {
       "subject": "case:literal-binding__unbounded",
@@ -1239,7 +1241,7 @@
       "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "A calc input bound to `*` is a literal binding with no value codegen reads, so elaboration refuses SI_EDGE_DANGLING at wiring. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+      "reason": "A calc input bound to `*` is a literal binding with no value codegen reads, so elaboration refuses SI_EDGE_DANGLING at wiring. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal. Screen-side rule candidate: agentic-mbse backlog [SUBSET-PROFILE-TYPING-AND-LITERAL-CANDIDATES], routed to EXEC-SUBSET-CONTRACT Item 3."
     },
     {
       "subject": "case:multiple-redefinition__unrelated_roots",
@@ -1289,7 +1291,7 @@
       "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "A part usage typed by two unrelated part definitions has no one most-specific type, so the occurrence index refuses SI_REDEFINITION_INVALID. The screen's verdict is incomplete with no refused finding. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+      "reason": "A part usage typed by two unrelated part definitions has no one most-specific type, so the occurrence index refuses SI_REDEFINITION_INVALID. The screen's verdict is incomplete with no refused finding. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal. Screen-side rule candidate: agentic-mbse backlog [SUBSET-PROFILE-TYPING-AND-LITERAL-CANDIDATES], routed to EXEC-SUBSET-CONTRACT Item 3."
     },
     {
       "subject": "case:calc-def-reference__package_attribute",
@@ -1319,7 +1321,7 @@
       "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "A calc def parameter with no typing is refused SI_TYPE_INVALID at extraction. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+      "reason": "A calc def parameter with no typing is refused SI_TYPE_INVALID at extraction. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal. Screen-side rule candidate: agentic-mbse backlog [SUBSET-PROFILE-TYPING-AND-LITERAL-CANDIDATES], routed to EXEC-SUBSET-CONTRACT Item 3."
     },
     {
       "subject": "case:calc-def-parameter__quantity_typed",
@@ -1329,7 +1331,7 @@
       "resolution": "reproduced_gap",
       "r3_row": null,
       "owner": "Reid Westwood",
-      "reason": "A calc def parameter typed by a quantity rather than a ScalarValues primitive is refused SI_TYPE_INVALID at extraction. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal."
+      "reason": "A calc def parameter typed by a quantity rather than a ScalarValues primitive is refused SI_TYPE_INVALID at extraction. No shared rule or R3 row names this shape, and Item 2a attempted none (a tail site, plan Phase 6), so the contract is silent and the case pins today's refusal. Screen-side rule candidate: agentic-mbse backlog [SUBSET-PROFILE-TYPING-AND-LITERAL-CANDIDATES], routed to EXEC-SUBSET-CONTRACT Item 3."
     },
     {
       "subject": "case:candidate-expression-depth__attribute_value",

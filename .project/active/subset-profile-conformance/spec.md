@@ -1,6 +1,6 @@
 # Spec: Independent conformance corpus and per-site codes (EXEC-SUBSET-CONTRACT Item 2a)
 
-**Status:** Implemented; final audit Needs Work (2026-10-19, `audit.md`): C4, E3 and E4 open on two record Blockers. Owner gates RG-1, RG-2 and RG-3 pending.
+**Status:** Implemented; final audit Needs Work (2026-10-19, `audit.md`): C4, E3 and E4 open on two record Blockers, fixed 2026-10-19 (plan § Final-audit fixes) and awaiting re-audit. Owner gates RG-1, RG-2 and RG-3 pending.
 **Owner:** Reid Westwood
 **Created:** 2026-10-18
 **Complexity:** HIGH
