@@ -136,3 +136,10 @@ Gate: BLOCKED (audit-F1; design_review-F1 carried, owner); DISPOSED pending (aud
 - audit-F2: guard sentence now true (audit-F1 fixed). Remaining: the interim reason line names "plan Phase 10", and CLAUDE.md's `check` line lists exit 0 without the interim limit. Disposition: Phase 10 lands before merge (merge is the owner's, RG-3), and Phase 10 rewrites the reason line and CLAUDE.md's `check` line. If the owner chooses to merge before Phase 10, fix both first.
 - design_review-F1 / F2: still open with the owner (readiness rule, RG-2).
 Gate: BLOCKED only on design_review-F1 (owner).
+
+## Phase 10 dispositions — 2026-10-20 — implementer (rev 3c3b9062)
+- design_review-F1: CLOSED. No readiness claim exists, so nothing can over-claim the library-default String loss or settle RG-2 by how "ready" is defined. `check` exits 0 when `generate` would build and 1 when it would refuse (`cmd_check`, `cli/__init__.py:123`); the screen never changes an exit code. The loss stays filed under RG-2 (2a `rg2-string-policy.md`), and `check` has no special case for it. Authority: owner-ratified `briefs/align.md` Q1 (the generator's route alone decides); epic Item 2b Success Criteria ("check and generate fail at the same preparation seam"). Proof: `tests/conformance/subset_profile/test_report_form.py::test_check_gives_generate_s_answer_and_report` (246 cases: equal exit codes, equal to the stored generator outcome, no line calling a model ready or clean).
+- design_review-F2: CLOSED with F1. With no readiness rule, `check` takes no position on whether omissions or exclusions block (epic decision 2 stays the owner's). Omitted and excluded findings are shown as information, per rule, as L6 shows them as warnings (`spec.md:127`).
+- audit-F2: CLOSED. The interim reason line ("awaiting the owner's decision (plan Phase 10)") is gone with the readiness line. CLAUDE.md's `check` line and `docs/architecture/reference/02-orchestration.md` now state the exit codes as `generate`'s answer.
+Not checked: the epic file's own wording about readiness was not edited (outside this item's folder).
+Gate: CLEAR.
