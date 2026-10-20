@@ -4,7 +4,7 @@
 
 ## Active Work
 
-EXEC-SUBSET-CONTRACT Item 2b (`subset-profile-screen`, epic in agentic-mbse), live half: Phases 0-9 implemented and audited, Certify (2026-10-20, `.project/active/subset-profile-screen/audit.md`), branch `subset-profile-screen`. `sysml-codegen check` ships; `generate` refuses before writing and prints the same readiness report. Phase 10 (the readiness rule, D8) waits on the owner: whether omitted values block READY, and RG-2 for the unbound String library default. Until then no model reports READY. Snapshot carriage of the screen was split out as backlog `[SUBSET-SCREEN-SNAPSHOT-CARRIAGE]`. At close, update the agentic-mbse epic's Item 2b to match the split.
+EXEC-SUBSET-CONTRACT Item 2b (`subset-profile-screen`, epic in agentic-mbse), live half: Phases 0-9 implemented and audited, Certify (2026-10-20, `.project/active/subset-profile-screen/audit.md`); Phase 10 done 2026-10-20 (no readiness rule), not yet audited. Branch `subset-profile-screen`. `sysml-codegen check` gives `generate`'s answer without writing (exit 0 builds, 1 refuses) and prints the same report; the screen's findings are information and never change an exit code. The unbound String library default stays under RG-2. Snapshot carriage of the screen was split out as backlog `[SUBSET-SCREEN-SNAPSHOT-CARRIAGE]`. At close, update the agentic-mbse epic's Item 2b to match the split.
 
 The backlog holds separately scoped capabilities, diagnostics, model work, and assurance limits.
 
