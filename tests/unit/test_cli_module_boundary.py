@@ -58,3 +58,30 @@ def test_emit_holds_every_destination_writer():
     for name, functions in defined.items():
         if name != "emit.py":
             assert not writers & functions, (name, writers & functions)
+
+
+def test_the_screen_imports_no_cli_module_at_run_time():
+    """``subset_screen.py`` may name ``cli.prepare`` for type checking only (Invariant 1).
+
+    Importing any ``sysml_codegen.cli`` module runs the package, which imports ``emit``.
+    """
+    tree = ast.parse((CLI.parent / "subset_screen.py").read_text(encoding="utf-8"))
+    type_only = {
+        id(node)
+        for block in ast.walk(tree)
+        if isinstance(block, ast.If)
+        and isinstance(block.test, ast.Name)
+        and block.test.id == "TYPE_CHECKING"
+        for node in ast.walk(block)
+    }
+    runtime = {
+        name
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.Import, ast.ImportFrom)) and id(node) not in type_only
+        for name in (
+            [alias.name for alias in node.names]
+            if isinstance(node, ast.Import)
+            else [node.module or ""]
+        )
+    }
+    assert not {name for name in runtime if name.startswith("sysml_codegen.cli")}, runtime

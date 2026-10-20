@@ -1,6 +1,6 @@
 # Implementation Plan: Read-only readiness check, live half (EXEC-SUBSET-CONTRACT Item 2b)
 
-**Status:** In Progress (Phases 0-5 done)
+**Status:** In Progress (Phases 0-6 done)
 **Created:** 2026-10-20
 **Last Updated:** 2026-10-20
 **Branch / base:** sysml-codegen `subset-profile-screen` at `cbbc1100` (design approved); agentic-mbse sibling `/home/reid/src/subset-conformance/agentic-mbse` at `e268357f`, which this plan does not edit (design D12).
@@ -377,15 +377,15 @@ def test_screen_failure_is_not_assessed(monkeypatch, target): ...
 
 See `design.md` D7, D10, D17, Component Overview (`subset_screen.py`, `subset_profile_adapter.py`), Implementation Notes ("Skew tests", "Location mapping").
 
-- [ ] `subset_screen.py` (new): `ScreenAssessed`, `ScreenNotAssessed` with its five causes, `assess_screen`. Mapping and rendering happen inside its catch-all; unmapped paths keep their raw string.
-- [ ] `subset_profile_adapter.py`: the three new fields; docstring rewritten to D10.
-- [ ] `tests/conformance/subset_profile/test_reason_mapping.py`: replace `test_nothing_in_src_imports_the_adapter` with the D10 boundary test (only `subset_screen.py` imports the adapter at run time, only inside `assess_screen`).
-- [ ] Tests for each not-assessed cause, including a parse-error source and a snapshot source; a refused finding mapped to `NO_REFUSAL` makes the whole screen not assessed, naming the finding.
+- [x] `subset_screen.py` (new): `ScreenAssessed`, `ScreenNotAssessed` with its five causes, `assess_screen`. Mapping and rendering happen inside its catch-all; unmapped paths keep their raw string.
+- [x] `subset_profile_adapter.py`: the three new fields; docstring rewritten to D10.
+- [x] `tests/conformance/subset_profile/test_reason_mapping.py`: replace `test_nothing_in_src_imports_the_adapter` with the D10 boundary test (only `subset_screen.py` imports the adapter at run time, only inside `assess_screen`).
+- [x] Tests for each not-assessed cause, including a parse-error source and a snapshot source; a refused finding mapped to `NO_REFUSAL` makes the whole screen not assessed, naming the finding.
 
 ### Validation
 
-- [ ] New unit tests pass; the boundary test passes; `test_tripwire.py` unchanged and passing.
-- [ ] Phase exit check (no byte-identity change expected; run it anyway).
+- [x] New unit tests pass; the boundary test passes; `test_tripwire.py` unchanged and passing.
+- [x] Phase exit check (no byte-identity change expected; run it anyway).
 
 **What we know after this phase:** the screen can be called on the shared load and cannot raise.
 
@@ -735,6 +735,37 @@ See `design.md#potential-risks` for the full table. Phase-specific mitigations:
   - It is allowed by name in the test with that reason. This changes nothing about what `generate` accepts or refuses. Invariant 4's text should name it when the design is next revised.
 
 ### Phase 6 Completion
+**Completed:** 2026-10-20. `assess_screen(loaded)` runs the screen on the shared load and cannot raise. Nothing calls it yet, so no command's behaviour, record or package byte changed.
+
+**Changes Made:**
+- `subset_screen.py` (new):
+  - `NotAssessedCause` has five members: `PROFILE_SKEW`, `SCREEN_FAILED`, `PARSE_ERRORS`, `NOT_LOADED`, `SNAPSHOT_SOURCE`.
+  - `ScreenNotAssessed(cause, reason)` carries the reason already worded. `ScreenAssessed(profile_version, verdict, findings, unverified)` carries rendered findings and `UnverifiedEntry` rows for the checks that could not run.
+  - `assess_screen(loaded)` handles a failed load and a snapshot without running anything. Otherwise `_screen` compares agentic-mbse's `SUBSET_PROFILE_VERSION` with the pin, and only then imports the adapter, extracts, evaluates, renders and maps each file to its `root-N/` referent. Any exception becomes `SCREEN_FAILED` with the exception type and message.
+  - The module tells the source types apart through the orchestration types, so it never imports `sysml_codegen.cli` at run time; that package imports `emit`.
+- `subset_profile_adapter.py`: `SubsetDiagnostic` gains `rule_id`, `outcome` and `qualification`, which `render_finding` fills. The docstring now describes D10. `_upstream_pins.py`'s note on where the pin is read is updated to match.
+- Tests:
+  - `tests/unit/test_subset_screen.py` (no license): skew older and newer, with the adapter dropped from `sys.modules` and still absent afterwards; snapshot; the two failed-load kinds; a screen that cannot run; an unmapped path keeps its raw string.
+  - `tests/conformance/subset_profile/test_assess_screen.py` (licensed): on all 246 2a cases, `assess_screen` gives the stored verdict and the stored findings (rule, outcome, line); every file is a `root-` referent; a code is present exactly on refused findings. Also: `extract_subset_facts`, `evaluate_subset_profile` and `render_finding` each patched to raise; a refused finding mapped to `NO_REFUSAL` makes the whole screen not assessed, naming `part-multiplicity/ordered`; a real parse error.
+  - `test_reason_mapping.py`: `test_nothing_in_src_imports_the_adapter` is replaced by `test_only_the_screen_imports_the_adapter_and_only_after_the_version_check`. The only run-time importer is `subset_screen._screen` (type-checking imports aside), and its version comparison comes before the import.
+  - `tests/unit/test_cli_module_boundary.py`: `subset_screen.py` names no `sysml_codegen.cli` module outside `TYPE_CHECKING`.
+- Site account: two adapter rows' line and first evidence pointer refreshed. No site added (499).
+
+**Exit check:** licensed suite 9360 passed, 9 failed (the base 9), 9 skipped. No new failures. The missing base IDs are Phases 3 and 5's 49 and the replaced boundary test. Byte identity: 0 differences. Refusal records: 0 of 173 differ from the Phase 4 file. 2a harness 4895 passed, `test_tripwire.py` included and unchanged. mypy clean (90 files), ruff `src/` clean, ruff `src/ tests/` 94. agentic-mbse clean.
+
+**Deviations:**
+- The adapter import sits in `_screen`, a helper `assess_screen` calls inside its catch-all, rather than in `assess_screen`'s own body. The boundary test names `_screen`.
+- The screen names files as SysIDE's URI path (`///home/...`), which is not a key of the load's referent map. `_referent` also tries the resolved path, the same fallback as the generator's `_lookup_referent` (`orchestration/elaborated_pipeline.py`). Without it, no file would have been mapped.
+
+**Execution lane (Phase 9):** not set up. It is not cheap, and no doc or script says how to build it. `CODEGEN_EXECUTION_PROVENANCE` must name a JSON manifest, which `tests/execution/environment_pins.py` (`load_execution_provenance`) checks. It needs:
+  - `schema_version`, an `artifact_root` directory, and `python.executable` and `python.version`.
+  - Four `roots`, each with a full commit SHA, the SHA-256 of an artifact file under `artifact_root`, and a source directory:
+    - `codegen_source`: a source archive, and a directory holding `sysml_codegen/`.
+    - `agentic_install`: a wheel, and a directory holding `agentic_mbse/`.
+    - `teax_source`: a source archive.
+    - `teax_simkit`: a directory holding `simkit/` inside the TEAx source, with the same commit and archive hash as TEAx.
+  - `TEAX_SIMKIT_PATH` must also be set, and the README says TEAx must have evidence schema v3 numeric publication.
+  - A TEAx checkout exists at `~/src/teax`. I did not check its version or build any of these artifacts.
 
 ### Phase 7 Completion
 

@@ -8,9 +8,11 @@ holds the two things codegen owns about them:
 - ``render_finding``: one finding as a ``SubsetDiagnostic``, with that code, the rule
   record's remedy and the finding's location.
 
-Nothing on the ``generate`` route imports this module in 2a; Item 2b decides how a
-``SubsetDiagnostic`` joins a refusal. Importing it checks the installed screen's
-``SUBSET_PROFILE_VERSION`` against the pin in ``_upstream_pins.py`` (design D12), so a mapping
+Only ``subset_screen.assess_screen`` imports this module at run time, inside the function and
+after it has compared the installed screen's ``SUBSET_PROFILE_VERSION`` with the pin in
+``_upstream_pins.py`` (Item 2b design D10). A skewed screen is therefore reported as not
+assessed and this module is never imported against it. Importing it directly still makes the
+same comparison and raises ``ImportError`` on a mismatch (Item 2a design D12), so a mapping
 reviewed against one contract is never read against another.
 """
 
@@ -21,7 +23,13 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 
 from agentic_mbse.sysml import subset_profile
-from agentic_mbse.sysml.subset_profile import ContextId, Outcome, RuleRecords, SubsetFinding
+from agentic_mbse.sysml.subset_profile import (
+    ContextId,
+    Outcome,
+    Qualification,
+    RuleRecords,
+    SubsetFinding,
+)
 
 from sysml_codegen._upstream_pins import SUBSET_PROFILE_VERSION
 from sysml_codegen.elaboration.diagnostics import ElaborationCode
@@ -103,6 +111,9 @@ class SubsetDiagnostic:
 
     #: The code the generator refuses this finding with; ``None`` unless the finding is refused.
     code: Code | None
+    rule_id: str
+    outcome: Outcome
+    qualification: Qualification
     subset_reason: str
     remedy: str
     #: The finding's subject; ``None`` for an anonymous element, which its location identifies.
@@ -124,6 +135,9 @@ def render_finding(finding: SubsetFinding, rules: RuleRecords) -> SubsetDiagnost
         code = mapping.code_for(finding.context_id)
     return SubsetDiagnostic(
         code=code,
+        rule_id=finding.rule_id,
+        outcome=finding.outcome,
+        qualification=finding.qualification,
         subset_reason=finding.reason,
         remedy=rules.rule(finding.rule_id).remedy,
         subject=finding.subject.qualified_name,

@@ -183,12 +183,47 @@ def _imported_modules(tree: ast.Module) -> set[str]:
     return modules
 
 
-def test_nothing_in_src_imports_the_adapter():
-    """The adapter is off the generate route in 2a: no module under src/ imports it."""
-    importers = [
-        str(path.relative_to(REPO_ROOT))
+def _runtime_adapter_imports(tree: ast.Module) -> list[str]:
+    """The enclosing function of each run-time import of the adapter (``<module>`` at top level).
+
+    An import under ``if TYPE_CHECKING:`` is a type-checking import and is not counted.
+    """
+    found: list[str] = []
+
+    def visit(node: ast.AST, function: str) -> None:
+        if isinstance(node, ast.If) and isinstance(node.test, ast.Name):
+            if node.test.id == "TYPE_CHECKING":
+                for child in node.orelse:
+                    visit(child, function)
+                return
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            function = node.name
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            wrapper = ast.Module(body=[node], type_ignores=[])
+            if "sysml_codegen.subset_profile_adapter" in _imported_modules(wrapper):
+                found.append(function)
+        for child in ast.iter_child_nodes(node):
+            visit(child, function)
+
+    visit(tree, "<module>")
+    return found
+
+
+def test_only_the_screen_imports_the_adapter_and_only_after_the_version_check():
+    """Item 2b design D10: ``subset_screen._screen`` is the one run-time importer.
+
+    ``_screen`` compares the installed ``SUBSET_PROFILE_VERSION`` with the pin before its
+    import, and ``assess_screen`` calls it under its catch-all, so a skewed or failing
+    import is reported as "not assessed", never raised.
+    """
+    importers = {
+        str(path.relative_to(REPO_ROOT)): functions
         for path in sorted((REPO_ROOT / "src" / "sysml_codegen").rglob("*.py"))
-        if "sysml_codegen.subset_profile_adapter"
-        in _imported_modules(ast.parse(path.read_text(encoding="utf-8")))
-    ]
-    assert importers == []
+        if (functions := _runtime_adapter_imports(ast.parse(path.read_text(encoding="utf-8"))))
+    }
+    assert importers == {"src/sysml_codegen/subset_screen.py": ["_screen"]}
+    source = (REPO_ROOT / "src/sysml_codegen/subset_screen.py").read_text(encoding="utf-8")
+    body = source[source.index("def _screen(") :]
+    assert body.index("installed != SUBSET_PROFILE_VERSION") < body.index(
+        "from sysml_codegen.subset_profile_adapter import"
+    )
