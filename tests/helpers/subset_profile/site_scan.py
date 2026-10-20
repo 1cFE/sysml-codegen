@@ -587,3 +587,219 @@ def load_account(path: Path = ACCOUNT) -> SiteAccount:
 
 def iter_unrecognized(found: Scan) -> Iterator[Site]:
     return (s for s in found.codegen() if s.channel == UNRECOGNIZED)
+
+
+# ---- reachability (Item 2b D14) -----------------------------------------------------------------
+
+#: A function in ``src/sysml_codegen/``, named as a ``Site`` names its enclosing function:
+#: (``Site.file``, ``Site.function``).
+FunctionKey = tuple[str, str]
+
+_AnyFunction = ast.FunctionDef | ast.AsyncFunctionDef
+#: The methods instantiating a class runs.
+_CONSTRUCTION = frozenset({"__new__", "__init__", "__post_init__"})
+_PROPERTY_DECORATORS = frozenset({"property", "cached_property"})
+
+
+@dataclass(frozen=True)
+class _Body:
+    """What one function's body can run, by name (see ``_body_names``)."""
+
+    #: Names called or loaded bare, import-alias resolved.
+    bare: frozenset[str]
+    #: Attribute names called, dunders excepted.
+    attribute_calls: frozenset[str]
+    #: Attribute names loaded without a call.
+    attribute_loads: frozenset[str]
+
+
+@dataclass
+class _CallIndex:
+    """What the closure follows, read once from every module."""
+
+    #: Module-level function name → every such function.
+    module_functions: dict[str, set[FunctionKey]] = field(default_factory=dict)
+    #: Method name → every method of that name, in any class.
+    methods: dict[str, set[FunctionKey]] = field(default_factory=dict)
+    #: Enclosing function → its nested functions by name.
+    nested: dict[FunctionKey, dict[str, FunctionKey]] = field(default_factory=dict)
+    #: Class name → its construction methods.
+    constructors: dict[str, set[FunctionKey]] = field(default_factory=dict)
+    #: Class name → the bare names of its bases.
+    bases: dict[str, set[str]] = field(default_factory=dict)
+    #: Names of properties, which run on attribute access rather than on a call.
+    properties: set[str] = field(default_factory=set)
+    #: A module-level ``alias = name``, which other modules import under ``alias``.
+    assigned_aliases: dict[str, str] = field(default_factory=dict)
+    bodies: dict[FunctionKey, _Body] = field(default_factory=dict)
+
+
+def _bare_name(node: ast.expr) -> str | None:
+    target = node.func if isinstance(node, ast.Call) else node
+    if isinstance(target, ast.Name):
+        return target.id
+    if isinstance(target, ast.Attribute):
+        return target.attr
+    return None
+
+
+def _import_aliases(tree: ast.Module) -> dict[str, str]:
+    """``from x import name as alias`` anywhere in the module: alias → name."""
+    return {
+        alias.asname: alias.name
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom)
+        for alias in node.names
+        if alias.asname is not None
+    }
+
+
+def _without_annotations(fn: _AnyFunction) -> Iterator[ast.AST]:
+    """The nodes of a function's decorators, defaults and body, never its annotations."""
+    annotations: set[int] = set()
+    for node in ast.walk(fn):
+        if isinstance(node, ast.arg) and node.annotation is not None:
+            annotations.add(id(node.annotation))
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.returns:
+            annotations.add(id(node.returns))
+        elif isinstance(node, ast.AnnAssign):
+            annotations.add(id(node.annotation))
+    pending: list[ast.AST] = [fn]
+    while pending:
+        node = pending.pop()
+        if id(node) in annotations:
+            continue
+        yield node
+        pending.extend(ast.iter_child_nodes(node))
+
+
+def _body_names(fn: _AnyFunction, aliases: dict[str, str]) -> _Body:
+    """The names a function's body, nested functions included, can run.
+
+    A dunder call such as ``super().__init__`` is left to construction, which reaches the
+    construction methods of a class and its bases; a bare name loaded anywhere is followed,
+    so a function handed over as an argument is reached.
+    """
+    bare: set[str] = set()
+    attribute_calls: set[str] = set()
+    attribute_loads: set[str] = set()
+    for node in _without_annotations(fn):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+            name = node.func.attr
+            if not (name.startswith("__") and name.endswith("__")):
+                attribute_calls.add(name)
+        elif isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
+            bare.add(aliases.get(node.id, node.id))
+        elif isinstance(node, ast.Attribute) and isinstance(node.ctx, ast.Load):
+            attribute_loads.add(node.attr)
+    return _Body(frozenset(bare), frozenset(attribute_calls), frozenset(attribute_loads))
+
+
+def _index_module(rel: str, tree: ast.Module, index: _CallIndex) -> None:
+    aliases = _import_aliases(tree)
+    for st in tree.body:
+        if (
+            isinstance(st, ast.Assign)
+            and len(st.targets) == 1
+            and isinstance(st.targets[0], ast.Name)
+            and isinstance(st.value, ast.Name)
+        ):
+            index.assigned_aliases[st.targets[0].id] = st.value.id
+
+    def walk(node: ast.AST, stack: tuple[str, ...], owner: FunctionKey | str | None) -> None:
+        """``owner`` is the enclosing function's key, a class name, or ``None`` at module level."""
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                qualname = (*stack, child.name)
+                key = (rel, ".".join(qualname))
+                index.bodies[key] = _body_names(child, aliases)
+                if owner is None:
+                    index.module_functions.setdefault(child.name, set()).add(key)
+                elif isinstance(owner, str):
+                    index.methods.setdefault(child.name, set()).add(key)
+                    if child.name in _CONSTRUCTION:
+                        index.constructors.setdefault(owner, set()).add(key)
+                    if any(_bare_name(d) in _PROPERTY_DECORATORS for d in child.decorator_list):
+                        index.properties.add(child.name)
+                else:
+                    index.nested.setdefault(owner, {})[child.name] = key
+                walk(child, qualname, key)
+            elif isinstance(child, ast.ClassDef):
+                index.bases.setdefault(child.name, set()).update(
+                    name for base in child.bases if (name := _bare_name(base)) is not None
+                )
+                walk(child, (*stack, child.name), child.name)
+            else:
+                walk(child, stack, owner)
+
+    walk(tree, (), None)
+
+
+def _construction(class_name: str, index: _CallIndex) -> set[FunctionKey]:
+    """The construction methods of a class and of every base it names, by bare name."""
+    found: set[FunctionKey] = set()
+    pending, seen = [class_name], set()
+    while pending:
+        name = pending.pop()
+        if name in seen:
+            continue
+        seen.add(name)
+        found |= index.constructors.get(name, set())
+        pending.extend(index.bases.get(name, ()))
+    return found
+
+
+def _enclosing(key: FunctionKey) -> Iterator[FunctionKey]:
+    """The key itself, then each enclosing qualname, innermost first."""
+    file, function = key
+    parts = function.split(".")
+    for end in range(len(parts), 0, -1):
+        yield file, ".".join(parts[:end])
+
+
+def _callees(key: FunctionKey, index: _CallIndex) -> set[FunctionKey]:
+    body = index.bodies[key]
+    found: set[FunctionKey] = set()
+    for name in body.bare:
+        target = index.assigned_aliases.get(name, name)
+        found |= index.module_functions.get(target, set()) | _construction(target, index)
+        found |= {
+            nested[name]
+            for scope in _enclosing(key)
+            if name in (nested := index.nested.get(scope, {}))
+        }
+    for name in body.attribute_calls:
+        target = index.assigned_aliases.get(name, name)
+        found |= index.methods.get(name, set())
+        found |= index.module_functions.get(target, set()) | _construction(target, index)
+    for name in body.attribute_loads & index.properties:
+        found |= index.methods[name]
+    return found
+
+
+def call_closure(roots: Iterable[FunctionKey], codegen_src: Path = SRC) -> frozenset[FunctionKey]:
+    """Every function in ``src/sysml_codegen/`` reachable from ``roots`` by name.
+
+    Name-based and over-approximate. A bare name reaches every module-level function of that
+    name, a nested function it can see, and, for a class name, the construction methods of the
+    class and its named bases; ``x.name(...)`` also reaches every method of that name; loading
+    ``x.name`` reaches a property of that name. A module-level ``alias = name`` is followed
+    across modules. Annotations are not followed, and neither is a call made through
+    ``getattr`` or a callable stored and called under another name. Pure: reads source only.
+    """
+    index = _CallIndex()
+    for rel, tree in _sources(codegen_src, "sysml_codegen", EXCLUDE):
+        _index_module(rel, tree, index)
+
+    pending = list(roots)
+    unknown = [root for root in pending if root not in index.bodies]
+    if unknown:
+        raise KeyError(f"no such function under {codegen_src}: {unknown}")
+    reached: set[FunctionKey] = set()
+    while pending:
+        key = pending.pop()
+        if key in reached:
+            continue
+        reached.add(key)
+        pending.extend(_callees(key, index))
+    return frozenset(reached)

@@ -4,7 +4,7 @@
 
 ## Active Work
 
-EXEC-SUBSET-CONTRACT Item 2b (`subset-profile-screen`, epic in agentic-mbse): spec in progress at `.project/active/subset-profile-screen/spec.md`, branch `subset-profile-screen`.
+EXEC-SUBSET-CONTRACT Item 2b (`subset-profile-screen`, epic in agentic-mbse): implementation in progress on branch `subset-profile-screen`, plan `.project/active/subset-profile-screen/plan.md`. Phase 0 (baselines, oracles, probes) done; Phases 1-3 are the pure moves; Phase 10 (readiness rule D8) waits on the owner.
 
 The backlog holds separately scoped capabilities, diagnostics, model work, and assurance limits.
 

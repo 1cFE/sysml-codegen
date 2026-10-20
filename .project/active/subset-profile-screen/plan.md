@@ -1,6 +1,6 @@
 # Implementation Plan: Read-only readiness check, live half (EXEC-SUBSET-CONTRACT Item 2b)
 
-**Status:** Draft
+**Status:** In Progress (Phase 0 done)
 **Created:** 2026-10-20
 **Last Updated:** 2026-10-20
 **Branch / base:** sysml-codegen `subset-profile-screen` at `cbbc1100` (design approved); agentic-mbse sibling `/home/reid/src/subset-conformance/agentic-mbse` at `e268357f`, which this plan does not edit (design D12).
@@ -93,21 +93,21 @@ def test_manifest_is_stable_at_base(tmp_path):
 
 All output goes to `.project/active/subset-profile-screen/evidence/` unless a path says otherwise.
 
-- [ ] **Base suites.** Re-run the sysml-codegen licensed suite and the agentic-mbse "all extras" suite at the base with `baseline.md`'s exact commands. Record the commands, the failing test IDs and the skip IDs in `evidence/baseline.md`. Settle the 2a "10 versus 9" gap by ID (spec Criterion 12).
-- [ ] **Static checks.** Record `mypy src/` and `ruff check src/` counts (and per-file for the files Appendix A of the design touches).
-- [ ] **Execution lane baseline.** Run `tests/execution` (124 TEAx tests) with `TEAX_SIMKIT_PATH` and `CODEGEN_EXECUTION_PROVENANCE` set, so Phase 9 has something to compare against (D15). If the environment is missing, record "not run" and why.
-- [ ] **Timings.** Wall time of the licensed suite (save `--durations=50`), and `generate` time on each `catf_mfe` model (for B3).
-- [ ] **Byte-identity manifest.** Write `scripts/package_manifest.py` with `record` and `compare`. It calls `run_codegen(GenerationConfig(...))` (whose contract every phase keeps) for every 2a builds case and the 23 committed v6 snapshots, live (where source models exist) and `--from-snapshot`, with a fixed package name and output layout, and records relative path → sha256 for every file. Run it twice into different folders first; if any byte differs, find the cause (timestamps, absolute paths) and normalize only that, writing down what was normalized. Save `evidence/package-manifest-base.json`.
-- [ ] **Refusal-record oracle.** Write `scripts/refusal_records.py` with `record` and `compare`. For every refused 2a case, capture each record carrying a `refusal` extra (logger name, level, message, `extra` serialized), with tmp paths normalized. Also capture, at the base: (a) the D4 coincidence case, a case refused by the plan build, the coverage preflight or `PARAM_FIELD_COLLISION`, run against a destination containing a symlink (today: `PACKAGE_WRITE`); (b) D18's three writer failures, with one writer (`_generate_pipeline`) patched to raise `CodeGenerationError`, `OSError` and `RuntimeError` in turn. Save to `tests/expectations/subset_profile/refusal_records.json`, so later tests can read it.
-- [ ] **Churn lists.** In `evidence/churn.md`: every test import line naming a name that D1 moves (with multi-line imports in full); the four monkeypatches (`tests/unit/test_cli_generation.py:466, :507`; `tests/conformance/test_public_package_oracle.py:55`; `tests/conformance/test_public_diagnostic_totality.py:471-473`) plus any others found; every caller of `_generate_package_from_graph` (R2-4 list); every test that drives a writer directly with a graph a preflight would refuse (D14; these move to `prepare_graph` in Phase 5); every test that asserts on the count or level of log records (risk table, for Phase 8).
-- [ ] **Reachability probe (de-risk first).** Add `call_closure(roots)` to `tests/helpers/subset_profile/site_scan.py`: a name-based call closure over `src/sysml_codegen/` built on the existing `_FunctionScope`/`Site` scan. Unit-test it on a small synthetic tree. Run it from today's writer roots (`_clear_output_directory`, `_setup_output_directories`, the nine `_generate_*` writers, `_seal_package`) and join with the site account. Record which `public_capability`, `malformed_input`, `unknown` and relay sites appear. Expected: site 337, site 338 (via `generation/pipeline.py:56`, `generation/registry.py:266`, `contracts/model_contract.py:37`) and the sites behind the nine `_preflight_constraint_names` calls. Anything else: stop and surface it.
-- [ ] **D8 fact probe.** Run case `candidate-es-010-refusal__string_library_default__unbound_input` and record the entry point's `entry_type`, `python_type`, `default_value` and `unresolved_default_kind` (`resolution/models.py:80-88`). The review inferred these from code but did not run it; Phase 10's option (2) depends on the value.
+- [x] **Base suites.** Re-run the sysml-codegen licensed suite and the agentic-mbse "all extras" suite at the base with `baseline.md`'s exact commands. Record the commands, the failing test IDs and the skip IDs in `evidence/baseline.md`. Settle the 2a "10 versus 9" gap by ID (spec Criterion 12).
+- [x] **Static checks.** Record `mypy src/` and `ruff check src/` counts (and per-file for the files Appendix A of the design touches).
+- [x] **Execution lane baseline.** (recorded "not run", see notes) Run `tests/execution` (124 TEAx tests) with `TEAX_SIMKIT_PATH` and `CODEGEN_EXECUTION_PROVENANCE` set, so Phase 9 has something to compare against (D15). If the environment is missing, record "not run" and why.
+- [x] **Timings.** Wall time of the licensed suite (save `--durations=50`), and `generate` time on each `catf_mfe` model (for B3).
+- [x] **Byte-identity manifest.** Write `scripts/package_manifest.py` with `record` and `compare`. It calls `run_codegen(GenerationConfig(...))` (whose contract every phase keeps) for every 2a builds case and the 23 committed v6 snapshots, live (where source models exist) and `--from-snapshot`, with a fixed package name and output layout, and records relative path → sha256 for every file. Run it twice into different folders first; if any byte differs, find the cause (timestamps, absolute paths) and normalize only that, writing down what was normalized. Save `evidence/package-manifest-base.json`.
+- [x] **Refusal-record oracle.** Write `scripts/refusal_records.py` with `record` and `compare`. For every refused 2a case, capture each record carrying a `refusal` extra (logger name, level, message, `extra` serialized), with tmp paths normalized. Also capture, at the base: (a) the D4 coincidence case, a case refused by the plan build, the coverage preflight or `PARAM_FIELD_COLLISION`, run against a destination containing a symlink (today: `PACKAGE_WRITE`); (b) D18's three writer failures, with one writer (`_generate_pipeline`) patched to raise `CodeGenerationError`, `OSError` and `RuntimeError` in turn. Save to `tests/expectations/subset_profile/refusal_records.json`, so later tests can read it.
+- [x] **Churn lists.** In `evidence/churn.md`: every test import line naming a name that D1 moves (with multi-line imports in full); the four monkeypatches (`tests/unit/test_cli_generation.py:466, :507`; `tests/conformance/test_public_package_oracle.py:55`; `tests/conformance/test_public_diagnostic_totality.py:471-473`) plus any others found; every caller of `_generate_package_from_graph` (R2-4 list); every test that drives a writer directly with a graph a preflight would refuse (D14; these move to `prepare_graph` in Phase 5); every test that asserts on the count or level of log records (risk table, for Phase 8).
+- [x] **Reachability probe (de-risk first).** Add `call_closure(roots)` to `tests/helpers/subset_profile/site_scan.py`: a name-based call closure over `src/sysml_codegen/` built on the existing `_FunctionScope`/`Site` scan. Unit-test it on a small synthetic tree. Run it from today's writer roots (`_clear_output_directory`, `_setup_output_directories`, the nine `_generate_*` writers, `_seal_package`) and join with the site account. Record which `public_capability`, `malformed_input`, `unknown` and relay sites appear. Expected: site 337, site 338 (via `generation/pipeline.py:56`, `generation/registry.py:266`, `contracts/model_contract.py:37`) and the sites behind the nine `_preflight_constraint_names` calls. Anything else: stop and surface it.
+- [x] **D8 fact probe.** Run case `candidate-es-010-refusal__string_library_default__unbound_input` and record the entry point's `entry_type`, `python_type`, `default_value` and `unresolved_default_kind` (`resolution/models.py:80-88`). The review inferred these from code but did not run it; Phase 10's option (2) depends on the value.
 
 ### Validation
 
-- [ ] The manifest records the same bytes on two runs.
-- [ ] `refusal_records.py compare` against itself passes; the file has one entry per refused 2a case plus the four extra entries.
-- [ ] The reachability probe's result is recorded and matches the design's prediction, or the mismatch is surfaced before Phase 1.
+- [x] The manifest records the same bytes on two runs.
+- [x] `refusal_records.py compare` against itself passes; the file has one entry per refused 2a case plus the four extra entries.
+- [x] The reachability probe's result is recorded and matches the design's prediction, or the mismatch is surfaced before Phase 1.
 
 **What we know after this phase:** the exact test IDs, counts, bytes and records every later phase must keep, and whether D14 and D8 option (2) rest on true facts.
 
@@ -602,10 +602,27 @@ See `design.md#potential-risks` for the full table. Phase-specific mitigations:
 [TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 0 Completion
-**Completed:**
+**Completed:** 2026-10-20, at `556cbedf`, before any `src/` change. Full record: [evidence/baseline.md](evidence/baseline.md); churn: [evidence/churn.md](evidence/churn.md).
+
 **Actual Changes:**
+- Baselines: codegen 7170 passed, 9 failed, 9 skipped (180 s); agentic-mbse 4447 passed, 5 failed (2a's 5 IDs). Outcomes by ID, failing IDs and the 50 slowest tests are in `evidence/`. mypy `src/` clean, ruff `src/` clean, ruff `src/ tests/` 94 (same as 2a). The 2a "10 versus 9" gap is one test that now passes (`test_self_binding_guidance_contract.py::test_zero_unmarked_self_named_examples_across_all_trees`).
+- `scripts/package_manifest.py` (with `scripts/_generate_corpus.py`): 123 subjects (77 builds cases live, 23 snapshots replayed, their 23 source sets live), 3418 files, `evidence/package-manifest-base.json`. Two runs in different folders are identical with **no normalization**.
+- `scripts/refusal_records.py` and `tests/helpers/refusal_records.py`: 173 entries in `tests/expectations/subset_profile/refusal_records.json` (169 refused cases, the D4 symlinked-destination case, three D18 writer failures), one record each. Placeholders cover the output folder, the checkout and the agentic-mbse install; no record holds a code location, so moving code cannot change one.
+- `call_closure` in `tests/helpers/subset_profile/site_scan.py`, unit-tested in `tests/conformance/subset_profile/test_call_closure.py` (10 tests, no license).
+- Timings: `generate` 4.19 s on `catf_mfe_d5`, 3.84 s on `catf_mfe_gated`.
+
+**Probe results (both design premises hold):**
+- Reachability: from today's writers the covered sites are exactly account lines 337 (`_refuse_colliding_field_names`), 338 (`validate_constraint_graph_or_raise`, via `_preflight_constraint_names` and the three renderer guards) and 341 (`assert_unique_predicate_function_names`, via `_preflight_constraint_names` only). That is the design's prediction.
+- D8: the String-default case's entry point `fx__gen__t__u` is `LIBRARY_DEFAULT`, `python_type` `str`, `default_value` `None`, `unresolved_default_kind` `"literal"`. Phase 10 option (2) can use `"literal"`.
+
 **Issues:**
+- The execution lane was **not run**: it needs a `CODEGEN_EXECUTION_PROVENANCE` manifest of hashed artifact archives, which does not exist on this machine and which no script here builds. Phases 1-8 do not depend on it; Phase 9 does, so someone has to supply the manifest before then.
+- A naive name-based closure reached all of elaboration (through `super().__init__` and Jinja's `template.render()` matching a nested `render`) and missed site 337 (hidden behind `generate_all_derived_schemas_from_graph = generate_all_derived_schemas`). The closure now scopes nested functions and methods, leaves dunder calls to construction, skips annotations and follows module-level aliases (rules in its docstring and tests).
+
 **Deviations:**
+- The stencil's `test_manifest_is_stable_at_base` is not a suite test: the double run is `package_manifest.py record` then `compare` (about 15 s each), recorded above, rather than 30 s added to every suite run.
+- Churn the design did not list: a fifth monkeypatch (`tests/conformance/test_public_authority_switch.py:483`, `_check_duplicate_output_paths`), and two tests that read `cli/__init__.py` as text and would pass vacuously after a move (`test_generation_boundary.py:175-200`, `test_elaboration_import_boundaries.py:322-328`). All are in `evidence/churn.md`.
+- `scripts/refusal_records.py` finds `_generate_pipeline` in `cli` or `cli.emit` so the same script records at the base and compares after Phase 2; it is the only place that knows both homes.
 
 ### Phase 1 Completion
 
