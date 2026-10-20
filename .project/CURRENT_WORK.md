@@ -4,7 +4,7 @@
 
 ## Active Work
 
-EXEC-SUBSET-CONTRACT Item 2b (`subset-profile-screen`, epic in agentic-mbse): implementation in progress on branch `subset-profile-screen`, plan `.project/active/subset-profile-screen/plan.md`. Phases 0-3 done (baselines and probes, then the three pure moves: shared load, module split, `prepare` → `emit_package`) Phase 4 (every model refusal before the destination) Phase 5 (writers' re-checks dropped, reachability test) Phase 6 (`assess_screen`) Phase 7 (the report and interim readiness rule) Phase 8 (`generate` prints the report after the seal; `check` ships) and Phase 9 (every spec criterion proved; TEAx lane 124/124 at base and branch) done; Phase 10 (readiness rule D8) waits on the owner.
+EXEC-SUBSET-CONTRACT Item 2b (`subset-profile-screen`, epic in agentic-mbse), live half: Phases 0-9 implemented and audited, Certify (2026-10-20, `.project/active/subset-profile-screen/audit.md`), branch `subset-profile-screen`. `sysml-codegen check` ships; `generate` refuses before writing and prints the same readiness report. Phase 10 (the readiness rule, D8) waits on the owner: whether omitted values block READY, and RG-2 for the unbound String library default. Until then no model reports READY. Snapshot carriage of the screen was split out as backlog `[SUBSET-SCREEN-SNAPSHOT-CARRIAGE]`. At close, update the agentic-mbse epic's Item 2b to match the split.
 
 The backlog holds separately scoped capabilities, diagnostics, model work, and assurance limits.
 
