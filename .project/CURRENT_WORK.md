@@ -4,7 +4,7 @@
 
 ## Active Work
 
-None. EXEC-SUBSET-CONTRACT Item 2b (`subset-profile-screen`, epic in agentic-mbse) is next: `/_my_spec`, on a branch from both mains after Item 2a merges.
+EXEC-SUBSET-CONTRACT Item 2b (`subset-profile-screen`, epic in agentic-mbse): spec in progress at `.project/active/subset-profile-screen/spec.md`, branch `subset-profile-screen`.
 
 The backlog holds separately scoped capabilities, diagnostics, model work, and assurance limits.
 
