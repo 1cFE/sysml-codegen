@@ -364,9 +364,9 @@ def run_codegen(config: GenerationConfig) -> bool:
     whose receipt binds the instance graph to what it projects to. There is no
     flag, environment variable, or config field that selects an implementation.
 
-    The route is ``load_source``, then ``prepare`` (read-only), then ``emit_package``
-    (the only step that writes). A refusal from either half is logged once, as one
-    record carrying its ``Refusal``.
+    The route is ``load_source``, then ``prepare`` (read-only), then the destination
+    check, then ``emit_package`` (the only step that writes). A refusal at any step is
+    logged once, as one record carrying its ``Refusal``.
 
     Args:
         config: Generation configuration with paths and options.
@@ -389,6 +389,12 @@ def run_codegen(config: GenerationConfig) -> bool:
     prepared = prepare.prepare(prepare.load_source(source), config.package_name)
     if isinstance(prepared, prepare.Refused):
         prepare.log_refused(prepared)
+        return False
+    # Only a model that builds has its destination inspected, so a refused run logs one
+    # record, the model's.
+    problem = emit.inspect_destination(config.output_path)
+    if problem is not None:
+        prepare.log_refused(emit.destination_refused(problem))
         return False
     return emit.emit_package(prepared, config) is None
 

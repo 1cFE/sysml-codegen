@@ -1,6 +1,6 @@
 # Implementation Plan: Read-only readiness check, live half (EXEC-SUBSET-CONTRACT Item 2b)
 
-**Status:** In Progress (Phases 0-3 done)
+**Status:** In Progress (Phases 0-4 done)
 **Created:** 2026-10-20
 **Last Updated:** 2026-10-20
 **Branch / base:** sysml-codegen `subset-profile-screen` at `cbbc1100` (design approved); agentic-mbse sibling `/home/reid/src/subset-conformance/agentic-mbse` at `e268357f`, which this plan does not edit (design D12).
@@ -282,19 +282,19 @@ The D4 coincidence case is excluded from the base-record equality by name and ge
 
 See `design.md` D3, D4, Architecture "The steps inside `prepare`".
 
-- [ ] `generation/entry_point.py`: the field-row builder and `refuse_param_field_collisions(groups)`; the writer uses the builder. The raise site at `:38` does not move, so site 337's ID is unchanged.
-- [ ] `cli/prepare.py`: constraint plan, coverage account and parameter-field steps at the end of `prepare`; `Prepared` gains the constraint plan.
-- [ ] `cli/emit.py`: drop the plan build and coverage from `emit_package`; keep the link check as its first step.
-- [ ] `cli/__init__.py`: `run_codegen` calls `inspect_destination` after `prepare` only on `Prepared`, logging today's `Package sealing failed: …` record on a problem (D4, `generate` bullet).
-- [ ] Refresh site account row 337's evidence pointer to the new call.
-- [ ] Re-record the D4 coincidence entry in `refusal_records.json` as a named, stated change.
+- [x] `generation/entry_point.py`: the field-row builder and `refuse_param_field_collisions(groups)`; the writer uses the builder. The raise site at `:38` does not move, so site 337's ID is unchanged.
+- [x] `cli/prepare.py`: constraint plan, coverage account and parameter-field steps at the end of `prepare`; `Prepared` gains the constraint plan.
+- [x] `cli/emit.py`: drop the plan build and coverage from `emit_package`; keep the link check as its first step.
+- [x] `cli/__init__.py`: `run_codegen` calls `inspect_destination` after `prepare` only on `Prepared`, logging today's `Package sealing failed: …` record on a problem (D4, `generate` bullet).
+- [x] Refresh site account row 337's evidence pointer to the new call.
+- [x] Re-record the D4 coincidence entry in `refusal_records.json` as a named, stated change.
 
 ### Validation
 
-- [ ] Sentinel matrix passes for every refused 2a case, `output-naming__param_field_collision` included. If the lane is too slow, share one tree copy per case; do not drop cases or flags (risk table).
-- [ ] First reported code unchanged for every refused case (refusal records compare, with the one named exception).
-- [ ] Step-order test now checks that `prepare` produces `CONSTRAINT_PLAN`, `COVERAGE_ACCOUNT` and `PARAMETER_FIELD_NAMES` refusals.
-- [ ] Phase exit check (byte identity must still hold: no builds case changes).
+- [x] Sentinel matrix passes for every refused 2a case, `output-naming__param_field_collision` included. If the lane is too slow, share one tree copy per case; do not drop cases or flags (risk table).
+- [x] First reported code unchanged for every refused case (refusal records compare, with the one named exception).
+- [x] Step-order test now checks that `prepare` produces `CONSTRAINT_PLAN`, `COVERAGE_ACCOUNT` and `PARAMETER_FIELD_NAMES` refusals.
+- [x] Phase exit check (byte identity must still hold: no builds case changes).
 
 **What we know after this phase:** a refused `generate` writes nothing, for every refused case and every destination flag.
 
@@ -689,6 +689,26 @@ See `design.md#potential-risks` for the full table. Phase-specific mitigations:
 **Surprises:** none against the design's premises. Not part of this phase but worth knowing: `tests/unit/test_report_precedence.py` needs `simkit`, so it fails when `tests/unit` is run on its own; the full-suite run deselects it.
 
 ### Phase 4 Completion
+**Completed:** 2026-10-20. Behaviour change, as stated in D3 and D4: every model refusal is decided by `prepare`, before the destination is looked at. A refused `generate` now leaves its destination untouched for every refused 2a case, every destination flag set, and populated or empty destinations.
+
+**Changes Made:**
+- `generation/entry_point.py`: `parameter_field_rows(group)` builds a group's schema field rows; `refuse_param_field_collisions(groups)` runs `_refuse_colliding_field_names` over every group in order. The schema writer builds its rows with the first and still calls the check itself (Phase 5 drops that call). The raise site is unchanged; it moved from line 38 to 39 because of one added import.
+- `cli/prepare.py`: `prepare_graph` ends with three more steps: `CONSTRAINT_PLAN` (template environment and plan build), `COVERAGE_ACCOUNT`, then `PARAMETER_FIELD_NAMES`. `Prepared` gains `constraint_plan`.
+- `cli/emit.py`: the plan build and coverage preflight are gone from `emit_package`. It still repeats the link check first, then clears, writes and seals, with every failure at step `EMIT`. New `destination_refused(problem)` forms the `Package sealing failed: …` refusal for both callers.
+- `cli/__init__.py`: `run_codegen` inspects the destination only after `prepare` returns `Prepared`, and logs `destination_refused` on a problem.
+- Site account: row 337's line (39) and evidence (`cli/prepare.py:276`, the new call) refreshed. Line and first evidence pointer refreshed for the 17 `cli/prepare.py` and `cli/emit.py` rows. No site added or removed (499).
+- `refusal_records.json` re-recorded. `scripts/refusal_records.py`'s docstring now says the `destination_link` entry records the stated change.
+- New `tests/conformance/test_refusal_before_first_write.py`. The matrix is 169 refused cases × 5 flag sets × populated and empty destinations. Each run must leave a byte-identical tree and log exactly the base record. One test pins D4's new record, and one shows a model that builds still gets `PACKAGE_WRITE` on a symlinked destination. The 1693 tests run in 12 seconds, so no sharing of trees was needed.
+- `tests/unit/test_prepare_steps.py`: `prepare` produces `CONSTRAINT_PLAN`, `COVERAGE_ACCOUNT` and `PARAMETER_FIELD_NAMES` refusals, and an empty graph passes every step.
+
+**Refusal records against Phase 0: 1 of 173 differs, and it is the expected one.**
+- `destination_link:output-naming__param_field_collision`. Base: `Package sealing failed: INVALID_PATH(elsewhere): symlinks are forbidden beneath the package root`, `PACKAGE_WRITE`. Now: `Code generation failed: PARAM_FIELD_COLLISION: parameter group 'fx_params': …`, `GENERATION` with the `PARAM_FIELD_COLLISION` code. That is D4's stated change. The new record equals the base record of `case:output-naming__param_field_collision`, the same model with a clean destination. All 169 `case:*` entries and the three `writer_failure:*` entries are unchanged.
+
+**The matrix discriminates:** run against the Phase 3 source, exactly 11 tests fail. These are `output-naming__param_field_collision` under all 10 flag and destination combinations, plus the D4 test. Everything else passes, so the matrix pins this change and nothing else.
+
+**Exit check:** licensed suite 9131 passed, 9 failed (the base 9), 9 skipped. No new failures; the only missing base IDs are Phase 3's 13 replaced `test_cli_generation.py` tests. Byte identity: 0 differences (123 subjects), so no builds case changed. 2a harness: 4640 passed. mypy clean, ruff `src/` clean, ruff `src/ tests/` 94. agentic-mbse clean.
+
+**Deviations:** none.
 
 ### Phase 5 Completion
 

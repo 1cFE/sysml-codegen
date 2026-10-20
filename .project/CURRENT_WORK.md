@@ -4,7 +4,7 @@
 
 ## Active Work
 
-EXEC-SUBSET-CONTRACT Item 2b (`subset-profile-screen`, epic in agentic-mbse): implementation in progress on branch `subset-profile-screen`, plan `.project/active/subset-profile-screen/plan.md`. Phases 0-3 done (baselines and probes, then the three pure moves: shared load, module split, `prepare` → `emit_package`); Phase 4 is next; Phase 10 (readiness rule D8) waits on the owner.
+EXEC-SUBSET-CONTRACT Item 2b (`subset-profile-screen`, epic in agentic-mbse): implementation in progress on branch `subset-profile-screen`, plan `.project/active/subset-profile-screen/plan.md`. Phases 0-3 done (baselines and probes, then the three pure moves: shared load, module split, `prepare` → `emit_package`) and Phase 4 (every model refusal before the destination) done; Phase 5 is next; Phase 10 (readiness rule D8) waits on the owner.
 
 The backlog holds separately scoped capabilities, diagnostics, model work, and assurance limits.
 

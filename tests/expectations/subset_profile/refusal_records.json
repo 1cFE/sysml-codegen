@@ -3154,12 +3154,20 @@
   ],
   "destination_link:output-naming__param_field_collision": [
    {
+    "constraint_name_safety": null,
     "level": "ERROR",
     "logger": "sysml_codegen.cli",
-    "message": "Package sealing failed: INVALID_PATH(elsewhere): symlinks are forbidden beneath the package root",
+    "message": "Code generation failed: PARAM_FIELD_COLLISION: parameter group 'fx_params': keys 'fx__site__caster[0]__load' and 'fx__site__caster_0__load' both render as the schema field 'fx__site__caster_0__load' — rename one in the model",
     "refusal": {
-     "items": [],
-     "kind": "RefusalKind.PACKAGE_WRITE"
+     "items": [
+      {
+       "code": "GenerationCode.PARAM_FIELD_COLLISION",
+       "reason": "SiteReason.GENERATION_PARAM_FIELD_COLLISION",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.GENERATION"
     }
    }
   ],

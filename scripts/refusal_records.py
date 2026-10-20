@@ -5,8 +5,10 @@ The second check every 2b refactor phase runs. Each entry is the list of refusal
 records one run logs, in the form ``tests/helpers/refusal_records.py`` serializes:
 
 - ``case:<id>``: every 2a case the generator refuses, into an empty destination;
-- ``destination_link:<id>``: design D4's coincidence case, a model ``prepare`` will refuse
-  late (the parameter-field collision) run against a destination holding a symlink;
+- ``destination_link:<id>``: design D4's coincidence case, a model refused by its last check
+  (the parameter-field collision) run against a destination holding a symlink. The base
+  commit logged ``PACKAGE_WRITE`` here; since 2b Phase 4 it logs the model's own refusal, the
+  one stated change, so this entry was re-recorded then and equals ``case:<id>``;
 - ``writer_failure:<Exception>``: design D18, one writer (``_generate_pipeline``) patched to
   raise ``CodeGenerationError``, ``OSError`` and ``RuntimeError`` in turn on a builds case.
 

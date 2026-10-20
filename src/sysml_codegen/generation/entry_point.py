@@ -7,6 +7,7 @@ Generates from ComputationGraph entry_point_groups:
 
 import json
 import logging
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -45,6 +46,26 @@ def _refuse_colliding_field_names(group_label: str, fields: list[dict[str, Any]]
         seen[name] = alias
 
 
+def parameter_field_rows(group: ParameterGroup) -> list[dict[str, Any]]:
+    """The schema field rows for one parameter group, one per entry point, in order."""
+    return [
+        {
+            "name": params_field_name(ep.qualified_name),
+            "alias": ep.qualified_name,
+            "type": getattr(ep, "python_type", "float"),
+            "description": f"Entry point: {ep.simple_name}",
+            "default": ep.default_value,
+        }
+        for ep in group.parameters
+    ]
+
+
+def refuse_param_field_collisions(groups: Sequence[ParameterGroup]) -> None:
+    """Refuse the first group, in order, whose keys sanitize onto one schema field name."""
+    for group in groups:
+        _refuse_colliding_field_names(group.name, parameter_field_rows(group))
+
+
 def generate_all_derived_schemas(
     entry_point_groups: list[ParameterGroup],
     template_env: jinja2.Environment,
@@ -65,17 +86,7 @@ def generate_all_derived_schemas(
 
     generated_files = []
     for group in entry_point_groups:
-        # Build field list from EntryPoint objects
-        fields: list[dict[str, Any]] = []
-        for ep in group.parameters:
-            field: dict[str, Any] = {
-                "name": params_field_name(ep.qualified_name),
-                "alias": ep.qualified_name,
-                "type": getattr(ep, "python_type", "float"),
-                "description": f"Entry point: {ep.simple_name}",
-                "default": ep.default_value,
-            }
-            fields.append(field)
+        fields = parameter_field_rows(group)
         _refuse_colliding_field_names(group.name, fields)
 
         # Build description from source file

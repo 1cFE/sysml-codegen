@@ -1,9 +1,9 @@
 """The writing half of ``generate``: everything that changes the destination (Item 2b D1).
 
 ``emit_package`` takes what ``prepare`` built and writes it: the destination link check, the
-constraint plan and coverage account, the clear, the package folders, the writers and the
-seal. This is the only module on the generate route that writes under the destination. Each
-failure is logged once, with the record ``generate`` has always logged for it, and returned.
+clear, the package folders, the writers and the seal. This is the only module on the generate
+route that writes under the destination. Each failure is logged once, with the record
+``generate`` has always logged for it, and returned.
 """
 
 from __future__ import annotations
@@ -14,7 +14,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from sysml_codegen.cli import prepare
 from sysml_codegen.cli.prepare import (
     PreparationStep,
     Prepared,
@@ -55,8 +54,21 @@ def inspect_destination(path: Path) -> DestinationProblem | None:
     return None
 
 
+def destination_refused(problem: DestinationProblem) -> Refused:
+    """The refusal ``generate`` logs when the destination cannot take a package."""
+    return Refused(
+        PreparationStep.DESTINATION,
+        Refusal(RefusalKind.PACKAGE_WRITE),
+        f"Package sealing failed: {problem.detail}",
+    )
+
+
 def emit_package(prepared: Prepared, config: GenerationConfig) -> Refused | None:
-    """Write and seal one package. Returns ``None``, or the failure it logged."""
+    """Write and seal one package. Returns ``None``, or the failure it logged.
+
+    The destination is checked again first, because the tree can change after the caller
+    checked it.
+    """
     if config.package_name != prepared.package_name:
         raise ValueError(
             f"emit_package was given package {config.package_name!r} for a model prepared "
@@ -64,13 +76,7 @@ def emit_package(prepared: Prepared, config: GenerationConfig) -> Refused | None
         )
     problem = inspect_destination(config.output_path)
     if problem is not None:
-        return _logged(
-            Refused(
-                PreparationStep.DESTINATION,
-                Refusal(RefusalKind.PACKAGE_WRITE),
-                f"Package sealing failed: {problem.detail}",
-            )
-        )
+        return _logged(destination_refused(problem))
     return _write_package(prepared, config)
 
 
@@ -80,27 +86,12 @@ def _logged(refused: Refused) -> Refused:
 
 
 def _write_package(prepared: Prepared, config: GenerationConfig) -> Refused | None:
-    """Everything after the link check, in today's order. Returns ``None`` or the logged failure."""
+    """Clear, write and seal, in today's order. Returns ``None`` or the logged failure."""
     from sysml_codegen.contracts import PackageSealError
-    from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
 
     graph = prepared.graph
     template_env = prepared.template_env
-    step = PreparationStep.CONSTRAINT_PLAN
     try:
-        # Build every constraint body and wrapper while the target tree is still untouched.
-        constraint_plan = build_constraint_generation_plan(
-            graph, template_env, prepared.package_name
-        )
-
-        # The coverage account the package is about to bake agrees with the catalog it
-        # claims to summarize, and the aggregator's existence agrees with the same
-        # population. Still before the clear, so a disagreement refuses without touching
-        # the tree.
-        step = PreparationStep.COVERAGE_ACCOUNT
-        prepare._preflight_coverage_account(graph, constraint_plan)
-
-        step = PreparationStep.EMIT
         if config.overwrite:
             logger.info("Clearing existing output directory...")
             _clear_output_directory(config)
@@ -115,7 +106,7 @@ def _write_package(prepared: Prepared, config: GenerationConfig) -> Refused | No
         _generate_schemas(graph, config, template_env)
 
         logger.info("Generating TEAx module wrappers...")
-        _generate_modules(graph, config, template_env, constraint_plan)
+        _generate_modules(graph, config, template_env, prepared.constraint_plan)
 
         logger.info("Generating implementation stencils...")
         _generate_stencils(graph, config, template_env)
@@ -148,9 +139,9 @@ def _write_package(prepared: Prepared, config: GenerationConfig) -> Refused | No
                 )
             )
     # Measured, and not changed here: any failure after the clear leaves the partially
-    # written output tree on disk, refusals included.
+    # written output tree on disk.
     except Exception as error:
-        return _logged(refused_at_generation(step, error))
+        return _logged(refused_at_generation(PreparationStep.EMIT, error))
 
     logger.info("Code generation complete")
     return None

@@ -74,10 +74,8 @@ def load_source(source: ModelSource) -> LoadedSource:
 class PreparationStep(Enum):
     """The steps of the generator's route, in the order they run.
 
-    ``prepare`` runs construction through the preflights and creates the template
-    environment. ``emit_package`` runs the destination check, then builds the constraint plan
-    and checks the coverage account, then writes. Nothing produces ``PARAMETER_FIELD_NAMES``
-    yet.
+    ``prepare`` runs construction through the parameter-field check. ``emit_package`` runs the
+    destination check, then writes.
     """
 
     CONSTRUCTION = auto()
@@ -100,6 +98,7 @@ class Prepared:
 
     graph: ComputationGraph
     template_env: jinja2.Environment
+    constraint_plan: ConstraintGenerationPlan
     package_name: str
 
 
@@ -225,11 +224,13 @@ def prepare(loaded: LoadedSource, package_name: str) -> Prepared | Refused:
 
 
 def prepare_graph(graph: ComputationGraph, package_name: str) -> Prepared | Refused:
-    """Run the preflights on a constructed graph, in today's order.
+    """Run every check after construction, in order, on a constructed graph.
 
-    Each one refuses before link inspection, plan rendering, output clearing, directory
-    creation or any write.
+    Each one refuses before the destination is inspected, cleared, created or written.
     """
+    from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
+    from sysml_codegen.generation.entry_point import refuse_param_field_collisions
+
     step = PreparationStep.GENERATION_METADATA
     try:
         # Unsupported root-output wrappers are a public model refusal. Registry collection
@@ -259,12 +260,23 @@ def prepare_graph(graph: ComputationGraph, package_name: str) -> Prepared | Refu
         step = PreparationStep.CONSTRAINT_TOTALITY
         _preflight_constraint_totality(graph)
 
-        # The environment the constraint plan renders with; ``emit_package`` builds the plan.
+        # Every constraint body and wrapper, rendered in memory.
         step = PreparationStep.CONSTRAINT_PLAN
         template_env = _get_template_env()
+        constraint_plan = build_constraint_generation_plan(graph, template_env, package_name)
+
+        # The coverage account the package is about to bake agrees with the catalog it claims
+        # to summarize, and the aggregator's existence agrees with the same population.
+        step = PreparationStep.COVERAGE_ACCOUNT
+        _preflight_coverage_account(graph, constraint_plan)
+
+        # Two parameter keys that render as one schema field. Last, so every check that ran
+        # before it at the base still reports first for a model with several faults.
+        step = PreparationStep.PARAMETER_FIELD_NAMES
+        refuse_param_field_collisions(graph.entry_point_groups)
     except Exception as error:
         return refused_at_generation(step, error)
-    return Prepared(graph, template_env, package_name)
+    return Prepared(graph, template_env, constraint_plan, package_name)
 
 
 def _get_template_env() -> jinja2.Environment:
