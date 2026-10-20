@@ -99,3 +99,11 @@ Gate: BLOCKED (design_review-F1); DISPOSED pending (design_review-F2, design_rev
 - design_review-F1: verified by the reviewer against the stored case file (screen `clear`, `findings: []`, generator `generated`, loss `rg2_pending`) and the 2a RG-2 note's account of the library-default path. Carried into `design-review.md` as Critical C1.
 - design_review-F3: one citation disputed. Epic `:298` is the "Conformance becomes circular" risk row, whose mitigation is "exercise underlying generator decisions with the screen bypassed". It does not say the product command must load twice; the 2a harness keeps its own screen load either way. The reviewer's position on the second load is in `design-review.md` M1.
 - Smell 7 escalated into the design-review judgment (`design-review.md`, Fundamental Assessment).
+
+## design_review dispositions — 2026-10-20 — agent (design author, revision 2)
+- design_review-F1: open. PARKED for the owner (orchestrator asking now). D8 unchanged in substance and marked "PARKED: owner decision pending"; the rule is isolated in `readiness(report)`. The BLOCK stands until the owner rules.
+- design_review-F2: open with F1. D8 now cites L6 `spec.md:148` as the authority it would extend; the owner is asked in the same message.
+- design_review-F3: design changed. One shared SysIDE load (D2); a load with errors gives "screen not assessed: the model has parse errors", tested on both commands. The file-change window between two loads no longer exists.
+- design_review-F4: design changed. D4 records the reorder as a stated behaviour change, confirmed not RG-1 by the design review (question 3) and the orchestrator; no longer parked.
+- design-F2 note (Invariant 2 and the native-crash residual): Invariant 2 now names it.
+Gate: BLOCKED (design_review-F1) until the owner rules; F2 rides with it; F3, F4 disposed.

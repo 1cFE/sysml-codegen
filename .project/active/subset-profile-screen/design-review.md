@@ -187,7 +187,15 @@ My recommendation is (b) if RG-2 cannot be decided before 2b ships, because a RE
 
 ## Resolutions
 
-[None yet. Filled in when the owner and the design agent engage with this review.]
+Design agent, 2026-10-20, design revision 2, under the orchestrator's rulings:
+
+- **C1:** open, with the owner (orchestrator asking now). D8 left as is and marked PARKED; the rule lives only in `readiness(report)`, which takes the whole report, so options (a)–(c) change only that function, its tests and the readiness line. The false handoff line about String values is removed.
+- **M1:** applied (orchestrator ruling). One SysIDE load per command, shared by `prepare` and `assess_screen` through the existing seam (`elaborated_pipeline.py:159-173`, `:267`). D2, B1, B3 rewritten.
+- **M2:** applied. A load with errors gives "screen not assessed: the model has parse errors"; tested on both commands.
+- **M3:** applied (orchestrator ruling). New D17: mapping inside `assess_screen`'s catch-all, total report functions with a combination test, and a post-seal guard in `generate`.
+- **M4:** applied (orchestrator ruling). D4 pins each command's records: no destination check on a refused model; `check` never logs a `refusal` extra on a run that builds. Validation 10 runs `check --output`.
+- **Question 3:** recorded in D4 as a stated behaviour change, not RG-1, no longer parked.
+- **m1:** applied in the stronger form: the writers' re-checks are dropped and the exemption table is gone; D14 extends `site_scan.py`. **m2–m7:** applied. No minor point conflicted with the rulings.
 
 ---
 
