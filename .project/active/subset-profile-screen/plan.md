@@ -916,6 +916,21 @@ Each fix below is its own commit with its tests.
 
 **Fix 4, advisory: Success Criterion 10's wording matches the report.** It said both commands report "every collected screen finding". It now says every finding is collected and counted, and lists what is printed in full and what is a count line, as the Phase 8 report-length ruling decided. It is marked as an orchestrator decision (design D5) with scope unchanged. Its proof now also names the stored-answer test (collection) and the shape test (printing). No code change.
 
+**Fix 5, advisory: the package name stays carried twice, with its guard. Not changed, because carrying it once is not a small change.**
+- `prepare` needs the name: it renders constraint modules with it while building the constraint plan (`generation/constraint_plan.py:33`). So `Prepared` must record the name its plan was built with.
+- The writers need it too, and each reads it from `GenerationConfig` (`cli/emit.py`, 8 writers). `GenerationConfig` is the whole generation request, built at 77 call sites under `src/` and `tests/`.
+- Carrying it once means the writers stop reading `config.package_name`. That needs a writer-settings type split out of `GenerationConfig`, new signatures for the 8 writers, and changes to about 25 direct writer calls in 6 test files.
+- A smaller version, passing the name to the writers as an extra parameter, would leave a second copy inside `config` that the writers could still read. That is worse than a checked guard.
+- So the `ValueError` in `emit_package` stays. It is an internal invariant, recorded in the site account. `run_codegen` is the one caller under `src/` and passes `config.package_name` to both, so it cannot fire there.
+
+**Fix 6, advisory: the relay rule lives once.** The audit named three copies. There were five, each the same rule over a different span: let the four public refusals (`CodeGenerationError`, `ElaborationDiagnosticError`, `ElaborationError`, `SysMLParsingError`) through as themselves, and convert anything else with `unexpected_public_failure`.
+- The five were `elaborate_model_paths`, `elaborate_admitted_sources` (`orchestration/elaborated_pipeline.py`), and `build_exact_pipeline_context`, its live-load form and its snapshot form (`orchestration/exact_pipeline_context.py`). The snapshot form also lets `InstanceGraphSnapshotError` through.
+- New: `relay_public_failures(*also_public)` in `elaboration/elaborate.py`, next to `unexpected_public_failure`, as a context manager. Each of the five is now `with relay_public_failures(...)` over the same span it had, so what is caught and what passes through is unchanged.
+- Left as they were: `elaborate_loaded_extractor`'s ladder, which converts six specific error types each to its own diagnostic, and the two `unexpected_public_failure` calls in `cli/prepare.py`, which return a `Refused` instead of raising. Neither is the same logic.
+- I did not take the audit's other suggestion, to rebuild `build_exact_pipeline_context` as `load_live_models` plus the live-load form. That would check `targets` after loading instead of before, which changes which refusal a run with both faults gets. With the rule in one place, the gain is small.
+- Site account: the 10 rows for the five relays (a bare re-raise and an `unexpected_public_failure` raise each) are now 2 rows on `relay_public_failures`, so it has 492 sites. Same disposition and role (`handled_elsewhere`, `relay_plumbing`). The note names the five steps that use it.
+- Tests: `tests/unit/test_relay_public_failures.py` pins the helper: each of the four public refusals passes through as the same object, any other failure becomes `SI_INTERNAL_DEFECT` with the original as its cause, and an extra type passes only when named. The five steps' behaviour stays covered by the existing public-diagnostic, exact-route, snapshot and reachability suites (2680 tests in that selection pass).
+
 ### Phase 10 Completion
 
 ---
