@@ -19,7 +19,6 @@ from sysml_codegen.cli.prepare import (
     Prepared,
     Refused,
     _get_python_path,
-    _preflight_constraint_names,
     log_refused,
     refused_at_generation,
 )
@@ -227,7 +226,6 @@ def _generate_schemas(
     template_env: jinja2.Environment,
 ) -> None:
     """Generate Pydantic schemas for multi-output modules."""
-    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_multioutput_model
     from sysml_codegen.resolution.models import ModuleKind
 
@@ -278,7 +276,6 @@ def _generate_modules(
     constraint_plan: ConstraintGenerationPlan,
 ) -> None:
     """Generate TEAx module wrappers for all module types (ADR-003 namespacing)."""
-    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_teax_module
     from sysml_codegen.resolution.models import ModuleKind
 
@@ -332,7 +329,6 @@ def _generate_stencils(
     template_env: jinja2.Environment,
 ) -> None:
     """Generate implementation stencils for all module types (ADR-003 namespacing)."""
-    _preflight_constraint_names(graph)
     from sysml_codegen.generation import (
         backup_implementation,
         generate_implementation,
@@ -429,7 +425,6 @@ def _generate_pipeline(
     template_env: jinja2.Environment,
 ) -> None:
     """Generate pipeline YAML from computation graph."""
-    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_pipeline_yaml
 
     pipelines_dir = config.output_path / "pipelines"
@@ -453,7 +448,6 @@ def _generate_registry(
     template_env: jinja2.Environment,
 ) -> None:
     """Generate registry function in __init__.py."""
-    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_registry
 
     output_path = config.output_path / "__init__.py"
@@ -477,7 +471,6 @@ def _generate_entry_points(
     template_env: jinja2.Environment,
 ) -> None:
     """Generate entry point parameter group schemas and JSON templates."""
-    _preflight_constraint_names(graph)
     from sysml_codegen.generation import (
         generate_all_derived_jsons_from_graph,
         generate_all_derived_schemas_from_graph,
@@ -507,7 +500,6 @@ def _generate_backlog(
     config: GenerationConfig,
 ) -> None:
     """Generate implementation backlog report."""
-    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_backlog_report
 
     output_path = config.output_path / "IMPLEMENTATION_BACKLOG.md"
@@ -528,7 +520,6 @@ def _generate_tests(
     template_env: jinja2.Environment,
 ) -> None:
     """Generate runnable test file for implementations."""
-    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_test_implementations
 
     tests_dir = config.output_path / "tests"
@@ -556,7 +547,6 @@ def _seal_package(
     final on disk before ``seal_package`` runs, and ``package_contract.json`` is written
     last, never in its own coverage.
     """
-    _preflight_constraint_names(graph)
     from sysml_codegen.contracts import (
         DEFAULT_COVERAGE_POLICY,
         build_generation_manifest,

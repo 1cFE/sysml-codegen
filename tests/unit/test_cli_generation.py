@@ -1,6 +1,5 @@
 """Unit tests for CLI generation helpers (Bug 7)."""
 
-import os
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -14,21 +13,9 @@ from agentic_mbse.sysml.expression_ir import (
 )
 
 from sysml_codegen.cli import GenerationConfig, run_codegen
-from sysml_codegen.cli.emit import (
-    _generate_backlog,
-    _generate_entry_points,
-    _generate_modules,
-    _generate_pipeline,
-    _generate_registry,
-    _generate_schemas,
-    _generate_stencils,
-    _generate_tests,
-    _seal_package,
-)
 from sysml_codegen.cli.prepare import (
     PreparationStep,
     Refused,
-    _get_template_env,
     log_refused,
     prepare_graph,
 )
@@ -185,19 +172,6 @@ def _colliding_context():
     return graph
 
 
-def _complete_tree_manifest(root: Path):
-    records = []
-    for path in sorted(root.rglob("*")):
-        relative = path.relative_to(root).as_posix()
-        if path.is_symlink():
-            records.append((relative, "symlink", os.readlink(path)))
-        elif path.is_dir():
-            records.append((relative, "directory", None))
-        else:
-            records.append((relative, "file", path.read_bytes()))
-    return records
-
-
 def _unsafe_name_context(name: str = "value"):
     predicate = OperatorNode(
         operator=">",
@@ -274,71 +248,6 @@ def _unsafe_name_context(name: str = "value"):
 def _missing_catalog_context():
     return _unsafe_name_context("safe_name").model_copy(update={"constraint_catalog": None})
 
-
-GRAPH_AWARE_WRITERS = (
-    _generate_schemas,
-    _generate_modules,
-    _generate_stencils,
-    _generate_pipeline,
-    _generate_registry,
-    _generate_entry_points,
-    _generate_backlog,
-    _generate_tests,
-    _seal_package,
-)
-
-
-@pytest.mark.parametrize("writer", GRAPH_AWARE_WRITERS, ids=lambda writer: writer.__name__)
-@pytest.mark.parametrize("initial_tree", ["absent", "populated"])
-def test_unsafe_graph_rejected_before_writer_io(writer, initial_tree, tmp_path):
-    output = tmp_path / "output"
-    if initial_tree == "populated":
-        (output / "nested").mkdir(parents=True)
-        (output / "nested" / "marker.bin").write_bytes(b"unchanged\x00")
-    before = (output.exists(), _complete_tree_manifest(output))
-    config = GenerationConfig(output_path=output, package_name="pkg")
-    ctx = _unsafe_name_context()
-    template_env = _get_template_env()
-    if writer in (_generate_backlog, _seal_package):
-        args = (ctx, config)
-    elif writer is _generate_modules:
-        from sysml_codegen.generation.constraint_plan import ConstraintGenerationPlan
-
-        args = (ctx, config, template_env, ConstraintGenerationPlan({}, None, {}))
-    else:
-        args = (ctx, config, template_env)
-    with pytest.raises(CodeGenerationError) as error:
-        writer(*args)
-    assert error.value.name_safety_violation is not None
-    assert error.value.name_safety_violation.final_binding == "value"
-    assert (output.exists(), _complete_tree_manifest(output)) == before
-
-
-@pytest.mark.parametrize("writer", GRAPH_AWARE_WRITERS, ids=lambda writer: writer.__name__)
-@pytest.mark.parametrize("initial_tree", ["absent", "populated"])
-def test_missing_catalog_rejected_before_writer_io(writer, initial_tree, tmp_path):
-    output = tmp_path / "output"
-    if initial_tree == "populated":
-        (output / "nested").mkdir(parents=True)
-        (output / "nested" / "marker.bin").write_bytes(b"unchanged\x00")
-    before = (output.exists(), _complete_tree_manifest(output))
-    config = GenerationConfig(output_path=output, package_name="pkg")
-    ctx = _missing_catalog_context()
-    template_env = _get_template_env()
-    if writer in (_generate_backlog, _seal_package):
-        args = (ctx, config)
-    elif writer is _generate_modules:
-        from sysml_codegen.generation.constraint_plan import ConstraintGenerationPlan
-
-        args = (ctx, config, template_env, ConstraintGenerationPlan({}, None, {}))
-    else:
-        args = (ctx, config, template_env)
-    with pytest.raises(CodeGenerationError) as error:
-        writer(*args)
-    assert error.value.name_safety_violation is not None
-    assert error.value.name_safety_violation.kind == "catalog_module_join"
-    assert error.value.name_safety_violation.final_binding == "c1"
-    assert (output.exists(), _complete_tree_manifest(output)) == before
 
 
 def _refused(graph: ComputationGraph) -> Refused:

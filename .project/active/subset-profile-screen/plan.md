@@ -1,6 +1,6 @@
 # Implementation Plan: Read-only readiness check, live half (EXEC-SUBSET-CONTRACT Item 2b)
 
-**Status:** In Progress (Phases 0-4 done)
+**Status:** In Progress (Phases 0-5 done)
 **Created:** 2026-10-20
 **Last Updated:** 2026-10-20
 **Branch / base:** sysml-codegen `subset-profile-screen` at `cbbc1100` (design approved); agentic-mbse sibling `/home/reid/src/subset-conformance/agentic-mbse` at `e268357f`, which this plan does not edit (design D12).
@@ -332,16 +332,16 @@ def test_emit_does_not_change_the_graph():   # licensed, one corpus case
 
 See `design.md` D14 and its Round 2 rationale; `design-review.md` R2-1.
 
-- [ ] `cli/emit.py`: remove the nine re-check calls (base lines `cli/__init__.py:483, 534, 588, 685, 709, 733, 763, 784, 812`).
-- [ ] `generation/entry_point.py:79`: the schema writer no longer calls the field check.
-- [ ] Keep the three renderer guards (`generation/pipeline.py:56`, `generation/registry.py:266`, `contracts/model_contract.py:37`) and `test_module_kind_faildloud.py:277-294`.
-- [ ] Move to `prepare_graph` every test in `evidence/churn.md`'s "drives a writer with a refused graph" list.
-- [ ] Add the reachability test and the graph-unchanged test.
+- [x] `cli/emit.py`: remove the nine re-check calls (base lines `cli/__init__.py:483, 534, 588, 685, 709, 733, 763, 784, 812`).
+- [x] `generation/entry_point.py:79`: the schema writer no longer calls the field check.
+- [x] Keep the three renderer guards (`generation/pipeline.py:56`, `generation/registry.py:266`, `contracts/model_contract.py:37`) and `test_module_kind_faildloud.py:277-294`.
+- [x] Move to `prepare_graph` every test in `evidence/churn.md`'s "drives a writer with a refused graph" list.
+- [x] Add the reachability test and the graph-unchanged test.
 
 ### Validation
 
-- [ ] Reachability test passes with only site 338. Its stated limit (calls through `getattr` or stored callables are not followed) is in its docstring.
-- [ ] Phase exit check, including byte identity and refusal records.
+- [x] Reachability test passes with only site 338. Its stated limit (calls through `getattr` or stored callables are not followed) is in its docstring.
+- [x] Phase exit check, including byte identity and refusal records.
 
 **What we know after this phase:** the generator half of the design is finished. `prepare` holds every model refusal, and `emit_package` cannot reach one except the allowed, already-passed check.
 
@@ -711,6 +711,28 @@ See `design.md#potential-risks` for the full table. Phase-specific mitigations:
 **Deviations:** none.
 
 ### Phase 5 Completion
+**Completed:** 2026-10-20. The writers no longer refuse a bad graph on their own, and `generate` accepts and refuses exactly what it did after Phase 4. No refusal record and no package byte changed.
+
+**Changes Made:**
+- `cli/emit.py`: the nine `_preflight_constraint_names(graph)` calls at the top of the writers and `_seal_package` are gone, and so is the import.
+- `generation/entry_point.py`: `generate_all_derived_schemas` no longer calls `_refuse_colliding_field_names`. A comment points at `refuse_param_field_collisions`, the `prepare` step that checks the same rows first. The three renderer guards (`generation/pipeline.py`, `generation/registry.py`, `contracts/model_contract.py`) and `test_module_kind_faildloud.py:277-294` are kept.
+- `tests/unit/test_cli_generation.py`: `test_unsafe_graph_rejected_before_writer_io` and `test_missing_catalog_rejected_before_writer_io` (the `evidence/churn.md` §4 list, 36 test IDs) are removed with `GRAPH_AWARE_WRITERS` and `_complete_tree_manifest`. They tested exactly the re-check D14 drops. The same two graphs are already refused at `prepare_graph`'s `CONSTRAINT_NAMES` step by Phase 3's `test_a_name_collision_is_refused_at_the_constraint_names_step` and `test_a_missing_catalog_is_refused_at_the_constraint_names_step`, so moving them would have duplicated those.
+- New `tests/conformance/subset_profile/test_emit_reachability.py` (no license):
+  - The covered sites reachable from `emit_package` must equal the allowed set exactly.
+  - The constraint-names step must still reach `validate_constraint_graph_or_raise`.
+  - None of `prepare`'s six preflights, and not `_refuse_colliding_field_names`, may be reachable from `emit_package`.
+  - The docstring states the closure's limit: calls through `getattr` and stored callables are not followed.
+  - Run against the Phase 4 source, two of its three tests fail, as they should.
+- New `tests/conformance/test_emit_leaves_the_graph_unchanged.py` (licensed): `Prepared.graph.model_dump()` is equal before and after `emit_package` on `d38_caret` and `constraint_multi_instance`.
+- Site account: one line refreshed (the `emit_package` row, after the import removal). No site added or removed (499).
+
+**Exit check:** licensed suite 9100 passed, 9 failed (the base 9), 9 skipped. No new failures. The missing base IDs are Phase 3's 13 and the 36 removed here. Byte identity: 0 differences. Refusal records: 0 of 173 differ from the Phase 4 file, so the only difference from Phase 0 is still the D4 entry. 2a harness passes. mypy clean, ruff `src/` clean, ruff `src/ tests/` 94. agentic-mbse clean.
+
+**Deviations:**
+- **Two covered sites are reachable from `emit_package`, not one.** The design (D14, Invariant 4) and the plan's stencil expect only site 338. The second is `elaboration/elaborate.py::unexpected_public_failure::coded::SI_INTERNAL_DEFECT::1` (`relay_plumbing`). It is reached through `refused_at_generation`, which `emit_package` calls for a writer failure nobody classified, as D18 requires.
+  - The design's Phase 0 probe looked only at the writers, not at D18's handler, so it did not see this.
+  - The site is a factory that wraps an exception raised elsewhere, and its row says the originating sites own the refusal. What it can wrap after the first write is raised at a site this test keeps unreachable, or at an `internal_invariant` or `environment` site.
+  - It is allowed by name in the test with that reason. This changes nothing about what `generate` accepts or refuses. Invariant 4's text should name it when the design is next revised.
 
 ### Phase 6 Completion
 

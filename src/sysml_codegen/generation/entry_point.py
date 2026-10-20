@@ -86,8 +86,9 @@ def generate_all_derived_schemas(
 
     generated_files = []
     for group in entry_point_groups:
+        # The rows were checked for colliding field names before anything was written
+        # (``refuse_param_field_collisions``, the parameter-field step of ``prepare``).
         fields = parameter_field_rows(group)
-        _refuse_colliding_field_names(group.name, fields)
 
         # Build description from source file
         description = f"Parameters from {group.source_file}."
