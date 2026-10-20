@@ -5,6 +5,7 @@
 terms through ``subset_profile_adapter``. It never raises. Every way the screen cannot answer
 becomes a ``ScreenNotAssessed`` with its cause and a worded reason:
 
+- agentic-mbse's screen, or the adapter that reads it, cannot be imported;
 - the installed screen's ``SUBSET_PROFILE_VERSION`` differs from the pin (decided before the
   adapter is imported, design D10);
 - the model has parse errors, or did not load (design D2);
@@ -40,6 +41,7 @@ __all__ = [
 
 
 class NotAssessedCause(StrEnum):
+    SCREEN_NOT_IMPORTABLE = "screen_not_importable"
     PROFILE_SKEW = "profile_skew"
     SCREEN_FAILED = "screen_failed"
     PARSE_ERRORS = "parse_errors"
@@ -110,9 +112,12 @@ def assess_screen(loaded: LoadedSource) -> ScreenAssessed | ScreenNotAssessed:
 
 def _screen(loaded: LiveLoad) -> ScreenAssessed | ScreenNotAssessed:
     """Compare the version, then import the adapter and run the screen. May raise."""
-    from agentic_mbse.sysml import subset_profile
-
     from sysml_codegen._upstream_pins import SUBSET_PROFILE_VERSION
+
+    try:
+        from agentic_mbse.sysml import subset_profile
+    except ImportError as error:
+        return _not_importable(error, SUBSET_PROFILE_VERSION)
 
     installed = subset_profile.SUBSET_PROFILE_VERSION
     if installed != SUBSET_PROFILE_VERSION:
@@ -122,9 +127,12 @@ def _screen(loaded: LiveLoad) -> ScreenAssessed | ScreenNotAssessed:
             f"reviewed against {SUBSET_PROFILE_VERSION!r}",
         )
 
-    from agentic_mbse.sysml.subset_extraction import extract_subset_facts
+    try:
+        from agentic_mbse.sysml.subset_extraction import extract_subset_facts
 
-    from sysml_codegen.subset_profile_adapter import render_finding
+        from sysml_codegen.subset_profile_adapter import render_finding
+    except ImportError as error:
+        return _not_importable(error, SUBSET_PROFILE_VERSION)
 
     rules = subset_profile.PACKAGED_RULES
     result = subset_profile.evaluate_subset_profile(
@@ -147,6 +155,14 @@ def _screen(loaded: LiveLoad) -> ScreenAssessed | ScreenNotAssessed:
             )
             for check in result.unverified
         ),
+    )
+
+
+def _not_importable(error: ImportError, pin: str) -> ScreenNotAssessed:
+    return ScreenNotAssessed(
+        NotAssessedCause.SCREEN_NOT_IMPORTABLE,
+        f"agentic-mbse's subset screen could not be imported, so the model was not checked "
+        f"against {pin!r}: {error}",
     )
 
 

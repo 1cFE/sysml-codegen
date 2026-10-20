@@ -121,6 +121,17 @@ def log_refused(refused: Refused) -> None:
     logger.error(refused.message, extra=extra)
 
 
+def log_generator_answer(generator: Prepared | Refused) -> None:
+    """The report's first line: a refusal's one record, or that the model builds.
+
+    ``generate`` prints it before it writes (design D16), so it needs nothing from the screen.
+    """
+    if isinstance(generator, Refused):
+        log_refused(generator)
+    else:
+        logger.info(f"Generator: builds ({len(generator.graph.modules)} modules)")
+
+
 def refused_at_construction(error: Exception) -> Refused:
     """Convert a failure to load, elaborate or project into its refusal.
 

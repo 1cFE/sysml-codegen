@@ -877,6 +877,25 @@ See `design.md#potential-risks` for the full table. Phase-specific mitigations:
 
 **Deviations:** none from the plan.
 
+### Audit fixes (audit.md, Needs Work)
+Each fix below is its own commit with its tests.
+
+**Fix 1, blocker B1: nothing before the seal imports agentic-mbse's screen.** `generate` imported `cli/readiness.py` before loading the model, and `readiness.py` imported `agentic_mbse.sysml.subset_profile` at module level. If that import failed, `generate` crashed and wrote nothing. That was my Phase 8 decision, and its reasoning was wrong: `generate` needs agentic-mbse, but not that module. The fix is structural:
+- The destination types (`DestinationState`, `DestinationCheck` and the two constants) moved from `readiness.py` to a new `cli/destination.py`, which imports nothing from the screen.
+- The report's first line moved to `prepare.log_generator_answer` (was `readiness.log_generator_section`). `generate` prints it before writing.
+- `run_codegen` imports neither `readiness` nor the screen. Both are imported inside `_report_after_the_seal`'s guard.
+- `readiness.py` now loads without the screen module. Its enums are imported inside the functions that read a `ScreenAssessed`, which exists only once the screen module has imported. So `check` still reports the generator's answer when the screen cannot be imported.
+- `assess_screen` gains a cause, `SCREEN_NOT_IMPORTABLE`. An `ImportError` from the screen module, its extractor or the adapter becomes "agentic-mbse's subset screen could not be imported, so the model was not checked against '<pin>': <error>". Any other failure is still `SCREEN_FAILED`.
+- Tests:
+  - `tests/conformance/test_screen_import_failure.py` (licensed, 4 tests). Each run is a fresh interpreter in which a meta-path finder (`tests/helpers/blocked_screen_import.py`) fails every import of `agentic_mbse.sysml.subset_profile`.
+    - `generate --models` and `generate --from-snapshot` write the same files, byte for byte, as an unblocked run, exit 0, and report the screen not assessed.
+    - `check` exits 3 for the case that builds and 1, with the refusal record, for the refused case.
+    - No run shows a traceback or `ImportError` text.
+    - I ran the same blocked import against the unfixed code in a temporary worktree: `ModuleNotFoundError`, exit 1, nothing written.
+  - `tests/unit/test_cli_module_boundary.py` now covers `readiness.py` and `destination.py` (no import of `emit` or the CLI package, anywhere in the file). It checks that no CLI module imports the screen at module level. A fresh-interpreter probe loads every CLI module and the screen wrapper and finds none of the screen's modules. The probe is weak alone, because loading those modules imports no agentic-mbse at all; the licensed test above is what proves the route.
+- Criteria 7 and 8 re-read. Their proofs in `spec.md` now name the import-failure test. One limit is stated there: when the module cannot be imported, its version cannot be read, so the report names the pin and the import error instead of both versions.
+- The site-account row for `DestinationCheck.__post_init__` is re-keyed to `cli/destination.py`.
+
 ### Phase 10 Completion
 
 ---

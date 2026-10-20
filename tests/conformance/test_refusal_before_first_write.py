@@ -27,7 +27,7 @@ from pathlib import Path
 import pytest
 
 from sysml_codegen import cli
-from sysml_codegen.cli import GenerationConfig, readiness, run_codegen
+from sysml_codegen.cli import GenerationConfig, prepare, run_codegen
 from sysml_codegen.cli.prepare import Refused
 from tests.conftest import requires_license
 from tests.helpers import refusal_records
@@ -101,15 +101,15 @@ def test_a_refused_generate_leaves_its_destination(answer, flags, sentinel, tmp_
 
 
 def _logged_refused(monkeypatch: pytest.MonkeyPatch) -> list[Refused]:
-    """Every ``Refused`` either command hands to the report's generator section."""
+    """Every ``Refused`` either command hands to the report's generator answer."""
     seen: list[Refused] = []
-    real = readiness.log_refused
+    real = prepare.log_refused
 
     def spy(refused: Refused) -> None:
         seen.append(refused)
         real(refused)
 
-    monkeypatch.setattr(readiness, "log_refused", spy)
+    monkeypatch.setattr(prepare, "log_refused", spy)
     return seen
 
 

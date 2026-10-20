@@ -27,6 +27,7 @@ import pytest
 
 from sysml_codegen import cli
 from sysml_codegen.cli import CheckRequest, prepare, readiness, run_check
+from sysml_codegen.cli.destination import DESTINATION_NOT_CHECKED
 from tests.conformance.test_refusal_before_first_write import _sentinel, _tree
 from tests.conftest import requires_license
 from tests.helpers import refusal_records
@@ -105,7 +106,7 @@ def test_check_exits_0_when_readiness_says_ready(monkeypatch):
 def test_check_without_output_leaves_the_destination_unchecked():
     report = run_check(CheckRequest(prepare.LiveModels((_models(BUILDS_CASE),)), "pkg", None))
     assert isinstance(report.generator, prepare.Prepared)
-    assert report.destination == readiness.DESTINATION_NOT_CHECKED
+    assert report.destination == DESTINATION_NOT_CHECKED
 
 
 @pytest.mark.parametrize("command", ["generate", "check"])

@@ -15,13 +15,15 @@ import logging
 import pytest
 from agentic_mbse.sysml.subset_profile import Outcome, Qualification, Verdict
 
-from sysml_codegen.cli.prepare import PreparationStep, Prepared, Refused, prepare_graph
-from sysml_codegen.cli.readiness import (
-    AWAITING_OWNER,
+from sysml_codegen.cli.destination import (
     DESTINATION_CLEAN,
     DESTINATION_NOT_CHECKED,
     DestinationCheck,
     DestinationState,
+)
+from sysml_codegen.cli.prepare import PreparationStep, Prepared, Refused, prepare_graph
+from sysml_codegen.cli.readiness import (
+    AWAITING_OWNER,
     Disagreement,
     DisagreementKind,
     Readiness,

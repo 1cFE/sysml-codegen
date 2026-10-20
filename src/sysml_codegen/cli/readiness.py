@@ -4,18 +4,22 @@ A ``ReadinessReport`` holds four answers, each already decided elsewhere:
 
 - the generator: ``Prepared`` (builds) or ``Refused``, from ``prepare``, the destination check
   or ``emit_package``;
-- the destination check: not checked, clean, or the problem ``generate`` would stop at;
+- the destination check (``cli/destination.py``): not checked, clean, or the problem
+  ``generate`` would stop at;
 - the screen: ``ScreenAssessed`` or ``ScreenNotAssessed``, from ``assess_screen``;
 - at most one disagreement between the generator and the screen (design D9).
 
 Three pure functions read it. ``readiness`` decides ready, not ready or refused, and is the one
-place that rule lives (design D8). ``log_generator_section`` and ``log_assessment`` render it
-through the CLI's logger, in one fixed order; ``log_report`` is the two in turn, and
-``generate`` writes the package between them. None of them
-reads a table or raises on any member of the enums it switches on (design D17).
+place that rule lives (design D8). ``log_report`` renders it through the CLI's logger, in one
+fixed order: the generator's answer (``prepare.log_generator_answer``), then ``log_assessment``.
+``generate`` prints the generator's answer before it writes and calls ``log_assessment`` after
+the seal. None of them reads a table or raises on any member of the enums it switches on
+(design D17).
 
-This module imports no SysIDE and not the adapter, and nothing that writes. It does import
-agentic-mbse's screen vocabulary, so the CLI imports it only inside the commands that report.
+This module imports no SysIDE, not the adapter and nothing that writes, and it loads without
+agentic-mbse's screen module. The screen's enums are imported only inside the functions that
+read a ``ScreenAssessed``, which exists only once that module has imported. So ``check`` still
+reports the generator's answer when the screen cannot be imported.
 """
 
 from __future__ import annotations
@@ -26,9 +30,8 @@ from dataclasses import dataclass
 from enum import Enum, StrEnum
 from typing import TYPE_CHECKING
 
-from agentic_mbse.sysml.subset_profile import Outcome, Qualification, Verdict
-
-from sysml_codegen.cli.prepare import PreparationStep, Prepared, Refused, log_refused
+from sysml_codegen.cli.destination import DestinationCheck, DestinationState
+from sysml_codegen.cli.prepare import PreparationStep, Prepared, Refused, log_generator_answer
 from sysml_codegen.subset_screen import (
     NotAssessedCause,
     ScreenAssessed,
@@ -41,11 +44,6 @@ if TYPE_CHECKING:
 
 #: The CLI's logger, so every report line has the name ``generate``'s lines have.
 logger = logging.getLogger("sysml_codegen.cli")
-
-#: Findings printed one by one, with location and remedy: the ones a modeler must act on.
-#: A ``candidate_refusal`` finding is printed so too, whatever its outcome. Admitted findings
-#: are one count line; omitted and excluded ones are one line per rule (design D5).
-_ACTED_ON = frozenset({Outcome.REFUSED, Outcome.UNCONFIRMED})
 
 #: The steps after ``prepare``. A refusal there is about the destination or the writing, not
 #: the model, so the model still builds as far as the screen's agreement is concerned.
@@ -95,27 +93,6 @@ class Disagreement:
     screen_reasons: tuple[str, ...]
 
 
-class DestinationState(Enum):
-    NOT_CHECKED = "not checked"
-    CLEAN = "clean"
-    PROBLEM = "problem"
-
-
-@dataclass(frozen=True)
-class DestinationCheck:
-    state: DestinationState
-    #: The ``Package sealing failed: …`` text; set exactly when the state is ``PROBLEM``.
-    message: str | None = None
-
-    def __post_init__(self) -> None:
-        if (self.state is DestinationState.PROBLEM) != (self.message is not None):
-            raise ValueError("a destination check has a message exactly when it has a problem")
-
-
-DESTINATION_NOT_CHECKED = DestinationCheck(DestinationState.NOT_CHECKED)
-DESTINATION_CLEAN = DestinationCheck(DestinationState.CLEAN)
-
-
 @dataclass(frozen=True)
 class ReadinessReport:
     generator: Prepared | Refused
@@ -157,6 +134,8 @@ def readiness_report(
     """Combine the answers, computing the disagreement when the screen was assessed."""
     disagreement = None
     if isinstance(screen, ScreenAssessed):
+        from agentic_mbse.sysml.subset_profile import Outcome
+
         # A rendered finding carries a code exactly when it is refused (the adapter's contract).
         refused = [
             RefusedFinding(f.subset_reason, f.code.value)
@@ -193,6 +172,8 @@ def readiness(report: ReadinessReport) -> ReadinessVerdict:
         else:
             reasons.append(f"the screen was not assessed: {screen.reason}")
     else:
+        from agentic_mbse.sysml.subset_profile import Qualification, Verdict
+
         if screen.unverified:
             reasons.append(f"{len(screen.unverified)} screen checks could not run")
         if screen.verdict is not Verdict.CLEAR:
@@ -211,19 +192,8 @@ def readiness(report: ReadinessReport) -> ReadinessVerdict:
 
 def log_report(report: ReadinessReport) -> None:
     """The whole report, as ``check`` prints it."""
-    log_generator_section(report.generator)
+    log_generator_answer(report.generator)
     log_assessment(report)
-
-
-def log_generator_section(generator: Prepared | Refused) -> None:
-    """The generator's answer: a refusal's one record, exactly as ``generate`` logs it.
-
-    ``generate`` prints this before it writes (design D16), so it reads the generator alone.
-    """
-    if isinstance(generator, Refused):
-        log_refused(generator)
-    else:
-        logger.info(f"Generator: builds ({len(generator.graph.modules)} modules)")
 
 
 def log_assessment(report: ReadinessReport) -> None:
@@ -262,6 +232,8 @@ def _log_screen(report: ReadinessReport) -> None:
     if isinstance(screen, ScreenNotAssessed):
         logger.info(f"Screen not assessed: {screen.reason}")
         return
+    from agentic_mbse.sysml.subset_profile import Outcome, Qualification, Verdict
+
     counts: dict[str, int] = {}
     for finding in screen.findings:
         counts[finding.outcome.value] = counts.get(finding.outcome.value, 0) + 1
@@ -277,7 +249,10 @@ def _log_screen(report: ReadinessReport) -> None:
     admitted = 0
     grouped: dict[tuple[str, str], list[SubsetDiagnostic]] = {}
     for finding in screen.findings:
-        if finding.outcome in _ACTED_ON or finding.qualification is Qualification.CANDIDATE_REFUSAL:
+        # Printed in full: what a modeler must act on (design D5). Admitted findings are one
+        # count line; omitted and excluded ones are one line per rule.
+        acted_on = finding.outcome in (Outcome.REFUSED, Outcome.UNCONFIRMED)
+        if acted_on or finding.qualification is Qualification.CANDIDATE_REFUSAL:
             _log_finding(finding, refusal_items)
         elif finding.outcome is Outcome.ADMITTED:
             admitted += 1
@@ -298,6 +273,8 @@ def _log_screen(report: ReadinessReport) -> None:
 
 def _log_finding(finding: SubsetDiagnostic, refusal_items: Sequence[RefusalItem]) -> None:
     """One finding in full: where it is, what the generator does with it, and its remedy."""
+    from agentic_mbse.sysml.subset_profile import Qualification
+
     where = _location(finding.source_file, finding.source_line)
     line = (
         f"  {finding.outcome.value} {finding.rule_id} ({finding.subset_reason}) "
