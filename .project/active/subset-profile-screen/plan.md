@@ -931,6 +931,15 @@ Each fix below is its own commit with its tests.
 - Site account: the 10 rows for the five relays (a bare re-raise and an `unexpected_public_failure` raise each) are now 2 rows on `relay_public_failures`, so it has 492 sites. Same disposition and role (`handled_elsewhere`, `relay_plumbing`). The note names the five steps that use it.
 - Tests: `tests/unit/test_relay_public_failures.py` pins the helper: each of the four public refusals passes through as the same object, any other failure becomes `SI_INTERNAL_DEFECT` with the original as its cause, and an extra type passes only when named. The five steps' behaviour stays covered by the existing public-diagnostic, exact-route, snapshot and reachability suites (2680 tests in that selection pass).
 
+**Exit check after the audit fixes (HEAD `303dfe6c`).**
+- Licensed suite, `--all-extras`: 11250 passed, 9 failed, 9 skipped. The 9 failures are the base 9 (`test_check_ledger_4a` ×8 and the `test_study_cli` bogus-tool case). No new failures. Every base ID now missing is explained: site re-keys, Phase 3's replaced `test_cli_generation.py` tests, and Phase 8's replaced `test_nothing_in_src_imports_the_adapter`.
+- Package bytes: 0 differences against `evidence/package-manifest-base.json`.
+- Refusal records: 0 of 173 differ.
+- mypy `src/` clean. ruff `src/` clean; ruff `src/ tests/` 94, the same as the base.
+- agentic-mbse: no changes (`git status` empty).
+- TEAx lane at `303dfe6c`: 124 passed, the same IDs and outcomes as the base run. The receipt is `evidence/execution-lane/provenance-audit-fixes-303dfe6c.json`.
+- One slip in the commits: fix 6's plan note was committed with fix 5 (`92323247`), not with fix 6's code (`303dfe6c`).
+
 ### Phase 10 Completion
 
 ---

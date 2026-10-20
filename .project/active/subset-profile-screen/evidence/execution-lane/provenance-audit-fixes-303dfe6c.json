@@ -1,0 +1,34 @@
+{
+  "artifact_root": "/tmp/subset-2b/lane-af/artifacts",
+  "python": {
+    "executable": "/tmp/subset-2b/lane-af/venv/bin/python",
+    "version": "3.12.3"
+  },
+  "roots": {
+    "agentic_install": {
+      "artifact_path": "/tmp/subset-2b/lane-af/artifacts/agentic_mbse-0.1.3-py3-none-any.whl",
+      "commit": "e268357fa8a5b23bac7fb17ff972a5a812801b3b",
+      "path": "/tmp/subset-2b/lane-af/venv/lib/python3.12/site-packages",
+      "wheel_sha256": "2c6cf3d03521b25e174fb412a01369ef2ed39838722d6b574ccbeffd1d2d7564"
+    },
+    "codegen_source": {
+      "archive_sha256": "a4a22306be62515a1b156d13832c65eaf19a6137480575c70350c564bd199a70",
+      "artifact_path": "/tmp/subset-2b/lane-af/artifacts/codegen-303dfe6c.tar",
+      "commit": "303dfe6cdbfbd7404bdef338975e506c1277af77",
+      "path": "/tmp/subset-2b/lane-af/codegen/src"
+    },
+    "teax_simkit": {
+      "archive_sha256": "c566cf44569c95577125fcbdaf6089a3875856e622e2f1a0d10515c1603d8cbf",
+      "artifact_path": "/tmp/subset-2b/lane-af/artifacts/teax-8d877460.tar",
+      "commit": "8d877460ac4f6f264561d916e40c1708adb13397",
+      "path": "/tmp/subset-2b/lane-af/teax-clone/packages/teax-simkit"
+    },
+    "teax_source": {
+      "archive_sha256": "c566cf44569c95577125fcbdaf6089a3875856e622e2f1a0d10515c1603d8cbf",
+      "artifact_path": "/tmp/subset-2b/lane-af/artifacts/teax-8d877460.tar",
+      "commit": "8d877460ac4f6f264561d916e40c1708adb13397",
+      "path": "/tmp/subset-2b/lane-af/teax-clone"
+    }
+  },
+  "schema_version": "stop-parser-execution-provenance/v1"
+}
