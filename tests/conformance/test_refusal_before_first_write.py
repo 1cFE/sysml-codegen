@@ -7,6 +7,10 @@ empty destination. The tree must be byte-identical afterwards, with no file adde
 removed, and the run must log exactly one refusal record, equal to the one the base commit
 logged for that case (``tests/expectations/subset_profile/refusal_records.json``).
 
+``check --output`` gets the same matrix, without the flags it does not take (design D6): the
+same tree check, the same single record, and the same ``Refused`` (step, refusal and message)
+that ``generate`` hands to the logger for that case.
+
 The one stated change (design D4) has its own test below: a model refused by its last check,
 run against a destination holding a symlink, now reports the model's refusal where the base
 reported ``PACKAGE_WRITE``. A model that builds still gets ``PACKAGE_WRITE`` there.
@@ -17,11 +21,14 @@ Licensed.
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
 import pytest
 
-from sysml_codegen.cli import GenerationConfig, run_codegen
+from sysml_codegen import cli
+from sysml_codegen.cli import GenerationConfig, readiness, run_codegen
+from sysml_codegen.cli.prepare import Refused
 from tests.conftest import requires_license
 from tests.helpers import refusal_records
 from tests.helpers.subset_profile import cases
@@ -91,6 +98,40 @@ def test_a_refused_generate_leaves_its_destination(answer, flags, sentinel, tmp_
     assert _tree(destination) == before
     assert records == BASE[f"case:{answer.case_id}"]
     assert len(records) == 1
+
+
+def _logged_refused(monkeypatch: pytest.MonkeyPatch) -> list[Refused]:
+    """Every ``Refused`` either command hands to the report's generator section."""
+    seen: list[Refused] = []
+    real = readiness.log_refused
+
+    def spy(refused: Refused) -> None:
+        seen.append(refused)
+        real(refused)
+
+    monkeypatch.setattr(readiness, "log_refused", spy)
+    return seen
+
+
+@pytest.mark.parametrize("sentinel", ["populated", "empty"])
+@pytest.mark.parametrize("answer", REFUSED, ids=lambda a: a.case_id)
+def test_check_refuses_as_generate_does_and_leaves_its_destination(
+    answer, sentinel, monkeypatch, tmp_path
+):
+    seen = _logged_refused(monkeypatch)
+    destination = _sentinel(tmp_path, sentinel)
+    before = _tree(destination)
+    argv = ["sysml-codegen", "check", "--models", str(cases.model_root(answer))]
+    monkeypatch.setattr(sys, "argv", [*argv, "--output", str(destination)])
+    with refusal_records.capture_refusals(destination) as records:
+        with pytest.raises(SystemExit) as exit_info:
+            cli.main()
+    assert exit_info.value.code == 1
+    assert _tree(destination) == before
+    assert records == BASE[f"case:{answer.case_id}"]
+    _generate(answer, tmp_path / "generated")
+    [checked, generated] = seen
+    assert checked == generated
 
 
 def test_the_late_refusal_case_is_among_the_refused_cases():

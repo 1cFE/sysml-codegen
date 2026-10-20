@@ -10,7 +10,7 @@ decides it once. It does not extract SysML data, resolve references, or render t
                                      (this layer)
 ```
 
-`run_codegen` (`cli/__init__.py:956`) is the single public generation entry point, and it
+`run_codegen` (`cli/__init__.py:461`) is the single public generation entry point, and it
 constructs exactly one way.
 
 ## One entry point, two sources, one receipt
@@ -71,7 +71,20 @@ collapsing them loses which gate refused:
 | `SysMLParsingError` | the sources did not load |
 | `CodeGenerationError` | projection, a preflight check, or generation refused |
 
-Preflight checks run before any output is written or cleared: exact context receipt, exit-point type support, constraint totality/name safety, duplicate paths, registry class-name collisions, and renderer metadata validity. The current gate sequence lives in `cli/__init__.py`; boundary tests assert refusals preserve the target tree byte for byte.
+Preflight checks run before any output is written or cleared: exact context receipt, exit-point type support, constraint totality/name safety, duplicate paths, registry class-name collisions, and renderer metadata validity. The gate sequence lives in `prepare` (`cli/prepare.py:200`), whose steps the `PreparationStep` enum names in order (`cli/prepare.py:74`); boundary tests assert refusals preserve the target tree byte for byte.
+
+## The route: read first, write last, then report
+
+`run_codegen` runs four steps, and only the third writes:
+
+1. `load_source` (`cli/prepare.py:65`) loads the live models once, or names the snapshot.
+2. `prepare` (`cli/prepare.py:200`) builds the graph and runs every check that can refuse a model. It returns `Prepared` (the graph, template environment, constraint plan and package name) or `Refused` (the step, the `Refusal` and the message). It writes nothing, so every model refusal is decided before the destination is touched.
+3. When the model builds, `inspect_destination` (`cli/emit.py:45`) checks the destination for links without writing. Then `emit_package` (`cli/emit.py:65`) clears, writes and seals. It repeats the link check first and owns every writer failure.
+4. After the seal, `assess_screen` (`subset_screen.py:82`) runs agentic-mbse's subset screen on the same load, and the rest of the readiness report is printed (`cli/readiness.py`). This step runs under a guard (`cli/__init__.py:515`): a failure there is one WARNING and never changes the exit code. A snapshot source is never screened, because snapshots do not carry the screen.
+
+Every refusal is logged once, as one record carrying its `Refusal`.
+
+`sysml-codegen check` (`run_check`, `cli/__init__.py:122`) runs steps 1, 2 and 4, plus step 3's link check when `--output` is given. It never calls `emit_package` and writes nothing. It prints the same report as `generate` and exits 0 when ready, 1 when refused and 3 when the model builds but is not ready. Until the owner decides the readiness rule, no model is reported ready (`readiness`, `cli/readiness.py:165`).
 
 ## The single-authority state, stated exactly
 

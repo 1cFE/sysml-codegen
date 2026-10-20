@@ -1,6 +1,6 @@
 # Implementation Plan: Read-only readiness check, live half (EXEC-SUBSET-CONTRACT Item 2b)
 
-**Status:** In Progress (Phases 0-8 done)
+**Status:** In Progress (Phases 0-9 done; Phase 10 gated on the owner)
 **Created:** 2026-10-20
 **Last Updated:** 2026-10-20
 **Branch / base:** sysml-codegen `subset-profile-screen` at `cbbc1100` (design approved); agentic-mbse sibling `/home/reid/src/subset-conformance/agentic-mbse` at `e268357f`, which this plan does not edit (design D12).
@@ -513,19 +513,19 @@ def test_check_equals_stored_answers(case):
 
 See `design.md` Validation Approach lines 1, 4–11; D15.
 
-- [ ] Criterion 1, `check` half: extend Phase 4's sentinel matrix with `check --output` (same `Refusal`, same `PreparationStep`, one record).
-- [ ] Criterion 4 (stencil). Criterion 5: for the 23 committed snapshots and every builds case captured on the fly, `check --from-snapshot` gives the live generator outcome, the screen is not assessed for the snapshot reason, never READY; `generate --from-snapshot` byte-identical.
-- [ ] Criterion 6: all 23 envelopes load; a refused envelope keeps its message; `sysml-codegen snapshot` output byte-identical with the adapter patched to raise and under patched skew.
-- [ ] Criteria 7, 8, 9 on one builds and one refused case, both commands (skew both ways; screen raising at each of the three points; constructed `screen_refuses_generator_builds` witness exits 3 on `check` and still builds on `generate`).
-- [ ] Criterion 10: `generate` and `check --output` print identical report lines on the same cases and destination.
-- [ ] Execution lane (124 TEAx tests) compared with Phase 0. agentic-mbse "all extras" suite compared with Phase 0's IDs.
-- [ ] Short note in CLAUDE.md "Processing Pipeline" and `docs/architecture/` on `prepare`/`emit_package` and `check`.
+- [x] Criterion 1, `check` half: extend Phase 4's sentinel matrix with `check --output` (same `Refusal`, same `PreparationStep`, one record).
+- [x] Criterion 4 (stencil). Criterion 5: for the 23 committed snapshots and every builds case captured on the fly, `check --from-snapshot` gives the live generator outcome, the screen is not assessed for the snapshot reason, never READY; `generate --from-snapshot` byte-identical.
+- [x] Criterion 6: all 23 envelopes load; a refused envelope keeps its message; `sysml-codegen snapshot` output byte-identical with the adapter patched to raise and under patched skew.
+- [x] Criteria 7, 8, 9 on one builds and one refused case, both commands (skew both ways; screen raising at each of the three points; constructed `screen_refuses_generator_builds` witness exits 3 on `check` and still builds on `generate`).
+- [x] Criterion 10: `generate` and `check --output` print identical report lines on the same cases and destination.
+- [x] Execution lane (124 TEAx tests) compared with Phase 0. agentic-mbse "all extras" suite compared with Phase 0's IDs.
+- [x] Short note in CLAUDE.md "Processing Pipeline" and `docs/architecture/` on `prepare`/`emit_package` and `check`.
 
 ### Validation
 
-- [ ] Every criterion test above passes on the licensed lane with no skips beyond Phase 0's.
-- [ ] Phase exit check.
-- [ ] Spec Success Criteria 1–12 each checked off in `spec.md` with the test that proves it.
+- [x] Every criterion test above passes on the licensed lane with no skips beyond Phase 0's.
+- [x] Phase exit check.
+- [x] Spec Success Criteria 1–12 each checked off in `spec.md` with the test that proves it.
 
 **What we know after this phase:** everything the spec asks for holds, except the readiness rule, which still withholds READY (A1).
 
@@ -825,6 +825,40 @@ See `design.md#potential-risks` for the full table. Phase-specific mitigations:
 **Deviations:** none from the plan. The `log_agentic_mbse_missing` move corrects a Phase 7 mistake.
 
 ### Phase 9 Completion
+**Completed:** 2026-10-20. Every spec success criterion holds, each with its test, and each is checked off in `spec.md`. The readiness rule still withholds READY (A1). No file under `src/` changed in this phase.
+
+**Changes Made (tests and docs only):**
+- Criterion 1, `check` half (`test_refusal_before_first_write.py`): `check --output` on every refused case, into a populated and an empty sentinel (338 runs). Exit 1, tree byte-identical, the base record, and the `Refused` handed to the report equal to `generate`'s for the same case, step included. Both commands' `Refused` is caught by a spy on `readiness.log_refused`. `check` takes no destination flags (D6), so its matrix has none.
+- Criterion 4 (`test_check_matches_stored_answers.py`, 874 tests): on all 246 cases, `run_check` reports the stored generator run (outcome, codes, site reasons) and the stored screen (verdict; rule, outcome and line of each finding). Its computed disagreement equals the one the stored answers imply. All 136 recorded disagreements appear, the 23 `fixture:` subjects included.
+- Criteria 5 and 6 (`test_check_snapshots.py`, 108 tests):
+  - All 23 committed snapshots replay through `check`. The screen is not assessed for the snapshot reason, there is no disagreement, and the model is never ready. The generator outcome equals live `check` for the 22 snapshots whose sources are committed.
+  - All 77 building cases are captured on the fly, replay as building and are not ready.
+  - `generate --from-snapshot` prints the snapshot screen line and reason.
+  - A v5 snapshot is refused by `check` with exactly `generate`'s record.
+  - `sysml-codegen snapshot` writes the same bytes under five faults: each of the three screen points raising, and both skew directions.
+- Criteria 7-9 (`test_check_screen_faults.py`, 22 tests):
+  - Skew: older and newer × both commands × a building and a refused case. The adapter is dropped from `sys.modules` and must stay unimported (design § Implementation Notes, "Skew tests").
+  - The three raise points: on a building case with a finding (`binding-source__expression_source__owner_other`) and the agreeing refused case. The first attempt used a case with no findings, where `render_finding` never runs, so those 4 tests failed until the cases were changed.
+  - The constructed witness. The building case `anonymous-declaration__attribute_usage` is screened with the real screen result of the first refused case whose screen agrees with the generator. `check` reports `screen_refuses_generator_builds` and exits 3. `generate` exits 0 and writes the same bytes as without the witness.
+- Criterion 10 (`test_report_form.py`, 246 tests): `check --output` then `generate` on the same model and the same, still empty, destination print identical report lines. The writers log under the same logger name, so a report line is told apart by the module that logged it (`readiness`, or `prepare` for the refusal record).
+- Docs: a "read first, write last, then report" section in `docs/architecture/reference/02-orchestration.md`, with the stale `cli/__init__.py:956` pointer corrected. A paragraph and a `check` command line in `CLAUDE.md`.
+- Evidence: `evidence/execution-lane/` holds the lane recipe as `lane.sh` and `lane_manifest.py`, both receipts' manifests, and a README.
+
+**`catf_mfe_d5` live comparison (by hand):** its sources are untracked (`spike-snapshot/regen/`, gitignored), so the test cannot run it. Run once: live `check` builds 43 modules, and replay builds 43 modules with the snapshot screen reason. Both are not ready.
+
+**Execution lane: run, with receipts.** The recipe was found in the retired `verification/run_independent_green.py` (`git show 7fb488fb^:…`), well within the hour. The inputs are an isolated `git archive` of codegen, agentic-mbse `e268357f` as a wheel and TEAx `8d877460`.
+- Base `556cbedf`: 124 passed.
+- Phase 8 `d8f98340`: 124 passed. Phase 9 changes no file under `src/` (`git diff d8f98340 -- src` is empty), so this is the code the Phase 9 commit ships.
+- The two runs have the same 124 IDs and outcomes. Digests are in `evidence/execution-lane/README.md`.
+
+**agentic-mbse all-extras:** 5 failed, 4447 passed, 8 skipped, 1 xfailed. The failing IDs are identical to `evidence/agentic-failing-base.txt`. agentic-mbse is unchanged (`git status` empty).
+
+**Exit check:**
+- Licensed suite: 11225 passed, 10 failed, 9 skipped (4:09). The 10 failures are the base 9 plus `test_disagreement_record.py::test_only_the_reader_and_this_test_name_the_record`: the criterion 4 docstring named the record's file. It was reworded and rerun (881 passed).
+- Skips: the base 9. The lost test IDs are the same eight families as in Phases 7 and 8.
+- Byte identity: 0 differences. Refusal records: 0 of 173 differ. mypy clean (91 files). ruff `src/` clean, `src/ tests/` 94.
+
+**Deviations:** none from the plan.
 
 ### Phase 10 Completion
 
