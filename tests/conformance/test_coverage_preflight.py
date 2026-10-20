@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from sysml_codegen.cli import GenerationConfig, _generate_package_from_graph
+from sysml_codegen.cli import GenerationConfig, run_codegen
 from sysml_codegen.cli.prepare import _preflight_coverage_account
 from sysml_codegen.core.errors import CodeGenerationError
 from sysml_codegen.elaboration import project
@@ -53,15 +53,14 @@ def _nothing_was_written(config: GenerationConfig) -> bool:
     return not output.exists() or not any(output.iterdir())
 
 
-def _refused(graph, config, caplog) -> str:
-    """Generate, require refusal, and return the logged message.
+def _refused(config, caplog) -> str:
+    """Generate through ``run_codegen``, require refusal, and return the logged message.
 
-    ``_generate_package_from_graph`` reports a refusal by logging it and returning False —
-    that is its contract with the CLI — so the assertion is on the return value and the
-    message, not on an escaping exception.
+    ``run_codegen`` reports a refusal by logging it and returning False, so the assertion is
+    on the return value and the message, not on an escaping exception.
     """
     with caplog.at_level(logging.ERROR):
-        assert _generate_package_from_graph(graph, config) is False
+        assert run_codegen(config) is False
     return "\n".join(record.getMessage() for record in caplog.records)
 
 
@@ -104,7 +103,7 @@ def test_a_perturbed_account_refuses_before_any_write(tmp_path, monkeypatch, cap
         "sysml_codegen.generation.constraint_plan.build_constraint_generation_plan", _corrupt
     )
     config = _config(tmp_path)
-    message = _refused(project(elaborate_model_paths([FIXTURE])), config, caplog)
+    message = _refused(config, caplog)
     assert "COVERAGE_ACCOUNT_INVALID: the account disagrees with its catalog" in message
     assert _nothing_was_written(config)
 
@@ -173,7 +172,7 @@ def test_a_reason_item_two_adds_later_refuses_with_the_ruling_instruction(monkey
 def test_the_d9_fixture_refuses_generation_by_name(tmp_path, caplog):
     """An inapplicability marker on a gate that ran stops the run, before any output."""
     config = _config(tmp_path, D9_FIXTURE)
-    message = _refused(project(elaborate_model_paths([D9_FIXTURE])), config, caplog)
+    message = _refused(config, caplog)
     assert "marked inapplicable but produced" in message
     assert _nothing_was_written(config)
 

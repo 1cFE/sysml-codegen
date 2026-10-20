@@ -1,17 +1,30 @@
 """The writing half of ``generate``: everything that changes the destination (Item 2b D1).
 
-Clearing, creating the package folders, the writers and the seal. This is the only module on
-the generate route that writes under the destination.
+``emit_package`` takes what ``prepare`` built and writes it: the destination link check, the
+constraint plan and coverage account, the clear, the package folders, the writers and the
+seal. This is the only module on the generate route that writes under the destination. Each
+failure is logged once, with the record ``generate`` has always logged for it, and returned.
 """
 
 from __future__ import annotations
 
 import logging
 import shutil
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from sysml_codegen.cli.prepare import _get_python_path, _preflight_constraint_names
+from sysml_codegen.cli import prepare
+from sysml_codegen.cli.prepare import (
+    PreparationStep,
+    Prepared,
+    Refused,
+    _get_python_path,
+    _preflight_constraint_names,
+    log_refused,
+    refused_at_generation,
+)
+from sysml_codegen.cli.refusal import Refusal, RefusalKind
 
 if TYPE_CHECKING:
     import jinja2
@@ -22,6 +35,125 @@ if TYPE_CHECKING:
 
 #: The CLI's logger, so a record keeps the name it had before the writers moved here.
 logger = logging.getLogger("sysml_codegen.cli")
+
+
+@dataclass(frozen=True)
+class DestinationProblem:
+    """Why the destination cannot take a package: today's sealing-failure detail."""
+
+    detail: str
+
+
+def inspect_destination(path: Path) -> DestinationProblem | None:
+    """Check, without writing, that no link sits on or under the destination."""
+    from sysml_codegen.contracts import PackageSealError, ensure_package_tree_is_link_free
+
+    try:
+        ensure_package_tree_is_link_free(path)
+    except (PackageSealError, OSError) as error:
+        return DestinationProblem(str(error))
+    return None
+
+
+def emit_package(prepared: Prepared, config: GenerationConfig) -> Refused | None:
+    """Write and seal one package. Returns ``None``, or the failure it logged."""
+    if config.package_name != prepared.package_name:
+        raise ValueError(
+            f"emit_package was given package {config.package_name!r} for a model prepared "
+            f"as {prepared.package_name!r}"
+        )
+    problem = inspect_destination(config.output_path)
+    if problem is not None:
+        return _logged(
+            Refused(
+                PreparationStep.DESTINATION,
+                Refusal(RefusalKind.PACKAGE_WRITE),
+                f"Package sealing failed: {problem.detail}",
+            )
+        )
+    return _write_package(prepared, config)
+
+
+def _logged(refused: Refused) -> Refused:
+    log_refused(refused)
+    return refused
+
+
+def _write_package(prepared: Prepared, config: GenerationConfig) -> Refused | None:
+    """Everything after the link check, in today's order. Returns ``None`` or the logged failure."""
+    from sysml_codegen.contracts import PackageSealError
+    from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
+
+    graph = prepared.graph
+    template_env = prepared.template_env
+    step = PreparationStep.CONSTRAINT_PLAN
+    try:
+        # Build every constraint body and wrapper while the target tree is still untouched.
+        constraint_plan = build_constraint_generation_plan(
+            graph, template_env, prepared.package_name
+        )
+
+        # The coverage account the package is about to bake agrees with the catalog it
+        # claims to summarize, and the aggregator's existence agrees with the same
+        # population. Still before the clear, so a disagreement refuses without touching
+        # the tree.
+        step = PreparationStep.COVERAGE_ACCOUNT
+        prepare._preflight_coverage_account(graph, constraint_plan)
+
+        step = PreparationStep.EMIT
+        if config.overwrite:
+            logger.info("Clearing existing output directory...")
+            _clear_output_directory(config)
+
+        logger.info("Creating output directory structure...")
+        _setup_output_directories(config)
+
+        # primitives.py is required for module imports.
+        _generate_primitives(config)
+
+        logger.info("Generating schemas...")
+        _generate_schemas(graph, config, template_env)
+
+        logger.info("Generating TEAx module wrappers...")
+        _generate_modules(graph, config, template_env, constraint_plan)
+
+        logger.info("Generating implementation stencils...")
+        _generate_stencils(graph, config, template_env)
+
+        logger.info("Generating pipeline configuration...")
+        _generate_pipeline(graph, config, template_env)
+
+        logger.info("Generating module registry...")
+        _generate_registry(graph, config, template_env)
+
+        logger.info("Generating entry point schemas and JSON templates...")
+        _generate_entry_points(graph, config, template_env)
+
+        logger.info("Generating implementation backlog...")
+        _generate_backlog(graph, config)
+
+        logger.info("Generating runnable tests...")
+        _generate_tests(graph, config, template_env)
+
+        # Seal over the final on-disk state, live and from-snapshot paths alike.
+        logger.info("Sealing package...")
+        try:
+            _seal_package(graph, config)
+        except (PackageSealError, OSError) as error:
+            return _logged(
+                Refused(
+                    PreparationStep.EMIT,
+                    Refusal(RefusalKind.PACKAGE_WRITE),
+                    f"Package sealing failed: {error}",
+                )
+            )
+    # Measured, and not changed here: any failure after the clear leaves the partially
+    # written output tree on disk, refusals included.
+    except Exception as error:
+        return _logged(refused_at_generation(step, error))
+
+    logger.info("Code generation complete")
+    return None
 
 
 def _ensure_package_init_files(

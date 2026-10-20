@@ -15,16 +15,12 @@ import logging
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from sysml_codegen.cli import emit, prepare
 from sysml_codegen.cli.study import STUDY_TOOLS, cmd_study
 
-if TYPE_CHECKING:
-    from sysml_codegen.resolution.models import ComputationGraph
-
-# Note: Heavy imports moved inside run_codegen to avoid loading generation
-# module at CLI import time. This keeps CLI startup fast.
+# Note: the generate route imports its heavy modules inside the functions that use
+# them, so loading the CLI stays fast.
 
 logger = logging.getLogger(__name__)
 
@@ -368,8 +364,9 @@ def run_codegen(config: GenerationConfig) -> bool:
     whose receipt binds the instance graph to what it projects to. There is no
     flag, environment variable, or config field that selects an implementation.
 
-    The legacy builders are gone from the tree entirely (retirement steps 1-4);
-    there is no other construction authority left to be reachable from here.
+    The route is ``load_source``, then ``prepare`` (read-only), then ``emit_package``
+    (the only step that writes). A refusal from either half is logged once, as one
+    record carrying its ``Refusal``.
 
     Args:
         config: Generation configuration with paths and options.
@@ -377,248 +374,23 @@ def run_codegen(config: GenerationConfig) -> bool:
     Returns:
         True if generation succeeded, False otherwise.
     """
-    from sysml_codegen.cli.refusal import (
-        Refusal,
-        RefusalKind,
-        diagnostic_refusal,
-        generation_refusal,
-        readiness_refusal,
-    )
-    from sysml_codegen.elaboration.elaborate import (
-        ElaborationDiagnosticError,
-        ElaborationError,
-        unexpected_public_failure,
-    )
-    from sysml_codegen.generation import CodeGenerationError, SysMLParsingError
-    from sysml_codegen.orchestration.exact_pipeline_context import (
-        build_exact_pipeline_context,
-        build_exact_pipeline_context_from_snapshot,
-    )
-    from sysml_codegen.snapshot.envelope import InstanceGraphSnapshotError
-
-    source = config.from_snapshot if config.from_snapshot is not None else config.models_path
-    logger.info(f"Generating code from {source}")
+    source: prepare.ModelSource
+    if config.from_snapshot is not None:
+        source = prepare.SnapshotFile(config.from_snapshot)
+        logger.info(f"Generating code from {config.from_snapshot}")
+    else:
+        assert config.models_path is not None  # guaranteed by the CLI group
+        source = prepare.LiveModels((config.models_path,))
+        logger.info(f"Generating code from {config.models_path}")
     logger.info(f"Output to {config.output_path}")
     logger.info(f"Package name: {config.package_name}")
 
     logger.info("Building pipeline context...")
-    try:
-        if config.from_snapshot is not None:
-            context = build_exact_pipeline_context_from_snapshot(config.from_snapshot)
-        else:
-            assert config.models_path is not None  # guaranteed by the CLI group
-            context = build_exact_pipeline_context([config.models_path])
-        # One read, one projection. Every later step works from this object, so a
-        # package is never assembled out of several separately derived graphs.
-        graph = context.computation_graph
-    except InstanceGraphSnapshotError as error:
-        logger.error(
-            f"Snapshot refused: {error}", extra={"refusal": Refusal(RefusalKind.SNAPSHOT)}
-        )
+    prepared = prepare.prepare(prepare.load_source(source), config.package_name)
+    if isinstance(prepared, prepare.Refused):
+        prepare.log_refused(prepared)
         return False
-    # The two elaboration refusal classes stay distinct in the log the way the
-    # corpus driver keeps them distinct: readiness findings and validation
-    # diagnostics are different answers, and collapsing them loses which gate
-    # refused. Neither is a CodeGenerationError, so neither is caught below.
-    except ElaborationError as error:
-        logger.error(
-            f"Model is not ready for the exact route: {error}",
-            extra={"refusal": readiness_refusal(error)},
-        )
-        return False
-    except ElaborationDiagnosticError as error:
-        logger.error(
-            f"Model failed exact-route validation: {error}",
-            extra={"refusal": diagnostic_refusal(error)},
-        )
-        return False
-    except SysMLParsingError as error:
-        logger.error(
-            f"SysML parsing failed: {error}", extra={"refusal": Refusal(RefusalKind.PARSING)}
-        )
-        return False
-    except CodeGenerationError as error:
-        logger.error(
-            f"Code generation failed: {error}",
-            extra={
-                "constraint_name_safety": error.name_safety_violation,
-                "refusal": generation_refusal(error),
-            },
-        )
-        return False
-    except Exception as error:
-        diagnostic = unexpected_public_failure(error)
-        logger.error(
-            f"Model failed exact-route validation: {diagnostic}",
-            extra={"refusal": diagnostic_refusal(diagnostic)},
-        )
-        return False
-
-    logger.info(f"Built computation graph with {len(graph.modules)} modules")
-    try:
-        return _generate_package_from_graph(graph, config)
-    # A refusal generation already formed keeps its own code and vocabulary; only
-    # a failure nobody classified becomes an internal defect.
-    except CodeGenerationError as error:
-        logger.error(
-            f"Code generation failed: {error}",
-            extra={
-                "constraint_name_safety": error.name_safety_violation,
-                "refusal": generation_refusal(error),
-            },
-        )
-        return False
-    except Exception as error:
-        diagnostic = unexpected_public_failure(error)
-        logger.error(
-            f"Code generation failed: {diagnostic}",
-            extra={"refusal": diagnostic_refusal(diagnostic)},
-        )
-        return False
-
-
-def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConfig) -> bool:
-    """Write and seal one package from an already-constructed computation graph.
-
-    Authority-neutral by construction: it takes a graph and chooses nothing. The
-    caller has already decided which authority produced it, which is why
-    ``run_codegen`` is the only thing that decides. Private on purpose — the
-    recovery's legacy-specimen tests drive it directly while their fixtures are
-    retired, and Phase 4 removes those callers with the legacy owners.
-    """
-    from sysml_codegen.cli.refusal import Refusal, RefusalKind, generation_refusal
-    from sysml_codegen.contracts import PackageSealError, ensure_package_tree_is_link_free
-    from sysml_codegen.generation import (
-        CodeGenerationError,
-        SysMLParsingError,
-    )
-    from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
-
-    try:
-        # Unsupported root-output wrappers are a public model refusal, before
-        # link inspection, plan rendering, output clearing, directory creation,
-        # or any write. Registry collection shares the same total validator.
-        prepare._preflight_generation_metadata(graph)
-        prepare._preflight_exit_point_types(graph)
-
-        # Validate both generated constraint scopes before overwrite clearing or output creation.
-        prepare._preflight_constraint_names(graph)
-
-        # Step 1.5: Fail fast on a sanitize-collision BEFORE clearing output, so a
-        # duplicate path never wipes or silently overwrites existing files.
-        prepare._check_duplicate_output_paths(graph.modules)
-
-        # Step 1.7: registry class-name collisions the aliasing cannot resolve.
-        # The check itself lives at the registry pass, which runs after the tree
-        # is cleared; running it here is what makes the refusal fail-before-mutate.
-        prepare._preflight_registry_class_names(graph)
-
-        # Step 1.8: the constraint catalog accounts for every authored usage, and
-        # every occurrence row joins one of them by identity. Before output clear,
-        # like the preceding checks: a package that shipped a catalog missing a carrier would
-        # claim coverage it does not have.
-        prepare._preflight_constraint_totality(graph)
-
-        try:
-            ensure_package_tree_is_link_free(config.output_path)
-        except (PackageSealError, OSError) as error:
-            logger.error(
-                f"Package sealing failed: {error}",
-                extra={"refusal": Refusal(RefusalKind.PACKAGE_WRITE)},
-            )
-            return False
-
-        # Build every constraint body and wrapper while the target tree is still untouched.
-        template_env = prepare._get_template_env()
-        constraint_plan = build_constraint_generation_plan(graph, template_env, config.package_name)
-
-        # Step 1.9: the coverage account the package is about to bake agrees with the catalog
-        # it claims to summarize, and the aggregator's existence agrees with the same
-        # population. Still before the clear, so a disagreement refuses without touching the
-        # tree.
-        prepare._preflight_coverage_account(graph, constraint_plan)
-
-        # Step 2: Clear and setup output directories
-        if config.overwrite:
-            logger.info("Clearing existing output directory...")
-            emit._clear_output_directory(config)
-
-        logger.info("Creating output directory structure...")
-        emit._setup_output_directories(config)
-
-        # Step 3: Generate primitives.py (required for module imports)
-        emit._generate_primitives(config)
-
-        # Step 5: Generate schemas
-        logger.info("Generating schemas...")
-        emit._generate_schemas(graph, config, template_env)
-
-        # Step 6: Generate modules and stencils (all types unified via graph)
-        logger.info("Generating TEAx module wrappers...")
-        emit._generate_modules(graph, config, template_env, constraint_plan)
-
-        logger.info("Generating implementation stencils...")
-        emit._generate_stencils(graph, config, template_env)
-
-        # Step 7: Generate pipeline and registry
-        logger.info("Generating pipeline configuration...")
-        emit._generate_pipeline(graph, config, template_env)
-
-        logger.info("Generating module registry...")
-        emit._generate_registry(graph, config, template_env)
-
-        # Step 8: Generate entry points and extras
-        logger.info("Generating entry point schemas and JSON templates...")
-        emit._generate_entry_points(graph, config, template_env)
-
-        logger.info("Generating implementation backlog...")
-        emit._generate_backlog(graph, config)
-
-        logger.info("Generating runnable tests...")
-        emit._generate_tests(graph, config, template_env)
-
-        # Step 9: Seal the package (D1) — over final on-disk state, both live and
-        # from-snapshot paths alike (D8).
-        logger.info("Sealing package...")
-        try:
-            emit._seal_package(graph, config)
-        except (PackageSealError, OSError) as error:
-            logger.error(
-                f"Package sealing failed: {error}",
-                extra={"refusal": Refusal(RefusalKind.PACKAGE_WRITE)},
-            )
-            return False
-
-        logger.info("Code generation complete")
-        return True
-
-    except SysMLParsingError as e:
-        logger.error(f"SysML parsing failed: {e}", extra={"refusal": Refusal(RefusalKind.PARSING)})
-        return False
-    except CodeGenerationError as e:
-        logger.error(
-            f"Code generation failed: {e}",
-            extra={
-                "constraint_name_safety": e.name_safety_violation,
-                "refusal": generation_refusal(e),
-            },
-        )
-        return False
-    except OSError as e:
-        # The only unnamed failure this half can operationally hit is the
-        # filesystem: the output tree is created and written from step 2 onward.
-        # Everything else reaching here is converted by ``run_codegen`` into the
-        # same caused, located public diagnostic as construction failures. The
-        # private writer keeps the original exception intact for that boundary.
-        #
-        # Measured, and deliberately not changed here: any failure after step 2
-        # leaves the partially written output tree on disk. That is true of the
-        # named refusals above as well, and has been since before this narrowing.
-        logger.error(
-            f"Writing the generated package failed: {e}",
-            extra={"refusal": Refusal(RefusalKind.PACKAGE_WRITE)},
-        )
-        return False
+    return emit.emit_package(prepared, config) is None
 
 
 __all__ = [

@@ -1,6 +1,6 @@
 # Implementation Plan: Read-only readiness check, live half (EXEC-SUBSET-CONTRACT Item 2b)
 
-**Status:** In Progress (Phases 0-2 done)
+**Status:** In Progress (Phases 0-3 done)
 **Created:** 2026-10-20
 **Last Updated:** 2026-10-20
 **Branch / base:** sysml-codegen `subset-profile-screen` at `cbbc1100` (design approved); agentic-mbse sibling `/home/reid/src/subset-conformance/agentic-mbse` at `e268357f`, which this plan does not edit (design D12).
@@ -231,18 +231,18 @@ def test_writer_failure_logs_base_record(exc, monkeypatch, caplog):
 
 See `design.md` D1, D2, D11, D18, Implementation Notes ("Order of `prepare`'s refusal conversion", "`Refused` carries the logged form"), Architecture "`_generate_package_from_graph` is removed".
 
-- [ ] `cli/prepare.py`: `ModelSource`, `LoadedSource`, `load_source`, `PreparationStep` (all members, step order pinned), `Prepared`, `Refused`, `prepare(loaded, package_name)`, `prepare_graph(graph, package_name)`. One conversion ladder from today's `:1218-1259` and the pre-write part of `:1399-1425`.
-- [ ] `cli/emit.py`: `inspect_destination`, `emit_package(prepared, config)` taking package name and template environment from `Prepared` (m2), holding today's link check, plan build, coverage preflight, clear, writers, seal and the D18 handler blocks in today's order. Returns `None` or the failure it logged.
-- [ ] `cli/__init__.py`: `run_codegen` composes the three and logs a `Refused` through one helper that reproduces today's record. Remove `_generate_package_from_graph`.
-- [ ] Move the four test files in R2-4 to `prepare_graph`, asserting `Refused` (step, refusal, message). Tests never build a `Prepared` by hand.
-- [ ] `tests/helpers/subset_profile/observe.py`: move `_elaboration_spy` to wrap `elaborate_loaded_extractor` (D11, spy half only). `generator_half` still runs `run_codegen`.
+- [x] `cli/prepare.py`: `ModelSource`, `LoadedSource`, `load_source`, `PreparationStep` (all members, step order pinned), `Prepared`, `Refused`, `prepare(loaded, package_name)`, `prepare_graph(graph, package_name)`. One conversion ladder from today's `:1218-1259` and the pre-write part of `:1399-1425`.
+- [x] `cli/emit.py`: `inspect_destination`, `emit_package(prepared, config)` taking package name and template environment from `Prepared` (m2), holding today's link check, plan build, coverage preflight, clear, writers, seal and the D18 handler blocks in today's order. Returns `None` or the failure it logged.
+- [x] `cli/__init__.py`: `run_codegen` composes the three and logs a `Refused` through one helper that reproduces today's record. Remove `_generate_package_from_graph`.
+- [x] Move the four test files in R2-4 to `prepare_graph`, asserting `Refused` (step, refusal, message). Tests never build a `Prepared` by hand.
+- [x] `tests/helpers/subset_profile/observe.py`: move `_elaboration_spy` to wrap `elaborate_loaded_extractor` (D11, spy half only). `generator_half` still runs `run_codegen`.
 
 ### Validation
 
-- [ ] D18 test passes against Phase 0's writer-failure records.
-- [ ] Refusal records compare equal for every refused case, including the D4 coincidence case (still `PACKAGE_WRITE` here, because the link check still precedes the plan build).
-- [ ] `test_generator_half.py`, `test_tripwire.py`, `test_occurrence_parity.py` pass (the spy still sees one graph per run).
-- [ ] Phase exit check.
+- [x] D18 test passes against Phase 0's writer-failure records.
+- [x] Refusal records compare equal for every refused case, including the D4 coincidence case (still `PACKAGE_WRITE` here, because the link check still precedes the plan build).
+- [x] `test_generator_half.py`, `test_tripwire.py`, `test_occurrence_parity.py` pass (the spy still sees one graph per run).
+- [x] Phase exit check.
 
 **What we know after this phase:** `generate` is already the composition `check` will reuse, and nothing a user can observe has changed.
 
@@ -660,6 +660,33 @@ See `design.md#potential-risks` for the full table. Phase-specific mitigations:
 - `test_mutator.py::test_a_package_init_site_imports_the_package_itself` used a site in `cli/__init__.py`. No scanned site lives in any package `__init__.py` now, so the test checks `module_name`'s mapping for an `__init__.py` path on its own and `site_target` on the moved site (`cli.prepare`).
 
 ### Phase 3 Completion
+**Completed:** 2026-10-20. `run_codegen` is now `load_source` → `prepare` → `emit_package`, and nothing a user can observe changed: every package byte and every refusal record equals the base.
+
+**Changes Made:**
+- `cli/prepare.py`: `LiveModels`, `SnapshotFile`, `ModelSource`, `LoadedSource`, `load_source`, `PreparationStep` (all twelve members), `Prepared(graph, template_env, package_name)`, `Refused(step, refusal, message, constraint_name_safety)`, `log_refused`, `prepare` and `prepare_graph`. The two ladders are `refused_at_construction(error)` (today's construction ladder: snapshot, readiness, diagnostic, parsing, generation, internal defect) and `refused_at_generation(step, error)` (parsing, generation, `OSError` as `PACKAGE_WRITE`, internal defect). A `FailedLoad` goes straight into the construction ladder without being re-raised. `prepare` calls both builders through the `exact_pipeline_context` module and the preflights by global name, so existing patches stay live.
+- `cli/emit.py`: `DestinationProblem`, `inspect_destination`, `emit_package(prepared, config) -> Refused | None`. In today's order: link check (step `DESTINATION`), plan build (`CONSTRAINT_PLAN`), coverage preflight (`COVERAGE_ACCOUNT`), clear, setup, writers and seal (`EMIT`). It takes the graph, template environment and package name from `Prepared`. Each failure is logged once through `log_refused` and returned.
+- `cli/__init__.py`: `run_codegen` keeps its four INFO lines, then composes the three; `_generate_package_from_graph` and the old handler blocks are gone. The `"Built computation graph with N modules"` line is logged by `prepare` after construction, so it still comes before a preflight refusal.
+- Tests moved off `_generate_package_from_graph`:
+  - `test_cli_generation.py`: name-safety, missing-catalog and colliding-graph cases call `prepare_graph` and assert the step, the `Refusal` and `constraint_name_safety`. One new test logs a `Refused` and checks the single record. The two unclassified-failure tests patch `load_live_models` with a stand-in and the live-load builder (and, for generation, the first preflight).
+  - `test_constraint_catalog_totality.py`: the mutated-catalog refusals call `prepare_graph` and assert step `CONSTRAINT_TOTALITY`.
+  - `test_public_diagnostic_totality.py`, `test_generation_exit_type_preflight.py`: models-arm patches retargeted to `load_live_models` and `build_exact_pipeline_context_from_live_load`.
+  - `test_public_authority_switch.py` and `test_elaboration_import_boundaries.py` read every `cli/*.py` file. The "one construction route" pin now expects the live-load and snapshot builders, counting `exact_pipeline_context.<builder>` attribute calls as well as imports.
+- `tests/helpers/subset_profile/observe.py`: the elaboration spy wraps `elaborated_pipeline.elaborate_loaded_extractor`. `elaborate_live_load` returns that function's result unchanged, so a refused case still records no graph.
+- New: `tests/unit/test_prepare_steps.py` (step order) and `tests/conformance/test_emit_writer_failures.py` (D18: `_generate_pipeline` in `cli.emit` raises each of the three failures; the single record equals `writer_failure:*` in `refusal_records.json`).
+- Site account: one row added, `cli/emit.py::emit_package::builtin::ValueError::1`, `internal_invariant` (count 499). Line and first evidence pointer refreshed for the 17 `cli/prepare.py` and `cli/emit.py` rows, since code was added above them.
+
+**Exit check:** licensed suite 7434 passed, 9 failed (the base 9), 9 skipped. No new failures. The only base IDs missing that a site re-key does not explain are the 13 replaced `test_cli_generation.py` tests. Byte identity: 0 differences (123 subjects). Refusal records: 0 of 173 differ, including the D4 coincidence case (`destination_link:*`, still `PACKAGE_WRITE`) and the three writer failures. The 2a harness (`tests/conformance/subset_profile/`) passes: 4640 tests, including `test_generator_half.py`, `test_tripwire.py` and `test_occurrence_parity.py`. mypy clean (89 files), ruff `src/` clean, ruff `src/ tests/` 94. agentic-mbse clean at `e268357f`.
+
+**Deviations:**
+- Not every R2-4 call site became a `prepare_graph` call. The design assumed every direct call passed a graph a `prepare` step refuses. Three did not:
+  - `test_constraint_catalog_totality.py:110, 140` build a package.
+  - `test_coverage_preflight.py`'s two route tests refuse at the coverage step, which is still inside `emit_package` in this phase.
+  - All three pass an unmutated graph projected from a model fixture, so they now call `run_codegen` on that fixture. That is the same route, and no `Prepared` is built by hand.
+- The template environment is created at the end of `prepare_graph`, before the link check. At the base it was created after the link check. A failure there would be refused at `CONSTRAINT_PLAN`, the step that uses the environment. Creating a jinja2 environment reads no files, and records and bytes are unchanged.
+- `emit_package` raises `ValueError` if the config's package name differs from the prepared one. This is a caller bug, not a refusal; `run_codegen` cannot reach it. It is the one new site in the account.
+- The tree-preservation assertions in the moved `test_cli_generation.py` tests are gone, as the design says: `prepare_graph` takes no destination. Success Criterion 1's sentinel runs (Phase 9) cover the live route.
+
+**Surprises:** none against the design's premises. Not part of this phase but worth knowing: `tests/unit/test_report_precedence.py` needs `simkit`, so it fails when `tests/unit` is run on its own; the full-suite run deselects it.
 
 ### Phase 4 Completion
 

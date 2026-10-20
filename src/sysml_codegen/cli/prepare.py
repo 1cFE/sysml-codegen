@@ -1,20 +1,36 @@
 """The read-only half of ``generate``: everything before the first write (Item 2b D1).
 
-The template environment, the path helpers both halves use, and the preflights that refuse a
-model before anything under the destination is cleared, created or written. Nothing here
-takes a destination; ``cli/emit.py`` may import from this module, never the reverse.
+``load_source`` opens the model source once; ``prepare`` constructs the computation graph from
+it and runs the preflights that refuse a model before anything under the destination is
+cleared, created or written. Each refusal comes back as a ``Refused`` value carrying the record
+``generate`` logs for it, and ``log_refused`` logs that record. Nothing here takes a
+destination; ``cli/emit.py`` may import from this module, never the reverse.
 """
 
 from __future__ import annotations
 
+import logging
+from dataclasses import dataclass
+from enum import Enum, auto
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import jinja2
 
+from sysml_codegen.cli.refusal import (
+    Refusal,
+    RefusalKind,
+    diagnostic_refusal,
+    generation_refusal,
+    readiness_refusal,
+)
+
 if TYPE_CHECKING:
+    from sysml_codegen.core.errors import CodeGenerationError
     from sysml_codegen.core.identifier_types import PythonModulePath
+    from sysml_codegen.generation.constraint_name_safety import ConstraintNameViolation
     from sysml_codegen.generation.constraint_plan import ConstraintGenerationPlan
+    from sysml_codegen.orchestration.elaborated_pipeline import FailedLoad, LiveLoad
     from sysml_codegen.resolution.models import (
         ComputationGraph,
         ConstraintCatalogEntry,
@@ -22,6 +38,233 @@ if TYPE_CHECKING:
         ConstraintCatalogUsageRecord,
         PipelineModule,
     )
+
+#: The CLI's logger, so a record keeps the name it had before the route was split.
+logger = logging.getLogger("sysml_codegen.cli")
+
+
+@dataclass(frozen=True)
+class LiveModels:
+    """Model files to load with SysIDE."""
+
+    paths: tuple[Path, ...]
+
+
+@dataclass(frozen=True)
+class SnapshotFile:
+    """A sealed v6 instance-graph snapshot. Loading it needs no SysIDE."""
+
+    path: Path
+
+
+type ModelSource = LiveModels | SnapshotFile
+#: What ``load_source`` returns: a live load, a live load that failed, or the snapshot.
+type LoadedSource = LiveLoad | FailedLoad | SnapshotFile
+
+
+def load_source(source: ModelSource) -> LoadedSource:
+    """Open the model source once. Never raises: a failed live load is a ``FailedLoad``."""
+    from sysml_codegen.orchestration import elaborated_pipeline
+
+    if isinstance(source, SnapshotFile):
+        return source
+    return elaborated_pipeline.load_live_models(source.paths)
+
+
+class PreparationStep(Enum):
+    """The steps of the generator's route, in the order they run.
+
+    ``prepare`` runs construction through the preflights and creates the template
+    environment. ``emit_package`` runs the destination check, then builds the constraint plan
+    and checks the coverage account, then writes. Nothing produces ``PARAMETER_FIELD_NAMES``
+    yet.
+    """
+
+    CONSTRUCTION = auto()
+    GENERATION_METADATA = auto()
+    EXIT_POINT_TYPES = auto()
+    CONSTRAINT_NAMES = auto()
+    OUTPUT_PATHS = auto()
+    REGISTRY_CLASS_NAMES = auto()
+    CONSTRAINT_TOTALITY = auto()
+    CONSTRAINT_PLAN = auto()
+    COVERAGE_ACCOUNT = auto()
+    PARAMETER_FIELD_NAMES = auto()
+    DESTINATION = auto()
+    EMIT = auto()
+
+
+@dataclass(frozen=True)
+class Prepared:
+    """A model the generator's route builds, ready for ``emit_package``."""
+
+    graph: ComputationGraph
+    template_env: jinja2.Environment
+    package_name: str
+
+
+@dataclass(frozen=True)
+class Refused:
+    """A refusal, the step that refused, and the record ``generate`` logs for it."""
+
+    step: PreparationStep
+    refusal: Refusal
+    message: str
+    #: Set exactly when ``refusal.kind`` is ``GENERATION``; may itself be ``None``.
+    constraint_name_safety: ConstraintNameViolation | None = None
+
+
+def log_refused(refused: Refused) -> None:
+    """Log the one refusal record for a refused run, as ``generate`` has always logged it."""
+    extra: dict[str, object] = {"refusal": refused.refusal}
+    if refused.refusal.kind is RefusalKind.GENERATION:
+        extra["constraint_name_safety"] = refused.constraint_name_safety
+    logger.error(refused.message, extra=extra)
+
+
+def refused_at_construction(error: Exception) -> Refused:
+    """Convert a failure to load, elaborate or project into its refusal.
+
+    The two elaboration refusal classes stay distinct the way the corpus driver keeps them
+    distinct: readiness findings and validation diagnostics are different answers, and
+    collapsing them loses which gate refused. A failure nobody classified becomes the
+    internal-defect diagnostic.
+    """
+    from sysml_codegen.elaboration.elaborate import (
+        ElaborationDiagnosticError,
+        ElaborationError,
+        unexpected_public_failure,
+    )
+    from sysml_codegen.generation import CodeGenerationError, SysMLParsingError
+    from sysml_codegen.snapshot.envelope import InstanceGraphSnapshotError
+
+    step = PreparationStep.CONSTRUCTION
+    if isinstance(error, InstanceGraphSnapshotError):
+        return Refused(step, Refusal(RefusalKind.SNAPSHOT), f"Snapshot refused: {error}")
+    if isinstance(error, ElaborationError):
+        return Refused(
+            step,
+            readiness_refusal(error),
+            f"Model is not ready for the exact route: {error}",
+        )
+    if isinstance(error, ElaborationDiagnosticError):
+        return Refused(
+            step, diagnostic_refusal(error), f"Model failed exact-route validation: {error}"
+        )
+    if isinstance(error, SysMLParsingError):
+        return Refused(step, Refusal(RefusalKind.PARSING), f"SysML parsing failed: {error}")
+    if isinstance(error, CodeGenerationError):
+        return _generation_refused(step, error)
+    diagnostic = unexpected_public_failure(error)
+    return Refused(
+        step,
+        diagnostic_refusal(diagnostic),
+        f"Model failed exact-route validation: {diagnostic}",
+    )
+
+
+def refused_at_generation(step: PreparationStep, error: Exception) -> Refused:
+    """Convert a failure after construction into its refusal.
+
+    A refusal generation already formed keeps its own code and vocabulary. The only unnamed
+    failure the writing steps can operationally hit is the filesystem; any other failure
+    nobody classified becomes the internal-defect diagnostic.
+    """
+    from sysml_codegen.elaboration.elaborate import unexpected_public_failure
+    from sysml_codegen.generation import CodeGenerationError, SysMLParsingError
+
+    if isinstance(error, SysMLParsingError):
+        return Refused(step, Refusal(RefusalKind.PARSING), f"SysML parsing failed: {error}")
+    if isinstance(error, CodeGenerationError):
+        return _generation_refused(step, error)
+    if isinstance(error, OSError):
+        return Refused(
+            step,
+            Refusal(RefusalKind.PACKAGE_WRITE),
+            f"Writing the generated package failed: {error}",
+        )
+    diagnostic = unexpected_public_failure(error)
+    return Refused(
+        step, diagnostic_refusal(diagnostic), f"Code generation failed: {diagnostic}"
+    )
+
+
+def _generation_refused(step: PreparationStep, error: CodeGenerationError) -> Refused:
+    return Refused(
+        step,
+        generation_refusal(error),
+        f"Code generation failed: {error}",
+        error.name_safety_violation,
+    )
+
+
+def prepare(loaded: LoadedSource, package_name: str) -> Prepared | Refused:
+    """Run the generator's route up to, not including, the first write.
+
+    One read, one projection: every later step works from the graph read here, so a package
+    is never assembled out of several separately derived graphs.
+    """
+    from sysml_codegen.orchestration import exact_pipeline_context
+    from sysml_codegen.orchestration.elaborated_pipeline import FailedLoad
+
+    if isinstance(loaded, FailedLoad):
+        return refused_at_construction(loaded.error)
+    try:
+        if isinstance(loaded, SnapshotFile):
+            context = exact_pipeline_context.build_exact_pipeline_context_from_snapshot(
+                loaded.path
+            )
+        else:
+            context = exact_pipeline_context.build_exact_pipeline_context_from_live_load(loaded)
+        graph = context.computation_graph
+    except Exception as error:
+        return refused_at_construction(error)
+
+    logger.info(f"Built computation graph with {len(graph.modules)} modules")
+    return prepare_graph(graph, package_name)
+
+
+def prepare_graph(graph: ComputationGraph, package_name: str) -> Prepared | Refused:
+    """Run the preflights on a constructed graph, in today's order.
+
+    Each one refuses before link inspection, plan rendering, output clearing, directory
+    creation or any write.
+    """
+    step = PreparationStep.GENERATION_METADATA
+    try:
+        # Unsupported root-output wrappers are a public model refusal. Registry collection
+        # shares the same total validator.
+        _preflight_generation_metadata(graph)
+        step = PreparationStep.EXIT_POINT_TYPES
+        _preflight_exit_point_types(graph)
+
+        # Both generated constraint scopes.
+        step = PreparationStep.CONSTRAINT_NAMES
+        _preflight_constraint_names(graph)
+
+        # A sanitize-collision, so a duplicate path never wipes or silently overwrites
+        # existing files.
+        step = PreparationStep.OUTPUT_PATHS
+        _check_duplicate_output_paths(graph.modules)
+
+        # Registry class-name collisions the aliasing cannot resolve. The check itself lives
+        # at the registry pass, which runs after the tree is cleared; running it here is what
+        # makes the refusal fail-before-mutate.
+        step = PreparationStep.REGISTRY_CLASS_NAMES
+        _preflight_registry_class_names(graph)
+
+        # The constraint catalog accounts for every authored usage, and every occurrence row
+        # joins one of them by identity: a package that shipped a catalog missing a carrier
+        # would claim coverage it does not have.
+        step = PreparationStep.CONSTRAINT_TOTALITY
+        _preflight_constraint_totality(graph)
+
+        # The environment the constraint plan renders with; ``emit_package`` builds the plan.
+        step = PreparationStep.CONSTRAINT_PLAN
+        template_env = _get_template_env()
+    except Exception as error:
+        return refused_at_generation(step, error)
+    return Prepared(graph, template_env, package_name)
 
 
 def _get_template_env() -> jinja2.Environment:

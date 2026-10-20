@@ -1,6 +1,6 @@
 # Spec: Read-only readiness check, live half (EXEC-SUBSET-CONTRACT Item 2b)
 
-**Status:** Revision 3, not yet reviewed. Revision 2 was approved by spec review round 2 (2026-10-20); revision 3 applies the scope split below. Implementation in progress (plan Phase 0 done, 2026-10-20).
+**Status:** Revision 3, not yet reviewed. Revision 2 was approved by spec review round 2 (2026-10-20); revision 3 applies the scope split below. Implementation in progress (plan Phases 0-3 done, 2026-10-20).
 **Owner:** Reid Westwood
 **Created:** 2026-10-20
 **Complexity:** HIGH

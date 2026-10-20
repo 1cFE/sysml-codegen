@@ -5,7 +5,7 @@ comes from the ``extra={"refusal": ...}`` payload on its ERROR records, never fr
 text, where a code can also appear inside detail. Stubs come the same way, from the
 ``extra={"manual_stub": ...}`` payload of the WARNING elaboration logs once per stubbed calc
 def member (design D9). The instance graph comes from a spy on
-``elaborated_pipeline.elaborate_model_paths`` as the exact pipeline context calls it, and the
+``elaborated_pipeline.elaborate_loaded_extractor`` as the exact pipeline context calls it, and the
 catalog from the written ``contracts/model_contract.json``. The screen's three entry points
 are tripwired for the run, so a generator answer can never be the screen's answer in
 disguise.
@@ -166,20 +166,22 @@ def screen_tripwire() -> Iterator[None]:
 
 @contextmanager
 def _elaboration_spy(graphs: list[InstanceGraph]) -> Iterator[None]:
+    # ``run_codegen`` elaborates the shared load (Item 2b D11): the builder looks this name up
+    # on the module at call time, so rebinding it here is what the route calls.
     from sysml_codegen.orchestration import elaborated_pipeline
 
-    real = elaborated_pipeline.elaborate_model_paths
+    real = elaborated_pipeline.elaborate_loaded_extractor
 
     def spy(*args: Any, **kwargs: Any) -> InstanceGraph:
         graph = real(*args, **kwargs)
         graphs.append(graph)
         return graph
 
-    elaborated_pipeline.elaborate_model_paths = spy
+    elaborated_pipeline.elaborate_loaded_extractor = spy
     try:
         yield
     finally:
-        elaborated_pipeline.elaborate_model_paths = real
+        elaborated_pipeline.elaborate_loaded_extractor = real
 
 
 @contextmanager

@@ -418,6 +418,11 @@ def test_a_parse_failure_crosses_the_context_builder_as_itself(
     assert caught.value is planted
 
 
+def _load_without_syside(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Make the live load succeed with a stand-in, so construction is the step under test."""
+    monkeypatch.setattr(elaborated_pipeline, "load_live_models", lambda _paths: SimpleNamespace())
+
+
 @pytest.mark.parametrize("source_kind", ["models", "snapshot"])
 def test_generation_entry_point_never_leaks_an_unexpected_traceback(
     monkeypatch: pytest.MonkeyPatch,
@@ -426,11 +431,11 @@ def test_generation_entry_point_never_leaks_an_unexpected_traceback(
     source_kind: str,
 ) -> None:
     planted = RuntimeError(f"planted {source_kind} generation failure")
-    builder_name = (
-        "build_exact_pipeline_context_from_snapshot"
-        if source_kind == "snapshot"
-        else "build_exact_pipeline_context"
-    )
+    if source_kind == "snapshot":
+        builder_name = "build_exact_pipeline_context_from_snapshot"
+    else:
+        builder_name = "build_exact_pipeline_context_from_live_load"
+        _load_without_syside(monkeypatch)
     monkeypatch.setattr(
         exact_pipeline_context,
         builder_name,
@@ -459,19 +464,20 @@ def test_a_formed_generation_refusal_is_not_relabelled_an_internal_defect(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """A refusal the generator already formed keeps its own code and vocabulary."""
-    import sysml_codegen.cli as cli_module
+    from sysml_codegen.cli import prepare
     from sysml_codegen.core.errors import GenerationCode
     from sysml_codegen.generation import CodeGenerationError
 
+    _load_without_syside(monkeypatch)
     monkeypatch.setattr(
         exact_pipeline_context,
-        "build_exact_pipeline_context",
-        lambda _source: SimpleNamespace(computation_graph=SimpleNamespace(modules=())),
+        "build_exact_pipeline_context_from_live_load",
+        lambda _loaded: SimpleNamespace(computation_graph=SimpleNamespace(modules=())),
     )
     monkeypatch.setattr(
-        cli_module,
-        "_generate_package_from_graph",
-        lambda _graph, _config: (_ for _ in ()).throw(
+        prepare,
+        "_preflight_generation_metadata",
+        lambda _graph: (_ for _ in ()).throw(
             CodeGenerationError(
                 "EXIT_POINT_TYPE_UNSUPPORTED: module='m' output='root'",
                 code=GenerationCode.EXIT_POINT_TYPE_UNSUPPORTED,
