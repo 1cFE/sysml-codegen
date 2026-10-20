@@ -1,0 +1,460 @@
+<title>Generator Check Architecture Review</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column (~68ch) with wide tables and diagrams allowed to scroll in their own boxes. */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #1c2330;
+  --muted: #5a6577;
+  --rule: #d9dee6;
+  --accent: #1f6f8b;
+  --accent-soft: #e3f0f5;
+  --good: #2e7d4f;
+  --good-soft: #e5f3ea;
+  --warn: #9a6a00;
+  --warn-soft: #fbf1d9;
+  --bad: #b23a3a;
+  --bad-soft: #f8e4e4;
+  --code-bg: #eef1f5;
+  --font-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d; --surface: #1a2029; --fg: #e3e8ef; --muted: #9aa5b5; --rule: #2d3644;
+    --accent: #6cc0dc; --accent-soft: #17323d; --good: #6fcf97; --good-soft: #173225;
+    --warn: #e5b94e; --warn-soft: #3a2f12; --bad: #f08a8a; --bad-soft: #3d1d1d; --code-bg: #232b36;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d; --surface: #1a2029; --fg: #e3e8ef; --muted: #9aa5b5; --rule: #2d3644;
+  --accent: #6cc0dc; --accent-soft: #17323d; --good: #6fcf97; --good-soft: #173225;
+  --warn: #e5b94e; --warn-soft: #3a2f12; --bad: #f08a8a; --bad-soft: #3d1d1d; --code-bg: #232b36;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.6;
+}
+.wrap {
+  max-width: 46rem; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 2.5rem 4rem;
+}
+h1, h2, h3 { font-family: var(--font-display); font-weight: 600; line-height: 1.2; text-wrap: balance; }
+h1 { font-size: 2.1rem; margin: 0 0 .4rem; }
+h2 { font-size: 1.5rem; margin: 3rem 0 .8rem; padding-top: 1.2rem; border-top: 1px solid var(--rule); }
+h3 { font-size: 1.15rem; margin: 1.8rem 0 .5rem; }
+p { margin: 0 0 1rem; }
+.sub { color: var(--muted); margin-bottom: 2rem; }
+code { font-family: var(--font-mono); font-size: .88em; background: var(--code-bg); padding: .08em .3em; border-radius: 3px; overflow-wrap: anywhere; }
+pre { font-family: var(--font-mono); font-size: .85rem; background: var(--code-bg); padding: .8rem 1rem; border-radius: 6px; overflow-x: auto; margin: 0 0 1rem; }
+ul, ol { padding-left: 1.3rem; margin: 0 0 1rem; }
+li { margin-bottom: .35rem; }
+.label { font-family: var(--font-display); text-transform: uppercase; letter-spacing: .06em; font-size: .78rem; color: var(--muted); font-weight: 600; }
+.story { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 1.2rem 1.4rem; }
+.story ol { margin: 0; }
+.story li { margin-bottom: .6rem; }
+.callout { border-left: 4px solid var(--accent); background: var(--accent-soft); padding: .9rem 1.1rem; border-radius: 0 6px 6px 0; margin: 1.2rem 0; }
+.callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+.callout.good { border-color: var(--good); background: var(--good-soft); }
+.callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+.scroll { overflow-x: auto; margin: 1rem 0 1.4rem; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: .55rem .7rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-family: var(--font-display); font-weight: 600; background: var(--code-bg); }
+tr:last-child td { border-bottom: none; }
+.pill { display: inline-block; font-size: .78rem; font-weight: 600; padding: .05rem .45rem; border-radius: 999px; white-space: nowrap; }
+.pill.yes { background: var(--good-soft); color: var(--good); }
+.pill.no { background: var(--bad-soft); color: var(--bad); }
+.pill.part { background: var(--warn-soft); color: var(--warn); }
+.diagram { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 1rem; overflow-x: auto; margin: 1rem 0 1.4rem; }
+.diagram svg text { font-family: var(--font-body); }
+.opt { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 1rem 1.2rem; margin: 1rem 0; }
+.opt h3 { margin-top: 0; }
+.opt .plain { font-style: italic; }
+.opt dl { display: grid; grid-template-columns: 7.5rem 1fr; gap: .35rem .8rem; margin: .6rem 0 0; font-size: .93rem; }
+.opt dt { font-weight: 600; color: var(--muted); }
+.opt dd { margin: 0; min-width: 0; }
+@media (max-width: 520px) { .opt dl { grid-template-columns: 1fr; } .opt dt { margin-top: .4rem; } }
+.q { background: var(--surface); border: 2px solid var(--accent); border-radius: 6px; padding: 1rem 1.2rem; margin: 1rem 0; }
+.q h3 { margin-top: 0; }
+.glossary { display: grid; grid-template-columns: 9rem 1fr; gap: .4rem 1rem; font-size: .93rem; margin: 0; }
+.glossary dt { font-weight: 600; }
+.glossary dd { margin: 0; min-width: 0; }
+@media (max-width: 520px) { .glossary { grid-template-columns: 1fr; } .glossary dt { margin-top: .5rem; } }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+
+<div class="wrap">
+
+<p class="label">Architecture review · 2026-10-20</p>
+<h1>How should a modeller find out early that a model won't generate?</h1>
+<p class="sub">What went wrong in dc3, what the epic built in response, the alternatives nobody weighed, and what I recommend.</p>
+
+<div class="callout">
+<p class="label">Names used on this page</p>
+<dl class="glossary">
+  <dt>sysml-codegen</dt><dd>The generator. <code>sysml-codegen generate</code> turns a SysML model into a Python package.</dd>
+  <dt>agentic-mbse</dt><dd>The modelling toolkit: the validator, the shipped guidance and examples, and the AI modelling skills.</dd>
+  <dt>L6</dt><dd>Level 6 of the validator (<code>agentic-mbse validate --level=6</code>), the level that warns about generator support.</dd>
+  <dt>TEAx</dt><dd>The runtime that executes generated packages. Its 124 tests check generated packages actually run.</dd>
+  <dt>dc3, fusion-tea</dt><dd>The two modelling projects that use both tools. dc3 is where the incident happened.</dd>
+  <dt>The epic</dt><dd>EXEC-SUBSET-CONTRACT, in agentic-mbse's backlog. Its items: 1 wrote the copied rules; 2a tested them against the generator; 2b (this branch) built <code>check</code>; 3 made L6 use the rules; 4 added a separate check for inputs bound in the wrong order; 5 tests every shipped example; 6 updates the modelling workflow.</dd>
+  <dt>RG-1, RG-3</dt><dd>Decisions you reserved: RG-1 is any change to which models the generator accepts or refuses; RG-3 is merges and recorded decisions.</dd>
+</dl>
+</div>
+
+<div class="story">
+<p class="label">The short version</p>
+<ol>
+  <li><strong>What went wrong.</strong> dc3 built and reviewed its models for about ten days with generation switched off. When someone finally ran <code>generate</code>, it refused. Three of the reasons were baked into the model's structure, so fixing them meant reworking reviewed models.</li>
+  <li><strong>Why nobody saw it coming.</strong> Nobody ran the generator early. Our shipped guidance taught some of the refused patterns. L6 printed a short list of problems under the heading "Pipeline Readiness", and the team read that as the full gap.</li>
+  <li><strong>What the epic built.</strong> A second, hand-written copy of part of the generator's refusal logic, inside agentic-mbse, so L6 could warn without running the generator. About 5,600 lines, plus a large test system that keeps it agreeing with the generator.</li>
+  <li><strong>Why a copy.</strong> agentic-mbse is not allowed to import the generator, because the generator already imports agentic-mbse. Nobody considered running the generator as a separate command, which is allowed.</li>
+  <li><strong>What is solid.</strong> Item 2b built <code>sysml-codegen check</code>: the generator's real code, run without writing any files.</li>
+  <li><strong>What I recommend.</strong> Prevent the structural mistakes with three sentences of guidance, have the modelling workflow run <code>check</code> early, and retire the copied rules before they go wrong.</li>
+  <li><strong>What only you can decide.</strong> The copy's one unique strength is that it shows every structural problem in a single run. The generator stops at its first failing step. Is that worth keeping a second copy of the generator's rules?</li>
+</ol>
+</div>
+
+<h2>1. What happened in dc3</h2>
+
+<p>The timeline, from dc3's own records:</p>
+<ul>
+  <li><strong>Oct 3.</strong> sysml-codegen installed in dc3.</li>
+  <li><strong>Oct 5.</strong> You amended dc3's goal to build the model natively first, with generation explicitly parked (<code>conversion-path-efficiency/goal.md:67</code>).</li>
+  <li><strong>Oct 4–13.</strong> The team built and reviewed the model. L6 reported 11 issues in two categories (B7 and B8 below) under the heading "Architecture &amp; Pipeline Readiness". The team took that as the size of the generation gap.</li>
+  <li><strong>Oct 13, 20:26.</strong> First <code>generate</code> run. It refused. Five more runs followed. Each showed one new refusal, and to see the next one the team had to stub out the last (temporarily delete or simplify the offending part of the model). A separate probe found the biggest one, B1.</li>
+  <li><strong>Oct 13, 20:47.</strong> The full inventory was written (dc3's T-001: eight categories, B1–B8). About 20 minutes of agent time.</li>
+  <li><strong>Oct 13, 22:06.</strong> The rewrite (dc3's WI-008) was designed, done and reviewed. About 80 minutes.</li>
+</ul>
+
+<p>The eight categories. The first three are the expensive ones, because they are about how the model is structured, not how one expression is written:</p>
+<div class="scroll"><table>
+<thead><tr><th>Code</th><th>What the model did</th><th>Kind</th><th>In dc3</th></tr></thead>
+<tbody>
+<tr><td>B1</td><td>Put an <code>assert constraint</code> inside a calculation usage (a calculation placed inside a part) instead of on the part itself</td><td>Structural</td><td>164</td></tr>
+<tr><td>B2</td><td>Gave a calculation an input that is a list of values (<code>Real[0..*] ordered</code>)</td><td>Structural</td><td>5 inputs in 3 calculations</td></tr>
+<tr><td>B3</td><td>Used an open-ended part count, like <code>[*]</code></td><td>Structural</td><td>15</td></tr>
+<tr><td>B4, B5</td><td>Used functions the generator doesn't support (<code>product</code>, <code>size</code>)</td><td>Expression</td><td>23</td></tr>
+<tr><td>B6</td><td>Used conditional expressions in a form the generator can't follow</td><td>Expression</td><td>5</td></tr>
+<tr><td>B7</td><td>Used String attributes, which the generator drops</td><td>Data</td><td>10</td></tr>
+<tr><td>B8</td><td>Used constraint forms the generator can't evaluate</td><td>Constraint</td><td>6</td></tr>
+</tbody></table></div>
+
+<p>What B1 cost is worth spelling out. dc3 used asserts inside calculations as safety guards: when a condition failed, the native SysML evaluation stopped with an error rather than returning a wrong number. The generator can't place those, so the rewrite moved them onto parts, where the generated code reports a pass or fail but keeps computing. dc3 lost that stop-on-failure behaviour on the generated path. That, not the 80 minutes, is the real cost.</p>
+
+<div class="callout warn">
+<p><strong>Three separate things went wrong.</strong> (1) Nobody ran the generator early, by explicit permission. (2) Our guidance taught some of the refused patterns. (3) L6's short list was read as the whole gap. A fourth made the clean-up slower: when the generator was finally run, it showed one problem per run. The epic treated all of these as one problem, "the validator doesn't know the generator's rules", and built a fix for that.</p>
+</div>
+
+<p>The incident cost is sized here from agent session times. How much of <em>your</em> time it took is not in any record, and the recommendation in section 6 assumes it was small. The last question at the end checks that.</p>
+
+<h2>2. How the generator decides, today</h2>
+
+<p>Every option either uses the generator's own decision or copies it, so this is the thing to understand first. The generator checks a model in a fixed order of five steps, then writes files. Some steps give up at the first bad item ("stops at first"). Others report everything they find in that step ("collects"). Either way, the generator stops after the first step that fails, so later steps are never reached.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 720 330" width="720" height="330" role="img" aria-label="Generator steps in order, with where each dc3 category fails">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker>
+  </defs>
+  <g font-size="13" fill="var(--fg)">
+    <rect x="10" y="20" width="120" height="54" rx="5" fill="var(--code-bg)" stroke="var(--rule)"/>
+    <text x="70" y="44" text-anchor="middle" font-weight="600">Load</text>
+    <text x="70" y="62" text-anchor="middle" font-size="11" fill="var(--muted)">read .sysml files</text>
+
+    <rect x="160" y="20" width="120" height="54" rx="5" fill="var(--bad-soft)" stroke="var(--bad)"/>
+    <text x="220" y="40" text-anchor="middle" font-weight="600">1 Expressions</text>
+    <text x="220" y="56" text-anchor="middle" font-size="11">stops at first</text>
+    <text x="220" y="69" text-anchor="middle" font-size="11" font-weight="600">B4 B5 B6</text>
+
+    <rect x="310" y="20" width="120" height="54" rx="5" fill="var(--good-soft)" stroke="var(--good)"/>
+    <text x="370" y="40" text-anchor="middle" font-weight="600">2 Constraints</text>
+    <text x="370" y="56" text-anchor="middle" font-size="11">collects</text>
+    <text x="370" y="69" text-anchor="middle" font-size="11" font-weight="600">B8</text>
+
+    <rect x="460" y="20" width="120" height="54" rx="5" fill="var(--bad-soft)" stroke="var(--bad)"/>
+    <text x="520" y="40" text-anchor="middle" font-weight="600">3 Part tree</text>
+    <text x="520" y="56" text-anchor="middle" font-size="11">stops at first</text>
+    <text x="520" y="69" text-anchor="middle" font-size="11" font-weight="600">B2 B3</text>
+
+    <rect x="160" y="130" width="270" height="54" rx="5" fill="var(--warn-soft)" stroke="var(--warn)"/>
+    <text x="295" y="150" text-anchor="middle" font-weight="600">4 Calculation graph</text>
+    <text x="295" y="166" text-anchor="middle" font-size="11">mostly collects; the B1 check stops at first</text>
+    <text x="295" y="179" text-anchor="middle" font-size="11" font-weight="600">B1 (164 of them, shown one at a time)</text>
+
+    <rect x="460" y="130" width="120" height="54" rx="5" fill="var(--bad-soft)" stroke="var(--bad)"/>
+    <text x="520" y="150" text-anchor="middle" font-weight="600">5 Final checks</text>
+    <text x="520" y="166" text-anchor="middle" font-size="11">names, types</text>
+    <text x="520" y="179" text-anchor="middle" font-size="11">stops at first</text>
+
+    <rect x="610" y="130" width="100" height="54" rx="5" fill="var(--code-bg)" stroke="var(--rule)"/>
+    <text x="660" y="152" text-anchor="middle" font-weight="600">Write</text>
+    <text x="660" y="170" text-anchor="middle" font-size="11" fill="var(--muted)">only if all pass</text>
+
+    <line x1="130" y1="47" x2="158" y2="47" stroke="var(--muted)" marker-end="url(#arr)"/>
+    <line x1="280" y1="47" x2="308" y2="47" stroke="var(--muted)" marker-end="url(#arr)"/>
+    <line x1="430" y1="47" x2="458" y2="47" stroke="var(--muted)" marker-end="url(#arr)"/>
+    <path d="M520,74 L520,100 L295,100 L295,128" fill="none" stroke="var(--muted)" marker-end="url(#arr)"/>
+    <line x1="430" y1="157" x2="458" y2="157" stroke="var(--muted)" marker-end="url(#arr)"/>
+    <line x1="580" y1="157" x2="608" y2="157" stroke="var(--muted)" marker-end="url(#arr)"/>
+
+    <rect x="10" y="225" width="700" height="90" rx="5" fill="var(--accent-soft)" stroke="var(--accent)"/>
+    <text x="24" y="248" font-weight="600">sysml-codegen check (built in Item 2b)</text>
+    <text x="24" y="270" font-size="12">Runs Load and steps 1–5 exactly as generate does, then stops. It never reaches Write and cannot clear a folder.</text>
+    <text x="24" y="290" font-size="12">Exit 0: generate would build this. Exit 1: generate would refuse it, with the reason. On dc3's original model it answers in</text>
+    <text x="24" y="307" font-size="12">0.5 s; on the fixed model, which builds, about 15 s.</text>
+  </g>
+</svg>
+</div>
+
+<p>Read it left to right, then down. On dc3's original model, step 1 fails first on the unsupported functions (B4, B5), so the modeller doesn't learn about the structural problems in steps 3 and 4 until those are fixed. The biggest problem, B1, sits in step 4, and its check stops at the first of 164. That is why dc3 needed run after run, and why the structural problems showed up last.</p>
+
+<p>The generator's refusals are spread over 491 places in its code. About 71 of those are places a modeller can reach by a modelling choice; the rest are internal errors, file problems and similar. There is no single rulebook of "what works". The only complete answer is running the generator.</p>
+
+<h2>3. What the epic built, and why it is a second copy</h2>
+
+<p>The epic's opening framing was: "L6 reports that contract without depending on codegen." Every choice after that inherited it. So Item 1 wrote 9 rules, each describing a pattern the generator refuses and how to fix it, in <code>src/agentic_mbse/sysml/subset_profile_rules.toml</code>. Six of the rules cover dc3's categories (B4 and B5 share one rule; B2 falls under a rule about what a calculation input can be bound to). Three cover other patterns. To check a model against those rules, agentic-mbse needs the same facts the generator works out, so Item 1 also ported part of the generator's code (the part tree, step 3) into agentic-mbse. Item 2a then built a test system in sysml-codegen that runs both on 246 small test models and checks they agree.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 720 250" width="720" height="250" role="img" aria-label="The generator and the copied rules in two repositories, held together by agreement tests">
+  <defs>
+    <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker>
+  </defs>
+  <g font-size="13" fill="var(--fg)">
+    <rect x="10" y="10" width="330" height="150" rx="6" fill="var(--surface)" stroke="var(--rule)"/>
+    <text x="24" y="32" font-weight="600">agentic-mbse (the modelling toolkit)</text>
+    <rect x="24" y="46" width="300" height="44" rx="4" fill="var(--warn-soft)" stroke="var(--warn)"/>
+    <text x="36" y="66" font-weight="600">Copied rules: 9 patterns + ported part tree</text>
+    <text x="36" y="82" font-size="11">about 5,600 lines, written by hand</text>
+    <rect x="24" y="104" width="300" height="44" rx="4" fill="var(--code-bg)" stroke="var(--rule)"/>
+    <text x="36" y="124" font-weight="600">L6 validator</text>
+    <text x="36" y="140" font-size="11">shows the copy's findings to the modeller</text>
+
+    <rect x="380" y="10" width="330" height="150" rx="6" fill="var(--surface)" stroke="var(--rule)"/>
+    <text x="394" y="32" font-weight="600">sysml-codegen (the generator)</text>
+    <rect x="394" y="46" width="300" height="44" rx="4" fill="var(--good-soft)" stroke="var(--good)"/>
+    <text x="406" y="66" font-weight="600">The real rules: steps 1–5</text>
+    <text x="406" y="82" font-size="11">491 refusal places, the only full answer</text>
+    <rect x="394" y="104" width="300" height="44" rx="4" fill="var(--code-bg)" stroke="var(--rule)"/>
+    <text x="406" y="124" font-weight="600">generate / check</text>
+    <text x="406" y="140" font-size="11">2b also prints the copy's findings here</text>
+
+    <line x1="174" y1="90" x2="174" y2="102" stroke="var(--muted)" marker-end="url(#arr2)"/>
+    <line x1="544" y1="90" x2="544" y2="102" stroke="var(--muted)" marker-end="url(#arr2)"/>
+    <path d="M380,135 L340,135" stroke="var(--muted)" stroke-dasharray="4 3" marker-end="url(#arr2)"/>
+    <text x="345" y="128" font-size="10" fill="var(--muted)">imports</text>
+
+    <rect x="120" y="185" width="480" height="52" rx="5" fill="var(--bad-soft)" stroke="var(--bad)"/>
+    <text x="360" y="206" text-anchor="middle" font-weight="600">Agreement tests (Item 2a): 246 test models run through both</text>
+    <text x="360" y="224" text-anchor="middle" font-size="11">Every generator change that adds or moves a refusal needs a matching change in both repositories</text>
+    <line x1="174" y1="160" x2="200" y2="183" stroke="var(--bad)"/>
+    <line x1="544" y1="160" x2="520" y2="183" stroke="var(--bad)"/>
+  </g>
+</svg>
+</div>
+
+<p>The two top boxes hold two versions of the same decisions, one real and one copied. The red box is what it costs to keep them from drifting apart. The dashed arrow is why the copy exists: sysml-codegen imports agentic-mbse, so agentic-mbse can't import sysml-codegen back.</p>
+
+<p>How well the copy matches the generator, on the 246 test models:</p>
+<ul>
+  <li><strong>It is never wrong when it speaks.</strong> It has never flagged a model the generator builds.</li>
+  <li><strong>It is often silent.</strong> The generator refuses 169 of the test models. The copy says nothing about 129 of them. 33 are checks only the generator can make by design, for example two outputs that would get the same Python name. 95 are refusals nobody could turn into a clean rule. 1 is a refusal that may be a generator bug, waiting on your RG-1 decision.</li>
+  <li><strong>On dc3 it did well.</strong> It reports all of B1–B8 in one run, including all 164 B1 assertions, because it doesn't stop at the first failing step.</li>
+  <li><strong>It has an expiry date.</strong> Two generator changes are waiting in the backlog for your approval: one lets calculations carry constraints (<code>CALCDEF-GATE-IMPLEMENTATION</code>), one adds functions like <code>product</code> (<code>SCALAR-FUNCTION-VOCABULARY</code>). Once either lands, the copy's matching rule would still say "refused" for models the generator then builds, and modellers would rewrite good models.</li>
+</ul>
+
+<p>The decision to build a copy is recorded in agentic-mbse's ADR 0001. On 2026-10-18 you were asked who should own the copy and how to keep the ported part tree in step, and you chose "A (ii)": agentic-mbse owns the copy, and a permanent test in sysml-codegen keeps the two part trees agreeing. The rejected options were all variants of who owns it. Not having a copy was never one of them. Retiring the copy would mean recording a new decision that replaces ADR 0001, which is yours to file (RG-3).</p>
+
+<h2>4. What Item 2b built, and what holds up</h2>
+
+<p>2b split <code>generate</code> into three parts: load the model, run steps 1–5 without writing (<code>cli/prepare.py</code>), then write (<code>cli/emit.py</code>). <code>check</code> is the first two parts only. An independent audit re-measured everything against the code before 2b:</p>
+<ul>
+  <li><strong>Packages:</strong> 0 of 123 generated packages changed, byte for byte. The 123 are the 77 test models that build, plus 23 committed snapshots replayed and their 23 source models run live.</li>
+  <li><strong>Refusals:</strong> 1 of 173 refusal messages changed. The 173 are the 169 refused test models plus four constructed failure cases. The one change: a refused model written to a folder containing a symlink now reports why the model was refused, instead of a file-permission error about the symlink.</li>
+  <li><strong>No half-written folders:</strong> a refused <code>generate</code> now leaves its output folder untouched. Before, one refusal fired after the folder was cleared.</li>
+  <li><strong>Tests:</strong> the same 9 tests fail as before 2b; TEAx runs 124 of 124.</li>
+</ul>
+<p>The part of 2b in question is an extra step: after <code>generate</code> and <code>check</code> finish, they also run the copied rules and print their findings. On a refused dc3 run that adds 17 seconds to a half-second answer. It shows the same one-run view L6 already shows, and it can't change the answer, which comes from the generator either way.</p>
+
+<h2>5. The options</h2>
+
+<p>Each option starts with how it works in at most three plain sentences. Your test was "if you can't explain how it works simply, it is not right"; where an option fails that, it says so. Day figures are agent estimates from reading the code, unreviewed, plus or minus 50%.</p>
+
+<div class="scroll"><table>
+<thead><tr><th>Option</th><th>Simple?</th><th>One source of truth?</th><th>dc3: runs to see all problems</th><th>Needs codegen installed</th><th>Build</th><th>Upkeep</th></tr></thead>
+<tbody>
+<tr><td>A. Keep everything</td><td><span class="pill part">with a caveat</span></td><td><span class="pill no">no</span></td><td>1 (via L6)</td><td>no</td><td>done</td><td>high</td></tr>
+<tr><td>B. Copy stays in L6, out of <code>check</code></td><td><span class="pill yes">yes</span></td><td><span class="pill no">no</span></td><td>1 (via L6)</td><td>no</td><td>under 1 d</td><td>high</td></tr>
+<tr><td>C. L6 runs <code>check</code>, copy retired</td><td><span class="pill yes">yes</span></td><td><span class="pill yes">yes</span></td><td>6+, as in dc3's history</td><td>yes</td><td>3–5 d</td><td>low</td></tr>
+<tr><td>D. Python checker function</td><td><span class="pill yes">yes</span></td><td><span class="pill yes">yes</span></td><td>n/a: for project tests, not L6</td><td>yes</td><td>1–2 d</td><td>moderate</td></tr>
+<tr><td>E1. Generator lists all problems per step</td><td><span class="pill yes">yes</span></td><td><span class="pill yes">yes</span></td><td>4+, structural last</td><td>yes</td><td>8–12 d</td><td>low</td></tr>
+<tr><td>E2. Generator continues past failed steps</td><td><span class="pill no">no</span></td><td><span class="pill yes">yes</span></td><td>about 1</td><td>yes</td><td>15+ d</td><td>moderate, risky</td></tr>
+<tr><td>F. Generate the copy from codegen</td><td><span class="pill no">no</span></td><td><span class="pill part">names only</span></td><td>1 (via L6)</td><td>no</td><td>2–3 d</td><td>high</td></tr>
+<tr><td>G. Fix guidance, run <code>check</code> early in the workflow</td><td><span class="pill yes">yes</span></td><td><span class="pill yes">yes</span></td><td>n/a: aims to prevent B1–B3</td><td>yes, to check</td><td>3–4 d</td><td>low</td></tr>
+<tr><td>H. Move generator's checks into agentic-mbse</td><td><span class="pill yes">yes</span></td><td><span class="pill yes">yes</span></td><td>1, for what moved</td><td>no</td><td>25–40 d</td><td>moderate</td></tr>
+</tbody></table></div>
+
+<p>The table is the summary. The cards below give each option's parts, what it catches and misses, and its risks. Section 6 then says which to combine.</p>
+
+<div class="opt">
+<h3>A. Keep everything as built</h3>
+<p class="plain">The toolkit keeps its own written copy of some of the generator's rules and checks models against it, so the validator can warn without the generator installed. A large test system keeps the copy in step with the generator. The copy's silence does not mean the model will generate.</p>
+<dl>
+<dt>Catches</dt><dd>All 9 patterns in one run, with a fix for each, without the generator installed. All of dc3's B1–B8.</dd>
+<dt>Misses</dt><dd>129 of the 169 refused test models. Anything a future generator change adds, until someone writes a rule.</dd>
+<dt>Upkeep</dt><dd>Every generator change that adds or moves a refusal needs a coordinated change in two repositories. The two waiting generator changes will each need one.</dd>
+<dt>Risk</dt><dd>Modellers read silence as "fine", which is why L6 has to print disclaimers about what it covers.</dd>
+</dl>
+</div>
+
+<div class="opt">
+<h3>B. The copy stays in L6 but leaves <code>generate</code> and <code>check</code></h3>
+<p class="plain"><code>check</code> reports only the generator's own answer. L6 keeps the copy, as in A.</p>
+<dl>
+<dt>Upkeep</dt><dd>Same as A. The agreement tests stay.</dd>
+<dt>Note</dt><dd>A presentation change inside A, not a different design. Its one change, taking the copy out of <code>generate</code> and <code>check</code>, is part of every option.</dd>
+</dl>
+</div>
+
+<div class="opt">
+<h3>C. L6 runs <code>sysml-codegen check</code> as a separate command; the copy is retired</h3>
+<p class="plain">When a project says it will generate code, the validator runs the generator's no-write check and shows its answer. If the generator isn't installed, the validator says it couldn't check and how to install it. The answer is the generator's own, so it can't disagree with the generator.</p>
+<dl>
+<dt>Parts</dt><dd>A machine-readable output for <code>check</code> (about 100 lines in sysml-codegen). A runner in L6 that finds <code>sysml-codegen</code> in the project's own environment, runs it, and turns its answer into L6 issues (200–300 lines in agentic-mbse). Item 3 already added a project setting for "this project targets generated code"; it decides when the runner runs.</dd>
+<dt>Catches</dt><dd>Everything the generator refuses, with no drift. But only one failing step per run, like <code>generate</code>.</dd>
+<dt>Misses</dt><dd>Nothing works without the generator installed. Both dc3 and fusion-tea install it, so in practice this only affects projects that can't generate anyway.</dd>
+<dt>Risks</dt><dd>It must find the generator in the project's own environment, not a global install, and print the version it used. Both tools need the SysIDE licence; the child process inherits it from the environment, but nobody has tried it. The copy's fix texts would need a new home in the generator's refusal messages (cost not estimated).</dd>
+</dl>
+</div>
+
+<div class="opt">
+<h3>D. A supported Python function for checking a model</h3>
+<p class="plain">The generator offers a function: give it a model folder and it returns the problems, without writing anything. A project's own tests can call it, for example a test that says "this model generates".</p>
+<dl>
+<dt>Note</dt><dd>L6 can't use it, because agentic-mbse can't import the generator. Both projects already import generator internals (fusion-tea's tests call <code>run_codegen</code>; dc3 imports <code>sysml_codegen.study</code>), so they already depend on code that could change without warning. A supported function would make that a promise.</dd>
+</dl>
+</div>
+
+<div class="opt">
+<h3>E1. The generator lists every problem within a step</h3>
+<p class="plain">Within each step, the generator lists every problem it finds instead of stopping at the first. It still stops after the first step that has problems, and says which later steps it didn't reach.</p>
+<dl>
+<dt>Misses</dt><dd>Measured on dc3: step 1 would show the 28 expression problems first, and the modeller would have to change the model before seeing the structural ones (B1–B3). Four or more runs, with the expensive problems last. The first design study claimed "about three runs with no stubbing"; the adversarial review measured it and found that wrong.</dd>
+<dt>Cost</dt><dd>8–12 days for every step. Step 1 alone is about half a day.</dd>
+<dt>Risk</dt><dd>The B1 check also refuses a plain (not asserted) <code>constraint</code> placed inside a calculation usage. Making it list all 164 asserts without stopping risks letting that plain form through. That would change what the generator accepts, so it needs your RG-1 decision.</dd>
+</dl>
+</div>
+
+<div class="opt">
+<h3>E2. The generator continues past a failed step</h3>
+<p class="plain">Can't be explained simply. Every later step would have to work on a model with known-bad parts and avoid reporting errors that are only side effects of those parts, across about 4,000 lines of the generator's core. Fails your test.</p>
+</div>
+
+<div class="opt">
+<h3>F. Generate the copy from the generator's code</h3>
+<p class="plain">Can't be explained honestly in one line. The generator's refusals are branches deep inside its code, not data that can be exported. Only the names and fix texts can be generated, not the checks. Fails your test as a design; useful only as a way to keep fix texts in one place.</p>
+</div>
+
+<div class="opt">
+<h3>G. Fix the guidance and run <code>check</code> early in the workflow</h3>
+<p class="plain">The shipped examples only teach patterns that the generator's own tests show it builds. When a project plans to generate code, the modelling workflow runs <code>sysml-codegen check</code> as soon as the first model pieces exist, and at each phase after. If generation is parked, the plan still runs one early check.</p>
+<dl>
+<dt>Cheapest piece</dt><dd>Three sentences in the guidance: asserts go on parts, not inside calculations; part counts are exact; calculation inputs are single values. Had dc3's modeller read these on Oct 4, B1–B3 would not have been built.</dd>
+<dt>Risk</dt><dd>Only works if the AI modelling skills are used (dc3 used them).</dd>
+<dt>If you say no to the early check</dt><dd>See the second question in section 7. Without it, a parked project still finds structural problems only when generation starts, and only the guidance protects it.</dd>
+</dl>
+</div>
+
+<div class="opt">
+<h3>H. Move the generator's own checks into agentic-mbse</h3>
+<p class="plain">Move the generator's model checks into the toolkit library, delete them from the generator, and have both call the one copy.</p>
+<dl>
+<dt>Cost</dt><dd>25–40 days, the highest risk of all. It rewrites the generator's core to move it, and every moved check is a chance to change what the generator accepts. The 33 generator-only checks can't move, so L6 would still be incomplete.</dd>
+<dt>When</dt><dd>Only if "a validator answer without the generator installed" is a hard requirement.</dd>
+</dl>
+</div>
+
+<h2>6. What I recommend</h2>
+
+<p>This sizes the fix to the incident as the records show it: about 20 minutes of agent inventory, about 80 minutes of rework, and the loss of dc3's stop-on-failure guards. If your own cost was much larger, the third question in section 7 changes this.</p>
+
+<div class="callout good">
+<p><strong>The recommendation, simply.</strong> The guidance tells modellers the generator's structural limits up front. When a project plans to generate code, the workflow runs the generator's own no-write check early and at every phase. The hand-copied rules are retired, so the only thing that ever says "this won't generate" is the generator.</p>
+</div>
+
+<p><strong>First, cheap, and part of every option (about 3–4 days in all):</strong></p>
+<ol>
+  <li><strong>Take the copied rules out of <code>generate</code> and <code>check</code></strong> (sysml-codegen, under a day). <code>check</code> becomes exactly "the generator's answer, nothing written". 2b is then ready for your merge decision (RG-3).</li>
+  <li><strong>Add the three structural limits to the guidance</strong> (agentic-mbse, a few hours). This is the cheapest fix for the thing that actually hurt dc3.</li>
+  <li><strong>Make the modelling workflow run <code>sysml-codegen check</code></strong> when a project targets generated code (agentic-mbse skills, about 2–3 days; this was already Item 6's job).</li>
+</ol>
+
+<p><strong>Then, the copy:</strong></p>
+<ol start="4">
+  <li><strong>Retire it before either waiting generator change lands.</strong> After that point it would tell modellers to rewrite good models. The input-order check from Item 4 borrows two small helper functions from the copy's code; those move first. Deleting the copy and its tests in both repositories has not been estimated.</li>
+</ol>
+
+<p><strong>Optional, only if a need shows up:</strong></p>
+<ul>
+  <li>E1 for step 1 only (half a day): the expression step lists all its problems. Worth doing, as long as nobody claims it solves the structural problems.</li>
+  <li>C, the L6 runner, if modellers keep skipping the workflow step.</li>
+  <li>D, a supported Python function, if a project wants a "this model generates" test.</li>
+</ul>
+
+<h3>What this keeps and what it throws away</h3>
+<div class="scroll"><table>
+<thead><tr><th>Item</th><th>Kept</th><th>Discarded</th></tr></thead>
+<tbody>
+<tr><td>1 (the copy)</td><td>The write-ups of where each of B1–B8 starts and stops, as documentation</td><td>The 9 rules, the ported part tree, the rule evaluator</td></tr>
+<tr><td>2a (agreement tests)</td><td>Stable refusal reasons in the generator, the list of every refusal place, the 246 test models as generator regression tests</td><td>The tests that compare the copy with the generator</td></tr>
+<tr><td>2b (this item)</td><td><code>check</code>, the load / check / write split, refusing before writing</td><td>The step that prints the copy's findings</td></tr>
+<tr><td>3 (L6)</td><td>The "targets generated code" setting, honest reporting of checks that couldn't run</td><td>L6's display of the copy's findings</td></tr>
+<tr><td>4 (input order)</td><td>All of it</td><td>Nothing</td></tr>
+<tr><td>5 (tested examples)</td><td>The example inventory and corrections</td><td>Its plan to generate docs from the copy; it points at the generator's tests instead</td></tr>
+</tbody></table></div>
+
+<h2>7. What only you can decide</h2>
+
+<div class="q">
+<h3>1. Retire the copy, or keep it for the structural patterns?</h3>
+<p>Only the copy shows dc3's structural problems (B1–B3) in one run. Without it, the generator shows them one step at a time, after the cheaper problems are fixed. The guidance and the early check aim to stop people building B1–B3 in the first place. Nobody has evidence yet on whether that is enough; dc3 is the only incident.</p>
+<ul>
+  <li><strong>Retire it</strong> (my recommendation). The timing is set by when you plan to approve either waiting generator change: the copy has to be gone before then.</li>
+  <li><strong>Keep only the three structural rules.</strong> This still needs the ported part tree (B2 and B3 depend on it) and the agreement tests for those rules, so most of the upkeep remains for a third of the coverage.</li>
+  <li><strong>Keep all of it</strong> (option A).</li>
+</ul>
+</div>
+
+<div class="q">
+<h3>2. Should a project that parks generation still run one early check?</h3>
+<p>On Oct 5 you let dc3 build natively with generation parked. The recommendation adds "still run <code>check</code> once, early, to find structural surprises". That narrows the permission you gave. My recommendation: yes, one check, with the result recorded but not blocking. If no, a parked project relies on the guidance alone until generation starts.</p>
+</div>
+
+<div class="q">
+<h3>3. How much of your own time did the dc3 incident cost?</h3>
+<p>The recommendation assumes it was small, like the agent time. If it was, the first three steps above are enough, and Items 5 and 6 should shrink to what supports them. If it cost you days, the one-run view of structural problems is worth more, and keeping the structural rules becomes the better answer to question 1.</p>
+</div>
+
+<h2>8. What wasn't checked</h2>
+<ul>
+  <li>Nobody built or measured E1 beyond the expression step. Run counts for later steps are read from code and dc3's logs.</li>
+  <li>Nobody ran L6 calling <code>check</code> as a separate process. Licence inheritance was read from code, not tried.</li>
+  <li>Nothing was run on fusion-tea.</li>
+  <li>The risk that listing all B1 problems lets the plain-constraint form through was read from code, not tried.</li>
+  <li>Day estimates are agent estimates, unreviewed, plus or minus 50%. Retiring the copy is not estimated.</li>
+  <li>The dc3 time figures are agent clock time from session logs, not your time.</li>
+</ul>
+
+<p class="sub">Sources: three agent reports next to this page in sysml-codegen <code>.project/active/subset-profile-screen/architecture-review/</code> (<code>01-current-system.md</code> facts, <code>02-alternatives.md</code> options, <code>03-challenge.md</code> adversarial review), dc3's T-001 inventory, and Item 2b's audit.</p>
+
+</div>
