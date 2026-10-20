@@ -914,6 +914,8 @@ Each fix below is its own commit with its tests.
 - Tests: `tests/unit/test_readiness_report.py::test_a_failed_write_is_an_environment_failure_not_a_refusal` pins the destination and emit cases, plus a writer's refusal at emit that stays "refused". The totality test now expects the verdict by refusal kind and covers the new emit-refusal fixture. `tests/conformance/test_emit_writer_failures.py` expects "environment failure" for the `OSError` writer and "refused" for the other two.
 - Design's `ReadinessReport` paragraph records the fourth answer.
 
+**Fix 4, advisory: Success Criterion 10's wording matches the report.** It said both commands report "every collected screen finding". It now says every finding is collected and counted, and lists what is printed in full and what is a count line, as the Phase 8 report-length ruling decided. It is marked as an orchestrator decision (design D5) with scope unchanged. Its proof now also names the stored-answer test (collection) and the shape test (printing). No code change.
+
 ### Phase 10 Completion
 
 ---
