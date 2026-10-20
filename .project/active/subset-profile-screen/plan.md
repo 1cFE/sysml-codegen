@@ -1,6 +1,6 @@
 # Implementation Plan: Read-only readiness check, live half (EXEC-SUBSET-CONTRACT Item 2b)
 
-**Status:** In Progress (Phase 0 done)
+**Status:** In Progress (Phases 0-1 done)
 **Created:** 2026-10-20
 **Last Updated:** 2026-10-20
 **Branch / base:** sysml-codegen `subset-profile-screen` at `cbbc1100` (design approved); agentic-mbse sibling `/home/reid/src/subset-conformance/agentic-mbse` at `e268357f`, which this plan does not edit (design D12).
@@ -142,15 +142,15 @@ The skip branch must be counted and listed in the test output, and must cover on
 
 See `design.md` D2, Component Overview (`orchestration/elaborated_pipeline.py`, `orchestration/exact_pipeline_context.py`).
 
-- [ ] `orchestration/elaborated_pipeline.py:159-173`: extract the load lines and `_live_source_referents` into the non-raising load function; `elaborate_model_paths` calls it, then `elaborate_loaded_extractor` (`:267`). Converters at `:295-371` untouched (`git diff` shows no change there).
-- [ ] `orchestration/exact_pipeline_context.py`: add the builder from a loaded source. It looks up `elaborate_loaded_extractor` on the `elaborated_pipeline` module at call time (D11 needs this in Phase 3).
-- [ ] `run_codegen` is not changed in this phase.
-- [ ] Unit tests: a load with errors returns the error flag and does not raise; a load that fails outright is carried as a failed load; the new builder on a clean load gives a graph equal to `build_exact_pipeline_context` on the same paths.
+- [x] `orchestration/elaborated_pipeline.py:159-173`: extract the load lines and `_live_source_referents` into the non-raising load function; `elaborate_model_paths` calls it, then `elaborate_loaded_extractor` (`:267`). Converters at `:295-371` untouched (`git diff` shows no change there).
+- [x] `orchestration/exact_pipeline_context.py`: add the builder from a loaded source. It looks up `elaborate_loaded_extractor` on the `elaborated_pipeline` module at call time (D11 needs this in Phase 3).
+- [x] `run_codegen` is not changed in this phase.
+- [x] Unit tests: a load with errors returns the error flag and does not raise; a load that fails outright is carried as a failed load; the new builder on a clean load gives a graph equal to `build_exact_pipeline_context` on the same paths.
 
 ### Validation
 
-- [ ] B1 test passes on every 2a case (stencil above). If it fails on any case, stop: B1's fallback (design B1) is a design change, not a plan step.
-- [ ] Phase exit check, including byte identity and refusal records.
+- [x] B1 test passes on every 2a case (stencil above). If it fails on any case, stop: B1's fallback (design B1) is a design change, not a plan step.
+- [x] Phase exit check, including byte identity and refusal records.
 
 **What we know after this phase:** one load can feed both the generator and the screen, and the screen sees the same thing it saw in 2a.
 
@@ -625,6 +625,22 @@ See `design.md#potential-risks` for the full table. Phase-specific mitigations:
 - `scripts/refusal_records.py` finds `_generate_pipeline` in `cli` or `cli.emit` so the same script records at the base and compares after Phase 2; it is the only place that knows both homes.
 
 ### Phase 1 Completion
+**Completed:** 2026-10-20. B1 holds: on all 246 2a cases the screen, run on the model the generator has just elaborated from the same load, gives the stored screen answer.
+
+**Changes Made:**
+- `orchestration/elaborated_pipeline.py`: `load_live_models(paths) -> LiveLoad | FailedLoad` (never raises), `LiveLoad` (extractor, model paths, source referents), `FailedLoad` (kind, the refusal), `LoadFailureKind` (`PARSE_ERRORS` when SysIDE reported error diagnostics, `NOT_LOADED` otherwise), `elaborate_live_load(loaded)`. `elaborate_model_paths` keeps its signature as load, re-raise a failed load's refusal, then `elaborate_live_load`. The old `_elaborate_model_paths` is gone; its three parse refusals are still `raise` statements, in `_load_live_models`, which `load_live_models` catches and classifies. The converters are untouched (`git diff` hunks stop above `elaborate_loaded_extractor`).
+- `orchestration/exact_pipeline_context.py`: `build_exact_pipeline_context_from_live_load(loaded)`, the same seal and refusal passthrough as `build_exact_pipeline_context`. It calls `elaborated_pipeline.elaborate_live_load` through the module, which calls `elaborate_loaded_extractor` through module globals, so a spy that rebinds `elaborated_pipeline.elaborate_loaded_extractor` sees the run (tested).
+- Tests: `tests/conformance/subset_profile/test_shared_load_screen.py` (B1, 246 cases), `tests/conformance/test_live_load.py` (parse errors, `ValueError` and unclassified load failures come back as the exact refusal `elaborate_model_paths` raises; the loaded builder seals the same receipt and graph as the path builder; the spy seam).
+- Site account: the three `_elaborate_model_paths` rows re-keyed to `_load_live_models` (same ordinals, line and first evidence pointer refreshed); three relay rows added (`elaborate_model_paths`'s `raise loaded.error`, and the new builder's re-raise and catch-all). Header count 495 → 498.
+
+**Exit check:** licensed suite 7432 passed, 9 failed (the 9 base IDs), 9 skipped; the only base IDs missing are the two renamed `test_site_reach` parameters (`_elaborate_model_paths::…::2, ::3`), present under their `_load_live_models` names. Byte identity: 0 differences over 123 subjects. Refusal records: 0 of 173 differ. mypy clean, ruff `src/` clean, ruff `src/ tests/` 94. agentic-mbse clean at `e268357f`.
+
+**Issues:**
+- A first version returned the parse-errors refusal as a value. The 2a site scanner only sees `raise` statements, so the site vanished from the account and 2a's reach, witness and mutation tests failed by the hundred. Raising inside `_load_live_models` and classifying in the caller keeps every refusal a scanned site.
+
+**Deviations:**
+- The plan's B1 stencil skips parse-error cases. There are none to skip: a parse refusal carries no code, so 2a could not store one. The test asserts every case loads instead.
+- The new builder calls `elaborate_live_load`, not `elaborate_loaded_extractor` directly; the spy seam D11 needs is unchanged.
 
 ### Phase 2 Completion
 
