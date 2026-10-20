@@ -197,6 +197,13 @@ Design agent, 2026-10-20, design revision 2, under the orchestrator's rulings:
 - **Question 3:** recorded in D4 as a stated behaviour change, not RG-1, no longer parked.
 - **m1:** applied in the stronger form: the writers' re-checks are dropped and the exemption table is gone; D14 extends `site_scan.py`. **m2–m7:** applied. No minor point conflicted with the rulings.
 
+Design agent, 2026-10-20, Round 2 points, under the orchestrator's rulings (no third review):
+
+- **R2-1:** applied. The constraint-name validator stays in `generate_pipeline_yaml`, `generate_registry` and `build_model_contract` (pinned by `test_module_kind_faildloud.py:277-294`). D14 allows site 338 by name with that reason and checks that `prepare`'s constraint-names step calls the same function. Only the unpinned re-checks are dropped: the nine `_preflight_constraint_names` calls and the schema writer's parameter-field check (D3 says why: nothing pins it). Invariant 4 and the de-risk line updated. Your suggested `model_dump()` guard around `emit_package` is added.
+- **R2-2:** applied as new D18. `emit_package` holds today's post-write handler blocks and logs the same single record per failure, byte-identical; `PreparationStep.EMIT` names it; the screen report still runs after a failed emit, under D17's guard. A test patches a writer to raise three kinds of exception and checks each record.
+- **R2-3:** applied. `ReadinessVerdict` carries reason strings already worded; `log_report` prints them without branching, so option (b) changes only `readiness` and its tests.
+- **R2-4:** applied. `_generate_package_from_graph` is removed; its four test files move to `prepare_graph` and assert `Refused`; tests do not build a `Prepared` by hand. `test_public_diagnostic_totality.py:471-473` is in the churn list.
+
 ---
 
 **Overall:** Revise. Ledger gate BLOCKED on C1 until the owner rules.
