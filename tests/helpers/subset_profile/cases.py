@@ -40,7 +40,7 @@ from agentic_mbse.sysml.conformance_case import (
 )
 from agentic_mbse.sysml.subset_profile import PACKAGED_RULES, Outcome, RuleRecords
 
-from sysml_codegen.cli.readiness import DisagreementKind, RefusedFinding, disagreement_kind
+from sysml_codegen.cli.report import DisagreementKind, RefusedFinding, disagreement_kind
 from sysml_codegen.elaboration.diagnostics import SiteReason
 from sysml_codegen.subset_profile_adapter import REASON_MAPPING, NoRefusal
 
@@ -459,7 +459,7 @@ def disagreement(
 ) -> Disagreement | None:
     """The disagreement between one subject's generator run and screen answer, if any.
 
-    The rule itself is ``sysml_codegen.cli.readiness.disagreement_kind`` (Item 2b D9); this
+    The rule itself is ``sysml_codegen.cli.report.disagreement_kind`` (Item 2b D9); this
     reads the stored answers into its inputs.
     """
     refused = [f for f in screen.findings if f.outcome is Outcome.REFUSED]

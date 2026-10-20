@@ -1,41 +1,31 @@
-"""The report functions are total, and the interim readiness rule never says READY (Item 2b).
+"""The report functions are total, and the report never decides or claims an outcome (Item 2b).
 
-Design D17's second layer: ``readiness_report``, ``readiness`` and ``log_report`` return for
-every combination of generator outcome kind, destination state, screen state, finding outcome
-and qualification, not-assessed cause and disagreement kind. Plan assumption A1: until the
-owner decides D8, every model that builds is NOT_READY with a worded reason, so READY is
-unreachable. A snapshot source is never ready whichever way the owner decides.
+Design D17's second layer: ``build_report`` and ``log_report`` return for every combination of
+generator outcome kind, screen state, finding outcome and qualification, not-assessed cause and
+disagreement kind. The generator alone decides the outcome (owner, Align Q1); the report logs
+at most the generator's own refusal record and never a line calling a model ready or clean.
 """
 
 from __future__ import annotations
 
 import itertools
 import logging
+import re
 
 import pytest
 from agentic_mbse.sysml.subset_profile import Outcome, Qualification, Verdict
 
-from sysml_codegen.cli.destination import (
-    DESTINATION_CLEAN,
-    DESTINATION_NOT_CHECKED,
-    DestinationCheck,
-    DestinationState,
-)
 from sysml_codegen.cli.prepare import PreparationStep, Prepared, Refused, prepare_graph
-from sysml_codegen.cli.readiness import (
-    AWAITING_OWNER,
+from sysml_codegen.cli.refusal import Refusal, RefusalItem, RefusalKind
+from sysml_codegen.cli.report import (
     Disagreement,
     DisagreementKind,
-    Readiness,
-    ReadinessReport,
-    ReadinessVerdict,
     RefusedFinding,
+    Report,
+    build_report,
     disagreement_kind,
     log_report,
-    readiness,
-    readiness_report,
 )
-from sysml_codegen.cli.refusal import Refusal, RefusalItem, RefusalKind
 from sysml_codegen.core.errors import GenerationCode
 from sysml_codegen.elaboration.diagnostics import ElaborationCode
 from sysml_codegen.resolution.models import ComputationGraph
@@ -87,15 +77,6 @@ GENERATORS = {
         None,
     ),
 }
-#: A failed write or seal is an environment failure; every other refusal is a refusal.
-_REFUSED_VERDICTS = {kind: Readiness.REFUSED for kind in RefusalKind} | {
-    RefusalKind.PACKAGE_WRITE: Readiness.ENVIRONMENT_FAILURE
-}
-DESTINATIONS = {
-    "not-checked": DESTINATION_NOT_CHECKED,
-    "clean": DESTINATION_CLEAN,
-    "problem": DestinationCheck(DestinationState.PROBLEM, "Package sealing failed: probe"),
-}
 
 
 def _finding(outcome: Outcome, qualification: Qualification) -> SubsetDiagnostic:
@@ -132,106 +113,50 @@ DISAGREEMENTS = {"none": None} | {
 
 
 def _reports():
-    for (g, generator), (d, destination), (s, screen), (k, disagreement) in itertools.product(
-        GENERATORS.items(), DESTINATIONS.items(), SCREENS.items(), DISAGREEMENTS.items()
+    for (g, generator), (s, screen), (k, disagreement) in itertools.product(
+        GENERATORS.items(), SCREENS.items(), DISAGREEMENTS.items()
     ):
-        yield f"{g}/{d}/{s}/{k}", ReadinessReport(generator, destination, screen, disagreement)
+        yield f"{g}/{s}/{k}", Report(generator, screen, disagreement)
 
 
 REPORTS = dict(_reports())
 
 
 def test_the_combinations_cover_every_enum_member():
-    assert len(REPORTS) == len(GENERATORS) * len(DESTINATIONS) * len(SCREENS) * len(DISAGREEMENTS)
+    assert len(REPORTS) == len(GENERATORS) * len(SCREENS) * len(DISAGREEMENTS)
     assert (
         len(SCREENS)
         == len(NotAssessedCause) + 2 * len(Verdict) * len(Outcome) * len(Qualification) + 1
     )
 
 
-def test_report_functions_are_total(caplog):
+#: A word that would call a model ready or clean. "not ready" is the generator's own refusal
+#: text from the base commit, which the refusal records pin.
+OUTCOME_CLAIM = re.compile(r"(?<!not )\bready\b|\bclean\b|\breadiness\b", re.IGNORECASE)
+
+
+def test_report_functions_are_total_and_claim_no_outcome(caplog):
     caplog.set_level(logging.INFO, logger="sysml_codegen.cli")
     for key, report in REPORTS.items():
-        verdict = readiness(report)
-        assert verdict.reasons, key
-        assert verdict.value is not Readiness.READY, key
-        if isinstance(report.generator, Refused):
-            assert verdict.value is _REFUSED_VERDICTS[report.generator.refusal.kind], key
         caplog.clear()
         log_report(report)
         assert caplog.records, key
-        rebuilt = readiness_report(report.generator, report.destination, report.screen)
-        assert isinstance(rebuilt, ReadinessReport), key
+        assert not [r for r in caplog.records if OUTCOME_CLAIM.search(r.getMessage())], key
+        records = sum(hasattr(r, "refusal") for r in caplog.records)
+        assert records == (1 if isinstance(report.generator, Refused) else 0), key
+        rebuilt = build_report(report.generator, report.screen)
+        assert isinstance(rebuilt, Report), key
 
 
-@pytest.mark.parametrize("generator", ["builds", "refused-construction"])
-def test_a_snapshot_is_never_ready(generator):
-    report = readiness_report(
-        GENERATORS[generator],
-        DESTINATION_CLEAN,
-        ScreenNotAssessed(NotAssessedCause.SNAPSHOT_SOURCE, "snapshots do not carry the screen"),
-    )
-    assert readiness(report).value is not Readiness.READY
-
-
-def test_with_nothing_against_it_a_model_waits_on_the_owner():
-    report = readiness_report(
-        _prepared(), DESTINATION_CLEAN, ScreenAssessed("subset-profile/v2", Verdict.CLEAR, (), ())
-    )
-    assert report.disagreement is None
-    verdict = readiness(report)
-    assert (verdict.value, verdict.reasons) == (Readiness.NOT_READY, (AWAITING_OWNER,))
-
-
-def test_reasons_are_printed_in_order(caplog):
+def test_the_screen_never_logs_an_error(caplog):
+    """The screen's lines are information and warnings; only the generator's refusal is an error."""
     caplog.set_level(logging.INFO, logger="sysml_codegen.cli")
-    key = "builds/problem/clear-omitted-candidate_refusal-1/screen_refuses_generator_builds"
-    report = REPORTS[key]
-    log_report(report)
-    lines = [r.getMessage() for r in caplog.records]
-    reasons = readiness(report).reasons
-    start = lines.index("Readiness: not ready")
-    assert lines[start + 1 :] == [f"  - {reason}" for reason in reasons]
-    assert len(reasons) == 4
-
-
-def test_a_check_destination_problem_is_a_warning_with_no_refusal(caplog):
-    report = REPORTS["builds/problem/assessed-empty/none"]
-    log_report(report)
-    [warning] = [r for r in caplog.records if r.levelno == logging.WARNING]
-    assert warning.getMessage() == "Package sealing failed: probe"
-    assert not any(hasattr(r, "refusal") for r in caplog.records)
-
-
-def test_a_generate_destination_refusal_logs_its_record_once(caplog):
-    report = REPORTS["refused-destination/problem/assessed-empty/none"]
-    log_report(report)
-    assert [r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING] == [
-        "Package sealing failed: probe"
-    ]
-    assert sum(hasattr(r, "refusal") for r in caplog.records) == 1
-
-
-@pytest.mark.parametrize(
-    ("generator", "verdict", "reason"),
-    [
-        (
-            "refused-destination",
-            Readiness.ENVIRONMENT_FAILURE,
-            "generate could not write the package (step destination)",
-        ),
-        (
-            "refused-emit",
-            Readiness.ENVIRONMENT_FAILURE,
-            "generate could not write the package (step emit)",
-        ),
-        ("refused-emit-generation", Readiness.REFUSED, "the generator refuses at step emit"),
-    ],
-)
-def test_a_failed_write_is_an_environment_failure_not_a_refusal(generator, verdict, reason):
-    """Spec, Outcomes: writing or sealing failing is not a refusal; a writer's refusal still is."""
-    report = REPORTS[f"{generator}/clean/assessed-empty/none"]
-    assert readiness(report) == ReadinessVerdict(verdict, (reason,))
+    for key, report in REPORTS.items():
+        if isinstance(report.generator, Refused):
+            continue
+        caplog.clear()
+        log_report(report)
+        assert all(r.levelno <= logging.WARNING for r in caplog.records), key
 
 
 @pytest.mark.parametrize(
@@ -249,10 +174,8 @@ def test_the_agreement_rule(builds, codes, refused, kind):
 
 
 def test_a_refusal_after_prepare_still_counts_as_the_model_building():
-    report = readiness_report(
-        GENERATORS["refused-emit"],
-        DESTINATION_CLEAN,
-        ScreenAssessed("subset-profile/v2", Verdict.CLEAR, (), ()),
+    report = build_report(
+        GENERATORS["refused-emit"], ScreenAssessed("subset-profile/v2", Verdict.CLEAR, (), ())
     )
     assert report.disagreement is None
 
@@ -300,11 +223,12 @@ def test_the_screen_section_prints_in_full_only_what_a_modeler_must_act_on(caplo
     screen = ScreenAssessed("subset-profile/v2", Verdict.REFUSED, findings, unverified)
     disagreement = Disagreement(DisagreementKind.CODE_UNMAPPED, ("SI_X",), ("ordered",))
     caplog.set_level(logging.INFO, logger="sysml_codegen.cli")
-    log_report(ReadinessReport(_prepared(), DESTINATION_NOT_CHECKED, screen, disagreement))
-    lines = [r.getMessage() for r in caplog.records]
+    log_report(Report(_prepared(), screen, disagreement))
+    records = caplog.records
+    lines = [r.getMessage() for r in records]
     start = next(i for i, m in enumerate(lines) if m.startswith("Screen "))
-    end = lines.index("Readiness: not ready")
-    assert lines[start + 1 : end] == [
+    assert lines[:start] == ["Generator: builds (0 modules)"]
+    assert lines[start + 1 :] == [
         "  refused part-multiplicity (ordered) P::x3 at root-0/m.sysml:3; the generator would "
         "refuse it with SI_MULTIPLICITY_UNSUPPORTED",
         "    remedy: part-multiplicity remedy",
@@ -321,6 +245,9 @@ def test_the_screen_section_prints_in_full_only_what_a_modeler_must_act_on(caplo
         "Disagreement: code_unmapped: generator codes ['SI_X'], screen reasons ['ordered']",
     ]
     assert lines[start] == (
-        "Screen subset-profile/v2: verdict refused; 3 admitted, 2 excluded, 2 omitted, "
-        "1 refused, 1 unconfirmed; 1 not assessed"
+        "Screen subset-profile/v2 (information; the generator's answer above decides): verdict "
+        "refused; 3 admitted, 2 excluded, 2 omitted, 1 refused, 1 unconfirmed; 1 not assessed"
     )
+    # The findings printed in full are warnings; everything else is information.
+    warned = [r.getMessage() for r in records if r.levelno == logging.WARNING]
+    assert warned == lines[start + 1 : start + 7]

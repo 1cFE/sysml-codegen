@@ -8,7 +8,7 @@ interpreter in which ``agentic_mbse.sysml.subset_profile`` fails to import
   ``generate`` with the screen importable, exits 0, and reports the screen not assessed.
 - ``generate --from-snapshot`` does the same. A snapshot is never screened, so its reason is
   the snapshot one, and nothing tries the import.
-- ``check`` reports the generator's answer with the screen not assessed: exit 3 for the case
+- ``check`` reports the generator's answer with the screen not assessed: exit 0 for the case
   that builds, exit 1 with today's refusal record for the case that refuses.
 
 None of them shows a traceback or ``ImportError`` text. The screen's own version cannot be read
@@ -99,15 +99,14 @@ def test_generate_builds_the_same_package_when_the_screen_cannot_be_imported(sou
         assert NOT_IMPORTABLE in output
     else:
         assert "INFO: Screen not assessed: snapshots do not carry the screen" in output
-    assert "INFO: Readiness: not ready" in output
 
 
-def test_check_reports_a_model_that_builds_as_not_ready(tmp_path):
+def test_check_reports_a_model_that_builds_as_building(tmp_path):
     run = _cli(
         "check", "--models", _models(BUILDS_CASE), "--output", tmp_path / "pkg", blocked=True
     )
     output = _clean(run)
-    assert run.returncode == 3, output
+    assert run.returncode == 0, output
     assert "INFO: Generator: builds (1 modules)" in output
     assert NOT_IMPORTABLE in output
     assert not (tmp_path / "pkg").exists()
@@ -119,4 +118,3 @@ def test_check_reports_a_refused_model_with_its_refusal(tmp_path):
     assert run.returncode == 1, output
     assert "ERROR: Code generation failed: PARAM_FIELD_COLLISION" in output
     assert NOT_IMPORTABLE in output
-    assert "INFO: Readiness: refused" in output

@@ -4,15 +4,15 @@ Spec Success Criteria 7, 8 and 9, design Validation 7-9. Each runs on a case tha
 a case the generator refuses, through both commands' public entry point.
 
 - Skew: the installed profile version patched older and newer than the pin. The outcome is
-  unchanged, the screen is not assessed, both versions are named, the model is never ready,
-  and no ``ImportError`` text appears. As design § Implementation Notes says, this is how
-  "isolated artifacts" is met: the adapter is dropped from ``sys.modules`` and the installed
-  version patched, so the real import path runs, and the adapter must stay unimported.
+  unchanged, the screen is not assessed, both versions are named, and no ``ImportError`` text
+  appears. As design § Implementation Notes says, this is how "isolated artifacts" is met:
+  the adapter is dropped from ``sys.modules`` and the installed version patched, so the real
+  import path runs, and the adapter must stay unimported.
 - The screen raising at each of its three points, on cases with findings so the renderer
   runs: outcome unchanged, screen not assessed.
 - A constructed witness for "the screen refuses, the generator builds": the case that builds
   is screened with another case's real refused result. ``check`` reports the disagreement and
-  exits 3; ``generate`` writes the same bytes as without it and exits 0.
+  exits 0, the generator's answer; ``generate`` writes the same bytes as without it and exits 0.
 
 Licensed.
 """
@@ -29,7 +29,7 @@ from agentic_mbse.sysml import subset_extraction, subset_profile
 from agentic_mbse.sysml.subset_profile import Outcome
 
 from sysml_codegen import cli, subset_profile_adapter
-from sysml_codegen.cli.readiness import DisagreementKind
+from sysml_codegen.cli.report import DisagreementKind
 from tests.conftest import requires_license
 from tests.helpers.subset_profile import cases, observe
 from tests.helpers.subset_profile.cases import GeneratorOutcome
@@ -44,7 +44,7 @@ REFUSED_CASE = "output-naming__param_field_collision"
 SCREENED_BUILDS_CASE = "binding-source__expression_source__owner_other"
 #: Exit codes when the screen gives no answer, generate's and check's, by generator outcome.
 EXITS = {
-    GeneratorOutcome.GENERATED: {"generate": 0, "check": 3},
+    GeneratorOutcome.GENERATED: {"generate": 0, "check": 0},
     GeneratorOutcome.REFUSED: {"generate": 1, "check": 1},
 }
 PIN = subset_profile.SUBSET_PROFILE_VERSION
@@ -94,7 +94,6 @@ def test_profile_skew_leaves_the_generator_s_answer(
     assert ADAPTER not in sys.modules
     screen = next(m for m in _infos(caplog) if m.startswith("Screen not assessed: "))
     assert repr(installed) in screen and repr(PIN) in screen
-    assert "Readiness: ready" not in _infos(caplog)
     assert "ImportError" not in caplog.text
 
 
@@ -157,11 +156,10 @@ def test_the_screen_refusing_a_model_that_builds_is_a_disagreement_on_check(
     monkeypatch.setattr(
         subset_profile, "evaluate_subset_profile", lambda *_a, **_k: refused_screen_result
     )
-    assert _run(monkeypatch, "check", BUILDS_CASE, tmp_path / "pkg") == 3
+    assert _run(monkeypatch, "check", BUILDS_CASE, tmp_path / "pkg") == 0
     kind = DisagreementKind.SCREEN_REFUSES_GENERATOR_BUILDS
     infos = _infos(caplog)
     assert any(m.startswith(f"Disagreement: {kind}:") for m in infos)
-    assert f"  - the screen and the generator disagree ({kind})" in infos
 
 
 def test_the_screen_refusing_a_model_that_builds_leaves_generate_building(

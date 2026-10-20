@@ -5,8 +5,7 @@ and ``run_codegen``. One writer is patched to raise each failure class in turn o
 builds, and the single refusal record must equal the one Phase 0 recorded at the base commit
 (``tests/expectations/subset_profile/refusal_records.json``, ``writer_failure:*``), which
 ``scripts/refusal_records.py`` took with the same three exceptions. The screen report is still
-printed after the failure. An ``OSError`` is an environment failure, not a refusal (spec,
-Outcomes); the other two are refusals at the writing step.
+printed after the failure.
 
 Licensed.
 """
@@ -36,15 +35,6 @@ FAILURES = {
     "OSError": OSError("probe: the disk refused the write"),
     "RuntimeError": RuntimeError("probe: an unclassified writer failure"),
 }
-#: The report's last two lines for each failure.
-VERDICTS = {
-    "CodeGenerationError": ["Readiness: refused", "  - the generator refuses at step emit"],
-    "OSError": [
-        "Readiness: environment failure",
-        "  - generate could not write the package (step emit)",
-    ],
-    "RuntimeError": ["Readiness: refused", "  - the generator refuses at step emit"],
-}
 
 
 @pytest.mark.parametrize("name", sorted(FAILURES))
@@ -64,4 +54,3 @@ def test_writer_failure_logs_the_base_record(name, tmp_path: Path, monkeypatch, 
     assert len(records) == 1
     infos = [r.getMessage() for r in caplog.records if r.levelno == logging.INFO]
     assert any(m.startswith("Screen ") for m in infos), infos
-    assert infos[-2:] == VERDICTS[name]

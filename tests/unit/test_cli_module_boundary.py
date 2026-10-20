@@ -2,7 +2,7 @@
 
 ``cli/prepare.py`` holds what runs before the first write; ``cli/emit.py`` holds everything
 that writes under the destination. ``emit`` may import ``prepare``; ``prepare`` and
-``readiness`` must never import ``emit`` or the CLI package that composes them, at module level
+``report`` must never import ``emit`` or the CLI package that composes them, at module level
 or inside a function. Read from source, so a function-local import counts too.
 
 Nothing ``generate`` runs before the seal may import agentic-mbse's subset screen (audit B1).
@@ -55,7 +55,7 @@ def _module_level_imports(path: Path) -> set[str]:
     return found
 
 
-@pytest.mark.parametrize("module", ["prepare.py", "readiness.py", "destination.py"])
+@pytest.mark.parametrize("module", ["prepare.py", "report.py", "destination.py"])
 def test_a_read_only_module_imports_nothing_that_writes(module):
     imported = _imported_modules(CLI / module)
     assert "sysml_codegen.cli.emit" not in imported
@@ -64,7 +64,7 @@ def test_a_read_only_module_imports_nothing_that_writes(module):
     )
 
 
-@pytest.mark.parametrize("module", ["__init__.py", "prepare.py", "destination.py", "readiness.py"])
+@pytest.mark.parametrize("module", ["__init__.py", "prepare.py", "destination.py", "report.py"])
 def test_no_cli_module_imports_the_screen_at_module_level(module):
     assert not _module_level_imports(CLI / module) & SCREEN_MODULES
 
@@ -74,7 +74,7 @@ def test_loading_every_cli_module_leaves_the_screen_unimported():
     probe = (
         "import sys\n"
         "import sysml_codegen.cli, sysml_codegen.cli.prepare, sysml_codegen.cli.emit\n"
-        "import sysml_codegen.cli.destination, sysml_codegen.cli.readiness\n"
+        "import sysml_codegen.cli.destination, sysml_codegen.cli.report\n"
         "import sysml_codegen.subset_screen\n"
         f"print(sorted(set(sys.modules) & set({sorted(SCREEN_MODULES)!r})))\n"
     )

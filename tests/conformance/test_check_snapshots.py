@@ -3,7 +3,7 @@
 Spec Success Criteria 5 and 6, design Validation 5 and 6.
 
 - Every committed snapshot replays through ``check``. The screen is not assessed, for the
-  snapshot reason, and the model is never ready. The generator outcome equals ``check`` on
+  snapshot reason. The generator outcome equals ``check`` on
   the live sources wherever the sources are committed. ``catf_mfe_d5``'s are not (they are
   regenerated into an untracked folder), so its live comparison is not run here.
 - Every 2a case that builds is captured on the fly and replayed: same outcome as live.
@@ -28,7 +28,7 @@ import pytest
 from agentic_mbse.sysml import subset_extraction, subset_profile
 
 from sysml_codegen import cli, subset_profile_adapter
-from sysml_codegen.cli import CheckRequest, prepare, readiness, run_check
+from sysml_codegen.cli import CheckRequest, prepare, report, run_check
 from sysml_codegen.subset_screen import NotAssessedCause, ScreenNotAssessed
 from tests.conformance.test_snapshot_v5_gate import _v5_extraction_payload
 from tests.conftest import FIXTURES_DIR, requires_license
@@ -64,7 +64,7 @@ def _id(snapshot: Path) -> str:
     return snapshot.relative_to(FIXTURES_DIR).as_posix()
 
 
-def _check(source: prepare.ModelSource) -> readiness.ReadinessReport:
+def _check(source: prepare.ModelSource) -> report.Report:
     return run_check(CheckRequest(source, "generated_code", None))
 
 
@@ -73,11 +73,11 @@ def _live_outcome(models: Path) -> tuple[str, ...] | None:
     return _outcome(_check(prepare.LiveModels((models,))))
 
 
-def _outcome(report: readiness.ReadinessReport) -> tuple[str, ...] | None:
+def _outcome(checked: report.Report) -> tuple[str, ...] | None:
     """``None`` when the model builds, else the sorted refusal codes."""
-    if isinstance(report.generator, prepare.Prepared):
+    if isinstance(checked.generator, prepare.Prepared):
         return None
-    return readiness.generator_codes(report.generator)
+    return report.generator_codes(checked.generator)
 
 
 def _main(monkeypatch: pytest.MonkeyPatch, *argv: str | Path) -> int:
@@ -94,13 +94,12 @@ def test_there_are_23_committed_snapshots():
 
 
 @pytest.mark.parametrize("snapshot", SNAPSHOTS, ids=_id)
-def test_a_committed_snapshot_replays_without_the_screen_and_is_never_ready(snapshot):
-    report = _check(prepare.SnapshotFile(snapshot))
-    assert report.screen == SNAPSHOT_SCREEN
-    assert report.disagreement is None
-    assert readiness.readiness(report).value is not readiness.Readiness.READY
+def test_a_committed_snapshot_replays_without_the_screen(snapshot):
+    checked = _check(prepare.SnapshotFile(snapshot))
+    assert checked.screen == SNAPSHOT_SCREEN
+    assert checked.disagreement is None
     if snapshot not in NO_COMMITTED_SOURCES:
-        assert _outcome(report) == _live_outcome(_sources(snapshot))
+        assert _outcome(checked) == _live_outcome(_sources(snapshot))
 
 
 @pytest.mark.parametrize("answer", BUILDS, ids=lambda a: a.case_id)
@@ -110,10 +109,9 @@ def test_a_building_case_captured_on_the_fly_replays_as_live(answer, tmp_path):
     snapshot = capture_instance_graph_snapshot(
         [cases.model_root(answer)], tmp_path / "instance_graph_snapshot.json"
     )
-    report = _check(prepare.SnapshotFile(snapshot))
-    assert isinstance(report.generator, prepare.Prepared)
-    assert report.screen == SNAPSHOT_SCREEN
-    assert readiness.readiness(report).value is readiness.Readiness.NOT_READY
+    checked = _check(prepare.SnapshotFile(snapshot))
+    assert isinstance(checked.generator, prepare.Prepared)
+    assert checked.screen == SNAPSHOT_SCREEN
     assert _live_outcome(cases.model_root(answer)) is None
 
 
@@ -124,7 +122,6 @@ def test_generate_from_a_snapshot_reports_the_screen_not_assessed(monkeypatch, t
     assert _main(monkeypatch, "generate", "--from-snapshot", snapshot, "-o", output) == 0
     infos = [r.getMessage() for r in caplog.records if r.levelno == logging.INFO]
     assert "Screen not assessed: snapshots do not carry the screen" in infos
-    assert "  - the source is a snapshot, and a snapshot is never ready" in infos
 
 
 def test_check_refuses_a_snapshot_the_loader_refuses_with_generate_s_record(monkeypatch, tmp_path):

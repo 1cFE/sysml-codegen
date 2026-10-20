@@ -3,14 +3,12 @@
 Item 2b design D4, D6, D16, D17, D18; Invariants 1, 3 and 5.
 
 - ``check`` never calls ``emit_package`` and leaves a populated destination byte-identical.
-- Exit codes: 1 refused, 3 builds but not ready, 0 ready. No model reaches ready until the
-  owner decides the readiness rule (plan assumption A1), so 0 is shown with ``readiness``
-  patched.
+- Exit codes: ``generate``'s answer, 0 when it would build and 1 when it would refuse. The
+  test over every 2a case is ``subset_profile/test_report_form.py``.
 - A model with parse errors: both commands log today's parsing record, and the screen is not
   assessed because of the parse errors (M2).
-- A symlinked destination (M4): ``generate`` logs one ``PACKAGE_WRITE`` record and exits 1;
-  ``check --output`` logs the same text at WARNING with no ``refusal`` extra and exits 3. A
-  refused model logs only its own refusal on both commands.
+- A symlinked destination (M4): ``generate`` and ``check --output`` both log the same one
+  ``PACKAGE_WRITE`` record and exit 1. A refused model logs only its own refusal on both.
 - After the seal, nothing in the screen or the report can change ``generate``'s result: each
   of the three report steps patched to raise leaves the same bytes, exit 0, and one WARNING.
 
@@ -28,8 +26,7 @@ from pathlib import Path
 import pytest
 
 from sysml_codegen import cli
-from sysml_codegen.cli import CheckRequest, prepare, readiness, run_check
-from sysml_codegen.cli.destination import DESTINATION_NOT_CHECKED
+from sysml_codegen.cli import CheckRequest, prepare, run_check
 from tests.conformance.test_refusal_before_first_write import _sentinel, _tree
 from tests.conftest import requires_license
 from tests.helpers import refusal_records
@@ -85,7 +82,7 @@ def test_check_writes_nothing_and_never_calls_emit(case_id, monkeypatch, tmp_pat
     destination = _sentinel(tmp_path, "populated")
     before = _tree(destination)
     code = _main(monkeypatch, "check", "--models", _models(case_id), "--output", destination)
-    assert code == (3 if case_id == BUILDS_CASE else 1)
+    assert code == (0 if case_id == BUILDS_CASE else 1)
     assert _tree(destination) == before
 
 
@@ -99,16 +96,13 @@ def test_check_logs_a_refusal_only_for_a_refused_model(monkeypatch, tmp_path):
     assert refused == BASE[f"case:{REFUSED_CASE}"]
 
 
-def test_check_exits_0_when_readiness_says_ready(monkeypatch):
-    ready = readiness.ReadinessVerdict(readiness.Readiness.READY, ())
-    monkeypatch.setattr("sysml_codegen.cli.readiness.readiness", lambda _report: ready)
-    assert _main(monkeypatch, "check", "--models", _models(BUILDS_CASE)) == 0
+def test_check_without_output_inspects_no_destination(monkeypatch):
+    def inspected(*_args: object) -> None:
+        raise AssertionError("check inspected a destination it was not given")
 
-
-def test_check_without_output_leaves_the_destination_unchecked():
+    monkeypatch.setattr("sysml_codegen.cli.destination.inspect_destination", inspected)
     report = run_check(CheckRequest(prepare.LiveModels((_models(BUILDS_CASE),)), "pkg", None))
     assert isinstance(report.generator, prepare.Prepared)
-    assert report.destination == DESTINATION_NOT_CHECKED
 
 
 @pytest.mark.parametrize("command", ["generate", "check"])
@@ -128,34 +122,19 @@ def test_a_model_with_parse_errors(command, monkeypatch, tmp_path, caplog):
     assert not output.exists()
 
 
-def test_generate_with_a_symlinked_destination_refuses_once(monkeypatch, tmp_path, caplog):
+@pytest.mark.parametrize("command", ["generate", "check"])
+def test_a_symlinked_destination_refuses_once(command, monkeypatch, tmp_path, caplog):
+    """``check --output`` gives ``generate``'s answer: the same one record, exit 1."""
     caplog.set_level(logging.INFO, logger="sysml_codegen")
     destination = _sentinel(tmp_path, "populated")
     (destination / "elsewhere").symlink_to(tmp_path)
     before = _tree(destination)
     with refusal_records.capture_refusals(destination) as records:
-        code = _main(monkeypatch, "generate", "--models", _models(BUILDS_CASE), "-o", destination)
+        code = _main(monkeypatch, command, "--models", _models(BUILDS_CASE), "-o", destination)
     assert code == 1
     assert [r["message"] for r in records] == [_PACKAGE_WRITE_SYMLINK]
     assert records[0]["refusal"] == {"items": [], "kind": "RefusalKind.PACKAGE_WRITE"}
     assert _messages(caplog, logging.WARNING) == []
-    assert _tree(destination) == before
-
-
-def test_check_with_a_symlinked_destination_warns_and_says_builds(monkeypatch, tmp_path, caplog):
-    caplog.set_level(logging.INFO, logger="sysml_codegen")
-    destination = _sentinel(tmp_path, "populated")
-    (destination / "elsewhere").symlink_to(tmp_path)
-    before = _tree(destination)
-    with refusal_records.capture_refusals(destination) as records:
-        code = _main(monkeypatch, "check", "--models", _models(BUILDS_CASE), "-o", destination)
-    assert code == 3
-    assert records == []
-    warnings = [m.replace(str(destination), "<OUTPUT>") for m in _messages(caplog, logging.WARNING)]
-    assert warnings == [_PACKAGE_WRITE_SYMLINK]
-    assert f"  - generate would stop at the destination: {_PACKAGE_WRITE_SYMLINK}" in [
-        m.replace(str(destination), "<OUTPUT>") for m in _messages(caplog, logging.INFO)
-    ]
     assert _tree(destination) == before
 
 
@@ -179,8 +158,8 @@ def test_a_refused_model_with_a_symlinked_destination_logs_only_the_model(
     "target",
     [
         "sysml_codegen.subset_screen.assess_screen",
-        "sysml_codegen.cli.readiness.readiness_report",
-        "sysml_codegen.cli.readiness.log_assessment",
+        "sysml_codegen.cli.report.build_report",
+        "sysml_codegen.cli.report.log_screen_section",
     ],
 )
 def test_generate_survives_a_report_failure(target, monkeypatch, tmp_path, caplog):
@@ -208,13 +187,13 @@ def test_check_has_no_guard(monkeypatch):
     def raising(*_args: object, **_kwargs: object) -> None:
         raise RuntimeError("probe: the report broke")
 
-    monkeypatch.setattr("sysml_codegen.cli.readiness.log_assessment", raising)
+    monkeypatch.setattr("sysml_codegen.cli.report.log_screen_section", raising)
     with pytest.raises(RuntimeError, match="probe: the report broke"):
         _main(monkeypatch, "check", "--models", _models(BUILDS_CASE))
 
 
 def test_generate_prints_the_report_after_writing(monkeypatch, tmp_path, caplog):
-    """D16: the generator section, then the writing, then the screen and readiness."""
+    """D16: the generator's answer, then the writing, then the screen's findings."""
     caplog.set_level(logging.INFO, logger="sysml_codegen")
     output = tmp_path / "pkg"
     assert _main(monkeypatch, "generate", "--models", _models(BUILDS_CASE), "-o", output) == 0
@@ -223,8 +202,7 @@ def test_generate_prints_the_report_after_writing(monkeypatch, tmp_path, caplog)
     screen = next(i for i, m in enumerate(infos) if m.startswith("Screen "))
     sealed = [i for i, m in enumerate(infos) if "seal" in m.lower()]
     assert sealed and all(builds < i < screen for i in sealed), infos
-    assert infos[screen - 1] == "Destination: clean"
-    assert infos[-2:] == ["Readiness: not ready", f"  - {readiness.AWAITING_OWNER}"]
+    assert infos[screen - 1] == "Code generation complete"
 
 
 def test_check_never_loads_the_writing_module(tmp_path):
@@ -246,4 +224,4 @@ def test_check_never_loads_the_writing_module(tmp_path):
         text=True,
         check=False,
     )
-    assert run.stdout.strip().splitlines()[-1] == "exit 3 emit loaded False", run.stderr
+    assert run.stdout.strip().splitlines()[-1] == "exit 0 emit loaded False", run.stderr

@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 from sysml_codegen.cli import CheckRequest, prepare, run_check
-from sysml_codegen.cli.readiness import ReadinessReport
+from sysml_codegen.cli.report import Report
 from sysml_codegen.subset_screen import ScreenAssessed
 from tests.conftest import FIXTURES_DIR, requires_license
 from tests.helpers.subset_profile import cases
@@ -34,11 +34,11 @@ ENTRIES = cases.read_disagreements()
 
 
 @cache
-def _check(model_root: Path) -> ReadinessReport:
+def _check(model_root: Path) -> Report:
     return run_check(CheckRequest(prepare.LiveModels((model_root,)), "generated_code", None))
 
 
-def _generator_run(report: ReadinessReport) -> GeneratorRun:
+def _generator_run(report: Report) -> GeneratorRun:
     generator = report.generator
     if isinstance(generator, prepare.Prepared):
         return GeneratorRun(GeneratorOutcome.GENERATED, (), ())
@@ -50,7 +50,7 @@ def _generator_run(report: ReadinessReport) -> GeneratorRun:
     )
 
 
-def _computed(subject: str, report: ReadinessReport) -> cases.Disagreement | None:
+def _computed(subject: str, report: Report) -> cases.Disagreement | None:
     found = report.disagreement
     if found is None:
         return None
