@@ -1,4 +1,0 @@
-new module
-============================= 351 passed in 0.43s ==============================
-FAILED tests/test_subset_gate_receipt.py::test_receipt_digest_matches_covered_files
-========================= 1 failed, 4 passed in 0.09s ==========================

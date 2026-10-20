@@ -1,9 +1,0 @@
-# Brief: /_my_close for EXEC-SUBSET-CONTRACT Item 2a
-
-Close Item 2a (`.project/active/subset-profile-conformance/`, sysml-codegen worktree, branch `subset-conformance`). Audit verdict: Certify (`audit.md`, 2026-10-19). After certification, the owner merged epic Item 3 (agentic-mbse PR #32) and the agentic-mbse branch was rebased and integrated (plan § "Integration with Item 3 after the rebase"; agentic-mbse `e2bff13f`, `3bb043ea`, `9a641a94`; codegen `ceb6796e`, `cb5243f8`). Both suites are at baseline and the gate receipt is fresh.
-
-The owner asked to close and then open PRs. Do the close per the command in this repo (archive, CHANGELOG, CURRENT_WORK, backlog/epic status), and in the agentic-mbse worktree `/home/reid/src/subset-conformance/agentic-mbse` update the epic's Item 2a status to complete with a pointer to the sysml-codegen archive, and its CURRENT_WORK.md.
-
-Record in the close as still pending with the owner (not decided by close): RG-1 (12 candidates in `rg1-recommendations.md`), RG-2 (`rg2-string-policy.md`), RG-3 (file the staged ADR 0001, ADR 0012, ADR 0016 and P-0001 amendments; check the owner's `adr-0012-occurrence-summary-amendment` branch for overlap first). Note the two user-visible L6 output changes from the integration (verdict line names `subset-profile/v2, subset-coverage/v2`; follow-up count 70 instead of 85). Item 2b's next step is `/_my_spec`, branching from both mains after this merges.
-
-If archiving moves files that the gate's receipt covers or that tests read by path, make sure nothing breaks: rerun the affected tests (and the gate if covered files change). Commit on `subset-conformance` branches only; never push, merge or open PRs. End commit messages with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. End with a short report and `ARTIFACT: <path>`.

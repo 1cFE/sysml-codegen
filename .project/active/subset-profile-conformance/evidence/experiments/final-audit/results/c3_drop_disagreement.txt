@@ -1,5 +1,0 @@
-dropped ['case:anonymous-declaration__calc_definition', 'case:candidate-chain-head__conditional_head']
-FAILED tests/conformance/subset_profile/test_agreement.py::test_a_case_agrees_or_its_disagreement_is_recorded[anonymous-declaration__calc_definition]
-FAILED tests/conformance/subset_profile/test_agreement.py::test_a_case_agrees_or_its_disagreement_is_recorded[candidate-chain-head__conditional_head]
-FAILED tests/conformance/subset_profile/test_agreement.py::test_the_records_case_entries_are_exactly_the_computed_disagreements
-================== 3 failed, 3858 passed in 228.32s (0:03:48) ==================

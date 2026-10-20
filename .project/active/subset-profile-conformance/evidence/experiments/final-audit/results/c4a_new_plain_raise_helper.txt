@@ -1,3 +1,0 @@
-appended helper with plain raise
-FAILED tests/conformance/subset_profile/test_site_account.py::test_every_scanned_site_has_one_row_and_every_row_a_site
-======================== 1 failed, 200 passed in 14.26s ========================

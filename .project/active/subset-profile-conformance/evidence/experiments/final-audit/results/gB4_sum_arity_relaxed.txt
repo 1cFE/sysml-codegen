@@ -1,7 +1,0 @@
-edited sysml-codegen/src/sysml_codegen/elaboration/project.py (1 matches, replaced 1)
-FAILED tests/conformance/subset_profile/test_fixture_agreement.py::test_the_stored_class_holds_live[subset_profile/push-down-sum-shape__zero_arguments]
-FAILED tests/conformance/subset_profile/test_generator_half.py::test_live_run_equals_the_stored_answer[push-down-sum-shape__zero_arguments]
-FAILED tests/conformance/subset_profile/test_generator_half.py::test_every_located_refusal_sits_on_the_construct[push-down-sum-shape__zero_arguments]
-FAILED tests/conformance/subset_profile/test_generator_mutations.py::test_neutralizing_a_site_changes_exactly_the_stored_cases[sysml_codegen/elaboration/project.py::_Projection._compile_computed_expression.render::coded::SI_SNAPSHOT_INVALID::5]
-FAILED tests/conformance/subset_profile/test_witnesses.py::test_a_codegen_witness_fires_its_sites_in_the_generator_half[push-down-sum-shape__zero_arguments]
-================== 5 failed, 3856 passed in 212.27s (0:03:32) ==================

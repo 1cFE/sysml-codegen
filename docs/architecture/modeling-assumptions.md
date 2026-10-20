@@ -676,7 +676,7 @@ A String attribute value is carried like any other attribute value: it is an att
 - A String bound to a calc input, in either spelling, and a String literal in a calc usage binding are refused at projection (`PROJECTION_FAILED`, `SI_RENDERING_COLLISION`): `candidate-es-010-refusal__string_to_calc_input__binding_value`, `…__attribute_declaration`, `candidate-es-010-refusal__string_usage_literal__binding_value`.
 - A calc def input with a String default that the usage leaves unbound generates as a `str` entry point with a `null` default, so the model's value does not reach the generated inputs (`candidate-es-010-refusal__string_library_default__unbound_input`; a Real default keeps its value, `…__real_library_default__unbound_input`).
 
-The String policy is pending the owner's RG-2 decision (`.project/active/subset-profile-conformance/rg2-string-policy.md`).
+The String policy is pending the owner's RG-2 decision (`c381fb00:.project/active/subset-profile-conformance/rg2-string-policy.md`).
 
 ### Non-numerical constraints
 
@@ -684,7 +684,7 @@ A constraint whose predicate is well formed but not numerical (a Boolean attribu
 
 ### A calc usage with its own result expression
 
-A calc usage that ends its body with its own bare expression (`calc m : Twice { in v = x; v * 3.0 }`) generates, but the expression is ignored: the output is computed from the calc def's expression. In the case found, the usage's input binding `in v = x` is lost as well, so `v` becomes an unbound library-default entry point with a `null` default. Case `calc-usage-result__bare_result__other_expression_site`; control `calc-usage-result__no_bare_result__other_expression_site`. The contract reports it (rule `calc-usage-result`, outcome `omitted`, qualified `candidate_refusal`). Whether it should be refused is RG1-3 in `.project/active/subset-profile-conformance/rg1-recommendations.md`. Until then, write the expression in the calc def, and use `default` there if a usage must override it.
+A calc usage that ends its body with its own bare expression (`calc m : Twice { in v = x; v * 3.0 }`) generates, but the expression is ignored: the output is computed from the calc def's expression. In the case found, the usage's input binding `in v = x` is lost as well, so `v` becomes an unbound library-default entry point with a `null` default. Case `calc-usage-result__bare_result__other_expression_site`; control `calc-usage-result__no_bare_result__other_expression_site`. The contract reports it (rule `calc-usage-result`, outcome `omitted`, qualified `candidate_refusal`). Whether it should be refused is RG1-3 in `c381fb00:.project/active/subset-profile-conformance/rg1-recommendations.md`. Until then, write the expression in the calc def, and use `default` there if a usage must override it.
 
 ### Calc def outputs that become manual stubs
 

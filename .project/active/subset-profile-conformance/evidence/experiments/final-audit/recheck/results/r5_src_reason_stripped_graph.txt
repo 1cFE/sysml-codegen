@@ -1,5 +1,0 @@
-edited sysml-codegen/src/sysml_codegen/elaboration/graph.py (1 matches, replaced 1)
-FAILED tests/conformance/subset_profile/test_generator_half.py::test_live_run_equals_the_stored_answer[candidate-es-002__part_inside_item_usage__attribute_value]
-FAILED tests/conformance/subset_profile/test_generator_mutations.py::test_neutralizing_a_site_changes_exactly_the_stored_cases[sysml_codegen/elaboration/occurrence.py::build_containment_address::coded::SI_OCCURRENCE_MISSING::1]
-FAILED tests/conformance/subset_profile/test_site_reasons.py::test_every_row_with_a_reason_is_passed_by_its_raise
-================== 3 failed, 4424 passed in 66.34s (0:01:06) ===================

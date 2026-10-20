@@ -1,7 +1,0 @@
-edited sysml-codegen/src/sysml_codegen/cli/__init__.py (2 matches, replaced 1)
-FAILED tests/conformance/subset_profile/test_fixture_agreement.py::test_the_stored_class_holds_live[subset_profile/output-naming__module_path_collision]
-FAILED tests/conformance/subset_profile/test_generator_half.py::test_live_run_equals_the_stored_answer[output-naming__module_path_collision]
-FAILED tests/conformance/subset_profile/test_generator_mutations.py::test_neutralizing_a_site_changes_exactly_the_stored_cases[sysml_codegen/cli/__init__.py::_check_duplicate_output_paths::free-text::CodeGenerationError::1]
-FAILED tests/conformance/subset_profile/test_tripwire.py::test_every_case_ends_as_stored_with_the_screen_tripwired[output-naming__module_path_collision]
-FAILED tests/conformance/subset_profile/test_witnesses.py::test_a_codegen_witness_fires_its_sites_in_the_generator_half[output-naming__module_path_collision]
-================== 5 failed, 3856 passed in 226.95s (0:03:46) ==================

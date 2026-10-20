@@ -1,2 +1,0 @@
-import sys; sys.path.insert(0,"/tmp/audit2a-final/perturb"); from edit import edit
-edit("sysml-codegen/src/sysml_codegen/elaboration/occurrence.py", '    steps: list[FeatureSlotId] = []\n    visited: set[DeclarationId] = set()\n', '    steps: list[FeatureSlotId] = []\n    visited: set[DeclarationId] = set()\n    if element is None:\n        raise OccurrenceResolutionError(\n            ElaborationCode.SI_OCCURRENCE_MISSING, "audit: no element"\n        )\n')
