@@ -127,9 +127,10 @@ REPORTS = dict(_reports())
 
 def test_the_combinations_cover_every_enum_member():
     assert len(REPORTS) == len(GENERATORS) * len(DESTINATIONS) * len(SCREENS) * len(DISAGREEMENTS)
-    assert len(SCREENS) == len(NotAssessedCause) + 2 * len(Verdict) * len(Outcome) * len(
-        Qualification
-    ) + 1
+    assert (
+        len(SCREENS)
+        == len(NotAssessedCause) + 2 * len(Verdict) * len(Outcome) * len(Qualification) + 1
+    )
 
 
 def test_report_functions_are_total(caplog):
@@ -216,3 +217,72 @@ def test_a_refusal_after_prepare_still_counts_as_the_model_building():
         ScreenAssessed("subset-profile/v2", Verdict.CLEAR, (), ()),
     )
     assert report.disagreement is None
+
+
+def _shaped(outcome: Outcome, rule_id: str, reason: str, *, line: int, **extra) -> SubsetDiagnostic:
+    return SubsetDiagnostic(
+        code=extra.get("code"),
+        rule_id=rule_id,
+        outcome=outcome,
+        qualification=extra.get("qualification", Qualification.NONE),
+        subset_reason=reason,
+        remedy=f"{rule_id} remedy",
+        subject=f"P::x{line}",
+        source_file="root-0/m.sysml",
+        source_line=line,
+    )
+
+
+def test_the_screen_section_prints_in_full_only_what_a_modeler_must_act_on(caplog):
+    """Design D5, orchestrator ruling 2026-10-20: the shape both commands print.
+
+    Refused, unconfirmed and ``candidate_refusal`` findings, unverified checks and the
+    disagreement in full; admitted findings as one count; omitted and excluded findings as one
+    line per rule, with the remedy once.
+    """
+    refused_code = ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED
+    findings = (
+        _shaped(Outcome.ADMITTED, "calc-owned-assertion", "calc_owned", line=1),
+        _shaped(Outcome.OMITTED, "string-value-omission", "string_value", line=2),
+        _shaped(Outcome.REFUSED, "part-multiplicity", "ordered", line=3, code=refused_code),
+        _shaped(Outcome.OMITTED, "string-value-omission", "string_value", line=4),
+        _shaped(Outcome.EXCLUDED, "redefinition", "redef_a", line=5),
+        _shaped(
+            Outcome.ADMITTED,
+            "binding-source",
+            "expression",
+            line=6,
+            qualification=Qualification.CANDIDATE_REFUSAL,
+        ),
+        _shaped(Outcome.ADMITTED, "calc-owned-assertion", "calc_owned", line=7),
+        _shaped(Outcome.UNCONFIRMED, "occurrence", "unconfirmed_occ", line=8),
+        _shaped(Outcome.EXCLUDED, "redefinition", "redef_b", line=9),
+    )
+    unverified = (UnverifiedEntry("binding-source", "probe_cause", "probe detail", None, None),)
+    screen = ScreenAssessed("subset-profile/v2", Verdict.REFUSED, findings, unverified)
+    disagreement = Disagreement(DisagreementKind.CODE_UNMAPPED, ("SI_X",), ("ordered",))
+    caplog.set_level(logging.INFO, logger="sysml_codegen.cli")
+    log_report(ReadinessReport(_prepared(), DESTINATION_NOT_CHECKED, screen, disagreement))
+    lines = [r.getMessage() for r in caplog.records]
+    start = next(i for i, m in enumerate(lines) if m.startswith("Screen "))
+    end = lines.index("Readiness: not ready")
+    assert lines[start + 1 : end] == [
+        "  refused part-multiplicity (ordered) P::x3 at root-0/m.sysml:3; the generator would "
+        "refuse it with SI_MULTIPLICITY_UNSUPPORTED",
+        "    remedy: part-multiplicity remedy",
+        "  admitted binding-source (expression) P::x6 at root-0/m.sysml:6 [candidate_refusal]",
+        "    remedy: binding-source remedy",
+        "  unconfirmed occurrence (unconfirmed_occ) P::x8 at root-0/m.sysml:8",
+        "    remedy: occurrence remedy",
+        "  admitted, not listed: 2 findings",
+        "  omitted string-value-omission (string_value): 2 findings",
+        "    remedy: string-value-omission remedy",
+        "  excluded redefinition (redef_a, redef_b): 2 findings",
+        "    remedy: redefinition remedy",
+        "  not assessed binding-source (probe_cause) at no location: probe detail",
+        "Disagreement: code_unmapped: generator codes ['SI_X'], screen reasons ['ordered']",
+    ]
+    assert lines[start] == (
+        "Screen subset-profile/v2: verdict refused; 3 admitted, 2 excluded, 2 omitted, "
+        "1 refused, 1 unconfirmed; 1 not assessed"
+    )

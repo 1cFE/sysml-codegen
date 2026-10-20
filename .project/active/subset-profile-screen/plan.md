@@ -820,9 +820,26 @@ See `design.md#potential-risks` for the full table. Phase-specific mitigations:
 - `generate` on `catf_mfe_d5` (from its regenerated sources) takes 7.5-7.7 s over three runs, against 4.19 s. On `catf_mfe_gated` it takes 6.75-6.86 s, against 3.84 s.
 - A time-stamped run shows the package sealed at 4.14 s, the same as the base. The other 3.2 s is the screen, after the seal. That is the "about 3 s" B3 predicted.
 
-**For the owner (not acted on):** `generate` on either catf_mfe model now prints about 240 report lines after "Code generation complete": two lines (the finding and its remedy) for each of 51 or 48 admitted and 68 omitted findings. The design's D5 renders every finding. Its sketch shows only a refused one, and the spec does not say whether admitted and omitted findings belong in `generate`'s output. Cutting them changes no outcome, so this waits for the owner.
+**Report length:** about 240 report lines on each catf_mfe model, one finding line and one remedy line per admitted or omitted finding. Decided by the orchestrator after Phase 8. See the Phase 8 follow-up below.
 
 **Deviations:** none from the plan. The `log_agentic_mbse_missing` move corrects a Phase 7 mistake.
+
+### Phase 8 follow-up: report length
+**Completed:** 2026-10-20, after Phase 9. This applies an orchestrator decision on report length (display only, no outcome changes), now recorded in design D5. `log_report` is shared, so both commands print the same shape.
+
+**Changes Made:**
+- `cli/readiness.py` `_log_screen`:
+  - Refused, unconfirmed and `candidate_refusal` findings print in full through the new `_log_finding`, as before: location, generator match and remedy.
+  - The remaining admitted findings print as one line, `admitted, not listed: N findings`.
+  - Omitted and excluded findings print as one line per (outcome, rule), with the distinct reasons and the count, then the rule's remedy once. The remedy is per rule (`rules.rule(id).remedy` in `subset_profile_adapter.py`), so grouping loses none.
+  - Unverified checks and the disagreement are unchanged. The summary tally still counts every finding.
+- The `SubsetDiagnostic` and `RefusalItem` imports are for type hints only, under `TYPE_CHECKING`. A run-time adapter import would break D10 and the Phase 9 skew test.
+- New `test_the_screen_section_prints_in_full_only_what_a_modeler_must_act_on` (`tests/unit/test_readiness_report.py`). It uses nine findings across every outcome plus a candidate refusal, an unverified check and a disagreement, and pins the exact lines and their order.
+- **Not done:** the ruling allowed a pointer in the summary line to L6's structured output for modelers who want every finding. I left it out. L6's presentation (`agentic-mbse validation/subset_presentation.py`, `present`) also cuts some findings to counts, so the pointer would not lead to every finding.
+
+**Line count after:** `generate` on `catf_mfe_d5` prints 41 lines in all, 7 after "Code generation complete" (was about 276 and 242). On `catf_mfe_gated` it prints 42 in all, 7 after (was about 271 and 236). The 7 lines are: the destination, the screen summary, the admitted count, one omitted rule with its remedy, and readiness with its reason.
+
+**Exit check:** licensed suite 11227 passed, 9 failed (the base 9), 9 skipped, no new failures. Refusal records: 0 of 173 differ. Byte identity: 0 differences. mypy clean (91 files). ruff `src/` clean, `src/ tests/` 94. agentic-mbse clean. `src/` changed, so the TEAx lane is rerun on this commit, with the receipt in `evidence/execution-lane/README.md`.
 
 ### Phase 9 Completion
 **Completed:** 2026-10-20. Every spec success criterion holds, each with its test, and each is checked off in `spec.md`. The readiness rule still withholds READY (A1). No file under `src/` changed in this phase.

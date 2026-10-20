@@ -24,6 +24,7 @@ import logging
 from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from enum import Enum, StrEnum
+from typing import TYPE_CHECKING
 
 from agentic_mbse.sysml.subset_profile import Outcome, Qualification, Verdict
 
@@ -34,8 +35,17 @@ from sysml_codegen.subset_screen import (
     ScreenNotAssessed,
 )
 
+if TYPE_CHECKING:
+    from sysml_codegen.cli.refusal import RefusalItem
+    from sysml_codegen.subset_profile_adapter import SubsetDiagnostic
+
 #: The CLI's logger, so every report line has the name ``generate``'s lines have.
 logger = logging.getLogger("sysml_codegen.cli")
+
+#: Findings printed one by one, with location and remedy: the ones a modeler must act on.
+#: A ``candidate_refusal`` finding is printed so too, whatever its outcome. Admitted findings
+#: are one count line; omitted and excluded ones are one line per rule (design D5).
+_ACTED_ON = frozenset({Outcome.REFUSED, Outcome.UNCONFIRMED})
 
 #: The steps after ``prepare``. A refusal there is about the destination or the writing, not
 #: the model, so the model still builds as far as the screen's agreement is concerned.
@@ -264,28 +274,46 @@ def _log_screen(report: ReadinessReport) -> None:
         f"{len(screen.unverified)} not assessed"
     )
     refusal_items = report.generator.refusal.items if isinstance(report.generator, Refused) else ()
+    admitted = 0
+    grouped: dict[tuple[str, str], list[SubsetDiagnostic]] = {}
     for finding in screen.findings:
-        where = _location(finding.source_file, finding.source_line)
-        line = (
-            f"  {finding.outcome.value} {finding.rule_id} ({finding.subset_reason}) "
-            f"{finding.subject or '<anonymous>'} at {where}"
-        )
-        if finding.qualification is not Qualification.NONE:
-            line += f" [{finding.qualification.value}]"
-        if finding.code is not None:
-            matched = [item for item in refusal_items if item.code.value == finding.code.value]
-            if matched:
-                there = _location(matched[0].source_file, matched[0].source_line)
-                line += f"; matches the generator's {finding.code.value} at {there}"
-            else:
-                line += f"; the generator would refuse it with {finding.code.value}"
-        logger.info(line)
-        logger.info(f"    remedy: {finding.remedy}")
+        if finding.outcome in _ACTED_ON or finding.qualification is Qualification.CANDIDATE_REFUSAL:
+            _log_finding(finding, refusal_items)
+        elif finding.outcome is Outcome.ADMITTED:
+            admitted += 1
+        else:
+            grouped.setdefault((finding.outcome.value, finding.rule_id), []).append(finding)
+    if admitted:
+        logger.info(f"  admitted, not listed: {admitted} findings")
+    for (outcome, rule_id), findings in grouped.items():
+        reasons = ", ".join(sorted({f.subset_reason for f in findings}))
+        logger.info(f"  {outcome} {rule_id} ({reasons}): {len(findings)} findings")
+        logger.info(f"    remedy: {findings[0].remedy}")
     for entry in screen.unverified:
         logger.info(
             f"  not assessed {entry.rule_id} ({entry.cause}) at "
             f"{_location(entry.source_file, entry.source_line)}: {entry.detail}"
         )
+
+
+def _log_finding(finding: SubsetDiagnostic, refusal_items: Sequence[RefusalItem]) -> None:
+    """One finding in full: where it is, what the generator does with it, and its remedy."""
+    where = _location(finding.source_file, finding.source_line)
+    line = (
+        f"  {finding.outcome.value} {finding.rule_id} ({finding.subset_reason}) "
+        f"{finding.subject or '<anonymous>'} at {where}"
+    )
+    if finding.qualification is not Qualification.NONE:
+        line += f" [{finding.qualification.value}]"
+    if finding.code is not None:
+        matched = [item for item in refusal_items if item.code.value == finding.code.value]
+        if matched:
+            there = _location(matched[0].source_file, matched[0].source_line)
+            line += f"; matches the generator's {finding.code.value} at {there}"
+        else:
+            line += f"; the generator would refuse it with {finding.code.value}"
+    logger.info(line)
+    logger.info(f"    remedy: {finding.remedy}")
 
 
 def _step(refused: Refused) -> str:
