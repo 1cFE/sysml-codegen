@@ -63,6 +63,21 @@ def test_only_the_reader_and_this_test_name_the_record():
     assert naming == []
 
 
+def test_no_shipped_file_names_the_record():
+    """Item 2b Invariant 8: the record is a test oracle, read at runtime by nothing shipped.
+
+    Every file under ``src/`` counts, templates and data included, not only Python.
+    """
+    naming = [
+        str(path.relative_to(REPO_ROOT))
+        for path in sorted((REPO_ROOT / "src").rglob("*"))
+        if path.is_file()
+        and "__pycache__" not in path.parts
+        and RECORD_NAME.encode() in path.read_bytes()
+    ]
+    assert naming == []
+
+
 def test_the_reader_makes_no_writing_call():
     calls = [
         node.func.attr if isinstance(node.func, ast.Attribute) else node.func.id

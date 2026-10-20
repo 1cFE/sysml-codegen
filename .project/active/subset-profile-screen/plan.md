@@ -1,6 +1,6 @@
 # Implementation Plan: Read-only readiness check, live half (EXEC-SUBSET-CONTRACT Item 2b)
 
-**Status:** In Progress (Phases 0-6 done)
+**Status:** In Progress (Phases 0-7 done)
 **Created:** 2026-10-20
 **Last Updated:** 2026-10-20
 **Branch / base:** sysml-codegen `subset-profile-screen` at `cbbc1100` (design approved); agentic-mbse sibling `/home/reid/src/subset-conformance/agentic-mbse` at `e268357f`, which this plan does not edit (design D12).
@@ -423,16 +423,16 @@ def test_snapshot_is_never_ready():
 
 See `design.md` D5, D8 (only the parts that hold whichever way the owner decides), D9, D17, Implementation Notes (the `ReadinessReport` sketch, "Logger").
 
-- [ ] `cli/readiness.py` (new), importing no SysIDE and not the adapter at run time.
-- [ ] `readiness()` per A1. `ReadinessVerdict` carries worded reason strings; `log_report` prints them in order without branching on them (R2-3).
-- [ ] `log_report` renders sections in one fixed order through `logging.getLogger("sysml_codegen.cli")`. The generator refusal line reuses Phase 3's logging helper, so it is byte-identical. The agentic-mbse-not-installed line says it is an environment problem (D6, m6). Wording stays inside L6's "CLEAR is relative to the implemented rules" (design "Open for the plan").
-- [ ] `tests/helpers/subset_profile/cases.py:459-478`: `disagreement` calls the `src/` rule.
-- [ ] A test that `src/` never reads `disagreements.json` (Invariant 8; 2a D3's writer guard may already cover it; extend rather than duplicate).
+- [x] `cli/readiness.py` (new), importing no SysIDE and not the adapter at run time.
+- [x] `readiness()` per A1. `ReadinessVerdict` carries worded reason strings; `log_report` prints them in order without branching on them (R2-3).
+- [x] `log_report` renders sections in one fixed order through `logging.getLogger("sysml_codegen.cli")`. The generator refusal line reuses Phase 3's logging helper, so it is byte-identical. The agentic-mbse-not-installed line says it is an environment problem (D6, m6). Wording stays inside L6's "CLEAR is relative to the implemented rules" (design "Open for the plan").
+- [x] `tests/helpers/subset_profile/cases.py:459-478`: `disagreement` calls the `src/` rule.
+- [x] A test that `src/` never reads `disagreements.json` (Invariant 8; 2a D3's writer guard may already cover it; extend rather than duplicate).
 
 ### Validation
 
-- [ ] Totality test, snapshot test and the existing disagreement-record tests pass.
-- [ ] Phase exit check.
+- [x] Totality test, snapshot test and the existing disagreement-record tests pass.
+- [x] Phase exit check.
 
 **What we know after this phase:** every piece `check` needs exists and is tested on its own; only the wiring is left.
 
@@ -768,6 +768,26 @@ See `design.md#potential-risks` for the full table. Phase-specific mitigations:
   - A TEAx checkout exists at `~/src/teax`. I did not check its version or build any of these artifacts.
 
 ### Phase 7 Completion
+**Completed:** 2026-10-20. Everything `check` needs exists and is tested on its own. Nothing calls it yet, so no record or package byte changed.
+
+**Changes Made:**
+- `cli/readiness.py` (new). It imports agentic-mbse's screen enums but no SysIDE, not the adapter and nothing that writes. Contents:
+  - `DisagreementKind`, `RefusedFinding` and `disagreement_kind(builds, refusal_codes, refused)`: the agreement rule moved out of `tests/helpers/subset_profile/cases.py` (D9).
+  - `Disagreement`, `DestinationState`/`DestinationCheck` (with `DESTINATION_NOT_CHECKED` and `DESTINATION_CLEAN`), `ReadinessReport`, `Readiness`, `ReadinessVerdict`.
+  - `readiness_report(generator, destination, screen)`, which computes the disagreement only when the screen was assessed.
+  - `readiness(report)`, the A1 interim rule: REFUSED for any `Refused`; otherwise NOT_READY with every reason that holds, in a fixed order, or `AWAITING_OWNER` when none does.
+  - `log_report`, which is `log_generator_section` (a refusal's one record through `log_refused`, or `Generator: builds (N modules)`) then `log_assessment` (destination, screen, disagreement, readiness line, then the reasons in order). Also `log_agentic_mbse_missing`, worded as an environment problem.
+- **Decision (agent):** for the agreement rule, a `Refused` at `DESTINATION` or `EMIT` counts as the model building, because `prepare` accepted it (`model_builds`). Otherwise a symlinked destination would read as `generator_refuses_screen_silent`.
+- **Decision (agent):** the destination line is a WARNING with no `refusal` extra (D4, `check --output`). It is not printed when the generator was refused at `DESTINATION`, because that refusal's record already carries the same text. So `generate` logs it once.
+- `tests/helpers/subset_profile/cases.py`: `disagreement` reads the stored answers into `disagreement_kind`. `DisagreementKind` comes from `src/`. The helper now computes each refused finding's mapped code for every run, not only refused runs. No stored case has a refused finding that maps to `NO_REFUSAL` (Phase 6 rendered all 246), and the disagreement tests (739) pass unchanged.
+- `test_disagreement_record.py`: new `test_no_shipped_file_names_the_record` extends the existing guard from Python files to every file under `src/` (Invariant 8).
+- New `tests/unit/test_readiness_report.py`. 5 generator kinds × 3 destinations × 156 screens × 4 disagreement states = 9360 reports, each through `readiness`, `log_report` and `readiness_report`. The screens are every not-assessed cause, plus every verdict × outcome × qualification with and without unverified checks, plus an empty clear screen. Also: snapshot never ready; reasons printed in order; destination WARNING without `refusal`; one record for a `generate` destination refusal; the agreement rule's five cases.
+- Site account: one row, `cli/readiness.py::DestinationCheck.__post_init__::builtin::ValueError::1`, `internal_invariant` (500).
+- `design.md` Invariant 4 now names the `unexpected_public_failure` relay as the second allowed site. Allowing it was the agent's call, ratified by the owner on 2026-10-20.
+
+**Exit check:** licensed suite 9374 passed, 9 failed (the base 9), 9 skipped. The one new failure was the missing account row, fixed and rerun (2a harness 4897 passed). No new lost IDs. Byte identity: 0 differences. Refusal records: 0 of 173 differ from the Phase 4 file. mypy clean (91 files), ruff `src/` clean, ruff `src/ tests/` 94. agentic-mbse clean.
+
+**Deviations:** none from the plan. The two decisions above fill gaps the design did not cover.
 
 ### Phase 8 Completion
 

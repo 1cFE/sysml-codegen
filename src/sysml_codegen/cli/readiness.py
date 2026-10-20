@@ -1,0 +1,303 @@
+"""The readiness report both ``check`` and ``generate`` print (EXEC-SUBSET-CONTRACT Item 2b).
+
+A ``ReadinessReport`` holds four answers, each already decided elsewhere:
+
+- the generator: ``Prepared`` (builds) or ``Refused``, from ``prepare``, the destination check
+  or ``emit_package``;
+- the destination check: not checked, clean, or the problem ``generate`` would stop at;
+- the screen: ``ScreenAssessed`` or ``ScreenNotAssessed``, from ``assess_screen``;
+- at most one disagreement between the generator and the screen (design D9).
+
+Three pure functions read it. ``readiness`` decides ready, not ready or refused, and is the one
+place that rule lives (design D8). ``log_generator_section`` and ``log_assessment`` render it
+through the CLI's logger, in one fixed order; ``log_report`` is the two in turn. None of them
+reads a table or raises on any member of the enums it switches on (design D17).
+
+This module imports no SysIDE and not the adapter, and nothing that writes. It does import
+agentic-mbse's screen vocabulary, so the CLI imports it only inside the commands that report.
+"""
+
+from __future__ import annotations
+
+import logging
+from collections.abc import Collection, Sequence
+from dataclasses import dataclass
+from enum import Enum, StrEnum
+
+from agentic_mbse.sysml.subset_profile import Outcome, Qualification, Verdict
+
+from sysml_codegen.cli.prepare import PreparationStep, Prepared, Refused, log_refused
+from sysml_codegen.subset_screen import (
+    NotAssessedCause,
+    ScreenAssessed,
+    ScreenNotAssessed,
+)
+
+#: The CLI's logger, so every report line has the name ``generate``'s lines have.
+logger = logging.getLogger("sysml_codegen.cli")
+
+#: The steps after ``prepare``. A refusal there is about the destination or the writing, not
+#: the model, so the model still builds as far as the screen's agreement is concerned.
+_AFTER_PREPARE = frozenset({PreparationStep.DESTINATION, PreparationStep.EMIT})
+
+AWAITING_OWNER = "the readiness rule is awaiting the owner's decision (plan Phase 10)"
+
+
+class DisagreementKind(StrEnum):
+    GENERATOR_REFUSES_SCREEN_SILENT = "generator_refuses_screen_silent"
+    SCREEN_REFUSES_GENERATOR_BUILDS = "screen_refuses_generator_builds"
+    CODE_UNMAPPED = "code_unmapped"
+
+
+@dataclass(frozen=True)
+class RefusedFinding:
+    """What the agreement rule reads from one ``refused`` screen finding."""
+
+    reason: str
+    #: The code ``REASON_MAPPING`` says the generator refuses the finding with.
+    mapped_code: str
+
+
+def disagreement_kind(
+    builds: bool, refusal_codes: Collection[str], refused: Sequence[RefusedFinding]
+) -> DisagreementKind | None:
+    """The disagreement between the generator and the screen's refused findings, if any.
+
+    Item 2a's agreement relation (design D7, D9): a refusal agrees with the screen when one
+    refused finding's mapped code is among the refusal's codes. Total; reads no table.
+    """
+    if builds:
+        return DisagreementKind.SCREEN_REFUSES_GENERATOR_BUILDS if refused else None
+    if not refused:
+        return DisagreementKind.GENERATOR_REFUSES_SCREEN_SILENT
+    if {finding.mapped_code for finding in refused} & set(refusal_codes):
+        return None
+    return DisagreementKind.CODE_UNMAPPED
+
+
+@dataclass(frozen=True)
+class Disagreement:
+    kind: DisagreementKind
+    #: Sorted codes of the generator's refusal; empty when it builds.
+    generator_codes: tuple[str, ...]
+    #: Sorted, distinct reasons of the screen's ``refused`` findings.
+    screen_reasons: tuple[str, ...]
+
+
+class DestinationState(Enum):
+    NOT_CHECKED = "not checked"
+    CLEAN = "clean"
+    PROBLEM = "problem"
+
+
+@dataclass(frozen=True)
+class DestinationCheck:
+    state: DestinationState
+    #: The ``Package sealing failed: …`` text; set exactly when the state is ``PROBLEM``.
+    message: str | None = None
+
+    def __post_init__(self) -> None:
+        if (self.state is DestinationState.PROBLEM) != (self.message is not None):
+            raise ValueError("a destination check has a message exactly when it has a problem")
+
+
+DESTINATION_NOT_CHECKED = DestinationCheck(DestinationState.NOT_CHECKED)
+DESTINATION_CLEAN = DestinationCheck(DestinationState.CLEAN)
+
+
+@dataclass(frozen=True)
+class ReadinessReport:
+    generator: Prepared | Refused
+    destination: DestinationCheck
+    screen: ScreenAssessed | ScreenNotAssessed
+    #: Computed only when the screen was assessed.
+    disagreement: Disagreement | None
+
+
+class Readiness(Enum):
+    READY = "ready"
+    NOT_READY = "not ready"
+    REFUSED = "refused"
+
+
+@dataclass(frozen=True)
+class ReadinessVerdict:
+    value: Readiness
+    #: Already worded, printed in order and never inspected.
+    reasons: tuple[str, ...]
+
+
+def model_builds(generator: Prepared | Refused) -> bool:
+    """Whether the model itself builds: ``prepare`` accepted it, whatever happened after."""
+    return isinstance(generator, Prepared) or generator.step in _AFTER_PREPARE
+
+
+def generator_codes(generator: Prepared | Refused) -> tuple[str, ...]:
+    if isinstance(generator, Prepared):
+        return ()
+    return tuple(sorted(item.code.value for item in generator.refusal.items))
+
+
+def readiness_report(
+    generator: Prepared | Refused,
+    destination: DestinationCheck,
+    screen: ScreenAssessed | ScreenNotAssessed,
+) -> ReadinessReport:
+    """Combine the answers, computing the disagreement when the screen was assessed."""
+    disagreement = None
+    if isinstance(screen, ScreenAssessed):
+        # A rendered finding carries a code exactly when it is refused (the adapter's contract).
+        refused = [
+            RefusedFinding(f.subset_reason, f.code.value)
+            for f in screen.findings
+            if f.outcome is Outcome.REFUSED and f.code is not None
+        ]
+        builds = model_builds(generator)
+        codes = () if builds else generator_codes(generator)
+        kind = disagreement_kind(builds, codes, refused)
+        if kind is not None:
+            reasons = tuple(sorted({finding.reason for finding in refused}))
+            disagreement = Disagreement(kind, codes, reasons)
+    return ReadinessReport(generator, destination, screen, disagreement)
+
+
+def readiness(report: ReadinessReport) -> ReadinessVerdict:
+    """Ready, not ready or refused, with the reasons in the order they are printed.
+
+    Interim rule (plan assumption A1) until the owner decides design D8: it decides only what
+    that question does not touch, so READY is unreachable and every model that builds is not
+    ready, with every reason that already holds and, failing those, ``AWAITING_OWNER``.
+    """
+    if isinstance(report.generator, Refused):
+        return ReadinessVerdict(
+            Readiness.REFUSED, (f"the generator refuses at step {_step(report.generator)}",)
+        )
+    reasons: list[str] = []
+    if report.destination.state is DestinationState.PROBLEM:
+        reasons.append(f"generate would stop at the destination: {report.destination.message}")
+    screen = report.screen
+    if isinstance(screen, ScreenNotAssessed):
+        if screen.cause is NotAssessedCause.SNAPSHOT_SOURCE:
+            reasons.append("the source is a snapshot, and a snapshot is never ready")
+        else:
+            reasons.append(f"the screen was not assessed: {screen.reason}")
+    else:
+        if screen.unverified:
+            reasons.append(f"{len(screen.unverified)} screen checks could not run")
+        if screen.verdict is not Verdict.CLEAR:
+            reasons.append(f"the screen's verdict is {screen.verdict.value}")
+        candidates = sum(
+            1 for f in screen.findings if f.qualification is Qualification.CANDIDATE_REFUSAL
+        )
+        if candidates:
+            reasons.append(f"{candidates} findings are candidate refusals")
+    if report.disagreement is not None:
+        reasons.append(f"the screen and the generator disagree ({report.disagreement.kind})")
+    if not reasons:
+        reasons.append(AWAITING_OWNER)
+    return ReadinessVerdict(Readiness.NOT_READY, tuple(reasons))
+
+
+def log_report(report: ReadinessReport) -> None:
+    """The whole report, as ``check`` prints it."""
+    log_generator_section(report)
+    log_assessment(report)
+
+
+def log_generator_section(report: ReadinessReport) -> None:
+    """The generator's answer: a refusal's one record, exactly as ``generate`` logs it."""
+    generator = report.generator
+    if isinstance(generator, Refused):
+        log_refused(generator)
+    else:
+        logger.info(f"Generator: builds ({len(generator.graph.modules)} modules)")
+
+
+def log_assessment(report: ReadinessReport) -> None:
+    """Destination, screen, disagreement and readiness, in that order."""
+    _log_destination(report)
+    _log_screen(report)
+    if report.disagreement is not None:
+        d = report.disagreement
+        logger.info(
+            f"Disagreement: {d.kind}: generator codes {list(d.generator_codes)}, "
+            f"screen reasons {list(d.screen_reasons)}"
+        )
+    verdict = readiness(report)
+    logger.info(f"Readiness: {verdict.value.value}")
+    for reason in verdict.reasons:
+        logger.info(f"  - {reason}")
+
+
+def log_agentic_mbse_missing() -> None:
+    """Why ``check`` cannot run at all: an environment problem, not a model refusal."""
+    logger.error(
+        "agentic-mbse is not installed, so the model cannot be checked. This is an "
+        "environment problem, not a model refusal; install agentic-mbse first."
+    )
+
+
+def _log_destination(report: ReadinessReport) -> None:
+    destination = report.destination
+    if destination.state is DestinationState.NOT_CHECKED:
+        logger.info("Destination: not checked")
+    elif destination.state is DestinationState.CLEAN:
+        logger.info("Destination: clean")
+    elif not (
+        isinstance(report.generator, Refused)
+        and report.generator.step is PreparationStep.DESTINATION
+    ):
+        # Not a refusal record: the generator outcome stays "builds" (design D4). When the
+        # generator was refused here, its record already carries this text.
+        logger.warning(destination.message)
+
+
+def _log_screen(report: ReadinessReport) -> None:
+    screen = report.screen
+    if isinstance(screen, ScreenNotAssessed):
+        logger.info(f"Screen not assessed: {screen.reason}")
+        return
+    counts: dict[str, int] = {}
+    for finding in screen.findings:
+        counts[finding.outcome.value] = counts.get(finding.outcome.value, 0) + 1
+    tally = ", ".join(f"{n} {outcome}" for outcome, n in sorted(counts.items())) or "no findings"
+    verdict = screen.verdict.value
+    if screen.verdict is Verdict.CLEAR:
+        verdict += " (over the implemented rules; not a promise the generator accepts the model)"
+    logger.info(
+        f"Screen {screen.profile_version}: verdict {verdict}; {tally}; "
+        f"{len(screen.unverified)} not assessed"
+    )
+    refusal_items = report.generator.refusal.items if isinstance(report.generator, Refused) else ()
+    for finding in screen.findings:
+        where = _location(finding.source_file, finding.source_line)
+        line = (
+            f"  {finding.outcome.value} {finding.rule_id} ({finding.subset_reason}) "
+            f"{finding.subject or '<anonymous>'} at {where}"
+        )
+        if finding.qualification is not Qualification.NONE:
+            line += f" [{finding.qualification.value}]"
+        if finding.code is not None:
+            matched = [item for item in refusal_items if item.code.value == finding.code.value]
+            if matched:
+                there = _location(matched[0].source_file, matched[0].source_line)
+                line += f"; matches the generator's {finding.code.value} at {there}"
+            else:
+                line += f"; the generator would refuse it with {finding.code.value}"
+        logger.info(line)
+        logger.info(f"    remedy: {finding.remedy}")
+    for entry in screen.unverified:
+        logger.info(
+            f"  not assessed {entry.rule_id} ({entry.cause}) at "
+            f"{_location(entry.source_file, entry.source_line)}: {entry.detail}"
+        )
+
+
+def _step(refused: Refused) -> str:
+    return refused.step.name.lower().replace("_", " ")
+
+
+def _location(file: str | None, line: int | None) -> str:
+    if file is None:
+        return "no location"
+    return file if line is None else f"{file}:{line}"
