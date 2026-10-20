@@ -12,5 +12,6 @@ The recipe is the retired `verification/run_independent_green.py` (`git show 7fb
 | `d8f98340` (Phase 8; Phase 9 changes no file under `src/`) | `fd8bb8d9afc1c1c5…` | 124 passed, 0 failed, 0 skipped |
 | `8621bac4` (Phase 8 follow-up, report length) | `b30b0214ab8a950c…` | 124 passed, 0 failed, 0 skipped |
 | `303dfe6c` (audit fixes 1-6) | `a4a22306be62515a…` | 124 passed, 0 failed, 0 skipped |
+| `3c3b9062` (Phase 10, no readiness rule) | `418e4e992ce1b9ab…` | 124 passed, 0 failed, 0 skipped |
 
-All runs used agentic-mbse wheel `2c6cf3d03521b25e…` and TEAx `8d877460` (archive `c566cf44569c9557…`). All four runs have the same 124 test IDs with the same outcomes (checked: True). The full manifests are `provenance-base-556cbedf.json`, `provenance-phase8-d8f98340.json`, `provenance-phase8-followup-8621bac4.json` and `provenance-audit-fixes-303dfe6c.json`.
+All runs used agentic-mbse wheel `2c6cf3d03521b25e…` and TEAx `8d877460` (archive `c566cf44569c9557…`). All five runs have the same 124 test IDs with the same outcomes (checked: True). The full manifests are `provenance-base-556cbedf.json`, `provenance-phase8-d8f98340.json`, `provenance-phase8-followup-8621bac4.json` `provenance-audit-fixes-303dfe6c.json` and `provenance-phase10-3c3b9062.json`.

@@ -1,6 +1,6 @@
-# Implementation Plan: Read-only readiness check, live half (EXEC-SUBSET-CONTRACT Item 2b)
+# Implementation Plan: Read-only check, live half (EXEC-SUBSET-CONTRACT Item 2b)
 
-**Status:** In Progress (Phases 0-9 done; Phase 10 gated on the owner)
+**Status:** Complete (Phases 0-10 done, 2026-10-20)
 **Created:** 2026-10-20
 **Last Updated:** 2026-10-20
 **Branch / base:** sysml-codegen `subset-profile-screen` at `cbbc1100` (design approved); agentic-mbse sibling `/home/reid/src/subset-conformance/agentic-mbse` at `e268357f`, which this plan does not edit (design D12).
@@ -41,11 +41,11 @@ Engineering bar for this plan [ORCHESTRATOR]: a clean refactor, each phase leavi
 | 9 | evidence | Corpus criterion tests, replay, snapshots, execution lane, docs note | D15, Validation |
 | 10 | **gated** | The readiness rule, after the owner rules | D8 (PARKED) |
 
-**Critical path.** 0 → 1 → 2 → 3 → 4 → 5 must run in order, because each pure move is proven against the state the previous one left. Phases 6 and 7 depend only on Phase 1 (the shared load) and can be built in parallel with 4–5. Phase 8 needs 3–7. Phase 10 needs the owner and Phase 8.
+**Critical path.** 0 → 1 → 2 → 3 → 4 → 5 must run in order, because each pure move is proven against the state the previous one left. Phases 6 and 7 depend only on Phase 1 (the shared load) and can be built in parallel with 4–5. Phase 8 needs 3–7. Phase 10 needs Phase 8.
 
 **First proof point.** Phase 0's reachability probe (the design's "de-risk first" item): a call closure from today's writers, joined with the site account, must show exactly the covered sites the design predicts (site 337, the nine `_preflight_constraint_names` calls, and site 338 through three renderer guards). The second is Phase 1's B1 test: the screen, run on the model the generator just elaborated, must equal 2a's stored screen answers on every 2a case. If either comes back different, stop and surface it (capture-fidelity law 4); later phases rest on both.
 
-**Readiness rule independence.** D8 is PARKED with the owner. Phases 0–9 never assert READY or exit 0 on a real model. Phase 7 ships an interim `readiness()` that decides every case the owner's question does not touch and withholds READY on the rest (Phase 7, assumption A1). Phase 10 replaces only that function, its tests and the readiness line.
+**Readiness rule.** Phases 0–9 shipped an interim readiness answer (Phase 7, assumption A1). Phase 10 removed it: there is no readiness rule, and `check` exits as `generate` would.
 
 **Hidden churn the design did not list (found while planning).**
 
@@ -531,54 +531,30 @@ See `design.md` Validation Approach lines 1, 4–11; D15.
 
 ---
 
-## Phase 10: The readiness rule (GATED on the owner)
+## Phase 10: No readiness rule — `check` gives `generate`'s answer
 
-- [ ] **Owner decision on D8 received and recorded** under `design-review.md` Resolutions and in `product-lens.md`. **Open. Waiting on the owner; do not start this phase until it is checked.** The question is below.
+Replaced 2026-10-20 (orchestrator direction). The readiness rule (D8) was not an owner question: the record already settles it, and the third outcome was the pipeline's addition, not the owner's.
 
-### The question for the owner (as the orchestrator is asking it)
-
-1. Should READY mean "builds, and nothing the package needs to run is known to be missing", with omitted and excluded findings shown as counts on the readiness line rather than withholding READY? (This would extend L6 `spec.md:148`, where omissions and exclusions are warnings, and answer the epic's open owner decision 2 for `check`; `design-review.md` C1, ledger design_review-F1, F2.)
-2. For the unbound String library default (`candidate-es-010-refusal__string_library_default__unbound_input`, a silent loss the screen does not report): either decide RG-2 now (2a's options B or D, `c381fb00:.project/active/subset-profile-conformance/rg2-string-policy.md`), or have `check` report "builds, not ready" for it, found through `unresolved_default_kind` on a library-default `str` entry point in `Prepared.graph`, until RG-2 is decided.
+Sources, graded:
+- [OWNER-ratified 2026-10-20, `briefs/align.md` Q1] The generator's own route alone decides whether `generate` and `check` refuse.
+- [INHERITED: epic Item 2b Success Criteria] "check and generate fail at the same preparation seam without mutating a sentinel destination." `check` gives `generate`'s answer without writing.
+- [INHERITED: L6, owner-ratified 2026-10-18, agentic-mbse `.project/completed/20261020_l6-subset-profile/spec.md:146`] a subset-contract finding never labels a model generated-ready; [delegated by owner, same spec `:127`] dropped String values are warnings.
 
 ### Goal
 
-Replace A1's interim fallthrough in `readiness()` with the owner's rule. Only `readiness()`, its tests and the readiness line change (D8, R2-3).
+- `check` exit codes: 0 when `generate` would build, 1 when it would refuse (environment failure included), 2 usage error. Exit 3, the READY/NOT_READY concept, the interim rule, `readiness()` and the readiness line are removed. No wording calls a model ready or clean.
+- The screen section stays as the Phase 8 display ruling has it, as warnings and information under the generator's answer: actionable findings in full, admitted as a count, omitted and excluded per rule; "not assessed" with its reason; disagreements stated. It never changes the exit code.
+- The unbound String library default loss stays filed under RG-2 (2a `rg2-string-policy.md`); `check` has no special case for it.
 
-### Assumption under test
+### Tasks
 
-That D8 really is isolated: the owner's answer changes no file outside `cli/readiness.py`, its tests and the readiness line.
-
-### Test stencil (write first, adjusted to the answer)
-
-```python
-# tests/conformance/subset_profile/test_readiness_rule.py  (licensed)
-def test_unbound_string_default_is_not_ready():                     # answer (2), interim branch
-    report = check("candidate-es-010-refusal__string_library_default__unbound_input")
-    assert readiness(report).value is Readiness.NOT_READY and exit_code(report) == 3
-
-def test_clear_builds_case_is_ready():                              # answer (1)
-    assert exit_code(check(clear_builds_case())) == 0
-
-def test_omitted_only_case_is_ready_with_counts():                  # answer (1)
-    verdict = readiness(check(omitted_only_builds_case()))
-    assert verdict.value is Readiness.READY and "omitted" in " ".join(verdict.reasons)
-```
-
-### Changes required (by answer)
-
-- [ ] **If (1) is accepted:** the fallthrough becomes READY, with excluded and omitted counts in the reasons.
-- [ ] **If (1) is rejected (omitted or excluded withholds READY):** those findings join the NOT_READY conditions, each with its reason.
-- [ ] **If (2) is "not ready until RG-2":** add the `unresolved_default_kind` condition, using the value Phase 0's D8 probe recorded, with a reason naming RG-2.
-- [ ] **If the owner decides RG-2 (B or D):** the change that implements it (in the generator, or a new screen rule in agentic-mbse with its gate rerun) is its own item, not this phase. Assumption A2 [AGENT]: until that change lands, keep the `unresolved_default_kind` condition, with a reason naming the decided option. Confirm with the owner in the same message.
-- [ ] Record the rule as an ADR candidate for the owner to file at merge (RG-3), beside D1's (design "ADR candidates").
-
-### Validation
-
-- [ ] `git diff` for this phase touches only `cli/readiness.py`, its tests and the readiness wording. If anything else has to change, stop and surface it: D8's isolation claim was wrong.
-- [ ] Phase exit check, plus the Phase 9 criterion tests rerun.
-- [ ] Then `/_my_audit`, then `/_my_close`; `pre_pr` only after this phase (A1 keeps READY unreachable before it).
-
----
+- [x] Remove `Readiness`, `ReadinessVerdict`, `readiness()`, `AWAITING_OWNER` and the readiness line. Rename `cli/readiness.py` to `cli/report.py` (`Report`, `build_report`, `log_report`, `log_screen_section`).
+- [x] `cmd_check` returns 0 for `Prepared`, 1 for `Refused`.
+- [x] `check --output` refuses a destination problem with the record `generate` logs (was a WARNING and exit 3). `DestinationCheck` and the report's destination line go.
+- [x] Screen findings printed in full log at WARNING; the summary line says the generator's answer decides.
+- [x] Tests: `check`'s exit code equals `generate`'s and the stored outcome on every 2a case, and no line says ready or clean (`test_report_form.py`); readiness tests replaced (`test_report.py`); exit-3 assertions become `generate`'s answer.
+- [x] Spec, design, CLAUDE.md, `docs/architecture/reference/02-orchestration.md` and `product-lens.md` updated.
+- [x] Exit check: 0 byte and 0 record differences, base 9 failures only, mypy, ruff 94, TEAx lane receipt.
 
 ## Environment Setup
 
@@ -595,7 +571,6 @@ See `design.md#potential-risks` for the full table. Phase-specific mitigations:
 - **Phase 4:** the sentinel matrix is the slow part; share tree copies per case if needed, never drop cases or flags.
 - **Phase 5:** the reachability test is name-based and misses `getattr` calls (stated limit); the graph-unchanged test guards the RG-1 argument.
 - **Phase 8:** the generator-half move lands before `generate` calls the screen, or the tripwire fails. New INFO lines may break record-count tests; narrow them, don't loosen them.
-- **Phase 10:** if the owner's answer touches more than `readiness()`, the isolation claim was wrong; surface it.
 
 ## Implementation Notes
 
@@ -941,8 +916,31 @@ Each fix below is its own commit with its tests.
 - One slip in the commits: fix 6's plan note was committed with fix 5 (`92323247`), not with fix 6's code (`303dfe6c`).
 
 ### Phase 10 Completion
+**Completed:** 2026-10-20. Commits `3c3b9062` (code and tests) and `b8ae91ca` (documents).
+
+**Changes Made:**
+- `cli/readiness.py` is now `cli/report.py`. `Report` holds the generator's answer, the screen and at most one disagreement; `build_report`, `log_report` and `log_screen_section` render it. The `Readiness` enum, `ReadinessVerdict`, `readiness()`, `AWAITING_OWNER`, the readiness line and the destination line are gone.
+- `cmd_check` (`cli/__init__.py:123`) returns 0 for `Prepared` and 1 for `Refused`. Exit 3 is gone. Argparse keeps 2.
+- `check --output` with a link on or under the destination now refuses with the same `PACKAGE_WRITE` record `generate` logs, and exits 1. Before, it was a WARNING with no record and exit 3. `DestinationState`, `DestinationCheck`, `destination_check` and the `DestinationCheck.__post_init__` guard are removed; its site-account row goes too (491 sites).
+- The screen section is unchanged in content. Findings printed in full now log at WARNING; the rest stays INFO. The summary line reads "Screen <version> (information; the generator's answer above decides): verdict …".
+- Tests: `test_report_form.py::test_check_gives_generate_s_answer_and_report` runs `check --output` and `generate` on all 246 2a cases. It asserts equal exit codes, equal to the stored generator outcome, identical report lines, and no line matching ready, clean or readiness. `tests/unit/test_report.py` replaces `test_readiness_report.py`: totality over every combination, no outcome claim, exactly one refusal record when refused, no ERROR from the screen, and the D5 shape with its warning levels. Exit-3 assertions in `test_check_command.py`, `test_check_screen_faults.py`, `test_screen_import_failure.py` and `test_check_snapshots.py` now expect `generate`'s answer. The two symlinked-destination tests are one test over both commands.
+- Documents: spec Outcomes lose "ready"; Criteria 5, 7, 9 and 10 updated; new Criterion 13; the readiness answer recorded under Non-Goals as out, with its reason. Design D8 is one line, "out, because"; D4, D5, D6, D9, D16, D17, the invariants and Validation follow. CLAUDE.md, `02-orchestration.md` and `product-lens.md` (design_review-F1, F2 and audit-F2 closed; gate CLEAR).
+
+**Issues Encountered:**
+- The generator's own refusal text "Model is not ready for the exact route: …" (`cli/prepare.py:158`, and `cmd_snapshot`) says "not ready". It is the base commit's refusal message, which the refusal records pin, so it stays. The no-claim tests allow "not ready" and nothing else.
+- The screen verdict word `clear` stays: it is agentic-mbse's verdict name, and the line already says it is relative to the implemented rules and not a promise the generator accepts the model.
+
+**Deviations from Plan:**
+- The destination change in `check` was not in the direction's list. It follows from "`check` gives `generate`'s answer": `generate` refuses a linked destination, so `check --output` now does too. It changes `check`'s exit code for that case from 3 to 1 and adds the record; it changes nothing in `generate`.
+
+**Exit check (HEAD `b8ae91ca`, `src/` as at `3c3b9062`):**
+- Licensed suite, `--all-extras`: 11240 passed, 9 failed, 9 skipped. The 9 are the base 9. No new failures. The missing base IDs are the same set as the audit-fix exit check (site re-keys, Phase 3's replaced `test_cli_generation.py` tests, Phase 8's replaced adapter-import test).
+- Package bytes: 0 differences. Refusal records: 0 of 173 differ.
+- mypy `src/` clean. ruff `src/` clean; ruff `src/ tests/` 94.
+- agentic-mbse: no changes.
+- TEAx lane at `3c3b9062`: 124 passed, the same IDs and outcomes as the base. Receipt `evidence/execution-lane/provenance-phase10-3c3b9062.json`.
 
 ---
 
 **Status:** Draft → In Progress → Complete
-**Next step:** `/_my_implement` from Phase 0. Phase 10 waits on the owner's D8 answer.
+**Next step:** `/_my_audit` of Phase 10, then `/_my_close`.
