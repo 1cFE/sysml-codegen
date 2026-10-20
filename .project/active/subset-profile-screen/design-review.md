@@ -201,3 +201,61 @@ Design agent, 2026-10-20, design revision 2, under the orchestrator's rulings:
 
 **Overall:** Revise. Ledger gate BLOCKED on C1 until the owner rules.
 **Next Steps:** Get the owner's answer on C1. Record it under Resolutions, then re-run `/_my_design` (or return to the design-agent session) and point it at this review to incorporate C1 and M1–M4. The reviewer does not edit the design.
+
+---
+
+## Round 2 (2026-10-20, design revision 2 at `2fa80bca`)
+
+**Verdict: Revise, narrowly.** Every round-1 must-fix and should-fix point is resolved, and D8 is isolated as claimed, with one condition (R2-3). Two new gaps would make the plan build the wrong thing: D14's reachability test will not come back empty as the design predicts (R2-1), and no step is named to log a failure raised by a writer (R2-2). Both are small, checkable edits. A third review round is not needed: the orchestrator can confirm the edits against the points below. The ledger gate stays BLOCKED on C1 (the readiness rule) until the owner rules.
+
+Scope of this round: the round-1 points, D8's isolation, and m1 against RG-1 (the owner's rule that only the owner changes what the generator accepts or refuses). D8's substance was not reviewed. The product lens was not re-run: The Point is unchanged, and a round-2 disposition line is added to `product-lens.md`.
+
+### Round-1 points
+
+- **C1 (readiness rule):** open with the owner, as intended. D8 is marked PARKED, cites L6 `spec.md:148`, and the false handoff line about String values is gone (`design.md:98`, `:242`).
+- **M1 (one load):** resolved. D2 shares one load through the existing seam (`elaborated_pipeline.py:159-173`, `:267`), and B1 now names the real risk with a fallback.
+- **M2 (parse errors):** resolved. D2 and the Validation line "Parse errors" both state and test it.
+- **M3 (nothing after the seal raises):** resolved by D17. Mapping and rendering happen inside `assess_screen`'s catch-all, the report functions get a combination test, and `generate` has a post-seal guard.
+- **M4 (destination records):** resolved. D4 pins both commands' records, Invariant 5 holds the one-record rule, and Validation 10 runs `check --output`.
+- **Question 3 (D4's reorder):** recorded as a stated behaviour change with its own test (`design.md:94`, Invariant 5).
+- **m2, m3, m5, m6, m7:** resolved (`design.md:126`, D1, Invariant 2, D6, D6).
+- **m4 (churn list):** resolved, with two omissions, both in R2-4.
+- **m1 (drop the writers' re-checks):** RG-1 holds (below), but D14's prediction does not (R2-1).
+
+### m1 and RG-1: dropping the re-checks cannot change what `generate` accepts or refuses
+
+The reasoning, checked against the code:
+
+- **One production path reaches the writers.** Today the writers are called only from `_generate_package_from_graph` (`cli/__init__.py:1284`), and that is called only from `run_codegen` (`:1263`). No other module in `src/` imports a writer from `cli`. After 2b, D16 calls `emit_package` only from `run_codegen`, and only on a `Prepared`.
+- **The snapshot route is the same path.** `run_codegen` differs between sources only in which context builder it calls (`:1210-1214`). Everything after that is shared, so `prepare` runs every step for `--from-snapshot` too.
+- **The writers would re-check the same, unchanged graph.** `run_codegen` reads the graph once (`:1217`), and `Prepared` carries that one object, not the context (which re-projects on every read). `ComputationGraph` is not frozen, but I found no writer that changes it: the only rebuild in `generation/` is a `model_copy` of the catalog (`generation/modules.py:166`), which copies. The checks are deterministic over the graph. So a check that passed in `prepare` cannot fail later in a writer.
+- **Moving the field check is the same.** `_refuse_colliding_field_names` reads only the group's entry points (`generation/entry_point.py:21-45`), which the writers do not change.
+
+What I did not prove: that no writer mutates the graph. I checked by search, not by running anything. The byte-identity check (Invariant 6) would not catch a mutation that only matters for a refused model. A cheap guard: have the plan assert in one test that the graph's `model_dump()` is equal before and after `emit_package` on a corpus case.
+
+One weak spot, for tests only: `Prepared` is a plain frozen dataclass, so a test can build one by hand and hand `emit_package` a graph `prepare` never checked. That cannot affect `generate`, but it would let a test pass on a graph `generate` refuses. The four test files that call `_generate_package_from_graph` today (see R2-4) are the ones at risk.
+
+### New points
+
+- **R2-1 (Major). D14's reachability test will not be empty after the nine re-checks are dropped.** The constraint-name validator `validate_constraint_graph_or_raise` (site account row 338, `public_capability`) is also called inside three functions the writers use. These calls are not among the nine the design drops: `generate_pipeline_yaml` (`generation/pipeline.py:56`), `generate_registry` (`generation/registry.py:266`) and `build_model_contract` (`contracts/model_contract.py:37`, called by `_seal_package`). An existing test requires each of these three to refuse a bad graph on its own: `test_graph_renderers_reject_constraint_module_without_catalog` (`tests/conformance/test_module_kind_faildloud.py:277-294`). So the de-risk step ("it should come back empty") fails on day one, and the plan has to choose between deleting a pinned behaviour and bringing back an exemption list.
+  - Fix: decide it in the design. I recommend keeping the three guards and the test, since they are those functions' own contract. D14 then allows site 338 by name, with the reason that `prepare`'s constraint-names step runs the same function on `Prepared.graph`. A test should check that the allowed site's function is called by a named `prepare` step. That is a one-row list, not revision 1's table. The other option is to drop the three guards and delete the test, which keeps D14 empty. Either is RG-1-safe, for the reasons above.
+  - Apply the same rule to the parameter-field check, so the design treats both alike. If renderer guards stay, say why the schema writer's guard (`entry_point.py:79`) goes. Dropping it is fine; the public `generate_all_derived_schemas` then no longer refuses a colliding group on its own, and only in-repo tests call it.
+  - I checked the other covered sites in `cli/`, `generation/`, `contracts/` and `core/`. The predicate compiler and coverage sites (rows 336, 341, 343, 357) are reached only through the constraint plan build, which is in `prepare`. The exit-point site (row 377) is `internal_invariant`.
+- **R2-2 (Major). No step is named to log a failure raised inside a writer.** `emit_package` "returns `None` on success or the environment failure it logged" (`design.md:162`). Today the writers also raise `CodeGenerationError` (the three renderer guards above, `internal_invariant` sites in stencils, registry and pipeline) and unclassified exceptions. Today's two handler blocks catch them and log one refusal record each (`cli/__init__.py:1402-1410` and `:1266-1281`). The Implementation Notes place those blocks under "`prepare`'s refusal conversion", but `prepare` never runs the writers. If the plan follows the text literally, a template defect in `generate` becomes an uncaught traceback instead of today's `SI_INTERNAL_DEFECT` record. That breaks Invariant 5 and the stated limit in Architecture ("`generate` fail[s] with `SI_INTERNAL_DEFECT`").
+  - Fix: state that `emit_package` (or `run_codegen` around it) keeps today's post-write handling exactly: `CodeGenerationError` gives "Code generation failed" with its refusal, `OSError` gives "Writing the generated package failed" with `PACKAGE_WRITE`, and anything else gives the internal-defect refusal. Add a `PreparationStep` member for a writer failure so the report can name it. Also say whether `generate` still runs `assess_screen` after a failed emit.
+- **R2-3 (condition on D8's isolation). The readiness line's reasons must not be a closed enum that `log_report` switches on.** D17 has `log_report` handle "every member of every enum". If the verdict's reasons are an enum, the owner's option (b) adds a member, and `log_report` and the totality test change too. Fix: `readiness` returns its reasons as rendered text (or as data that `log_report` prints without branching on it). Then the isolation claim holds as written.
+- **R2-4 (Minor). The churn list misses `_generate_package_from_graph`.** The design never says what becomes of it. Four test files call or patch it: `tests/unit/test_cli_generation.py:348, 366, 381, 466, 475, 490`, `tests/conformance/test_constraint_catalog_totality.py:110, 140, 269`, `tests/conformance/test_coverage_preflight.py:67`, and a fourth patch at `tests/conformance/test_public_diagnostic_totality.py:471-473`, which the design's three-patch list omits. Every direct call passes a graph that a `prepare` step refuses, so these tests move to `prepare_graph`. The design should say so, and say that tests do not build a `Prepared` by hand to reach `emit_package`. The two tree-preservation tests (`test_cli_generation.py:472-490`) then no longer touch a destination. Criterion 1's sentinel runs cover that on the live route.
+
+### D8 isolation, checked against the owner's three options
+
+- **READY, with the omission counts on the line:** this is the proposed rule, so only `readiness` needs to change.
+- **"Builds, not ready" for the unbound String-default case:** the fact is already in the prepared graph. A String literal default fails `float()` in `resolve_modeled_default` and sets `unresolved_default_kind` (`extraction/modeled_defaults.py:47-51`). Projection carries that onto `EntryPoint` (`elaboration/project.py:508`), next to `entry_type`, `python_type` and `default_value` (`resolution/models.py:80-88`). `readiness(report)` receives `Prepared.graph` (D8), so it can test for a library-default `str` entry point with an unresolved default without any change to `prepare`, `Prepared` or the report. I inferred this from the code. I did not run the case to see the field's value.
+- **A generator change under RG-2 that removes the case:** nothing in 2b changes. If RG-2 is instead settled by a new screen rule in agentic-mbse, the profile version, the pin, `REASON_MAPPING` and 2a's stored answers change. That cost comes from the cross-repo change itself, not from how 2b is built.
+- **In every case,** the exit code, the readiness line and the tests all go through `readiness` (D6, D8, Invariant 7). No Validation line asserts READY or exit 0 on a corpus case. "A snapshot is never ready" holds under all three options. Subject to R2-3, nothing outside `readiness`, its tests and the readiness line has to change.
+
+### What I did not check
+
+I did not run any test or licensed command. I did not build the call closure from `emit_package`. I traced callers by name search, so a call through `getattr` or a stored callable would be missed (the same limit D14 states). I did not re-verify round-1 citations that the revision did not touch.
+
+**Overall (Round 2):** Revise. Apply R2-1, R2-2 and R2-3, and R2-4 if convenient. The orchestrator can confirm these against this section without another review round. The ledger gate stays BLOCKED on C1 until the owner rules.
+**Next Steps:** Send R2-1 to R2-4 to the design agent. After the owner's D8 ruling, record it under Resolutions and continue to `/_my_plan`. The reviewer does not edit the design.

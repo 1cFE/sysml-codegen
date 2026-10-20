@@ -107,3 +107,11 @@ Gate: BLOCKED (design_review-F1); DISPOSED pending (design_review-F2, design_rev
 - design_review-F4: design changed. D4 records the reorder as a stated behaviour change, confirmed not RG-1 by the design review (question 3) and the orchestrator; no longer parked.
 - design-F2 note (Invariant 2 and the native-crash residual): Invariant 2 now names it.
 Gate: BLOCKED (design_review-F1) until the owner rules; F2 rides with it; F3, F4 disposed.
+
+## design_review round 2 — 2026-10-20 — rev 2fa80bca — design reviewer
+- Lens not re-run: The Point and the owner gates are unchanged since the round-1 block above. Round 2 checked the dispositions only.
+- design_review-F1: still open with the owner. The design isolates the rule in `readiness(report)`, and route (ii) is computable from `Prepared.graph` (`EntryPoint.unresolved_default_kind`, `elaboration/project.py:508`), provided the readiness reasons are not a closed enum that `log_report` switches on (`design-review.md` R2-3).
+- design_review-F2: rides with F1. D8 now cites L6 `spec.md:148`. Confirmed.
+- design_review-F3, F4: disposition confirmed (D2 shared load and parse-error line; D4 stated behaviour change).
+- RG-1 check on the dropped writer re-checks (m1): no path changes what `generate` accepts or refuses, for live or snapshot sources (`design-review.md` Round 2). D14's prediction of an empty closure is wrong: site row 338 stays reachable through three renderer guards (R2-1). That is a test-design gap, not an RG-1 change.
+Gate: BLOCKED (design_review-F1) until the owner rules; F2 rides with it; F3, F4 confirmed.
