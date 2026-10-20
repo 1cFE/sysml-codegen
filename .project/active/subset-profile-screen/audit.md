@@ -121,3 +121,57 @@ The four new modules are well factored. `prepare.py` has two refusal ladders, on
 - The 2a site account's role classifications, which the reachability test trusts.
 - A wheel build, and `generate` on Windows or with non-default `--schema-class` or `--pipeline-name`.
 - Timings were not re-measured; the plan reports about 3 s added per `catf_mfe` model, after the seal.
+
+---
+
+## Re-check (2026-10-20, HEAD `7be7dc7c`, fixes `2e6daafa`..`2801f3f5`)
+
+**Updated verdict: Certify** for the live half, Phases 0-9. B1 is fixed by structure, and every base-vs-HEAD comparison still holds. Phase 10 (the readiness rule, D8) is still the owner's, and everything listed above under "What this audit cannot certify until Phase 10 lands" still stands.
+
+### B1: fixed
+
+- **By structure.** Nothing `generate` runs before the seal imports the screen:
+  - `run_codegen` no longer imports `readiness` (`cli/__init__.py:478-512`).
+  - The pre-write report line moved to `prepare.log_generator_answer` (`cli/prepare.py:124-132`).
+  - The destination types moved to `cli/destination.py`, which imports only `prepare` and `refusal`.
+  - `readiness` and the screen are imported only inside `_report_after_the_seal`'s guard.
+  - `readiness.py` imports `agentic_mbse.sysml.subset_profile` only inside the branches that read a `ScreenAssessed` (`readiness.py:140, 183, 243, 284`). A `ScreenAssessed` can exist only after that module imported, so `check` also reports the generator's answer when the import fails.
+- **The new test really blocks the import.** `tests/helpers/blocked_screen_import.py` installs a finder that raises `ModuleNotFoundError` for `agentic_mbse.sysml.subset_profile`, in a fresh interpreter, so nothing has imported it first. `test_screen_import_failure.py` then requires the "could not be imported" report line on the `--models` runs. That line is reached only through the new `ImportError` branch in `subset_screen._screen` (`subset_screen.py:115-120`), so if the block were not taking effect, the test would fail. It checks identical bytes against an unblocked run on both `generate` routes, `check` exit 3 or 1, and no traceback or `ImportError` text. I did not run this test against the unfixed code myself (the implementer reports it fails there). My own first-pass probe, which blocks the import a different way (`sys.modules[...] = None`), crashed at `ccb6bd7f`. At HEAD it builds and writes 23 files, the same as at the base.
+- **Docs.** The CLAUDE.md sentence "under a guard that cannot change its exit code" is now true.
+- **Ledger.** Product-lens audit-F1 is still marked BLOCK in `product-lens.md`. Its clearing rule asks a later block to cite it as FIXED. I could not write that file under this re-check's limits, so the ledger needs that entry.
+
+### Advisory fixes
+
+- **Advisory 1 (boundary test misses `readiness.py`) and 2 (destination check in the writing module): sound.**
+  - `readiness.py` and `destination.py` are now in the no-writing-import test.
+  - `emit` is imported only inside `run_codegen`, pinned from source.
+  - A fresh-interpreter test shows a `check --output` run never loads `sysml_codegen.cli.emit` (`test_check_command.py:230-249`). `check` cannot write by structure now, not just by the call-level test.
+  - One small gap: `_module_level_imports` reads only a file's top-level statements, so an import inside a module-level `try` or `if` would slip past it. The licensed import-failure test covers the route anyway.
+- **Advisory 3 (duplicated ladder), the `relay_public_failures` refactor: sound.**
+  - All five copies became `with relay_public_failures(...)` over exactly the span their `try` covered. I compared each hunk.
+  - The pass-through tuple is the same four classes, plus `InstanceGraphSnapshotError` for the snapshot form only, as before. The conversion is the same `raise unexpected_public_failure(error) from error`.
+  - No statement moved into or out of a span, so which refusal a run with several faults reports cannot change. The refusal-record compare below confirms it on 173 entries.
+  - Declining to rebuild `build_exact_pipeline_context` from `load_live_models` is right: it would check `targets` after loading instead of before, and that changes which refusal a run with both faults reports.
+  - The site account's 10 relay rows collapsing to 2 keeps the same role and disposition.
+- **Advisory 4 (package name carried twice): leaving it is reasonable.**
+  - `prepare` needs the name to build the constraint plan, so `Prepared` has to record it.
+  - The writers read it from `GenerationConfig`, the whole generation request.
+  - Carrying it once means splitting a writer-settings type out of `GenerationConfig` and changing eight writer signatures. Adding a parameter instead would leave a second copy the writers could still read.
+  - A checked internal invariant (`emit.py`, recorded in the site account, unreachable from `run_codegen`) is the better trade for this item.
+- **Advisory 5 (environment failure called "refused"): sound.**
+  - The new `ENVIRONMENT_FAILURE` keys on `RefusalKind.PACKAGE_WRITE`, which is exactly the spec's list: a write `OSError`, a sealing failure, or a link at the destination.
+  - A writer's own `CodeGenerationError` or an internal defect at the writing step stays "refused".
+  - Display and `check`'s exit code (1) only; `generate`'s record and exit code are unchanged.
+- **Advisory 6 (Criterion 10 wording): done.** The spec text now says what ships.
+- **Advisory 7 (the "plan Phase 10" reason line, and CLAUDE.md's "exit 0 ready" with no note that no model reaches it): not addressed.** It still stands as written above, and it only matters if the branch merges before Phase 10. CLAUDE.md's exit-code list also does not mention that exit 1 now covers an environment failure.
+
+### Comparisons re-run at HEAD (licensed, against my base recordings from the first pass, `build/audit-2b/recheck/`)
+
+- Package bytes: 0 differences over 123 subjects.
+- Refusal records: 1 of 173 differs, the same expected D4 entry. It still equals that case's clean-destination record.
+- Destination flags on all 77 building cases (default, then `--overwrite --preserve-handwritten`, then `--smart-regen`): identical to base at every step.
+- Snapshot capture bytes for all 23 source sets: identical to base.
+- Licensed suite: 11250 passed, 9 failed, 9 skipped. The failures and skips are exactly the base IDs. The 77 base IDs missing are the same planned renames and removals as in the first pass, and none is new. The new tests pass: `test_screen_import_failure.py` (4), `test_relay_public_failures.py` (7), `test_cli_module_boundary.py` (11) and `test_check_never_loads_the_writing_module`.
+- mypy clean (92 files); ruff `src/` clean; ruff `src/ tests/` 94, as at the base. agentic-mbse is clean at `e268357f`.
+
+**Not checked in this re-check:** the TEAx lane receipt at `303dfe6c` (`evidence/execution-lane/`) was not re-run or verified. The import-failure test was not run against the unfixed code. Plan, spec and CURRENT_WORK checkboxes and the product-lens ledger were not updated, because of the write limits.
