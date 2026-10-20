@@ -10,5 +10,6 @@ The recipe is the retired `verification/run_independent_green.py` (`git show 7fb
 |---|---|---|
 | `556cbedf` (2b base) | `e0889c830882c141…` | 124 passed, 0 failed, 0 skipped |
 | `d8f98340` (Phase 8; Phase 9 changes no file under `src/`) | `fd8bb8d9afc1c1c5…` | 124 passed, 0 failed, 0 skipped |
+| `8621bac4` (Phase 8 follow-up, report length) | `b30b0214ab8a950c…` | 124 passed, 0 failed, 0 skipped |
 
-Both runs used agentic-mbse wheel `2c6cf3d03521b25e…` and TEAx `8d877460` (archive `c566cf44569c9557…`). The two runs have the same 124 test IDs with the same outcomes. The full manifests are `provenance-base-556cbedf.json` and `provenance-phase8-d8f98340.json`.
+All runs used agentic-mbse wheel `2c6cf3d03521b25e…` and TEAx `8d877460` (archive `c566cf44569c9557…`). All three runs have the same 124 test IDs with the same outcomes (checked: True). The full manifests are `provenance-base-556cbedf.json`, `provenance-phase8-d8f98340.json` and `provenance-phase8-followup-8621bac4.json`.
