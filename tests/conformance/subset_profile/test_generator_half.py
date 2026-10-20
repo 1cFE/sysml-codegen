@@ -1,9 +1,13 @@
 """Every case's live generator half equals its stored answer, and refuses only on its construct.
 
-Item 2a design D1 and § C. Each case's model runs through ``run_codegen`` with the screen
-tripwired (``observe.generator_half``). Its outcome, codes and site reasons must equal the
+Item 2a design D1 and § C. Each case's model runs through the generator's own route with the
+screen tripwired (``observe.generator_half``). Its outcome, codes and site reasons must equal the
 stored answer, and every refusal the run locates must sit on the case's construct, so a case
 that refuses for an unrelated reason shows up as a broken case rather than as evidence.
+
+The generator half is ``load_source``, ``prepare`` and ``emit_package``, not ``run_codegen``
+(Item 2b design D11), so one more test holds them together: on every case, ``run_codegen``
+logs exactly the refusal the generator half returns, or none when it generates.
 
 A case may also assert seams (design D9): a fact about one declaration at a named point of
 the output, such as "no attribute node" for a dropped String value. Each must hold live. And
@@ -31,11 +35,15 @@ Licensed.
 
 from __future__ import annotations
 
+import logging
 import re
+import tempfile
 from functools import cache
+from pathlib import Path
 
 import pytest
 
+from sysml_codegen.cli import GenerationConfig, run_codegen
 from sysml_codegen.core.errors import GenerationCode
 from sysml_codegen.elaboration.diagnostics import ElaborationCode
 from tests.conftest import requires_license
@@ -95,3 +103,17 @@ def test_every_located_refusal_sits_on_the_construct(answer: StoredAnswer):
 def test_every_seam_holds(answer: StoredAnswer, seam: SeamAnswer):
     declaration = observe.declaration_in(cases.model_root(answer), seam.declaration)
     assert observe.seam_value(_observe(answer.case_id), seam.kind, declaration) == seam.expect
+
+
+@pytest.mark.parametrize("answer", ANSWERS, ids=lambda a: a.case_id)
+def test_run_codegen_logs_the_generator_half_s_refusal(answer: StoredAnswer, caplog):
+    observation = _observe(answer.case_id)
+    caplog.set_level(logging.INFO, logger="sysml_codegen")
+    with tempfile.TemporaryDirectory() as out:
+        output = Path(out) / "pkg"
+        generated = run_codegen(
+            GenerationConfig(output_path=output, models_path=cases.model_root(answer))
+        )
+    logged = [r.refusal for r in caplog.records if hasattr(r, "refusal")]
+    assert generated is observation.generated
+    assert logged == ([] if observation.refusal is None else [observation.refusal])

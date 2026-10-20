@@ -289,6 +289,11 @@ def test_the_public_api_exports_no_second_construction_entry_point() -> None:
         "GenerationConfig",
         "cmd_generate",
         "cmd_install_commands",
+        # `check` runs the same `prepare` as `generate` and writes nothing, so it is a reader
+        # of the one construction route, not a second one (Item 2b design D6).
+        "cmd_check",
+        "run_check",
+        "CheckRequest",
         # The study dispatcher hands its arguments to a study tool and constructs nothing.
         "cmd_study",
         # `CODEGEN_COMMANDS` is gone: it was the old installer's file list, and the packaged

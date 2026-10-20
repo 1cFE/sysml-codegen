@@ -1,14 +1,15 @@
 """The two halves of a subset-profile case, each observed through its public surface.
 
-Generator half: ``run_codegen`` on the case model, exactly as a user runs it. The refusal
-comes from the ``extra={"refusal": ...}`` payload on its ERROR records, never from message
-text, where a code can also appear inside detail. Stubs come the same way, from the
-``extra={"manual_stub": ...}`` payload of the WARNING elaboration logs once per stubbed calc
-def member (design D9). The instance graph comes from a spy on
-``elaborated_pipeline.elaborate_loaded_extractor`` as the exact pipeline context calls it, and the
-catalog from the written ``contracts/model_contract.json``. The screen's three entry points
-are tripwired for the run, so a generator answer can never be the screen's answer in
-disguise.
+Generator half: the generator's own route on the case model, ``load_source``, ``prepare`` and
+``emit_package`` (``cli/prepare.py``, ``cli/emit.py``), which is ``generate`` with the screen
+left out (Item 2b design D11). The refusal is the ``Refused`` value the route returns, never
+message text, where a code can also appear inside detail; a separate test holds it equal to the
+record ``run_codegen`` logs. Stubs come from the ``extra={"manual_stub": ...}`` payload of the
+WARNING elaboration logs once per stubbed calc def member (design D9). The instance graph
+comes from a spy on ``elaborated_pipeline.elaborate_loaded_extractor`` as the exact pipeline
+context calls it, and the catalog from the written ``contracts/model_contract.json``. The
+screen's three entry points are tripwired for the run, so a generator answer can never be the
+screen's answer in disguise.
 
 Seams (design D9): a stored answer can assert one fact about one declaration at a named
 point of the generator's output. The declaration is found by qualified name in the loaded
@@ -89,7 +90,7 @@ class GeneratorObservation:
         if self.generated:
             return GeneratorRun(GeneratorOutcome.GENERATED, (), ())
         if not self.refusals:
-            raise AssertionError(f"run_codegen refused with no code: {self.refusal}")
+            raise AssertionError(f"the route refused with no code: {self.refusal}")
         return GeneratorRun(
             GeneratorOutcome.REFUSED,
             tuple(sorted(item.code.value for item in self.refusals)),
@@ -98,7 +99,7 @@ class GeneratorObservation:
 
 
 class _LogCapture(logging.Handler):
-    """The structured payloads ``run_codegen`` logs: refusals at ERROR, stub notices at WARNING."""
+    """The structured payloads the route logs: refusals at ERROR, stub notices at WARNING."""
 
     def __init__(self) -> None:
         super().__init__(logging.WARNING)
@@ -136,7 +137,7 @@ def _rebind_everywhere(original: object, replacement: object) -> list[tuple[obje
 def screen_tripwire() -> Iterator[None]:
     """Fail the run, after it ends, if the generator called the screen.
 
-    The tripwire records the call and raises; ``run_codegen`` turns that raise into an
+    The tripwire records the call and raises; the route turns that raise into an
     ``SI_INTERNAL_DEFECT`` refusal, so the record is what makes the call fail the test.
     """
     from agentic_mbse.sysml import occurrence_extraction, subset_extraction, subset_profile
@@ -166,7 +167,7 @@ def screen_tripwire() -> Iterator[None]:
 
 @contextmanager
 def _elaboration_spy(graphs: list[InstanceGraph]) -> Iterator[None]:
-    # ``run_codegen`` elaborates the shared load (Item 2b D11): the builder looks this name up
+    # ``prepare`` elaborates the shared load (Item 2b D11): the builder looks this name up
     # on the module at call time, so rebinding it here is what the route calls.
     from sysml_codegen.orchestration import elaborated_pipeline
 
@@ -216,8 +217,15 @@ def _log_capture() -> Iterator[_LogCapture]:
 
 
 def generator_half(model_root: Path) -> GeneratorObservation:
-    """Run ``run_codegen`` on ``model_root`` (a file or a directory) and observe it."""
-    from sysml_codegen.cli import GenerationConfig, run_codegen
+    """Run the generator's own route on ``model_root`` (a file or a directory) and observe it.
+
+    Refused at ``prepare``, the route writes nothing and logs nothing; the refusal is the
+    returned value. A temporary destination is always clean, so ``emit_package`` is the next
+    step, and it logs any refusal it returns: exactly that one record, or none on success.
+    """
+    from sysml_codegen.cli import GenerationConfig
+    from sysml_codegen.cli.emit import emit_package
+    from sysml_codegen.cli.prepare import LiveModels, Refused, load_source, prepare
 
     graphs: list[InstanceGraph] = []
     minted: set[tuple[str, DeclarationId]] = set()
@@ -228,22 +236,20 @@ def generator_half(model_root: Path) -> GeneratorObservation:
         _entry_point_spy(minted),
         screen_tripwire(),
     ):
-        package_dir = Path(out) / "pkg"
-        generated = run_codegen(GenerationConfig(output_path=package_dir, models_path=model_root))
-        contract_path = package_dir / "contracts" / "model_contract.json"
-        contract = json.loads(contract_path.read_text()) if generated else None
+        config = GenerationConfig(output_path=Path(out) / "pkg", models_path=model_root)
+        prepared = prepare(load_source(LiveModels((model_root,))), config.package_name)
+        refused = prepared if isinstance(prepared, Refused) else emit_package(prepared, config)
+        contract_path = config.output_path / "contracts" / "model_contract.json"
+        contract = json.loads(contract_path.read_text()) if refused is None else None
 
     if len(graphs) > 1:
-        raise AssertionError(f"run_codegen elaborated {len(graphs)} times; expected at most one")
-    if generated and capture.refusals:
-        raise AssertionError(f"run_codegen generated but logged refusals: {capture.refusals}")
-    if not generated and len(capture.refusals) != 1:
-        raise AssertionError(
-            f"run_codegen refused with {len(capture.refusals)} logged refusals; expected one"
-        )
+        raise AssertionError(f"the route elaborated {len(graphs)} times; expected at most one")
+    logged = [] if refused is None or refused is prepared else [refused.refusal]
+    if capture.refusals != logged:
+        raise AssertionError(f"the route logged {capture.refusals}; expected {logged}")
     return GeneratorObservation(
-        generated=generated,
-        refusal=None if generated else capture.refusals[0],
+        generated=refused is None,
+        refusal=None if refused is None else refused.refusal,
         graph=graphs[0] if graphs else None,
         contract=contract,
         entry_points=frozenset(minted),

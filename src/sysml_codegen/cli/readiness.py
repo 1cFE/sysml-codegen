@@ -10,7 +10,8 @@ A ``ReadinessReport`` holds four answers, each already decided elsewhere:
 
 Three pure functions read it. ``readiness`` decides ready, not ready or refused, and is the one
 place that rule lives (design D8). ``log_generator_section`` and ``log_assessment`` render it
-through the CLI's logger, in one fixed order; ``log_report`` is the two in turn. None of them
+through the CLI's logger, in one fixed order; ``log_report`` is the two in turn, and
+``generate`` writes the package between them. None of them
 reads a table or raises on any member of the enums it switches on (design D17).
 
 This module imports no SysIDE and not the adapter, and nothing that writes. It does import
@@ -200,13 +201,15 @@ def readiness(report: ReadinessReport) -> ReadinessVerdict:
 
 def log_report(report: ReadinessReport) -> None:
     """The whole report, as ``check`` prints it."""
-    log_generator_section(report)
+    log_generator_section(report.generator)
     log_assessment(report)
 
 
-def log_generator_section(report: ReadinessReport) -> None:
-    """The generator's answer: a refusal's one record, exactly as ``generate`` logs it."""
-    generator = report.generator
+def log_generator_section(generator: Prepared | Refused) -> None:
+    """The generator's answer: a refusal's one record, exactly as ``generate`` logs it.
+
+    ``generate`` prints this before it writes (design D16), so it reads the generator alone.
+    """
     if isinstance(generator, Refused):
         log_refused(generator)
     else:
@@ -227,14 +230,6 @@ def log_assessment(report: ReadinessReport) -> None:
     logger.info(f"Readiness: {verdict.value.value}")
     for reason in verdict.reasons:
         logger.info(f"  - {reason}")
-
-
-def log_agentic_mbse_missing() -> None:
-    """Why ``check`` cannot run at all: an environment problem, not a model refusal."""
-    logger.error(
-        "agentic-mbse is not installed, so the model cannot be checked. This is an "
-        "environment problem, not a model refusal; install agentic-mbse first."
-    )
 
 
 def _log_destination(report: ReadinessReport) -> None:

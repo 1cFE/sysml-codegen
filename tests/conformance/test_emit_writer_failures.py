@@ -4,13 +4,15 @@
 and ``run_codegen``. One writer is patched to raise each failure class in turn on a case that
 builds, and the single refusal record must equal the one Phase 0 recorded at the base commit
 (``tests/expectations/subset_profile/refusal_records.json``, ``writer_failure:*``), which
-``scripts/refusal_records.py`` took with the same three exceptions.
+``scripts/refusal_records.py`` took with the same three exceptions. The screen report is still
+printed after the failure, and names the writing step as the refusal.
 
 Licensed.
 """
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import pytest
@@ -36,7 +38,7 @@ FAILURES = {
 
 
 @pytest.mark.parametrize("name", sorted(FAILURES))
-def test_writer_failure_logs_the_base_record(name, tmp_path: Path, monkeypatch):
+def test_writer_failure_logs_the_base_record(name, tmp_path: Path, monkeypatch, caplog):
     def raising(*_args, **_kwargs):
         raise FAILURES[name]
 
@@ -45,7 +47,11 @@ def test_writer_failure_logs_the_base_record(name, tmp_path: Path, monkeypatch):
     config = GenerationConfig(
         output_path=output, models_path=cases.model_root(cases.load_answer(BUILDS_CASE))
     )
+    caplog.set_level(logging.INFO, logger="sysml_codegen")
     with refusal_records.capture_refusals(output) as records:
         assert run_codegen(config) is False
     assert records == refusal_records.load()[f"writer_failure:{name}"]
     assert len(records) == 1
+    infos = [r.getMessage() for r in caplog.records if r.levelno == logging.INFO]
+    assert any(m.startswith("Screen ") for m in infos), infos
+    assert infos[-2:] == ["Readiness: refused", "  - the generator refuses at step emit"]

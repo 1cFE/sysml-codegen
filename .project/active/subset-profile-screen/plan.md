@@ -1,6 +1,6 @@
 # Implementation Plan: Read-only readiness check, live half (EXEC-SUBSET-CONTRACT Item 2b)
 
-**Status:** In Progress (Phases 0-7 done)
+**Status:** In Progress (Phases 0-8 done)
 **Created:** 2026-10-20
 **Last Updated:** 2026-10-20
 **Branch / base:** sysml-codegen `subset-profile-screen` at `cbbc1100` (design approved); agentic-mbse sibling `/home/reid/src/subset-conformance/agentic-mbse` at `e268357f`, which this plan does not edit (design D12).
@@ -468,20 +468,20 @@ def test_generate_survives_report_failure(monkeypatch):            # D17 third l
 
 See `design.md` D4 (records per command), D6, D11, D16, D17, Invariants 1–5.
 
-- [ ] **First, before any `generate` change:** `observe.generator_half` becomes `load_source` + `prepare` + `emit_package` and reads the refusal from `Preparation` (D11). Add the test that `run_codegen`'s logged refusal equals the generator half's on every case. `test_tripwire.py` unchanged and passing.
-- [ ] `cli/__init__.py` `run_codegen`: D16's order, with the post-seal section under D17's guard (one WARNING line, exit code untouched). After a failed emit, the screen report still runs under the guard and the exit stays 1 (D18).
-- [ ] `cli/__init__.py`: `CheckRequest`, `run_check(request) -> ReadinessReport`, `cmd_check`, the `check` subparser with exactly the flags in D6, exit codes 0/1/3 from `readiness()`. `check` has no post-report guard.
-- [ ] Call-level test: `run_check` never calls `emit_package` (Invariant 1).
-- [ ] Update any test from `evidence/churn.md`'s record-count list that the new INFO lines break, by narrowing it to `refusal`-carrying records, never by loosening what it checks.
+- [x] **First, before any `generate` change:** `observe.generator_half` becomes `load_source` + `prepare` + `emit_package` and reads the refusal from `Preparation` (D11). Add the test that `run_codegen`'s logged refusal equals the generator half's on every case. `test_tripwire.py` unchanged and passing.
+- [x] `cli/__init__.py` `run_codegen`: D16's order, with the post-seal section under D17's guard (one WARNING line, exit code untouched). After a failed emit, the screen report still runs under the guard and the exit stays 1 (D18).
+- [x] `cli/__init__.py`: `CheckRequest`, `run_check(request) -> ReadinessReport`, `cmd_check`, the `check` subparser with exactly the flags in D6, exit codes 0/1/3 from `readiness()`. `check` has no post-report guard.
+- [x] Call-level test: `run_check` never calls `emit_package` (Invariant 1).
+- [x] Update any test from `evidence/churn.md`'s record-count list that the new INFO lines break, by narrowing it to `refusal`-carrying records, never by loosening what it checks.
 
 ### Validation
 
-- [ ] Parse-error case, both commands: today's parsing record; screen "not assessed: the model has parse errors"; no findings, no disagreement (M2).
-- [ ] Destination records (M4): builds case with a symlinked destination: `generate` one `PACKAGE_WRITE` record, exit 1; `check --output` same text, no `refusal` extra, exit 3. Refused case with a symlinked destination: both log only the model refusal; sentinel unchanged.
-- [ ] Exit-code mapping: exit 0 is tested with `readiness` patched to return READY (no real model reaches READY until Phase 10, A1).
-- [ ] D17 guard test (stencil) and D18 "screen report still printed" test.
-- [ ] Timing: licensed suite and `catf_mfe` `generate` compared with Phase 0; record the added time (B3).
-- [ ] Phase exit check, including byte identity.
+- [x] Parse-error case, both commands: today's parsing record; screen "not assessed: the model has parse errors"; no findings, no disagreement (M2).
+- [x] Destination records (M4): builds case with a symlinked destination: `generate` one `PACKAGE_WRITE` record, exit 1; `check --output` same text, no `refusal` extra, exit 3. Refused case with a symlinked destination: both log only the model refusal; sentinel unchanged.
+- [x] Exit-code mapping: exit 0 is tested with `readiness` patched to return READY (no real model reaches READY until Phase 10, A1).
+- [x] D17 guard test (stencil) and D18 "screen report still printed" test.
+- [x] Timing: licensed suite and `catf_mfe` `generate` compared with Phase 0; record the added time (B3).
+- [x] Phase exit check, including byte identity.
 
 **What we know after this phase:** both commands work end to end; `generate` decides and writes exactly as at the base.
 
@@ -790,6 +790,39 @@ See `design.md#potential-risks` for the full table. Phase-specific mitigations:
 **Deviations:** none from the plan. The two decisions above fill gaps the design did not cover.
 
 ### Phase 8 Completion
+**Completed:** 2026-10-20. `generate` prints the readiness report after the seal and `check` ships. `generate` decides and writes exactly as before: 0 of 173 refusal records and 0 package files differ.
+
+**Changes Made:**
+- D11 first, before any `generate` change. `observe.generator_half` (`tests/helpers/subset_profile/observe.py`) now runs `load_source`, `prepare` and `emit_package` and takes the refusal from the returned `Refused`. It still requires the route to log exactly the record `emit_package` returns, and none for a refusal at `prepare`. The spies and the tripwire are unchanged. New `test_run_codegen_logs_the_generator_half_s_refusal` (`test_generator_half.py`, 246 cases) holds `run_codegen`'s logged refusal equal to the generator half's. The 2a harness passed at that point (5143 = 4897 + 246) and again in the full run; `test_tripwire.py` is unchanged.
+- `run_codegen` (`cli/__init__.py`), in D16's order: load, `prepare`, the destination check when the model builds, the generator section of the report, `emit_package` when the model builds and the destination is clean, then `_report_after_the_seal`. That function runs `assess_screen`, `readiness_report` and `log_assessment` under D17's guard: any `Exception` becomes one WARNING, "the screen report could not be produced: <type>: <message>", and the result stays what the emit set. After a failed emit the report still runs, names step `emit` as the refusal, and the run exits 1 (D18).
+- `CheckRequest`, `run_check(request) -> ReadinessReport`, `cmd_check` and the `check` subparser with D6's flags (`--models`/`--from-snapshot`, `--output`, `--package-name`, `--verbose`). Exit 0 ready, 1 refused, 3 builds but not ready. `run_check` returns the report and logs nothing; `cmd_check` prints it with `log_report`. `check` has no guard.
+- `readiness.log_generator_section` now takes the generator alone, because `generate` prints it before the screen has run.
+- **Correction to Phase 7:** `log_agentic_mbse_missing` moved out of `readiness.py` and into `cmd_check`. `readiness.py` imports agentic-mbse, so a function there could never run when agentic-mbse is missing.
+- **Decision (agent):** `run_codegen` imports `readiness` at its start, before writing, because the generator section is printed before writing (D16). `generate` already needs agentic-mbse, and `readiness` adds only its screen enums. `subset_screen` and every report step after the seal are imported inside the guard.
+- New `tests/conformance/test_check_command.py` (16 tests):
+  - `check` never calls `emit_package` or `_write_package` and leaves a populated destination byte-identical (Invariant 1). Exit 3 for the builds case, 1 for the refused case.
+  - `check` logs a refusal record only for a refused model, and that record equals the base's.
+  - Exit 0 with `readiness` patched to READY (A1).
+  - Parse errors on both commands (M2): one record, "SysML parsing failed: …" with kind `PARSING`; "Screen not assessed: the model has parse errors"; no finding or disagreement lines; nothing written.
+  - Destination records (M4). Builds case with a symlink: `generate` logs one `PACKAGE_WRITE` record, no WARNING, exit 1. `check --output` logs the same text at WARNING with no `refusal`, plus the readiness reason, exit 3. Refused case with a symlink: both commands log only the base model record, and the sentinel is unchanged.
+  - D17 guard: `assess_screen`, `readiness_report` and `log_assessment` each patched to raise. Each time: the tree equals an unpatched run's, exit 0, exactly one WARNING. `check` with `log_assessment` raising fails loudly.
+  - D16 order: `Generator: builds`, then the writing and sealing lines, then `Destination: clean` and the screen, ending with readiness.
+- `test_emit_writer_failures.py` (D18): each of the three writer failures still prints the screen report, ending `Readiness: refused` and `- the generator refuses at step emit`.
+- Churn §5 (the tests that read every record): none broke. The report lines are INFO and name no refusal code except in a disagreement line, and no test case in that list has a disagreement. No test was narrowed.
+- `test_public_authority_switch.py::test_the_public_api_exports_no_second_construction_entry_point` pins `cli.__all__` by value. It now includes `cmd_check`, `run_check` and `CheckRequest`, with a comment: `check` runs the same `prepare` and writes nothing, so it does not build packages a second way.
+
+**Exit check:**
+- Licensed suite: 9637 passed, 10 failed, 9 skipped. The 10 failures are the base 9 plus the `__all__` pin, which was fixed and rerun (19 passed). The lost test IDs are the same eight families as in Phase 7.
+- Byte identity: 0 differences. Refusal records: 0 of 173 differ. mypy clean (91 files). ruff `src/` clean, `src/ tests/` 94. agentic-mbse clean.
+
+**Timing (B3):**
+- Licensed suite: 3:35 wall time, against 3:02 at Phase 0, with 263 more tests.
+- `generate` on `catf_mfe_d5` (from its regenerated sources) takes 7.5-7.7 s over three runs, against 4.19 s. On `catf_mfe_gated` it takes 6.75-6.86 s, against 3.84 s.
+- A time-stamped run shows the package sealed at 4.14 s, the same as the base. The other 3.2 s is the screen, after the seal. That is the "about 3 s" B3 predicted.
+
+**For the owner (not acted on):** `generate` on either catf_mfe model now prints about 240 report lines after "Code generation complete": two lines (the finding and its remedy) for each of 51 or 48 admitted and 68 omitted findings. The design's D5 renders every finding. Its sketch shows only a refused one, and the spec does not say whether admitted and omitted findings belong in `generate`'s output. Cutting them changes no outcome, so this waits for the owner.
+
+**Deviations:** none from the plan. The `log_agentic_mbse_missing` move corrects a Phase 7 mistake.
 
 ### Phase 9 Completion
 
