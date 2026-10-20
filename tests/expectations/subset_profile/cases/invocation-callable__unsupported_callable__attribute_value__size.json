@@ -1,0 +1,13 @@
+{
+  "id": "invocation-callable__unsupported_callable__attribute_value__size",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EXPRESSION_SOURCE_UNSUPPORTED"
+    ],
+    "reasons": [
+      "evidence_expression_kind_unsupported"
+    ]
+  }
+}

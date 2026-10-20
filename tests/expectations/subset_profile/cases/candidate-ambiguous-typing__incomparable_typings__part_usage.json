@@ -1,0 +1,16 @@
+{
+  "id": "candidate-ambiguous-typing__incomparable_typings__part_usage",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_REDEFINITION_INVALID"
+    ],
+    "reasons": [
+      "occurrence_part_typing_ambiguous"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/occurrence.py::_effective_type::coded-fixed::SI_REDEFINITION_INVALID::1"
+    ]
+  }
+}

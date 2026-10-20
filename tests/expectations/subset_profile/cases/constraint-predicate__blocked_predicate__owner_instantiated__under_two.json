@@ -1,0 +1,18 @@
+{
+  "id": "constraint-predicate__blocked_predicate__owner_instantiated__under_two",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_CONSTRAINT_BLOCKED",
+      "SI_CONSTRAINT_BLOCKED"
+    ],
+    "reasons": [
+      "constraint_profile_blocked",
+      "constraint_profile_blocked"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._build_constraint_nodes::coded::SI_CONSTRAINT_BLOCKED::1"
+    ]
+  }
+}

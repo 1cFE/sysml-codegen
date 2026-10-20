@@ -1,0 +1,35 @@
+{
+  "id": "g2__definition_override_of_referenced_bound",
+  "home": "codegen",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      7
+    ],
+    "description": "part def BigSite :> Site redefines n default 3; big : BigSite gets three racks (control for G2)"
+  },
+  "screen": {
+    "verdict": "clear",
+    "findings": []
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "occurrences",
+        "declaration": "fx::Site::racks",
+        "expect": {
+          "count": 3,
+          "indices": [
+            0,
+            1,
+            2
+          ]
+        }
+      }
+    ]
+  }
+}

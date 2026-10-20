@@ -1,0 +1,28 @@
+{
+  "id": "candidate-es-002__part_inside_item_usage__attribute_value",
+  "home": "codegen",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      7
+    ],
+    "description": "attribute y reads it.rk.cap, an attribute of a part usage nested in an item usage"
+  },
+  "screen": {
+    "verdict": "clear",
+    "findings": []
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EDGE_DANGLING"
+    ],
+    "reasons": [
+      "graph_root_occurrence_package_missing"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/graph.py::InstanceGraph._validate_occurrences::coded::SI_EDGE_DANGLING::1"
+    ]
+  }
+}

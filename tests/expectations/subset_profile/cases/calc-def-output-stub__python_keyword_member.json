@@ -1,0 +1,50 @@
+{
+  "id": "calc-def-output-stub__python_keyword_member",
+  "home": "codegen",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      3
+    ],
+    "description": "calc def C's output reads a member named 'if', a Python keyword"
+  },
+  "screen": {
+    "verdict": "clear",
+    "findings": []
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "witnesses": [
+      "sysml_codegen/extraction/calc_compat_renderer.py::_render_reference::free-text::CompilationError::2"
+    ],
+    "stubs": [
+      {
+        "output": "fx::C::r",
+        "reason": "compile_reference_unresolved"
+      }
+    ],
+    "seams": [
+      {
+        "kind": "calc_compilability",
+        "declaration": "fx::Gen::t",
+        "expect": [
+          {
+            "compilability": "manual_required",
+            "outputs": [
+              "r"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "loss": {
+    "family": "calc-def-output-stub",
+    "disposition": "candidate_refusal",
+    "rg1": "RG1-8",
+    "control": "calc-def-output-stub__compiled_control"
+  }
+}

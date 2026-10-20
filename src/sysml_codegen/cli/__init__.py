@@ -213,6 +213,8 @@ def _check_duplicate_output_paths(modules: list[PipelineModule]) -> None:
     Only a collision between *different* raw sources is an error -- multiple
     usages of one calc def legitimately derive the same path.
     """
+    from sysml_codegen.core.errors import GenerationCode
+    from sysml_codegen.elaboration.diagnostics import SiteReason
     from sysml_codegen.generation import CodeGenerationError
 
     module_paths: dict[str, str] = {}
@@ -224,7 +226,9 @@ def _check_duplicate_output_paths(modules: list[PipelineModule]) -> None:
             raise CodeGenerationError(
                 f"DUPLICATE_OUTPUT_PATH: SysML names {prior!r} and {raw!r} both "
                 f"derive modules/{path}. Rename one, or this would silently "
-                f"overwrite.{_module_source(module)}"
+                f"overwrite.{_module_source(module)}",
+                code=GenerationCode.DUPLICATE_OUTPUT_PATH,
+                reason=SiteReason.GENERATION_MODULE_PATH_COLLISION,
             )
         module_paths[path] = raw
 
@@ -239,14 +243,16 @@ def _check_duplicate_output_paths(modules: list[PipelineModule]) -> None:
             raise CodeGenerationError(
                 f"DUPLICATE_OUTPUT_PATH: SysML names {prior!r} and {raw!r} both "
                 f"derive schemas/{schema_file}. Rename one, or this would silently "
-                f"overwrite.{_module_source(module)}"
+                f"overwrite.{_module_source(module)}",
+                code=GenerationCode.DUPLICATE_OUTPUT_PATH,
+                reason=SiteReason.GENERATION_SCHEMA_PATH_COLLISION,
             )
         schema_sources[schema_file] = raw
 
 
 def _preflight_generation_metadata(graph: ComputationGraph) -> None:
     """Validate renderer-required optional metadata before mutating output."""
-    from sysml_codegen.core.errors import CodeGenerationError
+    from sysml_codegen.core.errors import CodeGenerationError, GenerationCode
     from sysml_codegen.generation.pipeline import _input_to_context
     from sysml_codegen.resolution.models import ModuleKind
 
@@ -256,13 +262,15 @@ def _preflight_generation_metadata(graph: ComputationGraph) -> None:
         ):
             if module.calc_def_name is None:
                 raise CodeGenerationError(
-                    f"GENERATION_METADATA_MISSING: module {module.name!r} lacks calc_def_name"
+                    f"GENERATION_METADATA_MISSING: module {module.name!r} lacks calc_def_name",
+                    code=GenerationCode.GENERATION_METADATA_MISSING,
                 )
         if module.module_kind in (ModuleKind.CALCULATION, ModuleKind.FORMULA):
             if module.calc_def_qualified_name is None:
                 raise CodeGenerationError(
                     f"GENERATION_METADATA_MISSING: module {module.name!r} "
-                    "lacks calc_def_qualified_name"
+                    "lacks calc_def_qualified_name",
+                    code=GenerationCode.GENERATION_METADATA_MISSING,
                 )
         for module_input in module.inputs:
             _input_to_context(module_input, {})
@@ -279,12 +287,15 @@ def _preflight_registry_class_names(graph: ComputationGraph) -> None:
     anything is written — is what makes it fail-before-mutate, and the error is
     the package's own so the operator reads a refusal rather than a traceback.
     """
+    from sysml_codegen.elaboration.diagnostics import SiteReason
     from sysml_codegen.generation.errors import residual_class_name_collision_error
     from sysml_codegen.generation.registry import residual_class_name_collisions
 
     residual = residual_class_name_collisions(graph)
     if residual:
-        raise residual_class_name_collision_error(residual)
+        raise residual_class_name_collision_error(
+            residual, reason=SiteReason.GENERATION_REGISTRY_CLASS_NAME_COLLISION
+        )
 
 
 def _preflight_exit_point_types(graph: ComputationGraph) -> None:
@@ -317,6 +328,7 @@ def _preflight_constraint_totality(graph: ComputationGraph) -> None:
     those: ``fingerprint`` was minted at projection from the domain, so it still knows the
     removed row existed.
     """
+    from sysml_codegen.core.errors import GenerationCode
     from sysml_codegen.elaboration.graph import DISPOSITION_REASONS
     from sysml_codegen.generation import CodeGenerationError
     from sysml_codegen.resolution.models import ModuleKind
@@ -326,7 +338,8 @@ def _preflight_constraint_totality(graph: ComputationGraph) -> None:
         if any(module.module_kind is ModuleKind.CONSTRAINT for module in graph.modules):
             raise CodeGenerationError(
                 "CONSTRAINT_DOMAIN_INCOMPLETE: the graph generates constraint modules "
-                "but carries no catalog"
+                "but carries no catalog",
+                code=GenerationCode.CONSTRAINT_DOMAIN_INCOMPLETE,
             )
         return
 
@@ -335,7 +348,8 @@ def _preflight_constraint_totality(graph: ComputationGraph) -> None:
             "CONSTRAINT_DOMAIN_INCOMPLETE: the catalog's "
             f"{len(catalog.usage_records)} usage rows no longer match the fingerprint "
             "sealed at projection, so a row was added, removed, or altered after the "
-            "domain was rendered"
+            "domain was rendered",
+            code=GenerationCode.CONSTRAINT_DOMAIN_INCOMPLETE,
         )
 
     rows_by_id: dict[str, ConstraintCatalogUsageRecord] = {}
@@ -343,13 +357,15 @@ def _preflight_constraint_totality(graph: ComputationGraph) -> None:
         if row.declaration_id in rows_by_id:
             raise CodeGenerationError(
                 "CONSTRAINT_DOMAIN_INCOMPLETE: duplicate usage record for "
-                f"{row.usage_qualified_name} ({row.declaration_id})"
+                f"{row.usage_qualified_name} ({row.declaration_id})",
+                code=GenerationCode.CONSTRAINT_DOMAIN_INCOMPLETE,
             )
         reasons = DISPOSITION_REASONS.get(row.disposition_kind)
         if reasons is None or row.disposition_reason not in reasons:
             raise CodeGenerationError(
                 "CONSTRAINT_DOMAIN_INCOMPLETE: no disposition for "
-                f"{row.usage_qualified_name} ({row.declaration_id})"
+                f"{row.usage_qualified_name} ({row.declaration_id})",
+                code=GenerationCode.CONSTRAINT_DOMAIN_INCOMPLETE,
             )
         rows_by_id[row.declaration_id] = row
 
@@ -362,7 +378,8 @@ def _preflight_constraint_totality(graph: ComputationGraph) -> None:
         if occurrence.declaration_id not in rows_by_id:
             raise CodeGenerationError(
                 "CONSTRAINT_DOMAIN_INCOMPLETE: catalog row joins no domain member for "
-                f"{occurrence.usage_qualified_name} ({occurrence.declaration_id})"
+                f"{occurrence.usage_qualified_name} ({occurrence.declaration_id})",
+                code=GenerationCode.CONSTRAINT_DOMAIN_INCOMPLETE,
             )
         occurrences[occurrence.declaration_id] = occurrences.get(occurrence.declaration_id, 0) + 1
 
@@ -372,7 +389,8 @@ def _preflight_constraint_totality(graph: ComputationGraph) -> None:
             raise CodeGenerationError(
                 f"CONSTRAINT_DOMAIN_INCOMPLETE: occurrence_count {row.occurrence_count} "
                 f"disagrees with {counted} nodes for {row.usage_qualified_name} "
-                f"({declaration_id})"
+                f"({declaration_id})",
+                code=GenerationCode.CONSTRAINT_DOMAIN_INCOMPLETE,
             )
 
 
@@ -400,6 +418,7 @@ def _preflight_coverage_account(
     fail-before-mutate. The only thing between the earlier preflight block and this call is
     ``ensure_package_tree_is_link_free``, which inspects and raises and writes nothing.
     """
+    from sysml_codegen.core.errors import GenerationCode
     from sysml_codegen.generation import CodeGenerationError
     from sysml_codegen.generation.coverage import coverage_account
     from sysml_codegen.resolution.models import ModuleKind, ships_constraint_machinery
@@ -414,7 +433,8 @@ def _preflight_coverage_account(
             raise CodeGenerationError(
                 "COVERAGE_ACCOUNT_INVALID: the graph carries a REPORT_AGGREGATOR "
                 "module but no constraint catalog, so the report it would ship could not "
-                "state its coverage"
+                "state its coverage",
+                code=GenerationCode.COVERAGE_ACCOUNT_INVALID,
             )
         return
 
@@ -425,7 +445,8 @@ def _preflight_coverage_account(
             "the catalog has "
             f"{len(catalog.usage_records)} usage row(s), which requires {expected}. "
             "A report is required iff the model authored at least one constraint usage; the "
-            "aggregator mint and the generation seams must read that one population."
+            "aggregator mint and the generation seams must read that one population.",
+            code=GenerationCode.COVERAGE_ACCOUNT_INVALID,
         )
 
     recomputed = coverage_account(catalog)
@@ -434,7 +455,8 @@ def _preflight_coverage_account(
             "COVERAGE_ACCOUNT_INVALID: the account disagrees with its catalog: the plan holds "
             f"{constraint_plan.coverage}, and the sealed catalog implies {recomputed}. The "
             "account is a summary of that catalog and nothing else, so it was altered after "
-            "it was derived."
+            "it was derived.",
+            code=GenerationCode.COVERAGE_ACCOUNT_INVALID,
         )
 
 
@@ -1159,6 +1181,13 @@ def run_codegen(config: GenerationConfig) -> bool:
     Returns:
         True if generation succeeded, False otherwise.
     """
+    from sysml_codegen.cli.refusal import (
+        Refusal,
+        RefusalKind,
+        diagnostic_refusal,
+        generation_refusal,
+        readiness_refusal,
+    )
     from sysml_codegen.elaboration.elaborate import (
         ElaborationDiagnosticError,
         ElaborationError,
@@ -1187,30 +1216,46 @@ def run_codegen(config: GenerationConfig) -> bool:
         # package is never assembled out of several separately derived graphs.
         graph = context.computation_graph
     except InstanceGraphSnapshotError as error:
-        logger.error(f"Snapshot refused: {error}")
+        logger.error(
+            f"Snapshot refused: {error}", extra={"refusal": Refusal(RefusalKind.SNAPSHOT)}
+        )
         return False
     # The two elaboration refusal classes stay distinct in the log the way the
     # corpus driver keeps them distinct: readiness findings and validation
     # diagnostics are different answers, and collapsing them loses which gate
     # refused. Neither is a CodeGenerationError, so neither is caught below.
     except ElaborationError as error:
-        logger.error(f"Model is not ready for the exact route: {error}")
+        logger.error(
+            f"Model is not ready for the exact route: {error}",
+            extra={"refusal": readiness_refusal(error)},
+        )
         return False
     except ElaborationDiagnosticError as error:
-        logger.error(f"Model failed exact-route validation: {error}")
+        logger.error(
+            f"Model failed exact-route validation: {error}",
+            extra={"refusal": diagnostic_refusal(error)},
+        )
         return False
     except SysMLParsingError as error:
-        logger.error(f"SysML parsing failed: {error}")
+        logger.error(
+            f"SysML parsing failed: {error}", extra={"refusal": Refusal(RefusalKind.PARSING)}
+        )
         return False
     except CodeGenerationError as error:
         logger.error(
             f"Code generation failed: {error}",
-            extra={"constraint_name_safety": error.name_safety_violation},
+            extra={
+                "constraint_name_safety": error.name_safety_violation,
+                "refusal": generation_refusal(error),
+            },
         )
         return False
     except Exception as error:
         diagnostic = unexpected_public_failure(error)
-        logger.error(f"Model failed exact-route validation: {diagnostic}")
+        logger.error(
+            f"Model failed exact-route validation: {diagnostic}",
+            extra={"refusal": diagnostic_refusal(diagnostic)},
+        )
         return False
 
     logger.info(f"Built computation graph with {len(graph.modules)} modules")
@@ -1221,12 +1266,18 @@ def run_codegen(config: GenerationConfig) -> bool:
     except CodeGenerationError as error:
         logger.error(
             f"Code generation failed: {error}",
-            extra={"constraint_name_safety": error.name_safety_violation},
+            extra={
+                "constraint_name_safety": error.name_safety_violation,
+                "refusal": generation_refusal(error),
+            },
         )
         return False
     except Exception as error:
         diagnostic = unexpected_public_failure(error)
-        logger.error(f"Code generation failed: {diagnostic}")
+        logger.error(
+            f"Code generation failed: {diagnostic}",
+            extra={"refusal": diagnostic_refusal(diagnostic)},
+        )
         return False
 
 
@@ -1239,6 +1290,7 @@ def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConf
     recovery's legacy-specimen tests drive it directly while their fixtures are
     retired, and Phase 4 removes those callers with the legacy owners.
     """
+    from sysml_codegen.cli.refusal import Refusal, RefusalKind, generation_refusal
     from sysml_codegen.contracts import PackageSealError, ensure_package_tree_is_link_free
     from sysml_codegen.generation import (
         CodeGenerationError,
@@ -1274,7 +1326,10 @@ def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConf
         try:
             ensure_package_tree_is_link_free(config.output_path)
         except (PackageSealError, OSError) as error:
-            logger.error(f"Package sealing failed: {error}")
+            logger.error(
+                f"Package sealing failed: {error}",
+                extra={"refusal": Refusal(RefusalKind.PACKAGE_WRITE)},
+            )
             return False
 
         # Build every constraint body and wrapper while the target tree is still untouched.
@@ -1332,19 +1387,25 @@ def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConf
         try:
             _seal_package(graph, config)
         except (PackageSealError, OSError) as error:
-            logger.error(f"Package sealing failed: {error}")
+            logger.error(
+                f"Package sealing failed: {error}",
+                extra={"refusal": Refusal(RefusalKind.PACKAGE_WRITE)},
+            )
             return False
 
         logger.info("Code generation complete")
         return True
 
     except SysMLParsingError as e:
-        logger.error(f"SysML parsing failed: {e}")
+        logger.error(f"SysML parsing failed: {e}", extra={"refusal": Refusal(RefusalKind.PARSING)})
         return False
     except CodeGenerationError as e:
         logger.error(
             f"Code generation failed: {e}",
-            extra={"constraint_name_safety": e.name_safety_violation},
+            extra={
+                "constraint_name_safety": e.name_safety_violation,
+                "refusal": generation_refusal(e),
+            },
         )
         return False
     except OSError as e:
@@ -1357,7 +1418,10 @@ def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConf
         # Measured, and deliberately not changed here: any failure after step 2
         # leaves the partially written output tree on disk. That is true of the
         # named refusals above as well, and has been since before this narrowing.
-        logger.error(f"Writing the generated package failed: {e}")
+        logger.error(
+            f"Writing the generated package failed: {e}",
+            extra={"refusal": Refusal(RefusalKind.PACKAGE_WRITE)},
+        )
         return False
 
 

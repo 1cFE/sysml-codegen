@@ -1,0 +1,17 @@
+{
+  "id": "candidate-es-010-refusal__string_to_calc_input__binding_value__attribute_declaration",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "PROJECTION_FAILED",
+      "SI_RENDERING_COLLISION"
+    ],
+    "reasons": [
+      "projection_default_non_numeric"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/project.py::_float_default::coded::SI_RENDERING_COLLISION::1"
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "id": "blocked-predicate-unmapped-code__anonymous_assert_by_reference",
+  "home": "codegen",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      7
+    ],
+    "description": "anonymous assert positive; asserting the named constraint by reference"
+  },
+  "screen": {
+    "verdict": "refused",
+    "findings": [
+      {
+        "rule": "constraint-predicate",
+        "shape": "blocked_predicate",
+        "context": "owner_instantiated",
+        "outcome": "refused",
+        "subject": "<anonymous AssertConstraintUsage>",
+        "line": 7
+      }
+    ]
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_ID_UNSTABLE"
+    ],
+    "reasons": [
+      "identity_qualified_name_missing"
+    ]
+  }
+}

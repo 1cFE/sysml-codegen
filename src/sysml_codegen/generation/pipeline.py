@@ -175,10 +175,11 @@ def _input_to_context(
         # Upstream module output - channel name with optional field extraction
         channel = inp.source.producer_channel
         if channel is None:
-            from sysml_codegen.core.errors import CodeGenerationError
+            from sysml_codegen.core.errors import CodeGenerationError, GenerationCode
 
             raise CodeGenerationError(
-                f"GENERATION_METADATA_MISSING: input {inp.param_name!r} lacks producer_channel"
+                f"GENERATION_METADATA_MISSING: input {inp.param_name!r} lacks producer_channel",
+                code=GenerationCode.GENERATION_METADATA_MISSING,
             )
         # Look up field name from the producing module's output
         producer_field = channel_field_map.get(channel, "")
@@ -195,10 +196,11 @@ def _input_to_context(
         # stays the field's alias.
         qualified_name = inp.source.qualified_name
         if qualified_name is None:
-            from sysml_codegen.core.errors import CodeGenerationError
+            from sysml_codegen.core.errors import CodeGenerationError, GenerationCode
 
             raise CodeGenerationError(
-                f"GENERATION_METADATA_MISSING: input {inp.param_name!r} lacks qualified_name"
+                f"GENERATION_METADATA_MISSING: input {inp.param_name!r} lacks qualified_name",
+                code=GenerationCode.GENERATION_METADATA_MISSING,
             )
         field = params_field_name(qualified_name)
         if inp.source.param_group:

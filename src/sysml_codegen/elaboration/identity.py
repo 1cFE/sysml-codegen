@@ -17,6 +17,7 @@ from agentic_mbse.sysml.syside_adapter import SysideAdapter
 from sysml_codegen.elaboration.diagnostics import (
     ElaborationCode,
     ElaborationInvariantError,
+    SiteReason,
 )
 
 __all__ = [
@@ -40,10 +41,13 @@ __all__ = [
 class IdentityBoundaryError(ElaborationInvariantError):
     """A parser element cannot enter the stable declaration-ID boundary."""
 
-    def __init__(self, detail: str, *, missing: bool = False) -> None:
+    def __init__(
+        self, detail: str, *, missing: bool = False, reason: SiteReason | None = None
+    ) -> None:
         super().__init__(
             ElaborationCode.SI_ID_MISSING if missing else ElaborationCode.SI_ID_UNSTABLE,
             detail,
+            reason=reason,
         )
 
 
@@ -72,7 +76,8 @@ def declaration_id_for(element: Any) -> DeclarationId:
     qualified_name = getattr(element, "qualified_name", None)
     if qualified_name is None:
         raise IdentityBoundaryError(
-            f"{type(element).__name__} has no reload-stable qualified declaration identity"
+            f"{type(element).__name__} has no reload-stable qualified declaration identity",
+            reason=SiteReason.IDENTITY_QUALIFIED_NAME_MISSING,
         )
     raw = SysideAdapter.element_id(element)
     if raw.version != 5:

@@ -1,0 +1,35 @@
+{
+  "id": "candidate-es-010-refusal__real_library_default__unbound_input",
+  "home": "codegen",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      4
+    ],
+    "description": "calc usage t leaves its Real input u unbound, so the calc def default 3.0 applies (control for the String library-default path)"
+  },
+  "screen": {
+    "verdict": "clear",
+    "findings": []
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "contract_parameter",
+        "declaration": "fx::Gen::t",
+        "expect": [
+          {
+            "key": "fx__gen__t__u",
+            "entry_type": "library_default",
+            "python_type": "float",
+            "default_value": 3.0
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from agentic_mbse.sysml.constraint_facts import ConstraintFacts
@@ -27,6 +28,9 @@ from sysml_codegen.cli import (
     _seal_package,
     run_codegen,
 )
+from sysml_codegen.cli.refusal import Refusal, RefusalItem, RefusalKind
+from sysml_codegen.core.errors import GenerationCode
+from sysml_codegen.elaboration.diagnostics import ElaborationCode, SiteReason
 from sysml_codegen.generation import CodeGenerationError
 from sysml_codegen.resolution.models import (
     ComputationGraph,
@@ -366,6 +370,103 @@ def test_run_codegen_missing_catalog_preserves_tree_and_logs_payload(
     violation = records[0].constraint_name_safety
     assert violation.kind == "catalog_module_join"
     assert violation.final_binding == "c1"
+
+
+def _logged_refusals(caplog) -> list[Refusal]:
+    return [record.refusal for record in caplog.records if hasattr(record, "refusal")]
+
+
+def test_name_collision_refusal_logs_code_and_site_reason(tmp_path, caplog):
+    config = GenerationConfig(output_path=tmp_path / "output", models_path=tmp_path)
+    assert _generate_package_from_graph(_unsafe_name_context("value"), config) is False
+    assert _logged_refusals(caplog) == [
+        Refusal(
+            RefusalKind.GENERATION,
+            (
+                RefusalItem(
+                    GenerationCode.CONSTRAINT_NAME_UNSAFE,
+                    SiteReason.GENERATION_CONSTRAINT_NAME_UNSAFE,
+                    None,
+                    None,
+                ),
+            ),
+        )
+    ]
+
+
+def test_projection_refusal_logs_the_diagnostics_it_wraps(monkeypatch):
+    """The user's message names the projection's own code, so the payload carries it too."""
+    from sysml_codegen.cli.refusal import generation_refusal
+    from sysml_codegen.elaboration.graph import Diagnostic
+    from sysml_codegen.elaboration.project import ProjectionError
+    from sysml_codegen.orchestration import exact_pipeline_context
+
+    collision = Diagnostic(
+        ElaborationCode.SI_RENDERING_COLLISION,
+        None,
+        "fx::site::s",
+        None,
+        "two declarations render to one entry point",
+        source_file="root-0/model.sysml",
+        source_line=5,
+    )
+
+    def refuse(*_args):
+        raise ProjectionError([collision])
+
+    monkeypatch.setattr(exact_pipeline_context, "project", refuse)
+    with pytest.raises(CodeGenerationError) as error:
+        exact_pipeline_context._project_or_fail(SimpleNamespace(), None)
+    assert error.value.code is GenerationCode.PROJECTION_FAILED
+    assert "SI_RENDERING_COLLISION" in str(error.value)
+    assert generation_refusal(error.value).items == (
+        RefusalItem(GenerationCode.PROJECTION_FAILED, None, None, None),
+        RefusalItem(ElaborationCode.SI_RENDERING_COLLISION, None, "root-0/model.sysml", 5),
+    )
+
+
+_INTERNAL_DEFECT_REFUSAL = Refusal(
+    RefusalKind.DIAGNOSTIC,
+    (
+        RefusalItem(
+            ElaborationCode.SI_INTERNAL_DEFECT,
+            SiteReason.INTERNAL_FAILURE_UNCLASSIFIED,
+            None,
+            None,
+        ),
+    ),
+)
+
+
+def _unclassified_failure(*_args, **_kwargs):
+    raise RuntimeError("unclassified")
+
+
+def test_unclassified_construction_failure_logs_the_internal_defect_refusal(
+    tmp_path, monkeypatch, caplog
+):
+    monkeypatch.setattr(
+        "sysml_codegen.orchestration.exact_pipeline_context.build_exact_pipeline_context",
+        _unclassified_failure,
+    )
+    config = GenerationConfig(output_path=tmp_path / "output", models_path=tmp_path)
+    assert run_codegen(config) is False
+    assert _logged_refusals(caplog) == [_INTERNAL_DEFECT_REFUSAL]
+
+
+def test_unclassified_generation_failure_logs_the_internal_defect_refusal(
+    tmp_path, monkeypatch, caplog
+):
+    # Generation is patched to fail, so the graph is never read past its module count.
+    context = SimpleNamespace(computation_graph=SimpleNamespace(modules=[]))
+    monkeypatch.setattr(
+        "sysml_codegen.orchestration.exact_pipeline_context.build_exact_pipeline_context",
+        lambda _paths: context,
+    )
+    monkeypatch.setattr("sysml_codegen.cli._generate_package_from_graph", _unclassified_failure)
+    config = GenerationConfig(output_path=tmp_path / "output", models_path=tmp_path)
+    assert run_codegen(config) is False
+    assert _logged_refusals(caplog) == [_INTERNAL_DEFECT_REFUSAL]
 
 
 def test_collision_rejection_preserves_absent_output(tmp_path):

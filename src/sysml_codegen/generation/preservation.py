@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from sysml_codegen.core.errors import CodeGenerationError
+from sysml_codegen.core.errors import CodeGenerationError, GenerationCode
 from sysml_codegen.resolution.models import PipelineModule
 
 logger = logging.getLogger(__name__)
@@ -179,7 +179,8 @@ def _generate_expected_signature_from_module(module: PipelineModule) -> Function
     """Generate expected function signature from PipelineModule."""
     if module.calc_def_name is None:
         raise CodeGenerationError(
-            f"GENERATION_METADATA_MISSING: module {module.name!r} lacks calc_def_name"
+            f"GENERATION_METADATA_MISSING: module {module.name!r} lacks calc_def_name",
+            code=GenerationCode.GENERATION_METADATA_MISSING,
         )
 
     func_name = f"run_{module.calc_def_name.lower()}"

@@ -1,0 +1,16 @@
+{
+  "id": "calc-owned-assertion__asserted_constraint__calc_usage_owner",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_CONSTRAINT_UNATTACHED"
+    ],
+    "reasons": [
+      "elaboration_constraint_owner_unmapped"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._owner_kind::coded::SI_CONSTRAINT_UNATTACHED::1"
+    ]
+  }
+}

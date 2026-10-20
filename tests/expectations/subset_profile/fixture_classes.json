@@ -1,0 +1,797 @@
+{
+  "schema": "subset-fixture-classes/1",
+  "fixtures": {
+    "agg_literal_probe": {
+      "class": "generating"
+    },
+    "alias_agg_d5": {
+      "class": "generating"
+    },
+    "anonymous_return": {
+      "class": "refusing",
+      "codes": [
+        "SI_EVIDENCE_INCOMPLETE"
+      ]
+    },
+    "attr_expr_probe": {
+      "class": "generating"
+    },
+    "catf_mfe_d5": {
+      "class": "not_a_model",
+      "note": "Only the sealed snapshot is kept; its .sysml fork collapsed in REPO-CLEANUP Move C (scripts/make_d5_variant.py regenerates it)."
+    },
+    "catf_mfe_gated": {
+      "class": "generating"
+    },
+    "chain_spike_d5": {
+      "class": "generating"
+    },
+    "constraint_arithmetic_raise": {
+      "class": "generating"
+    },
+    "constraint_binding_unit_annotation": {
+      "class": "refusing",
+      "codes": [
+        "SI_EXPRESSION_SOURCE_UNSUPPORTED",
+        "SI_EXPRESSION_SOURCE_UNSUPPORTED"
+      ]
+    },
+    "constraint_blocked_chain_multi": {
+      "class": "refusing",
+      "codes": [
+        "SI_CONSTRAINT_BLOCKED"
+      ]
+    },
+    "constraint_blocked_owner": {
+      "class": "refusing",
+      "codes": [
+        "SI_MULTIPLICITY_UNRESOLVED"
+      ]
+    },
+    "constraint_blocked_profile": {
+      "class": "refusing",
+      "codes": [
+        "SI_CONSTRAINT_BLOCKED"
+      ]
+    },
+    "constraint_coverage_all_inapplicable": {
+      "class": "generating"
+    },
+    "constraint_coverage_eligible_inapplicable": {
+      "class": "refusing",
+      "codes": [
+        "COVERAGE_ACCOUNT_INVALID"
+      ]
+    },
+    "constraint_coverage_violation_partial": {
+      "class": "generating"
+    },
+    "constraint_coverage_zero_eligible": {
+      "class": "generating"
+    },
+    "constraint_def_owned_redefining": {
+      "class": "generating"
+    },
+    "constraint_domain_block_non_reaching": {
+      "class": "generating"
+    },
+    "constraint_domain_calc_def_owner": {
+      "class": "refusing",
+      "codes": [
+        "SI_CONSTRAINT_UNATTACHED"
+      ]
+    },
+    "constraint_domain_containment": {
+      "class": "generating"
+    },
+    "constraint_domain_detached_owner": {
+      "class": "generating"
+    },
+    "constraint_domain_inapplicable": {
+      "class": "generating"
+    },
+    "constraint_domain_inapplicable_late_marker": {
+      "class": "refusing",
+      "codes": [
+        "SI_CONSTRAINT_INCOMPLETE"
+      ]
+    },
+    "constraint_domain_inapplicable_malformed": {
+      "class": "refusing",
+      "codes": [
+        "SI_CONSTRAINT_INCOMPLETE"
+      ]
+    },
+    "constraint_domain_inapplicable_plain_form": {
+      "class": "refusing",
+      "codes": [
+        "SI_CONSTRAINT_INCOMPLETE"
+      ]
+    },
+    "constraint_domain_inapplicable_unattachable": {
+      "class": "refusing",
+      "codes": [
+        "SI_CONSTRAINT_UNATTACHED"
+      ]
+    },
+    "constraint_domain_plain_forms": {
+      "class": "generating"
+    },
+    "constraint_domain_satisfy": {
+      "class": "generating"
+    },
+    "constraint_domain_satisfy_calc_def": {
+      "class": "generating"
+    },
+    "constraint_inline": {
+      "class": "refusing",
+      "codes": [
+        "CONSTRAINT_NAME_UNSAFE"
+      ],
+      "note": "The recapture batch lists it as captured: elaboration seals a graph, and run_codegen then refuses at generation."
+    },
+    "constraint_malformed_mixed": {
+      "class": "refusing",
+      "codes": [
+        "SI_CONSTRAINT_BLOCKED"
+      ]
+    },
+    "constraint_multi_instance": {
+      "class": "generating"
+    },
+    "constraint_name_collision_control": {
+      "class": "generating"
+    },
+    "constraint_name_collision_probe": {
+      "class": "refusing",
+      "codes": [
+        "SI_ID_UNSTABLE"
+      ]
+    },
+    "constraint_non_numerical": {
+      "class": "refusing",
+      "codes": [
+        "CONSTRAINT_NAME_UNSAFE"
+      ],
+      "note": "The recapture batch lists it as captured: elaboration seals a graph, and run_codegen then refuses at generation."
+    },
+    "constraint_occurrence_demand": {
+      "class": "container",
+      "note": "Seven independent models, one per subdirectory; tests load each on its own."
+    },
+    "constraint_occurrence_demand/anonymous": {
+      "class": "refusing",
+      "codes": [
+        "SI_ID_UNSTABLE"
+      ]
+    },
+    "constraint_occurrence_demand/constraint_only": {
+      "class": "refusing",
+      "codes": [
+        "CONSTRAINT_NAME_UNSAFE"
+      ]
+    },
+    "constraint_occurrence_demand/cycle": {
+      "class": "refusing",
+      "codes": [
+        "SI_CONTAINMENT_RECURSIVE"
+      ]
+    },
+    "constraint_occurrence_demand/cycle_indirect": {
+      "class": "refusing",
+      "codes": [
+        "SI_ID_UNSTABLE"
+      ]
+    },
+    "constraint_occurrence_demand/order": {
+      "class": "refusing",
+      "codes": [
+        "CONSTRAINT_NAME_UNSAFE"
+      ]
+    },
+    "constraint_occurrence_demand/overrides": {
+      "class": "refusing",
+      "codes": [
+        "SI_SELF_BINDING"
+      ]
+    },
+    "constraint_occurrence_demand/shared": {
+      "class": "refusing",
+      "codes": [
+        "CONSTRAINT_NAME_UNSAFE"
+      ]
+    },
+    "constraint_occurrence_demand_overrides_d5": {
+      "class": "generating"
+    },
+    "constraint_shared_polarity": {
+      "class": "generating"
+    },
+    "constraint_strict_boundary": {
+      "class": "generating"
+    },
+    "costed_cart_d5": {
+      "class": "generating"
+    },
+    "d316_crosspart_expose": {
+      "class": "generating"
+    },
+    "d38_caret": {
+      "class": "generating"
+    },
+    "def_qual_one_occ_above": {
+      "class": "refusing",
+      "codes": [
+        "SI_OCCURRENCE_MISSING"
+      ]
+    },
+    "def_qual_sibling_scope": {
+      "class": "refusing",
+      "codes": [
+        "SI_OCCURRENCE_MISSING"
+      ]
+    },
+    "def_qual_two_occ_above": {
+      "class": "refusing",
+      "codes": [
+        "SI_OCCURRENCE_MISSING"
+      ]
+    },
+    "def_qual_two_occ_inside": {
+      "class": "generating"
+    },
+    "elab_constraint_formal_identity": {
+      "class": "refusing",
+      "codes": [
+        "CONSTRAINT_NAME_UNSAFE"
+      ]
+    },
+    "elab_fail_closed_probe": {
+      "class": "refusing",
+      "codes": [
+        "SI_EXPRESSION_SOURCE_UNSUPPORTED"
+      ]
+    },
+    "elab_finite_expression_multiplicity": {
+      "class": "refusing",
+      "codes": [
+        "SI_SELF_BINDING"
+      ]
+    },
+    "elab_identity_collision_probe": {
+      "class": "refusing",
+      "codes": [
+        "SI_ID_UNSTABLE"
+      ]
+    },
+    "elab_matrix_aggregations": {
+      "class": "generating"
+    },
+    "elab_matrix_c14": {
+      "class": "generating"
+    },
+    "elab_matrix_c16": {
+      "class": "generating"
+    },
+    "elab_matrix_c2": {
+      "class": "generating"
+    },
+    "elab_matrix_c21": {
+      "class": "generating"
+    },
+    "elab_matrix_c23": {
+      "class": "generating"
+    },
+    "elab_matrix_c3": {
+      "class": "generating"
+    },
+    "elab_matrix_c4": {
+      "class": "generating"
+    },
+    "elab_matrix_c5": {
+      "class": "generating"
+    },
+    "elab_matrix_c6": {
+      "class": "generating"
+    },
+    "elab_matrix_c7": {
+      "class": "generating"
+    },
+    "elab_namespace_distinguishability_probe": {
+      "class": "refusing",
+      "codes": [
+        "SYSML_NAMESPACE_NOT_DISTINGUISHABLE",
+        "SYSML_NAMESPACE_NOT_DISTINGUISHABLE"
+      ]
+    },
+    "elab_native_plural_scope": {
+      "class": "refusing",
+      "codes": [
+        "REGISTRY_CLASS_NAME_COLLISION"
+      ]
+    },
+    "elab_payload_identity": {
+      "class": "refusing",
+      "codes": [
+        "SI_CONSTRAINT_BLOCKED"
+      ]
+    },
+    "elab_shadowing_probe": {
+      "class": "generating"
+    },
+    "elab_unresolved_multiplicity": {
+      "class": "refusing",
+      "codes": [
+        "SI_MULTIPLICITY_UNRESOLVED"
+      ]
+    },
+    "ep_key_collision_probe": {
+      "class": "generating"
+    },
+    "exact_calc_ordering": {
+      "class": "generating"
+    },
+    "expr_compile_d5": {
+      "class": "generating"
+    },
+    "expr_paren_probe": {
+      "class": "generating"
+    },
+    "feature_metadata_multifile": {
+      "class": "generating"
+    },
+    "feature_typing_integrity": {
+      "class": "refusing",
+      "codes": [
+        "SI_TYPE_INVALID"
+      ]
+    },
+    "fusion_tea": {
+      "class": "generating"
+    },
+    "gate_a_d5": {
+      "class": "generating"
+    },
+    "golden": {
+      "class": "not_a_model",
+      "note": "The calc-compat parity golden file."
+    },
+    "indexed_bare_chain_operator": {
+      "class": "refusing",
+      "codes": [
+        "SI_INDEXED_SOURCE_UNSUPPORTED"
+      ]
+    },
+    "indexed_bare_chain_plural": {
+      "class": "refusing",
+      "codes": [
+        "SI_INDEXED_SOURCE_UNSUPPORTED"
+      ]
+    },
+    "indexed_bare_chain_singular": {
+      "class": "refusing",
+      "codes": [
+        "SI_INDEXED_SOURCE_UNSUPPORTED"
+      ]
+    },
+    "indexed_expression_source": {
+      "class": "refusing",
+      "codes": [
+        "SI_INDEXED_SOURCE_UNSUPPORTED"
+      ]
+    },
+    "instance_index_probe": {
+      "class": "refusing",
+      "codes": [
+        "SI_MULTIPLICITY_UNSUPPORTED"
+      ]
+    },
+    "item4_require": {
+      "class": "refusing",
+      "codes": [
+        "SI_EDGE_DANGLING"
+      ]
+    },
+    "modeled_default_fidelity": {
+      "class": "generating"
+    },
+    "multifile_group_identity": {
+      "class": "generating"
+    },
+    "multiplicity_writer_authority": {
+      "class": "refusing",
+      "codes": [
+        "SI_MULTIPLICITY_UNRESOLVED"
+      ]
+    },
+    "nested_occurrence_override_probe": {
+      "class": "generating"
+    },
+    "non_finite_literal": {
+      "class": "refusing",
+      "codes": [
+        "EXTRACTION_DIAGNOSTIC_BLOCKING"
+      ]
+    },
+    "numeric_evidence": {
+      "class": "generating"
+    },
+    "occurrence_calc_domain_derivation": {
+      "class": "refusing",
+      "codes": [
+        "PROJECTION_FAILED",
+        "SI_RENDERING_COLLISION"
+      ]
+    },
+    "occurrence_domain_derivation": {
+      "class": "refusing",
+      "codes": [
+        "SI_OCCURRENCE_MISSING"
+      ]
+    },
+    "occurrence_execution_matrix": {
+      "class": "generating"
+    },
+    "occurrence_multiplicity_incomparable": {
+      "class": "refusing",
+      "codes": [
+        "SI_REDEFINITION_INVALID"
+      ]
+    },
+    "predicate_unit_annotation": {
+      "class": "generating"
+    },
+    "predicate_unit_annotation_bare": {
+      "class": "generating"
+    },
+    "predicate_unit_annotation_incompatible": {
+      "class": "refusing",
+      "codes": [
+        "SI_CONSTRAINT_BLOCKED"
+      ]
+    },
+    "quoted_owner_formula": {
+      "class": "generating"
+    },
+    "retype_model": {
+      "class": "generating"
+    },
+    "sample_model": {
+      "class": "generating"
+    },
+    "shadowed_reference": {
+      "class": "generating"
+    },
+    "sibling_formal_cycle": {
+      "class": "refusing",
+      "codes": [
+        "SI_EDGE_DANGLING"
+      ]
+    },
+    "solar_battery_d5": {
+      "class": "generating"
+    },
+    "source_identity_absent_referent": {
+      "class": "refusing",
+      "codes": [],
+      "note": "SysIDE reports errors in the model, so run_codegen refuses at parsing, before any code is assigned."
+    },
+    "source_identity_binding_forms": {
+      "class": "refusing",
+      "codes": [],
+      "note": "SysIDE reports errors in the model, so run_codegen refuses at parsing, before any code is assigned."
+    },
+    "source_identity_indexed_source": {
+      "class": "refusing",
+      "codes": [
+        "SI_INDEXED_SOURCE_UNSUPPORTED"
+      ]
+    },
+    "source_identity_mixed_consumers": {
+      "class": "generating"
+    },
+    "source_identity_occurrence_ambiguity": {
+      "class": "refusing",
+      "codes": [
+        "SI_OCCURRENCE_MISSING",
+        "SI_OCCURRENCE_MISSING"
+      ]
+    },
+    "study_station": {
+      "class": "container",
+      "note": "The study-layer neutral fixture: a model, its generated package and study inputs."
+    },
+    "study_station/gates": {
+      "class": "not_a_model",
+      "note": "Study gate documents."
+    },
+    "study_station/models": {
+      "class": "generating"
+    },
+    "study_station/pkg": {
+      "class": "not_a_model",
+      "note": "The generated package of study_station/models."
+    },
+    "study_station/studies": {
+      "class": "not_a_model",
+      "note": "Study inputs (Python and TOML)."
+    },
+    "subset_profile_occurrence_seed": {
+      "class": "container",
+      "note": "The 34 occurrence parity seed models (design D6)."
+    },
+    "subset_profile_occurrence_seed/es001_admitted_part_assert": {
+      "class": "generating"
+    },
+    "subset_profile_occurrence_seed/es001_refused_calc_def_assert": {
+      "class": "refusing",
+      "codes": [
+        "SI_CONSTRAINT_UNATTACHED"
+      ]
+    },
+    "subset_profile_occurrence_seed/es001_refused_calc_usage_assert": {
+      "class": "refusing",
+      "codes": [
+        "SI_CONSTRAINT_UNATTACHED"
+      ]
+    },
+    "subset_profile_occurrence_seed/es003_admitted_fixed_arity": {
+      "class": "generating"
+    },
+    "subset_profile_occurrence_seed/es003_neighbor_exact_ordered_param": {
+      "class": "generating"
+    },
+    "subset_profile_occurrence_seed/es003_neighbor_ordered_param_scalar_arg": {
+      "class": "generating"
+    },
+    "subset_profile_occurrence_seed/es003_refused_ordered_nonunique": {
+      "class": "refusing",
+      "codes": [
+        "SI_EXPRESSION_SOURCE_UNSUPPORTED"
+      ]
+    },
+    "subset_profile_occurrence_seed/es004_admitted_exact_redefinition": {
+      "class": "generating"
+    },
+    "subset_profile_occurrence_seed/es004_admitted_uninstantiated_template": {
+      "class": "generating"
+    },
+    "subset_profile_occurrence_seed/es004_refused_range_parts": {
+      "class": "refusing",
+      "codes": [
+        "SI_MULTIPLICITY_UNSUPPORTED"
+      ]
+    },
+    "subset_profile_occurrence_seed/es004_refused_unbounded_parts": {
+      "class": "refusing",
+      "codes": [
+        "SI_MULTIPLICITY_UNRESOLVED"
+      ]
+    },
+    "subset_profile_occurrence_seed/es005_admitted_explicit_multiply": {
+      "class": "generating"
+    },
+    "subset_profile_occurrence_seed/es005_refused_product": {
+      "class": "refusing",
+      "codes": [
+        "SI_EXPRESSION_SOURCE_UNSUPPORTED"
+      ]
+    },
+    "subset_profile_occurrence_seed/es005_refused_size": {
+      "class": "refusing",
+      "codes": [
+        "SI_EXPRESSION_SOURCE_UNSUPPORTED"
+      ]
+    },
+    "subset_profile_occurrence_seed/es006_admitted_arithmetic_min": {
+      "class": "generating"
+    },
+    "subset_profile_occurrence_seed/es006_refused_conditional": {
+      "class": "refusing",
+      "codes": [
+        "SI_EVIDENCE_INCOMPLETE"
+      ]
+    },
+    "subset_profile_occurrence_seed/es007_admitted_numeric_and": {
+      "class": "generating"
+    },
+    "subset_profile_occurrence_seed/es007_refused_boolean_mixed": {
+      "class": "refusing",
+      "codes": [
+        "SI_CONSTRAINT_BLOCKED"
+      ]
+    },
+    "subset_profile_occurrence_seed/es010_admitted_numeric_value": {
+      "class": "generating"
+    },
+    "subset_profile_occurrence_seed/es010_omitted_string_value": {
+      "class": "generating"
+    },
+    "subset_profile_occurrence_seed/es010_refused_string_calc_input": {
+      "class": "refusing",
+      "codes": [
+        "PROJECTION_FAILED",
+        "SI_RENDERING_COLLISION"
+      ]
+    },
+    "subset_profile_occurrence_seed/f1_abort_incomparable_typings": {
+      "class": "refusing",
+      "codes": [
+        "SI_REDEFINITION_INVALID"
+      ]
+    },
+    "subset_profile_occurrence_seed/f1_abort_recursive_containment": {
+      "class": "refusing",
+      "codes": [
+        "SI_CONTAINMENT_RECURSIVE"
+      ]
+    },
+    "subset_profile_occurrence_seed/f1_abort_specialization_cycle": {
+      "class": "refusing",
+      "codes": [
+        "SI_CONTAINMENT_RECURSIVE"
+      ]
+    },
+    "subset_profile_occurrence_seed/f1_calc_redefined_everywhere": {
+      "class": "refusing",
+      "codes": [
+        "PROJECTION_FAILED",
+        "SI_RENDERING_COLLISION"
+      ]
+    },
+    "subset_profile_occurrence_seed/f1_effective_declaration_slot": {
+      "class": "refusing",
+      "codes": [
+        "NOTHING_TO_GENERATE"
+      ]
+    },
+    "subset_profile_occurrence_seed/f1_inherited_multiplicity_redef": {
+      "class": "refusing",
+      "codes": [
+        "NOTHING_TO_GENERATE"
+      ]
+    },
+    "subset_profile_occurrence_seed/f1_inherited_ordered_redef": {
+      "class": "refusing",
+      "codes": [
+        "NOTHING_TO_GENERATE"
+      ]
+    },
+    "subset_profile_occurrence_seed/f1_invalid_redefinition_family": {
+      "class": "refusing",
+      "codes": [],
+      "note": "SysIDE reports errors in the model, so run_codegen refuses at parsing, before any code is assigned."
+    },
+    "subset_profile_occurrence_seed/f1_multiplicity_only_on_redef": {
+      "class": "refusing",
+      "codes": [
+        "NOTHING_TO_GENERATE"
+      ]
+    },
+    "subset_profile_occurrence_seed/f1_nested_subtypes": {
+      "class": "generating"
+    },
+    "subset_profile_occurrence_seed/f1_referenced_bounds": {
+      "class": "refusing",
+      "codes": [
+        "SI_MULTIPLICITY_UNRESOLVED"
+      ]
+    },
+    "subset_profile_occurrence_seed/f1_zero_and_bad_multiplicities": {
+      "class": "refusing",
+      "codes": [
+        "SI_MULTIPLICITY_UNSUPPORTED"
+      ]
+    },
+    "subset_profile_occurrence_seed/unmapped_expression_calc_arg": {
+      "class": "refusing",
+      "codes": [
+        "SI_EXPRESSION_SOURCE_UNSUPPORTED"
+      ]
+    },
+    "two_same_leaf_producers": {
+      "class": "refusing",
+      "codes": [],
+      "note": "SysIDE reports errors in the model, so run_codegen refuses at parsing, before any code is assigned."
+    },
+    "u1_usage_qual_self": {
+      "class": "generating"
+    },
+    "u2_usage_qual_two_owner_occ": {
+      "class": "refusing",
+      "codes": [
+        "SI_OCCURRENCE_MISSING",
+        "SI_OCCURRENCE_MISSING"
+      ]
+    },
+    "u3_usage_qual_multi_occ": {
+      "class": "refusing",
+      "codes": [
+        "SI_OCCURRENCE_MISSING"
+      ]
+    },
+    "u3b_usage_qual_single_occ": {
+      "class": "refusing",
+      "codes": [
+        "SI_OCCURRENCE_MISSING"
+      ]
+    },
+    "u4_usage_qual_pkg_sibling": {
+      "class": "generating"
+    },
+    "u5_usage_qual_named_sibling": {
+      "class": "generating"
+    },
+    "u6_usage_qual_crossnamed": {
+      "class": "generating"
+    },
+    "u7_both_spellings": {
+      "class": "generating"
+    },
+    "unit_annotation_lanes": {
+      "class": "generating"
+    },
+    "unit_annotation_lanes_bare": {
+      "class": "generating"
+    },
+    "unit_lane_a9": {
+      "class": "generating"
+    },
+    "unit_lane_computed_disagreement": {
+      "class": "generating"
+    },
+    "unit_lane_constraint_disagreement": {
+      "class": "generating"
+    },
+    "unit_lane_radius": {
+      "class": "generating"
+    },
+    "unit_lane_source_identity": {
+      "class": "generating"
+    },
+    "unresolvable_attr_probe": {
+      "class": "refusing",
+      "codes": [
+        "REGISTRY_CLASS_NAME_COLLISION"
+      ],
+      "note": "The recapture batch lists it as captured: elaboration seals a graph, and run_codegen then refuses at generation."
+    },
+    "usage_owned_reference_consumers": {
+      "class": "generating"
+    },
+    "usage_owner_bare_alias": {
+      "class": "generating"
+    },
+    "usage_owner_bare_alias_arrayed": {
+      "class": "refusing",
+      "codes": [
+        "SI_OCCURRENCE_AMBIGUOUS"
+      ]
+    },
+    "usage_owner_bare_alias_def_owned": {
+      "class": "generating"
+    },
+    "usage_owner_bare_subset_def_owned": {
+      "class": "generating"
+    },
+    "usage_owner_calc_usage_leaf": {
+      "class": "refusing",
+      "codes": [
+        "SI_OCCURRENCE_MISSING"
+      ]
+    },
+    "v6_recapture_batch": {
+      "class": "not_a_model",
+      "note": "The batch record of the 37 corpus fixtures; it classes them."
+    },
+    "wi014_toy": {
+      "class": "generating"
+    },
+    "zero_output_calc": {
+      "class": "refusing",
+      "codes": [
+        "SI_EVIDENCE_INCOMPLETE"
+      ]
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "binding-source__expression_source__owner_other__calc_definition_owner",
+  "home": "agentic",
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "stubs": [
+      {
+        "output": "fx::Total::r",
+        "reason": "compile_invocation"
+      }
+    ]
+  }
+}

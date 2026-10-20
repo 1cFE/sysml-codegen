@@ -13,7 +13,8 @@ written.
 
 from __future__ import annotations
 
-import ast
+from collections.abc import Iterable
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 from uuid import NAMESPACE_URL, uuid5
@@ -35,8 +36,7 @@ from sysml_codegen.elaboration.occurrence import (
 from sysml_codegen.elaboration.project import ProjectionError, _Projection
 from sysml_codegen.orchestration import elaborated_pipeline
 from tests.conftest import requires_license
-
-ROOT = Path(__file__).resolve().parents[2]
+from tests.helpers.subset_profile import site_scan
 
 #: The codes the re-audit named as reaching the user without provenance. A raise
 #: site for one of these must pass both ``reference`` and ``location``.
@@ -49,63 +49,42 @@ GUARDED_CODES = frozenset(
     }
 )
 
-#: Error classes that fix their code at construction rather than taking it.
-CODE_BY_CLASS = {
-    "InvalidRedefinitionFamilyError": "SI_REDEFINITION_INVALID",
-    "RecursiveContainmentError": "SI_CONTAINMENT_RECURSIVE",
-}
-
 GUARDED_FILES = (
-    "src/sysml_codegen/elaboration/occurrence.py",
-    "src/sysml_codegen/elaboration/elaborate.py",
-    "src/sysml_codegen/elaboration/project.py",
+    "sysml_codegen/elaboration/occurrence.py",
+    "sysml_codegen/elaboration/elaborate.py",
+    "sysml_codegen/elaboration/project.py",
 )
 
 
-def _guarded_code(call: ast.Call) -> str | None:
-    """The guarded code one refusal-constructing call carries, if it carries one."""
-    name = call.func.id if isinstance(call.func, ast.Name) else None
-    if name in CODE_BY_CLASS:
-        return CODE_BY_CLASS[name]
-    for argument in call.args:
-        if (
-            isinstance(argument, ast.Attribute)
-            and isinstance(argument.value, ast.Name)
-            and argument.value.id == "ElaborationCode"
-            and argument.attr in GUARDED_CODES
-        ):
-            return argument.attr
-    return None
+def _sites_missing_provenance(sites: Iterable[site_scan.Site]) -> list[str]:
+    """Guarded sites that do not pass both provenance keywords.
 
-
-def _sites_missing_provenance() -> list[str]:
-    missing: list[str] = []
-    for relative in GUARDED_FILES:
-        tree = ast.parse((ROOT / relative).read_text())
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Call):
-                continue
-            code = _guarded_code(node)
-            if code is None:
-                continue
-            keywords = {keyword.arg for keyword in node.keywords}
-            if not {"reference", "location"} <= keywords:
-                missing.append(f"{relative}:{node.lineno} ({code})")
-    return missing
+    A query over the site scan (``tests/helpers/subset_profile/site_scan.py``), which also
+    resolves classes that fix their code at construction, such as
+    ``InvalidRedefinitionFamilyError``.
+    """
+    return [
+        f"{site.file}:{site.line} ({site.code})"
+        for site in sites
+        if site.file in GUARDED_FILES
+        and site.code in GUARDED_CODES
+        and not {"reference", "location"} <= site.keywords
+    ]
 
 
 def test_every_guarded_refusal_site_attaches_reference_and_location() -> None:
-    assert _sites_missing_provenance() == []
+    assert _sites_missing_provenance(site_scan.scan().codegen()) == []
 
 
 def test_the_guard_fails_when_a_site_drops_its_provenance() -> None:
     """The guard's own kill proof: a stripped site is detected, not tolerated."""
-    stripped = ast.parse(
-        "raise InvalidRedefinitionFamilyError('redefinition family contains a cycle')\n"
+    site = next(
+        site
+        for site in site_scan.scan().codegen()
+        if site.code == "SI_REDEFINITION_INVALID" and site.channel == "coded-fixed"
     )
-    [call] = [node for node in ast.walk(stripped) if isinstance(node, ast.Call)]
-    assert _guarded_code(call) == "SI_REDEFINITION_INVALID"
-    assert not {"reference", "location"} <= {keyword.arg for keyword in call.keywords}
+    stripped = replace(site, keywords=site.keywords - {"location"})
+    assert _sites_missing_provenance([stripped]) == [f"{site.file}:{site.line} ({site.code})"]
 
 
 def _declaration(name: str) -> DeclarationId:

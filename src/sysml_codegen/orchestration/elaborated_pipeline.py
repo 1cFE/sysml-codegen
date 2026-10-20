@@ -16,14 +16,15 @@ the caller's model roots live, the sealed admission manifest during capture.
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from dataclasses import replace
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from agentic_mbse import SemanticEvidenceCode, SemanticEvidenceError
 from agentic_mbse.sysml.syside_adapter import get_syside
 
 from sysml_codegen.analysis.source_referent import map_live_source_referent
-from sysml_codegen.core.errors import CodeGenerationError, SysMLParsingError
+from sysml_codegen.core.errors import CodeGenerationError, GenerationCode, SysMLParsingError
 from sysml_codegen.elaboration import (
     Diagnostic,
     ElaborationCode,
@@ -32,7 +33,7 @@ from sysml_codegen.elaboration import (
     GraphValidationError,
     project,
 )
-from sysml_codegen.elaboration.diagnostics import ElaborationInvariantError
+from sysml_codegen.elaboration.diagnostics import ElaborationInvariantError, SiteReason
 from sysml_codegen.elaboration.elaborate import (
     _build_instance_graph,
     unexpected_public_failure,
@@ -52,6 +53,9 @@ from sysml_codegen.extraction.errors import ExactTypeError
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.extraction.source_manifest import SourceAdmission
 from sysml_codegen.resolution.models import ComputationGraph
+
+if TYPE_CHECKING:
+    from sysml_codegen.extraction.source_evidence import ReadinessFinding
 
 __all__ = [
     "build_elaborated_pipeline",
@@ -191,7 +195,9 @@ def require_executable_content(graph: InstanceGraph, calc_definitions: Sequence[
         raise CodeGenerationError(
             "No calculation, constraint, or calculation definition found in models. "
             "There is nothing to generate: check that the model paths include the "
-            "library and design files you meant to load."
+            "library and design files you meant to load.",
+            code=GenerationCode.NOTHING_TO_GENERATE,
+            reason=SiteReason.ELABORATION_NO_EXECUTABLE_CONTENT,
         )
 
 
@@ -307,6 +313,7 @@ def elaborate_loaded_extractor(
                         reference=error.reference,
                         source_file=(error.location[0] if error.location is not None else None),
                         source_line=(error.location[1] if error.location is not None else None),
+                        reason=error.reason,
                     ),
                     source_referents,
                 ),
@@ -325,6 +332,7 @@ def elaborate_loaded_extractor(
                         reference=error.reference,
                         source_file=(error.location[0] if error.location is not None else None),
                         source_line=(error.location[1] if error.location is not None else None),
+                        reason=error.reason,
                     ),
                     source_referents,
                 ),
@@ -343,6 +351,7 @@ def elaborate_loaded_extractor(
                         reference=error.reference,
                         source_file=(error.location[0] if error.location is not None else None),
                         source_line=(error.location[1] if error.location is not None else None),
+                        reason=error.reason,
                     ),
                     source_referents,
                 ),
@@ -395,25 +404,35 @@ _EVIDENCE_CODES = {
     ),
 }
 
+#: Total over ``SemanticEvidenceCode``: a relayed agentic-mbse refusal carries no site
+#: reason of its own, so its code names it (EXEC-SUBSET-CONTRACT Item 2a D8).
+_EVIDENCE_REASONS = {
+    SemanticEvidenceCode.METATYPE_CHECK_FAILED: SiteReason.EVIDENCE_METATYPE_CHECK_FAILED,
+    SemanticEvidenceCode.EXPRESSION_KIND_UNSUPPORTED: (
+        SiteReason.EVIDENCE_EXPRESSION_KIND_UNSUPPORTED
+    ),
+    SemanticEvidenceCode.OPERAND_ITERATION_FAILED: SiteReason.EVIDENCE_OPERAND_ITERATION_FAILED,
+    SemanticEvidenceCode.EXPRESSION_DEPTH_EXHAUSTED: (
+        SiteReason.EVIDENCE_EXPRESSION_DEPTH_EXHAUSTED
+    ),
+    SemanticEvidenceCode.RESOLVED_TARGET_MISSING: SiteReason.EVIDENCE_RESOLVED_TARGET_MISSING,
+    SemanticEvidenceCode.DOCUMENT_TIER_MISSING: SiteReason.EVIDENCE_DOCUMENT_TIER_MISSING,
+    SemanticEvidenceCode.DOCUMENT_TIER_UNKNOWN: SiteReason.EVIDENCE_DOCUMENT_TIER_UNKNOWN,
+    SemanticEvidenceCode.RESOLVED_LEAF_MISSING: SiteReason.EVIDENCE_RESOLVED_LEAF_MISSING,
+    SemanticEvidenceCode.INDEXED_REFERENCE_UNSUPPORTED: (
+        SiteReason.EVIDENCE_INDEXED_REFERENCE_UNSUPPORTED
+    ),
+}
+
 
 def _readiness_with_referent(
-    finding: Any,
+    finding: ReadinessFinding,
     source_referents: Mapping[str, str],
-) -> Any:
-    from sysml_codegen.extraction.source_evidence import ReadinessFinding
-
-    source_file = finding.source_file
-    if source_file is not None:
-        source_file = _lookup_referent(source_file, source_referents)
-    return ReadinessFinding(
-        code=finding.code,
-        usage_qualified_name=finding.usage_qualified_name,
-        param_name=finding.param_name,
-        detail=finding.detail,
-        reference=finding.reference,
-        source_file=source_file,
-        source_line=finding.source_line,
-    )
+) -> ReadinessFinding:
+    """Return one finding with a portable source referent; every other field is kept."""
+    if finding.source_file is None:
+        return finding
+    return replace(finding, source_file=_lookup_referent(finding.source_file, source_referents))
 
 
 def _semantic_evidence_diagnostic(
@@ -430,6 +449,7 @@ def _semantic_evidence_diagnostic(
             reference=error.reference,
             source_file=(error.location[0] if error.location is not None else None),
             source_line=(error.location[1] if error.location is not None else None),
+            reason=_EVIDENCE_REASONS[error.code],
         ),
         source_referents,
     )
@@ -439,19 +459,14 @@ def _diagnostic_with_referent(
     diagnostic: Diagnostic,
     source_referents: Mapping[str, str],
 ) -> Diagnostic:
-    """Return one diagnostic with a portable source referent, failing closed."""
-    source_file = diagnostic.source_file
-    if source_file is not None:
-        source_file = _lookup_referent(source_file, source_referents)
-    return Diagnostic(
-        code=diagnostic.code,
-        consumer=diagnostic.consumer,
-        consumer_display=diagnostic.consumer_display,
-        param_name=diagnostic.param_name,
-        detail=diagnostic.detail,
-        reference=diagnostic.reference,
-        source_file=source_file,
-        source_line=diagnostic.source_line,
+    """Return one diagnostic with a portable source referent, failing closed.
+
+    Every other field, ``reason`` included, is kept.
+    """
+    if diagnostic.source_file is None:
+        return diagnostic
+    return replace(
+        diagnostic, source_file=_lookup_referent(diagnostic.source_file, source_referents)
     )
 
 

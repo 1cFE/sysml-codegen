@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -32,7 +33,11 @@ from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.core.models import AutoImplContext, AutoImplOutput, AutoImplStep
 from sysml_codegen.core.type_mapping import QUALIFIED_SYSML_TO_PYTHON
-from sysml_codegen.elaboration.diagnostics import ElaborationInvariantError
+from sysml_codegen.elaboration.diagnostics import (
+    ElaborationInvariantError,
+    ManualStubNotice,
+    SiteReason,
+)
 from sysml_codegen.elaboration.display import display_name, display_qualified_name
 from sysml_codegen.elaboration.expression_evidence import (
     ExpressionEvidenceInventory,
@@ -122,6 +127,31 @@ __all__ = [
     "unexpected_public_failure",
 ]
 
+logger = logging.getLogger(__name__)
+
+
+def _announce_stubs(calculation: str, compilation: ExactCalcDefCompilationResult) -> None:
+    """Log one ``ManualStubNotice`` per member of the calc def that compiled to a stub."""
+    for item in compilation.output_results:
+        if item.stub_reason is None:
+            continue
+        notice = ManualStubNotice(
+            calculation=calculation,
+            output=item.output_name,
+            reason=item.stub_reason,
+            detail=str(item.unsupported_reason),
+            intermediate=item.is_undeclared_intermediate,
+        )
+        logger.warning(
+            "Calculation %s output %s is a manual stub: %s (reason: %s)",
+            notice.calculation,
+            notice.output,
+            notice.detail,
+            notice.reason.value,
+            extra={"manual_stub": notice},
+        )
+
+
 
 class ElaborationError(Exception):
     """A strict elaboration stopped on every collected blocking binding form."""
@@ -140,8 +170,13 @@ def _render_readiness_finding(finding: ReadinessFinding) -> str:
     )
     return (
         f"{finding.code.value}: {finding.usage_qualified_name}.{finding.param_name}"
-        f"{reference}: {finding.detail}{location}"
+        f"{reference}: {finding.detail}{location}{_reason_suffix(finding.reason)}"
     )
+
+
+def _reason_suffix(reason: SiteReason | None) -> str:
+    """The rendered site reason, or nothing for a site that has none yet."""
+    return f" (reason: {reason.value})" if reason is not None else ""
 
 
 class ElaborationDiagnosticError(Exception):
@@ -186,6 +221,7 @@ def unexpected_public_failure(error: Exception) -> ElaborationDiagnosticError:
                 reference=None,
                 source_file=None,
                 source_line=None,
+                reason=SiteReason.INTERNAL_FAILURE_UNCLASSIFIED,
             ),
         )
     )
@@ -201,7 +237,7 @@ def _render_public_diagnostic(diagnostic: Diagnostic) -> str:
     )
     return (
         f"{diagnostic.code.value}: {diagnostic.consumer_display}{reference}: "
-        f"{diagnostic.detail}{location}"
+        f"{diagnostic.detail}{location}{_reason_suffix(diagnostic.reason)}"
     )
 
 
@@ -227,9 +263,12 @@ def _group_names(elements: Sequence[Any]) -> str:
 
 
 class _ReferenceResolutionError(Exception):
-    def __init__(self, code: ElaborationCode, detail: str) -> None:
+    def __init__(
+        self, code: ElaborationCode, detail: str, *, reason: SiteReason | None = None
+    ) -> None:
         self.code = code
         self.detail = detail
+        self.reason = reason
         super().__init__(detail)
 
 
@@ -646,6 +685,7 @@ class _ExactElaborator:
                         ElaborationCode.SI_EDGE_DANGLING,
                         "constraint profile selected an unrecognized definition UUID "
                         f"{item.effective_definition_id}",
+                        reason=SiteReason.ELABORATION_CONSTRAINT_DEFINITION_UNINDEXED,
                     )
             result[raw_usage_id] = _ConstraintAssociation(
                 usage_id=stable_usage_ids[raw_usage_id],
@@ -674,6 +714,7 @@ class _ExactElaborator:
                 raise ElaborationInvariantError(
                     ElaborationCode.SI_ID_MISSING,
                     f"calculation payload {calc_def.qualified_name!r} has no definition UUID",
+                    reason=SiteReason.ELABORATION_CALC_DEF_ID_MISSING,
                 )
             definition_id = DeclarationId(calc_def.element_id)
             if definition_id in result:
@@ -691,6 +732,7 @@ class _ExactElaborator:
                             ElaborationCode.SI_ID_MISSING,
                             f"calculation {definition_id.to_wire()} {role} "
                             f"{attribute.name!r} has no declaration UUID",
+                            reason=SiteReason.ELABORATION_CALC_PARAMETER_ID_MISSING,
                         )
             result[definition_id] = calc_def
         return result
@@ -706,12 +748,14 @@ class _ExactElaborator:
                 raise ElaborationInvariantError(
                     ElaborationCode.SI_EDGE_DANGLING,
                     f"calculation {definition_id.to_wire()} exact compilation failed: {error}",
+                    reason=error.reason if isinstance(error, CompilationError) else None,
                 ) from error
             if DeclarationId(compilation.definition_id) != definition_id:
                 raise ElaborationInvariantError(
                     ElaborationCode.SI_EDGE_DANGLING,
                     f"calculation {definition_id.to_wire()} compilation identity disagrees",
                 )
+            _announce_stubs(str(calc_def.qualified_name), compilation)
             result[definition_id] = compilation
         return result
 
@@ -817,6 +861,7 @@ class _ExactElaborator:
             f"{reference or '<unnamed owner>'}",
             reference=reference,
             location=location,
+            reason=SiteReason.ELABORATION_CONSTRAINT_OWNER_UNMAPPED,
         )
 
     def _display_path(self, scope: ScopeId, name: str) -> str:
@@ -949,6 +994,7 @@ class _ExactElaborator:
                 f"{_group_names(candidates)}",
                 reference=reference,
                 location=location,
+                reason=SiteReason.ELABORATION_VALUE_WRITERS_INCOMPARABLE,
             )
         return candidates[0]
 
@@ -1168,6 +1214,8 @@ class _ExactElaborator:
                             self._scope_display[scope],
                             None,
                             error.detail,
+                            location=SysideAdapter.get_source_location(feature),
+                            reason=SiteReason.ELABORATION_DEEP_OVERRIDE_TARGET_MISSING,
                         )
                         continue
                     if not all(isinstance(edge, NodeRef) for edge in edges):
@@ -1177,6 +1225,8 @@ class _ExactElaborator:
                             self._scope_display[scope],
                             None,
                             "deep literal override does not target an attribute node",
+                            location=SysideAdapter.get_source_location(feature),
+                            reason=SiteReason.ELABORATION_DEEP_OVERRIDE_TARGET_COMPUTED,
                         )
                         continue
                     for edge in edges:
@@ -1246,6 +1296,7 @@ class _ExactElaborator:
                 raise ElaborationInvariantError(
                     ElaborationCode.SI_EDGE_DANGLING,
                     f"calculation definition {definition_id.to_wire()} has no exact payload",
+                    reason=SiteReason.ELABORATION_CALC_DEF_PAYLOAD_MISSING,
                 )
             outputs, output_names, output_metadata = self._output_ports(
                 node_id, definition, calc_data
@@ -1356,6 +1407,7 @@ class _ExactElaborator:
                         node.display_path,
                         None,
                         f"constraint profile blocked execution: {reasons}",
+                        reason=SiteReason.CONSTRAINT_PROFILE_BLOCKED,
                     )
                 self._collect_bound_members(usage, definition, node)
                 if definition is not None and node.source_form == "definition_typed":
@@ -1633,6 +1685,7 @@ class _ExactElaborator:
                 f"attachment: {record.disposition.reason}",
                 reference=record.usage_qualified_name,
                 location=(record.source_file, record.source_line),
+                reason=SiteReason.ELABORATION_ASSERTED_CONSTRAINT_UNATTACHED,
             )
 
     @staticmethod
@@ -1674,9 +1727,12 @@ class _ExactElaborator:
             and getattr(target, "qualified_name", None) is not None
         ]
         if len(candidates) > 1 or (required and not candidates):
-            raise ValueError(
+            raise ElaborationInvariantError(
+                ElaborationCode.SI_TYPE_INVALID,
                 f"{getattr(usage, 'qualified_name', None)!r} has "
-                f"{len(candidates)} exact {type_name} typings"
+                f"{len(candidates)} exact {type_name} typings",
+                location=SysideAdapter.get_source_location(usage),
+                reason=SiteReason.ELABORATION_USAGE_DEFINITION_TYPING_COUNT,
             )
         return candidates[0] if candidates else None
 
@@ -1773,6 +1829,7 @@ class _ExactElaborator:
                     ElaborationCode.SI_EDGE_DANGLING,
                     f"constraint {usage_qn!r} exact definition association disagrees: "
                     f"live={live_definition_id}, profile={selected_definition_id}",
+                    reason=SiteReason.ELABORATION_CONSTRAINT_DEFINITION_DISAGREES,
                 )
         decision = association.decision
         predicate_ir = decision.effective_predicate
@@ -1860,6 +1917,7 @@ class _ExactElaborator:
                 raise ElaborationInvariantError(
                     ElaborationCode.SI_EDGE_DANGLING,
                     f"calculation output {output_id.to_wire()} has no exact metadata",
+                    reason=SiteReason.ELABORATION_CALC_OUTPUT_METADATA_MISSING,
                 )
             metadata[output_id] = PortMetadata(
                 python_type=extracted.python_type,
@@ -1890,6 +1948,7 @@ class _ExactElaborator:
                 raise ElaborationInvariantError(
                     ElaborationCode.SI_EDGE_DANGLING,
                     f"bound input {member_id.to_wire()} has no selected definition",
+                    reason=SiteReason.ELABORATION_BOUND_INPUT_DEFINITION_MISSING,
                 )
             effective_formal_id = self._effective_formal_for_member(definition, member_id)
             structural_formal_id = (
@@ -1936,7 +1995,13 @@ class _ExactElaborator:
             literal = extract_literal_value(expression)
             unsupported = self._unsupported_code(evidence)
             if unsupported is not None:
-                self._record_readiness(consumer, port, unsupported, evidence)
+                self._record_readiness(
+                    consumer,
+                    port,
+                    unsupported,
+                    evidence,
+                    reason=SiteReason.BINDING_SOURCE_FORM_UNSUPPORTED,
+                )
                 continue
             self._pending_bindings.append(
                 _PendingBinding(
@@ -2057,6 +2122,7 @@ class _ExactElaborator:
             raise ElaborationInvariantError(
                 ElaborationCode.SI_EDGE_DANGLING,
                 f"feature {root_id.to_wire()} has no exact live declaration",
+                reason=SiteReason.ELABORATION_FEATURE_DECLARATION_UNINDEXED,
             )
         type_targets = [
             target
@@ -2067,6 +2133,7 @@ class _ExactElaborator:
             raise ElaborationInvariantError(
                 ElaborationCode.SI_EDGE_DANGLING,
                 f"feature {root_id.to_wire()} has {len(type_targets)} exact typings",
+                reason=SiteReason.ELABORATION_FEATURE_TYPING_COUNT,
             )
         type_name = str(getattr(type_targets[0], "qualified_name", None) or "")
         python_type = QUALIFIED_SYSML_TO_PYTHON.get(type_name)
@@ -2074,6 +2141,7 @@ class _ExactElaborator:
             raise ElaborationInvariantError(
                 ElaborationCode.SI_EDGE_DANGLING,
                 f"feature {root_id.to_wire()} has unsupported exact type {type_name!r}",
+                reason=SiteReason.ELABORATION_FEATURE_TYPE_UNSUPPORTED,
             )
         return cast(str, python_type)
 
@@ -2095,6 +2163,7 @@ class _ExactElaborator:
                 ElaborationCode.SI_EDGE_DANGLING,
                 f"input slot {slot!r} has no effective formal on selected definition "
                 f"{declaration_id_for(definition).to_wire()}",
+                reason=SiteReason.ELABORATION_BOUND_INPUT_FORMAL_MISSING,
             )
         return selected
 
@@ -2201,6 +2270,8 @@ class _ExactElaborator:
         port: ConsumerPortId,
         code: ReadinessCode,
         evidence: BindingSourceEvidence,
+        *,
+        reason: SiteReason,
     ) -> None:
         key = (DeclarationId(evidence.formal.element_id), code)
         if key in self._readiness_keys:
@@ -2237,6 +2308,7 @@ class _ExactElaborator:
                     and evidence.location is not None
                     else None
                 ),
+                reason=reason,
             )
         )
         if not self._strict:
@@ -2314,15 +2386,19 @@ class _ExactElaborator:
             raise _ReferenceResolutionError(
                 ElaborationCode.SI_OCCURRENCE_MISSING,
                 f"leaf declaration {reference.leaf_id.to_wire()} is absent from the element index",
+                reason=SiteReason.ELABORATION_REFERENCE_LEAF_UNINDEXED,
             )
         try:
             address = self._reference_address(reference, leaf)
         except OccurrenceResolutionError as error:
-            raise _ReferenceResolutionError(error.code, error.detail) from error
+            raise _ReferenceResolutionError(
+                error.code, error.detail, reason=error.reason
+            ) from error
         if no_prefix and self._no_prefix_needs_modeled_prefix(address, consumer_scope):
             raise _ReferenceResolutionError(
                 ElaborationCode.SI_OCCURRENCE_MISSING,
                 "a package-anchored nested target requires its modeled containment prefix",
+                reason=SiteReason.ELABORATION_BARE_REFERENCE_PREFIX_REQUIRED,
             )
         try:
             scopes = self._occurrences.resolve_address(
@@ -2332,7 +2408,9 @@ class _ExactElaborator:
             )
             slot = self._slots.slot_of(reference.leaf_id)
         except OccurrenceResolutionError as error:
-            raise _ReferenceResolutionError(error.code, error.detail) from error
+            raise _ReferenceResolutionError(
+                error.code, error.detail, reason=error.reason
+            ) from error
         except KeyError:
             raise _ReferenceResolutionError(
                 ElaborationCode.SI_OCCURRENCE_MISSING,
@@ -2345,6 +2423,7 @@ class _ExactElaborator:
             raise _ReferenceResolutionError(
                 ElaborationCode.SI_OCCURRENCE_MISSING,
                 f"exact owner address has no target for leaf {reference.leaf_id.to_wire()}",
+                reason=SiteReason.ELABORATION_OWNER_ADDRESS_TARGET_MISSING,
             )
         if not plural and len(edges) != 1:
             raise _ReferenceResolutionError(
@@ -2429,7 +2508,9 @@ class _ExactElaborator:
                     plural=plural,
                 )
             except OccurrenceResolutionError as error:
-                raise _ReferenceResolutionError(error.code, error.detail) from error
+                raise _ReferenceResolutionError(
+                    error.code, error.detail, reason=error.reason
+                ) from error
         matches: dict[
             tuple[ScopeId, NodeId, OutputPortId, DeclarationId],
             _CalculationOutputProducer,
@@ -2474,6 +2555,7 @@ class _ExactElaborator:
             raise _ReferenceResolutionError(
                 ElaborationCode.SI_OCCURRENCE_MISSING,
                 f"exact output {output_id.to_wire()} has no producer in the consumer domain",
+                reason=SiteReason.ELABORATION_CALCULATION_OUTPUT_UNPRODUCED,
             )
         if not plural and len(records) != 1:
             identities = [
@@ -2483,6 +2565,7 @@ class _ExactElaborator:
             raise _ReferenceResolutionError(
                 ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
                 f"exact output {output_id.to_wire()} has {len(records)} producers: {identities}",
+                reason=SiteReason.ELABORATION_CALCULATION_OUTPUT_AMBIGUOUS,
             )
         return [ProducerRef(item.port_id) for item in records]
 
@@ -2527,6 +2610,7 @@ class _ExactElaborator:
                     error.detail,
                     reference=use.authored_text,
                     location=use.location,
+                    reason=error.reason,
                 )
                 continue
             pending.node.alias_target = edges[0]
@@ -2548,6 +2632,7 @@ class _ExactElaborator:
                     pending.node.display_name,
                     error.detail,
                     location=pending.location,
+                    reason=error.reason,
                 )
         for pending in self._pending_aliases:
             if pending.node.node_id in resolved_aliases:
@@ -2600,6 +2685,7 @@ class _ExactElaborator:
                         error.detail,
                         reference=use.authored_text,
                         location=use.location,
+                        reason=error.reason,
                     )
                     continue
                 leaf_fact = path.leaf
@@ -2650,6 +2736,7 @@ class _ExactElaborator:
                             error.detail,
                             reference=use.authored_text,
                             location=use.location,
+                            reason=error.reason,
                         )
                         continue
             if isinstance(pending.consumer, CalcNode):
@@ -2670,6 +2757,7 @@ class _ExactElaborator:
                         ElaborationCode.SI_EDGE_DANGLING,
                         f"authored literal binding {evidence.formal.qualified_name!r} "
                         "reached wiring with no literal value",
+                        reason=SiteReason.ELABORATION_LITERAL_BINDING_EMPTY,
                     )
                 pending.consumer.inputs[pending.port] = LiteralInput(evidence.value)
                 continue
@@ -2701,6 +2789,7 @@ class _ExactElaborator:
                     error.detail,
                     reference=use.authored_text,
                     location=pending.location,
+                    reason=error.reason,
                 )
                 continue
             pending.consumer.inputs[pending.port] = edge
@@ -2726,6 +2815,7 @@ class _ExactElaborator:
         *,
         reference: str | None = None,
         location: tuple[str, int] | None = None,
+        reason: SiteReason | None = None,
     ) -> None:
         diagnostic = Diagnostic(
             code=code,
@@ -2736,6 +2826,7 @@ class _ExactElaborator:
             reference=reference,
             source_file=location[0] if location is not None else None,
             source_line=location[1] if location is not None else None,
+            reason=reason,
         )
         if diagnostic not in self._graph.diagnostics:
             self._graph.diagnostics.append(diagnostic)

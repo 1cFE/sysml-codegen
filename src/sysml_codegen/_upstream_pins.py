@@ -15,6 +15,8 @@ Where each pin is read at runtime, after the Item 7 retirement:
 - `EXPRESSION_IR_SCHEMA_VERSION` and `PROFILE_SEMANTIC_VERSION` are the v6
   envelope's authority markers (`snapshot/envelope.py`), and the profile version
   also names the admitting profile in `generation/predicate_compiler.py`.
+- `SUBSET_PROFILE_VERSION` is checked when `subset_profile_adapter.py` is imported, which
+  nothing on the generate route does in EXEC-SUBSET-CONTRACT Item 2a.
 - `CONSTRAINT_FACTS_SCHEMA_VERSION` has **no runtime consumer**. Its guard lived
   in the deleted `snapshot/loader.py`, and the v6 envelope seals no
   `ConstraintFacts`, so nothing downstream can be stale against it. It is kept
@@ -59,6 +61,12 @@ EXPRESSION_IR_SCHEMA_VERSION = "expression-ir/v1"
 #: `agentic_mbse.sysml.executable_profile.PROFILE_SEMANTIC_VERSION`.
 PROFILE_SEMANTIC_VERSION = "executable-profile/v4"
 
+#: `agentic_mbse.sysml.subset_profile.SUBSET_PROFILE_VERSION`: the subset screen's decision
+#: version, which `subset_profile_adapter.REASON_MAPPING` was reviewed against. It names the
+#: contract; the agentic-mbse package version does not (EXEC-SUBSET-CONTRACT Item 2a D12). The
+#: adapter refuses to import against any other value.
+SUBSET_PROFILE_VERSION = "subset-profile/v2"
+
 __all__ = [
     "AGENTIC_MBSE_PACKAGE_VERSION",
     "CONSTRAINT_FACTS_SCHEMA_VERSION",
@@ -66,4 +74,5 @@ __all__ = [
     "INSTALLER_API_VERSION",
     "PROFILE_SEMANTIC_VERSION",
     "SEMANTIC_EVIDENCE_API_VERSION",
+    "SUBSET_PROFILE_VERSION",
 ]

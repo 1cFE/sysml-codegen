@@ -20,7 +20,7 @@ from agentic_mbse.sysml.expression_ir import (
 )
 
 from sysml_codegen.core.models import AutoImplContext
-from sysml_codegen.elaboration.diagnostics import ElaborationCode
+from sysml_codegen.elaboration.diagnostics import ElaborationCode, SiteReason
 from sysml_codegen.elaboration.identity import (
     ConsumerPortId,
     DeclarationId,
@@ -80,6 +80,20 @@ class Diagnostic:
     reference: str | None = None
     source_file: str | None = None
     source_line: int | None = None
+    #: Live only: the v6 snapshot encoding has no field for it (``SiteReason``).
+    reason: SiteReason | None = None
+
+
+class UnsupportedExpressionIRError(TypeError):
+    """A computed calculation's expression IR holds a node no generated module evaluates.
+
+    A ``TypeError`` like graph validation's other invalid-IR checks; it also carries the site
+    reason onto the ``SI_EDGE_DANGLING`` diagnostic validation reports it as.
+    """
+
+    def __init__(self, detail: str, *, reason: SiteReason) -> None:
+        super().__init__(detail)
+        self.reason = reason
 
 
 class GraphValidationError(ValueError):
@@ -596,8 +610,17 @@ class InstanceGraph:
                         self._graph_failure("non-root occurrence has no parent record")
                     )
                 if not record.package_display:
+                    # Reached by a valid model: a part usage owned by an item usage becomes a
+                    # root occurrence with no package (RG1-12).
                     failures.append(
-                        self._graph_failure("root occurrence has no package display metadata")
+                        Diagnostic(
+                            code=ElaborationCode.SI_EDGE_DANGLING,
+                            consumer=None,
+                            consumer_display="<instance-graph>",
+                            param_name=None,
+                            detail="root occurrence has no package display metadata",
+                            reason=SiteReason.GRAPH_ROOT_OCCURRENCE_PACKAGE_MISSING,
+                        )
                     )
             else:
                 if record.parent_id not in self.occurrences:
@@ -727,6 +750,13 @@ class InstanceGraph:
                 )
             try:
                 reference_count = self._expression_reference_count(node.expression_ir)
+            except UnsupportedExpressionIRError as error:
+                failures.append(
+                    self._dangling(
+                        node.node_id, node.display_path, str(error), reason=error.reason
+                    )
+                )
+                return
             except TypeError as error:
                 failures.append(
                     self._dangling(node.node_id, node.display_path, str(error))
@@ -828,7 +858,10 @@ class InstanceGraph:
         if isinstance(expression, InvocationNode):
             return sum(cls._expression_reference_count(item) for item in expression.arguments)
         if isinstance(expression, UnsupportedNode):
-            raise TypeError("computed calculation contains unsupported typed IR")
+            raise UnsupportedExpressionIRError(
+                "computed calculation contains unsupported typed IR",
+                reason=SiteReason.GRAPH_COMPUTED_IR_UNSUPPORTED,
+            )
         raise TypeError(
             "computed calculation contains invalid typed IR "
             f"{type(expression).__name__}"
@@ -960,6 +993,8 @@ class InstanceGraph:
         consumer_display: str,
         detail: str,
         param_name: str | None = None,
+        *,
+        reason: SiteReason | None = None,
     ) -> Diagnostic:
         return Diagnostic(
             code=ElaborationCode.SI_EDGE_DANGLING,
@@ -967,6 +1002,7 @@ class InstanceGraph:
             consumer_display=consumer_display,
             param_name=param_name,
             detail=detail,
+            reason=reason,
         )
 
     @staticmethod

@@ -16,6 +16,7 @@ from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.core.qualified_names import sanitize_name
 from sysml_codegen.core.type_mapping import QUALIFIED_SYSML_TO_PYTHON
+from sysml_codegen.elaboration.diagnostics import SiteReason
 from sysml_codegen.extraction.data_models import (
     AttributeInfo,
     CalculationDefinitionData,
@@ -211,6 +212,7 @@ class SysMLDataExtractor:
                     "a name, e.g. `return result : Real = <expr>`.",
                     reference=qualified_name,
                     location=(str(source_file), source_line),
+                    reason=SiteReason.EXTRACTION_CALC_DEF_RETURN_UNNAMED,
                 )
 
         # REQ-EXT-08 (V7): fail fast on a calc def with no output channel. Zero
@@ -226,6 +228,7 @@ class SysMLDataExtractor:
                 "(An anonymous 'return' is reported separately.)",
                 reference=qualified_name,
                 location=(str(source_file), source_line),
+                reason=SiteReason.EXTRACTION_CALC_DEF_NO_OUTPUT,
             )
 
         return CalculationDefinitionData(
@@ -316,6 +319,7 @@ class SysMLDataExtractor:
                 f"feature has {len(typing_targets)} typings; expected exactly one qualified typing",
                 reference=reference,
                 location=location,
+                reason=SiteReason.EXTRACTION_PARAMETER_TYPING_COUNT,
             )
         (typing_target,) = typing_targets
         qualified_type = getattr(typing_target, "qualified_name", None)
@@ -332,6 +336,7 @@ class SysMLDataExtractor:
                 "or ScalarValues::String",
                 reference=reference,
                 location=location,
+                reason=SiteReason.EXTRACTION_TYPING_TARGET_UNSUPPORTED,
             )
         sysml_type = str(getattr(typing_target, "name", None) or qualified_type)
 

@@ -1,0 +1,48 @@
+{
+  "id": "calc-def-output-stub__output_without_expression",
+  "home": "codegen",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      3
+    ],
+    "description": "calc def C declares out attribute o with no value"
+  },
+  "screen": {
+    "verdict": "clear",
+    "findings": []
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "stubs": [
+      {
+        "output": "fx::C::o",
+        "reason": "compile_no_expression"
+      }
+    ],
+    "seams": [
+      {
+        "kind": "calc_compilability",
+        "declaration": "fx::Gen::t",
+        "expect": [
+          {
+            "compilability": "manual_required",
+            "outputs": [
+              "o",
+              "r"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "loss": {
+    "family": "calc-def-output-stub",
+    "disposition": "candidate_refusal",
+    "rg1": "RG1-11",
+    "control": "calc-def-output-stub__compiled_control"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": "constraint-predicate__non_numerical_predicate__owner_uninstantiated",
+  "home": "agentic",
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "catalog_usage",
+        "declaration": "fx::Spare::c",
+        "expect": {
+          "kind": "non_reaching",
+          "reason": "owner_has_no_occurrences"
+        }
+      }
+    ]
+  }
+}

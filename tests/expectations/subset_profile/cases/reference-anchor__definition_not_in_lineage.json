@@ -1,0 +1,28 @@
+{
+  "id": "reference-anchor__definition_not_in_lineage",
+  "home": "codegen",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "a computed attribute in B reading `A::r`, a feature of a part def with no occurrence in the consumer's lineage"
+  },
+  "screen": {
+    "verdict": "clear",
+    "findings": []
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_OCCURRENCE_MISSING"
+    ],
+    "reasons": [
+      "occurrence_anchor_scope_missing"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/occurrence.py::OccurrenceIndex.resolve_address::coded::SI_OCCURRENCE_MISSING::1"
+    ]
+  }
+}

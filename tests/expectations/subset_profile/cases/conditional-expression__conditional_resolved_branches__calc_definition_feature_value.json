@@ -1,0 +1,13 @@
+{
+  "id": "conditional-expression__conditional_resolved_branches__calc_definition_feature_value",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EVIDENCE_INCOMPLETE"
+    ],
+    "reasons": [
+      "evidence_resolved_target_missing"
+    ]
+  }
+}

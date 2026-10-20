@@ -1,0 +1,19 @@
+{
+  "id": "constraint-predicate__numeric_and__owner_instantiated",
+  "home": "agentic",
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "catalog_usage",
+        "declaration": "fx::Site::c",
+        "expect": {
+          "kind": "eligible",
+          "reason": "admitted"
+        }
+      }
+    ]
+  }
+}

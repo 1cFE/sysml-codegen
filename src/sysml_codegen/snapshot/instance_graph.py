@@ -945,6 +945,10 @@ def _constraint_from_data(data: object) -> ConstraintNode:
 
 
 def _diagnostic_to_data(item: Diagnostic) -> dict[str, object]:
+    # The v6 encoding has no field for a site reason, so encoding one would drop it. A
+    # sealed graph carries no diagnostics at all (``InstanceGraph.require_projectable``).
+    if item.reason is not None:
+        raise ValueError(f"diagnostic {item.code.value} carries a site reason v6 cannot encode")
     return {
         "code": item.code.value,
         "consumer": item.consumer.to_wire() if item.consumer is not None else None,

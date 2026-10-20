@@ -17,7 +17,7 @@ from typing import Any
 
 import jinja2
 
-from sysml_codegen.core.errors import CodeGenerationError
+from sysml_codegen.core.errors import CodeGenerationError, GenerationCode
 from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
 from sysml_codegen.resolution.models import ComputationGraph, ModuleOutput, PipelineModule
 
@@ -53,7 +53,8 @@ def _get_module_sysml_qn(module: PipelineModule) -> str:
         if module.calc_def_qualified_name is None:
             raise CodeGenerationError(
                 f"GENERATION_METADATA_MISSING: module {module.name!r} "
-                "lacks calc_def_qualified_name"
+                "lacks calc_def_qualified_name",
+                code=GenerationCode.GENERATION_METADATA_MISSING,
             )
         return module.calc_def_qualified_name
     else:
@@ -64,7 +65,8 @@ def _build_stub_docstring_from_graph(module: PipelineModule) -> str:
     """Build stub docstring from PipelineModule fields."""
     if module.calc_def_name is None:
         raise CodeGenerationError(
-            f"GENERATION_METADATA_MISSING: module {module.name!r} lacks calc_def_name"
+            f"GENERATION_METADATA_MISSING: module {module.name!r} lacks calc_def_name",
+            code=GenerationCode.GENERATION_METADATA_MISSING,
         )
 
     lines = []
@@ -127,7 +129,8 @@ def _build_stencil_context_from_graph(
     """Build shared template context from PipelineModule fields."""
     if module.calc_def_name is None:
         raise CodeGenerationError(
-            f"GENERATION_METADATA_MISSING: module {module.name!r} lacks calc_def_name"
+            f"GENERATION_METADATA_MISSING: module {module.name!r} lacks calc_def_name",
+            code=GenerationCode.GENERATION_METADATA_MISSING,
         )
 
     output_names = [_output_attr_name(out) for out in module.outputs]
@@ -259,7 +262,8 @@ def generate_backlog_report(
 
         if module.calc_def_name is None:
             raise CodeGenerationError(
-                f"GENERATION_METADATA_MISSING: module {module.name!r} lacks calc_def_name"
+                f"GENERATION_METADATA_MISSING: module {module.name!r} lacks calc_def_name",
+                code=GenerationCode.GENERATION_METADATA_MISSING,
             )
 
         # Estimate complexity from calc_expressions

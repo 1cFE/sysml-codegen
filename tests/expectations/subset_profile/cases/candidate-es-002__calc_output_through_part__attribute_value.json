@@ -1,0 +1,21 @@
+{
+  "id": "candidate-es-002__calc_output_through_part__attribute_value",
+  "home": "codegen",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      7
+    ],
+    "description": "attribute y reads p.c.r, the out attribute of a calc usage inside part p: the admitted neighbor of the through-part input read"
+  },
+  "screen": {
+    "verdict": "clear",
+    "findings": []
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": []
+  }
+}

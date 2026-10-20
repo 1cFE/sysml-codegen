@@ -13,6 +13,7 @@ own error instead of a bare ``ValueError`` (Slice 3E audit F5, second half).
 
 from __future__ import annotations
 
+from sysml_codegen.elaboration.diagnostics import SiteReason
 from sysml_codegen.generation import CodeGenerationError
 from sysml_codegen.generation.errors import residual_class_name_collision_error
 from sysml_codegen.generation.registry import (
@@ -40,8 +41,11 @@ def test_grandparent_collision_survives_aliasing_and_is_refused_by_type():
     residual = _residual_collisions(aliased)
     assert sorted(residual) == ["Pump_Pump"]
 
-    error = residual_class_name_collision_error(residual)
+    error = residual_class_name_collision_error(
+        residual, reason=SiteReason.GENERATION_REGISTRY_RENDER_CLASS_NAME_COLLISION
+    )
     assert isinstance(error, CodeGenerationError)
+    assert error.reason is SiteReason.GENERATION_REGISTRY_RENDER_CLASS_NAME_COLLISION
     assert "grandparent collision" in str(error)
     assert "'Pump_Pump'" in str(error)
 

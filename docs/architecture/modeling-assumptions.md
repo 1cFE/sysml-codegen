@@ -93,7 +93,7 @@ calc cryo_load : MagnetCryogenicLoad {
 |------|-------|--------|---------|
 | Real | `Real` | `float` | `= 2600.0` |
 | Integer | `Integer` | `int` | `= 12` |
-| String | `String` | `str` | `= "HTS_CICC"` |
+| String | `String` | `str` | `= "HTS_CICC"`. Today a String bound to a calc input is refused, and an unbound String default generates with a `null` value ([Section 10](#10-what-generates-but-is-not-carried-through)). |
 | Boolean | `Boolean` | `bool` | `= true` |
 
 ### Unit Handling
@@ -136,7 +136,7 @@ Design attributes may contain several kinds of expressions, each with different 
 
 ### Literal Values
 
-Pure constants that become entry points. This includes numeric literals, string literals, and boolean literals.
+Pure constants that become entry points. This includes numeric literals and boolean literals. A String value does not become a usable entry point today. A String value that reaches a calc input, as an attribute value or as a literal in a calc usage binding, is refused. A calc def's String default that the usage leaves unbound does become an entry point, typed `str` with a `null` default, so the model's value is lost ([Section 10](#10-what-generates-but-is-not-carried-through)).
 
 ### True Static Expressions
 
@@ -665,6 +665,60 @@ definitions remain in the lifecycle contract's "Headline states and coverage tru
 
 ---
 
+## 10. What Generates but Is Not Carried Through
+
+Written in EXEC-SUBSET-CONTRACT Item 2a (2026-10-18). This section states today's behavior for constructs that generate while losing part of the model, or while replacing part of it with a handwritten stub. Each statement is pinned by a case whose stored answer is in `tests/expectations/subset_profile/cases/<case>.json` and is checked live by `tests/conformance/subset_profile/`. Codegen-home case models are in `tests/fixtures/subset_profile/`; the others are in agentic-mbse `src/agentic_mbse/sysml/subset_cases/`. Where a behavior awaits an owner decision, the decision record is named.
+
+### String values
+
+A String attribute value is carried like any other attribute value: it is an attribute node holding the text, and it gets no entry point unless a calculation reads it (cases `string-value-omission__string_value__attribute_value__*`, against numeric controls `string-value-omission__unconsumed_numeric_value__attribute_value` and `string-value-omission__numeric_value__attribute_value__read_by_attribute`). The difference is at the calculation boundary:
+
+- A String bound to a calc input, in either spelling, and a String literal in a calc usage binding are refused at projection (`PROJECTION_FAILED`, `SI_RENDERING_COLLISION`): `candidate-es-010-refusal__string_to_calc_input__binding_value`, `…__attribute_declaration`, `candidate-es-010-refusal__string_usage_literal__binding_value`.
+- A calc def input with a String default that the usage leaves unbound generates as a `str` entry point with a `null` default, so the model's value does not reach the generated inputs (`candidate-es-010-refusal__string_library_default__unbound_input`; a Real default keeps its value, `…__real_library_default__unbound_input`).
+
+The String policy is pending the owner's RG-2 decision (`c381fb00:.project/active/subset-profile-conformance/rg2-string-policy.md`).
+
+### Non-numerical constraints
+
+A constraint whose predicate is well formed but not numerical (a Boolean attribute, the literal `true`) generates, and the model contract's catalog records it `excluded`, reason `non_numerical` (§ 8). Cases `constraint-predicate__non_numerical_predicate__owner_instantiated`, `…__owner_instantiated__boolean_literal_root` and `…__owner_package`; control `constraint-predicate__numeric_and__owner_instantiated`, recorded `eligible`, `admitted`. This is an accepted omission.
+
+### A calc usage with its own result expression
+
+A calc usage that ends its body with its own bare expression (`calc m : Twice { in v = x; v * 3.0 }`) generates, but the expression is ignored: the output is computed from the calc def's expression. In the case found, the usage's input binding `in v = x` is lost as well, so `v` becomes an unbound library-default entry point with a `null` default. Case `calc-usage-result__bare_result__other_expression_site`; control `calc-usage-result__no_bare_result__other_expression_site`. The contract reports it (rule `calc-usage-result`, outcome `omitted`, qualified `candidate_refusal`). Whether it should be refused is RG1-3 in `c381fb00:.project/active/subset-profile-conformance/rg1-recommendations.md`. Until then, write the expression in the calc def, and use `default` there if a usage must override it.
+
+### Calc def outputs that become manual stubs
+
+When the compiler cannot render a calc def output, generation still succeeds: the output becomes a `MANUAL_REQUIRED` stub for handwritten code, and the run logs one `ManualStubNotice` warning per output naming the cause. A from-snapshot run compiles nothing and logs none. Causes reached by a model, one case each (`calc-def-output-stub__<case>`, control `calc-def-output-stub__compiled_control`):
+
+| Cause (`SiteReason`) | Construct | Case |
+|---|---|---|
+| `compile_invocation` | an invocation such as `sum(...)` | `invocation` |
+| `compile_ir_node_unsupported` | `%` | `unsupported_operator_node` |
+| `compile_literal_kind` | a Boolean or String literal | `boolean_literal`, `string_literal` |
+| `compile_reference_unresolved` | a library constant (`pi`); a member named a Python keyword or starting with a digit | `library_constant`, `python_keyword_member` |
+| `compile_operator_unsupported` | a comparison or `not` | `comparison_operator`, `not_operator` |
+| `compile_dependency_cycle` | members that depend on each other | `dependency_cycle` |
+| `compile_no_expression` | an `out` attribute with no expression | `output_without_expression` |
+
+Each cause is an RG-1 candidate (RG1-4 to RG1-11) until the owner decides whether it should refuse.
+
+### Redefinition precedence and incomparable typings
+
+When a value is set at more than one level, the usage-level override wins. With a definition default of 0.2, a specializing definition's default of 0.3 and a usage-level `= 0.35`, the generated value is 0.35, whether the override is written as a feature chain (`:>> driver.efficiency = 0.35`) or as a nested redefinition (`part :>> driver { :>> efficiency = 0.35; }`). Cases `push-down-redef-precedence__chain_override_wins` and `…__nested_override_wins`.
+
+A part usage typed by two definitions where neither specializes the other, and both redefine an inherited attribute, is refused (`SI_REDEFINITION_INVALID`, "incomparable exact user-definition typings"). No type is chosen for it. Case `candidate-ambiguous-typing__incomparable_typings__part_usage`.
+
+### Multiplicity through redefinition
+
+- A redefinition that gives no multiplicity (`part :>> servers;` over `servers : Server[2]`) expands to one unindexed occurrence, and an `ordered` flag on the redefined part is dropped. The language gives the redefinition the inherited `[2]`. Cases `g1__redefinition_drops_ordered_bounds`, `part-multiplicity__redefinition_drops_bounds__expanded_part_usage`; control `part-multiplicity__exact_redefinition__expanded_part_usage`. Restate the multiplicity on the redefinition. RG1-1.
+- When a multiplicity bound reads a `default` attribute, a specializing definition's override of that default is used, but a part usage's override is ignored. Cases `g2__usage_override_of_referenced_bound` (ignored), `g2__definition_override_of_referenced_bound` (used). Override the default in a specializing definition. RG1-2.
+
+### Formal redefinition order
+
+How a skipped formal is diagnosed when a calc usage redefines formals out of order is backlog item `POSITIONAL-FORMAL-REDEFINITION` (`.project/backlog/BACKLOG.md`). Its hazard entry, supplied by EXEC-SUBSET-CONTRACT Item 4, is agentic-mbse `docs/patterns/semantic-hazards.md`, positional input binding (anchor `positional-input-binding`).
+
+---
+
 ## Validation Rules
 
 The pipeline enforces these rules to catch modeling violations early. V1–V10 fire at
@@ -682,8 +736,8 @@ was deleted by REPO-CLEANUP Move C, 2026-08-25.)
 | V6 | Binding to undefined attribute | Fix the binding path |
 | V7 | Calc def extracts with zero output attributes | "Calc def '{name}' extracted with zero output attributes. A pipeline module needs at least one output channel. Likely cause: the calc def declares no result — add one, e.g. `out attribute y : Real = <expr>` or `return y : Real = <expr>`. (An anonymous `return` is reported separately.)" |
 | V8 | Calc def has an anonymous `return` (a result with no name) | "Calc def '{name}' has an anonymous `return` (a result with no name), so no output channel can be built. Give the result a name, e.g. `return result : Real = <expr>`." |
-| V9 | Two template calcs from different owners (a retyped usage's super- and subtype) resolve to the same virtual QN | "Template collision on '{virtual_qn}': owners '{owner_a}' and '{owner_b}' both define calc '{calc_name}'; kept most-specific owner '{winner}'." |
-| V10 | A usage has multiple incomparable owned types (neither specializes the other) | "Usage '{owning_qn}.{name}' has multiple incomparable owned types {sorted_qns}; resolved defaults against '{winner}' (first in stable order)." |
+| V9 | Two template calcs from different owners (a retyped usage's super- and subtype) resolve to the same virtual QN | Message removed with the legacy extraction lane (REPO-CLEANUP C3, `987836f3`). What the exact route does with this model was not rechecked in EXEC-SUBSET-CONTRACT Item 2a. |
+| V10 | A part usage has multiple incomparable owned types (neither specializes the other) | Refused, `SI_REDEFINITION_INVALID`: "part usage {reference} has incomparable exact user-definition typings" (`elaboration/occurrence.py`). No type is chosen; the first-in-stable-order resolution was removed with the legacy extraction lane. See § 10. |
 | `SI_SELF_BINDING` | A calc-usage binding whose right-hand side resolves to its own formal (`in x = x`) — compared by referent identity, never by name, and never reinterpreted as an outer reference (D-4). Screened at extraction (`extraction/source_evidence.py`) and refused as a readiness finding before generation, so an affected model produces no output. | "SI_SELF_BINDING: {usage_qn}.{param}" — exit 1, empty output directory. The authoritative authoring rule and replacement forms are agentic-mbse `docs/patterns/plant-idiom.md`, "Binding a modelled value into a calculation". |
 
 **No V12/V13 (Item 10 note).** The Item-10 design tentatively proposed V12 (multi-hop

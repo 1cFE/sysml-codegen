@@ -1,0 +1,28 @@
+{
+  "id": "constraint-typing__inherited_by_subsetting",
+  "home": "codegen",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      7
+    ],
+    "description": "an asserted constraint `k2 :> k1` whose definition comes only through subsetting a typed constraint usage"
+  },
+  "screen": {
+    "verdict": "clear",
+    "findings": []
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EDGE_DANGLING"
+    ],
+    "reasons": [
+      "elaboration_constraint_definition_disagrees"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._constraint_metadata::coded::SI_EDGE_DANGLING::1"
+    ]
+  }
+}

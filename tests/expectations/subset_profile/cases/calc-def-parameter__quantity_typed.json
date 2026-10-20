@@ -1,0 +1,28 @@
+{
+  "id": "calc-def-parameter__quantity_typed",
+  "home": "codegen",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "a calc def input typed MassValue"
+  },
+  "screen": {
+    "verdict": "clear",
+    "findings": []
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_TYPE_INVALID"
+    ],
+    "reasons": [
+      "extraction_typing_target_unsupported"
+    ],
+    "witnesses": [
+      "sysml_codegen/extraction/extractor.py::SysMLDataExtractor._extract_attribute::coded-fixed::SI_TYPE_INVALID::2"
+    ]
+  }
+}

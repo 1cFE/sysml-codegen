@@ -17,9 +17,10 @@ from typing import TYPE_CHECKING
 
 import jinja2
 
-from sysml_codegen.core.errors import CodeGenerationError
+from sysml_codegen.core.errors import CodeGenerationError, GenerationCode
 from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
 from sysml_codegen.core.qualified_names import sanitize_qualified_name
+from sysml_codegen.elaboration.diagnostics import SiteReason
 
 if TYPE_CHECKING:
     from sysml_codegen.generation.coverage import CoverageAccountData
@@ -57,7 +58,8 @@ def _get_module_sysml_qn(module: PipelineModule) -> str:
         if module.calc_def_qualified_name is None:
             raise CodeGenerationError(
                 f"GENERATION_METADATA_MISSING: module {module.name!r} "
-                "lacks calc_def_qualified_name"
+                "lacks calc_def_qualified_name",
+                code=GenerationCode.GENERATION_METADATA_MISSING,
             )
         return module.calc_def_qualified_name
     else:
@@ -129,9 +131,11 @@ def assert_unique_predicate_function_names(catalog: ConstraintCatalog) -> None:
 
     function_name, keys = min(collisions, key=lambda collision: collision[0])
     raise _generation_error(
+        GenerationCode.PREDICATE_FUNCTION_NAME_COLLISION,
         "Predicate function-name collision: raw definition keys "
         f"{keys!r} all normalize to {function_name!r}. "
-        "Rename one; generation cannot emit them safely."
+        "Rename one; generation cannot emit them safely.",
+        reason=SiteReason.GENERATION_PREDICATE_FUNCTION_NAME_COLLISION,
     )
 
 
@@ -182,6 +186,7 @@ def compile_shared_predicates(catalog: ConstraintCatalog) -> dict[str, tuple[str
             raise CodeGenerationError(
                 f"PREDICATE_COMPILE_FAILED: {error}",
                 name_safety_violation=error.name_safety_violation,
+                code=GenerationCode.PREDICATE_COMPILE_FAILED,
             ) from error
         compiled[key] = (fn_name, src, args)
     return compiled
@@ -211,7 +216,7 @@ def render_constraint_predicates_module(
                 function_name=fn_name,
             )
         except ScopePolicyMismatchError as error:
-            raise _generation_error(str(error)) from error
+            raise _generation_error(GenerationCode.PREDICATE_SCOPE_MISMATCH, str(error)) from error
 
     functions = [
         {"usage_qualified_name": key, "source": function_source_only(src).strip("\n")}
@@ -239,6 +244,7 @@ def render_constraint_module(
     )
     if entry is None:
         raise _generation_error(
+            GenerationCode.CONSTRAINT_DOMAIN_INCOMPLETE,
             f"module {module.name!r} (kind=constraint) has no matching catalog entry — "
             "the catalog and the graph's constraint modules have diverged"
         )
@@ -309,12 +315,15 @@ def render_constraint_module(
         )
         violation = select_name_safety_violation(violations)
     if violation is not None:
-        raise constraint_name_safety_error(violation)
+        raise constraint_name_safety_error(
+            violation, reason=SiteReason.GENERATION_PREDICATE_BINDING_NAME_UNSAFE
+        )
 
     input_names = [inp.param_name for inp in module.inputs]
     missing = [a for a in args if a not in input_names]
     if missing:
         raise _generation_error(
+            GenerationCode.PREDICATE_INPUT_UNRECONCILED,
             f"{entry.constraint_id}: predicate leaf(s) {missing} have no matching module "
             f"input among {input_names} — leaf-name/input-name reconciliation failed (B5)"
         )
@@ -355,7 +364,7 @@ def render_constraint_module(
             class_name=class_name,
         )
     except ScopePolicyMismatchError as error:
-        raise _generation_error(str(error)) from error
+        raise _generation_error(GenerationCode.PREDICATE_SCOPE_MISMATCH, str(error)) from error
     return code
 
 
@@ -394,10 +403,12 @@ def render_report_aggregator(
     return code
 
 
-def _generation_error(message: str) -> Exception:
+def _generation_error(
+    code: GenerationCode, message: str, *, reason: SiteReason | None = None
+) -> Exception:
     from sysml_codegen.generation import CodeGenerationError
 
-    return CodeGenerationError(message)
+    return CodeGenerationError(message, code=code, reason=reason)
 
 
 def generate_teax_module(
@@ -433,6 +444,7 @@ def generate_teax_module(
     if module.module_kind is ModuleKind.CONSTRAINT:
         if catalog is None or compiled_predicates is None:
             raise _generation_error(
+                GenerationCode.GENERATION_METADATA_MISSING,
                 f"module {module.name!r} (kind=constraint) needs the graph's "
                 "ConstraintCatalog and its compiled predicates to render"
             )
@@ -441,6 +453,7 @@ def generate_teax_module(
         )
     if module.module_kind is ModuleKind.REPORT_AGGREGATOR:
         raise _generation_error(
+            GenerationCode.MODULE_KIND_UNRENDERABLE,
             f"module {module.name!r} (kind=report_aggregator) cannot be rendered here: the "
             "aggregator bakes a coverage account derived once per run from the sealed "
             "catalog, and this function has no access to it. Render it through "
@@ -449,7 +462,8 @@ def generate_teax_module(
 
     if module.calc_def_name is None:
         raise CodeGenerationError(
-            f"GENERATION_METADATA_MISSING: module {module.name!r} lacks calc_def_name"
+            f"GENERATION_METADATA_MISSING: module {module.name!r} lacks calc_def_name",
+            code=GenerationCode.GENERATION_METADATA_MISSING,
         )
 
     multi_output = len(module.outputs) > 1

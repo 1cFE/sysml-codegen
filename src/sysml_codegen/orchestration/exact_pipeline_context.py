@@ -35,7 +35,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import NoReturn
 
-from sysml_codegen.core.errors import CodeGenerationError, SysMLParsingError
+from sysml_codegen.core.errors import CodeGenerationError, GenerationCode, SysMLParsingError
 from sysml_codegen.elaboration.elaborate import (
     ElaborationDiagnosticError,
     ElaborationError,
@@ -73,7 +73,10 @@ class ProjectionReceipt:
 
 
 def _receipt_failure(detail: str, cause: Exception | None = None) -> NoReturn:
-    failure = CodeGenerationError(f"ExactPipelineContext receipt verification failed: {detail}")
+    failure = CodeGenerationError(
+        f"ExactPipelineContext receipt verification failed: {detail}",
+        code=GenerationCode.RECEIPT_INVALID,
+    )
     if cause is None:
         raise failure
     raise failure from cause
@@ -128,7 +131,8 @@ def _computation_digest(graph: ComputationGraph) -> str:
         ).encode()
     except (TypeError, ValueError) as error:
         raise CodeGenerationError(
-            "the projected computation graph carries a non-finite or non-canonical value"
+            "the projected computation graph carries a non-finite or non-canonical value",
+            code=GenerationCode.PROJECTION_NONCANONICAL,
         ) from error
     return hashlib.sha256(encoded).hexdigest()
 
@@ -136,8 +140,16 @@ def _computation_digest(graph: ComputationGraph) -> str:
 def _project_or_fail(graph: InstanceGraph, targets: tuple[str, ...] | None) -> ComputationGraph:
     try:
         return project(graph, targets)
-    except (GraphValidationError, ProjectionError, TypeError, ValueError) as error:
-        raise CodeGenerationError(f"exact graph projection failed: {error}") from error
+    except (GraphValidationError, ProjectionError) as error:
+        raise CodeGenerationError(
+            f"exact graph projection failed: {error}",
+            code=GenerationCode.PROJECTION_FAILED,
+            diagnostics=error.diagnostics,
+        ) from error
+    except (TypeError, ValueError) as error:
+        raise CodeGenerationError(
+            f"exact graph projection failed: {error}", code=GenerationCode.PROJECTION_FAILED
+        ) from error
 
 
 class ExactPipelineContext:
@@ -251,7 +263,10 @@ def _seal(graph: InstanceGraph, targets: tuple[str, ...] | None) -> ExactPipelin
         graph.require_projectable()
         instance_bytes = encode_instance_graph(graph)
     except (GraphValidationError, InstanceGraphCodecError, TypeError, ValueError) as error:
-        raise CodeGenerationError(f"exact instance graph is not projectable: {error}") from error
+        raise CodeGenerationError(
+            f"exact instance graph is not projectable: {error}",
+            code=GenerationCode.GRAPH_NOT_PROJECTABLE,
+        ) from error
 
     # Project from the decoded bytes rather than from the caller's object, so the
     # receipt describes what a later read will actually re-derive. Projecting the
@@ -293,6 +308,7 @@ def build_exact_pipeline_context(
         raise
     except Exception as error:
         raise unexpected_public_failure(error) from error
+
 
 def build_exact_pipeline_context_from_snapshot(
     snapshot_path: Path,

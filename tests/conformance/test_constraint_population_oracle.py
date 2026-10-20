@@ -78,8 +78,23 @@ REFUSED_BY_DESIGN = frozenset(
 )
 
 
+#: Directories that hold many independent models, one per subdirectory, rather than one
+#: model. Loading one as a single fixture means nothing; each model is tested on its own by
+#: the test named here.
+MODEL_COLLECTIONS = {
+    # tests/conformance/subset_profile/test_occurrence_parity.py
+    "subset_profile_occurrence_seed",
+    # tests/conformance/subset_profile/test_agreement.py (codegen-home conformance cases)
+    "subset_profile",
+}
+
+
 def _fixture_dirs() -> list[Path]:
-    return sorted(path for path in FIXTURES_DIR.iterdir() if path.is_dir())
+    return sorted(
+        path
+        for path in FIXTURES_DIR.iterdir()
+        if path.is_dir() and path.name not in MODEL_COLLECTIONS
+    )
 
 
 def _constraint_bearing() -> list[Path]:

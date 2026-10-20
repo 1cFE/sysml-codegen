@@ -13,6 +13,7 @@ from agentic_mbse.sysml.syside_adapter import SysideAdapter
 from sysml_codegen.elaboration.diagnostics import (
     ElaborationCode,
     ElaborationInvariantError,
+    SiteReason,
 )
 from sysml_codegen.elaboration.display import display_name, display_qualified_name
 from sysml_codegen.elaboration.identity import (
@@ -51,12 +52,14 @@ class InvalidRedefinitionFamilyError(ElaborationInvariantError):
         *,
         reference: str | None = None,
         location: tuple[str, int] | None = None,
+        reason: SiteReason | None = None,
     ) -> None:
         super().__init__(
             ElaborationCode.SI_REDEFINITION_INVALID,
             detail,
             reference=reference,
             location=location,
+            reason=reason,
         )
 
 
@@ -70,8 +73,9 @@ class MultiplicityExpansionError(ElaborationInvariantError):
         *,
         reference: str | None = None,
         location: tuple[str, int] | None = None,
+        reason: SiteReason | None = None,
     ) -> None:
-        super().__init__(code, detail, reference=reference, location=location)
+        super().__init__(code, detail, reference=reference, location=location, reason=reason)
 
 
 class RecursiveContainmentError(ElaborationInvariantError):
@@ -83,12 +87,14 @@ class RecursiveContainmentError(ElaborationInvariantError):
         *,
         reference: str | None = None,
         location: tuple[str, int] | None = None,
+        reason: SiteReason | None = None,
     ) -> None:
         super().__init__(
             ElaborationCode.SI_CONTAINMENT_RECURSIVE,
             detail,
             reference=reference,
             location=location,
+            reason=reason,
         )
 
 
@@ -180,6 +186,7 @@ def build_containment_address(
             raise OccurrenceResolutionError(
                 ElaborationCode.SI_OCCURRENCE_MISSING,
                 f"semantic owner kind {type(current).__name__!r} cannot anchor containment",
+                reason=SiteReason.OCCURRENCE_CONTAINMENT_UNANCHORED,
             )
         try:
             current_id = declaration_id_for(current)
@@ -336,6 +343,7 @@ class FeatureSlotIndex:
                     "redefinition declaration "
                     f"{reference or declaration.to_wire()} has unrelated roots: "
                     + self._named(roots),
+                    reason=SiteReason.OCCURRENCE_REDEFINITION_ROOTS_UNRELATED,
                     reference=reference,
                     location=location,
                 )
@@ -570,12 +578,14 @@ class OccurrenceIndex:
                 ElaborationCode.SI_OCCURRENCE_MISSING,
                 f"consumer domain has no {address.anchor_kind} anchor "
                 f"{address.anchor_id.to_wire()}",
+                reason=SiteReason.OCCURRENCE_ANCHOR_SCOPE_MISSING,
             )
         if address.anchor_kind == "part_definition" and len(anchor_scopes) != 1:
             raise OccurrenceResolutionError(
                 ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
                 f"consumer domain has {len(anchor_scopes)} concrete scopes for definition "
                 f"{address.anchor_id.to_wire()}",
+                reason=SiteReason.OCCURRENCE_ANCHOR_DEFINITION_AMBIGUOUS,
             )
         states = anchor_scopes
         shared_prefix = True
@@ -594,6 +604,7 @@ class OccurrenceIndex:
                 raise OccurrenceResolutionError(
                     ElaborationCode.SI_OCCURRENCE_MISSING,
                     f"exact containment step {slot!r} has no concrete occurrence",
+                    reason=SiteReason.OCCURRENCE_CONTAINMENT_STEP_MISSING,
                 )
             selected = candidates
             consumer_scope = consumer_domain.scope
@@ -613,6 +624,7 @@ class OccurrenceIndex:
                 raise OccurrenceResolutionError(
                     ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
                     f"exact containment step {slot!r} has {len(selected)} concrete occurrences",
+                    reason=SiteReason.OCCURRENCE_CONTAINMENT_STEP_AMBIGUOUS,
                 )
             states = tuple(item.occurrence_id for item in selected)
         if not plural and len(states) != 1:
@@ -685,6 +697,7 @@ def _effective_type(
         raise InvalidRedefinitionFamilyError(
             f"part usage {reference or "<anonymous>"} has incomparable exact "
             "user-definition typings",
+            reason=SiteReason.OCCURRENCE_PART_TYPING_AMBIGUOUS,
             reference=reference,
             location=location,
         )
@@ -828,6 +841,7 @@ def _multiplicity_indices(
             f"ordered multiplicity on {name!r} is outside the supported occurrence model",
             reference=reference,
             location=location,
+            reason=SiteReason.OCCURRENCE_MULTIPLICITY_ORDERED,
         )
     if getattr(usage, "is_nonunique", False):
         reference, location = _multiplicity_diagnostic_context(usage, multiplicity)
@@ -836,6 +850,7 @@ def _multiplicity_indices(
             f"nonunique multiplicity on {name!r} is outside the supported occurrence model",
             reference=reference,
             location=location,
+            reason=SiteReason.OCCURRENCE_MULTIPLICITY_NONUNIQUE,
         )
     upper = getattr(multiplicity, "upper_bound", None)
     lower = getattr(multiplicity, "lower_bound", None)
@@ -860,6 +875,7 @@ def _multiplicity_indices(
             f"upper multiplicity on {name!r} is not a known finite integer",
             reference=reference,
             location=location,
+            reason=SiteReason.OCCURRENCE_MULTIPLICITY_UPPER_UNRESOLVED,
         )
     if count < 0:
         reference, location = _multiplicity_diagnostic_context(
@@ -870,6 +886,7 @@ def _multiplicity_indices(
             f"negative multiplicity on {name!r}",
             reference=reference,
             location=location,
+            reason=SiteReason.OCCURRENCE_MULTIPLICITY_NEGATIVE,
         )
     if lower is not None:
         lower_count = _modeled_integer_bound(
@@ -887,6 +904,7 @@ def _multiplicity_indices(
                 f"lower multiplicity on {name!r} is not a known finite integer",
                 reference=reference,
                 location=location,
+                reason=SiteReason.OCCURRENCE_MULTIPLICITY_LOWER_UNRESOLVED,
             )
         if lower_count != count:
             reference, location = _multiplicity_diagnostic_context(usage, multiplicity)
@@ -895,6 +913,7 @@ def _multiplicity_indices(
                 f"range multiplicity on {name!r} is outside the supported occurrence model",
                 reference=reference,
                 location=location,
+                reason=SiteReason.OCCURRENCE_MULTIPLICITY_RANGE,
             )
     return tuple(range(count))
 

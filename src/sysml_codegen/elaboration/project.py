@@ -33,7 +33,7 @@ from sysml_codegen.core.qualified_names import (
     sanitize_name,
     sanitize_qualified_name,
 )
-from sysml_codegen.elaboration.diagnostics import ElaborationCode
+from sysml_codegen.elaboration.diagnostics import ElaborationCode, SiteReason
 from sysml_codegen.elaboration.graph import (
     AttrNode,
     CalcNode,
@@ -133,6 +133,7 @@ def _diagnostic(
     param_name: str | None = None,
     reference: str | None = None,
     location: tuple[str, int] | None = None,
+    reason: SiteReason | None = None,
 ) -> Diagnostic:
     return Diagnostic(
         code,
@@ -143,6 +144,7 @@ def _diagnostic(
         reference=reference,
         source_file=location[0] if location is not None else None,
         source_line=location[1] if location is not None else None,
+        reason=reason,
     )
 
 
@@ -155,6 +157,7 @@ def _fail(
     param_name: str | None = None,
     reference: str | None = None,
     location: tuple[str, int] | None = None,
+    reason: SiteReason | None = None,
 ) -> NoReturn:
     raise ProjectionError(
         [
@@ -166,6 +169,7 @@ def _fail(
                 param_name=param_name,
                 reference=reference,
                 location=location,
+                reason=reason,
             )
         ]
     )
@@ -215,6 +219,7 @@ def _float_default(
         f"the public EntryPoint seam cannot carry non-numeric default {value!r}",
         reference=reference,
         location=location,
+        reason=SiteReason.PROJECTION_DEFAULT_NON_NUMERIC,
     )
 
 
@@ -367,6 +372,7 @@ class _Projection:
                 else f"distinct semantic modules render as public name {name!r}",
                 reference=reference,
                 location=location,
+                reason=SiteReason.PROJECTION_MODULE_NAME_COLLISION,
             )
         self.public_module_names[name] = semantic
 
@@ -390,6 +396,7 @@ class _Projection:
                 else f"distinct semantic outputs render as public channel {channel!r}",
                 reference=reference,
                 location=location,
+                reason=SiteReason.PROJECTION_CHANNEL_NAME_COLLISION,
             )
         self.public_channels[channel] = semantic
 
@@ -448,6 +455,7 @@ class _Projection:
                 "to take a parameter-group identity from",
                 reference=reference,
                 location=location,
+                reason=SiteReason.PROJECTION_GROUP_PACKAGE_UNNAMED,
             )
         root = self.graph.occurrences[OccurrenceId(steps=owner.scope.steps[:1])]
         if not root.package_display:
@@ -481,6 +489,7 @@ class _Projection:
                 f"distinct semantic sources render as entry point {qualified_name!r}",
                 reference=owner_reference,
                 location=owner_location,
+                reason=SiteReason.PROJECTION_ENTRY_POINT_NAME_COLLISION,
             )
         existing = self.entry_points.get(qualified_name)
         candidate = EntryPoint(
@@ -504,6 +513,7 @@ class _Projection:
                 f"entry point {qualified_name!r} has conflicting projected metadata",
                 reference=owner_reference,
                 location=owner_location,
+                reason=SiteReason.PROJECTION_ENTRY_POINT_METADATA_CONFLICT,
             )
         self.entry_semantics[qualified_name] = semantic
         self.entry_points[qualified_name] = candidate
@@ -683,6 +693,7 @@ class _Projection:
                 consumer_display=node.display_path,
                 reference=reference,
                 location=location,
+                reason=SiteReason.PROJECTION_PARAMETER_NAME_COLLISION,
             )
 
     def _computed_inputs(
@@ -730,6 +741,7 @@ class _Projection:
                         param_name=param_name,
                         reference=reference,
                         location=location,
+                        reason=SiteReason.PROJECTION_EXPRESSION_PARAMETER_COLLISION,
                     )
                 param_by_port[port] = param_name
                 if prior is not None:
@@ -812,6 +824,7 @@ class _Projection:
                     _fail(
                         ElaborationCode.SI_SNAPSHOT_INVALID,
                         f"sum on {node.display_path!r} must have one argument",
+                        reason=SiteReason.PROJECTION_SUM_ARGUMENT_COUNT,
                     )
                 return render(expression.arguments[0])
             if isinstance(expression, UnsupportedNode):
@@ -1085,6 +1098,7 @@ class _Projection:
                     f"distinct aliases render as {instance_path!r}/{node.display_name!r}",
                     reference=reference,
                     location=location,
+                    reason=SiteReason.PROJECTION_OUTPUT_ALIAS_COLLISION,
                 )
             rendered[key] = node.alias_target.target
             aliases.append(

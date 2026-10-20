@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -252,6 +253,12 @@ def test_live_and_v2_round_trip_projection_match_across_graph_shapes(fixture: st
         validation_diagnostics=extractor.diagnostics.validation,
         strict=fixture != "deep_cross_scope_probe",
     )
+    if any(item.reason is not None for item in live.diagnostics):
+        # v6 has no field for a site reason, so the encoder refuses one rather than
+        # drop it. Pin that refusal, then compare the round trip without reasons.
+        with pytest.raises(InstanceGraphCodecError, match="site reason v6 cannot encode"):
+            encode_instance_graph(live)
+        live.diagnostics = [replace(item, reason=None) for item in live.diagnostics]
 
     rebuilt = decode_instance_graph(encode_instance_graph(live))
 

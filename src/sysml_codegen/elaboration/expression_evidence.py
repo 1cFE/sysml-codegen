@@ -34,7 +34,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from agentic_mbse.errors import SemanticEvidenceCode, SemanticEvidenceError
@@ -48,6 +48,9 @@ from agentic_mbse.sysml.reference_use import (
     unit_annotation_value as agentic_unit_annotation_value,
 )
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
+
+if TYPE_CHECKING:
+    from sysml_codegen.elaboration.diagnostics import SiteReason
 
 __all__ = [
     "ExpressionEvidenceInventory",
@@ -177,11 +180,13 @@ class ExpressionInventoryError(Exception):
         reference: str | None = None,
         location: tuple[str, int] | None = None,
         cause: BaseException | None = None,
+        reason: SiteReason | None = None,
     ) -> None:
         self.detail = detail
         self.reference = reference
         self.location = location
         self.cause = cause
+        self.reason = reason
         super().__init__(detail)
 
 

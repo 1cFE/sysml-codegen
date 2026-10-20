@@ -1,0 +1,456 @@
+{
+  "schema": "subset-mutations/1",
+  "generator": {
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._build_constraint_nodes::coded::SI_CONSTRAINT_BLOCKED::1": [
+      "constraint-predicate__blocked_predicate__owner_instantiated",
+      "constraint-predicate__blocked_predicate__owner_instantiated__arithmetic_operand_mismatch",
+      "constraint-predicate__blocked_predicate__owner_instantiated__arithmetic_root",
+      "constraint-predicate__blocked_predicate__owner_instantiated__assert_by_reference",
+      "constraint-predicate__blocked_predicate__owner_instantiated__boolean_ordering",
+      "constraint-predicate__blocked_predicate__owner_instantiated__comparison_in_value_position",
+      "constraint-predicate__blocked_predicate__owner_instantiated__conjunction_in_value_position",
+      "constraint-predicate__blocked_predicate__owner_instantiated__connective_in_value_position",
+      "constraint-predicate__blocked_predicate__owner_instantiated__definition_without_predicate",
+      "constraint-predicate__blocked_predicate__owner_instantiated__feature_chain_root",
+      "constraint-predicate__blocked_predicate__owner_instantiated__implies_with_comparisons",
+      "constraint-predicate__blocked_predicate__owner_instantiated__part_usage_owner",
+      "constraint-predicate__blocked_predicate__owner_instantiated__real_equality",
+      "constraint-predicate__blocked_predicate__owner_instantiated__real_literal_root",
+      "constraint-predicate__blocked_predicate__owner_instantiated__real_reference_root",
+      "constraint-predicate__blocked_predicate__owner_instantiated__subtype",
+      "constraint-predicate__blocked_predicate__owner_instantiated__under_two",
+      "constraint-predicate__blocked_predicate__owner_instantiated__unit_annotation_root",
+      "constraint-predicate__blocked_predicate__owner_package"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._collect_bound_members::coded-returned::SI_SELF_BINDING|SI_INDEXED_SOURCE_UNSUPPORTED|SI_EXPRESSION_SOURCE_UNSUPPORTED::1": [
+      "binding-source__expression_source__owner_instantiated",
+      "binding-source__expression_source__owner_instantiated__arithmetic",
+      "binding-source__expression_source__owner_instantiated__constraint_input",
+      "binding-source__expression_source__owner_instantiated__indexed_owner",
+      "binding-source__expression_source__owner_instantiated__nested",
+      "binding-source__expression_source__owner_instantiated__part_usage_owner",
+      "binding-source__expression_source__owner_instantiated__selected_and_overridden",
+      "binding-source__expression_source__owner_instantiated__subtype",
+      "binding-source__expression_source__owner_package",
+      "binding-source__self_reference_source__owner_instantiated",
+      "binding-source__self_reference_source__owner_instantiated__indexed_owner",
+      "binding-source__self_reference_source__owner_instantiated__part_usage_owner",
+      "binding-source__self_reference_source__owner_instantiated__subtype",
+      "binding-source__self_reference_source__owner_package"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._halt_on_error_dispositions::coded::SI_CONSTRAINT_UNATTACHED::1": [
+      "calc-owned-assertion__asserted_constraint__calc_definition_owner"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._owner_kind::coded::SI_CONSTRAINT_UNATTACHED::1": [
+      "calc-owned-assertion__asserted_constraint__calc_usage_owner",
+      "calc-owned-assertion__asserted_constraint__unmapped_owner_kind",
+      "calc-owned-assertion__asserted_constraint__unmapped_owner_kind__item_usage",
+      "calc-owned-assertion__non_asserted_constraint__calc_usage_owner",
+      "calc-owned-assertion__non_asserted_constraint__unmapped_owner_kind",
+      "calc-owned-assertion__non_asserted_constraint__unmapped_owner_kind__attribute_definition",
+      "calc-owned-assertion__non_asserted_constraint__unmapped_owner_kind__constraint_definition",
+      "constraint-predicate__blocked_predicate__owner_other",
+      "constraint-predicate__non_numerical_predicate__owner_other"
+    ],
+    "sysml_codegen/elaboration/expression_evidence.py::_indexed_refusal::coded::INDEXED_REFERENCE_UNSUPPORTED::1": [
+      "indexed-reference__indexed_reference__attribute_value",
+      "indexed-reference__indexed_reference__attribute_value__template",
+      "indexed-reference__indexed_reference__binding_value",
+      "indexed-reference__indexed_reference__calc_definition_feature_value",
+      "indexed-reference__indexed_reference__constraint_predicate"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::_multiplicity_indices::coded::SI_MULTIPLICITY_UNRESOLVED::1": [
+      "part-multiplicity__unresolved_bound__expanded_part_usage",
+      "part-multiplicity__unresolved_bound__expanded_part_usage__referenced",
+      "part-multiplicity__unresolved_bound__expanded_part_usage__under_two"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::_multiplicity_indices::coded::SI_MULTIPLICITY_UNRESOLVED::2": [
+      "part-multiplicity__unresolved_bound__expanded_part_usage__lower"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::_multiplicity_indices::coded::SI_MULTIPLICITY_UNSUPPORTED::1": [
+      "part-multiplicity__ordered__expanded_part_usage",
+      "part-multiplicity__ordered__expanded_part_usage__under_two"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::_multiplicity_indices::coded::SI_MULTIPLICITY_UNSUPPORTED::3": [
+      "part-multiplicity__range__expanded_part_usage",
+      "part-multiplicity__range__expanded_part_usage__depth_two",
+      "part-multiplicity__range__expanded_part_usage__root",
+      "part-multiplicity__range__expanded_part_usage__subtype",
+      "part-multiplicity__range__expanded_part_usage__under_two"
+    ],
+    "agentic_mbse/sysml/executable_profile.py::_evaluate_usage_against_definition::shared-profile::block_assert_by_reference::1": [
+      "constraint-predicate__blocked_predicate__owner_instantiated__assert_by_reference"
+    ],
+    "agentic_mbse/sysml/executable_profile.py::_evaluate_usage_against_definition::shared-profile::block_missing_predicate::1": [
+      "constraint-predicate__blocked_predicate__owner_instantiated__definition_without_predicate"
+    ],
+    "agentic_mbse/sysml/reference_use.py::_reference_use::shared-evidence::RESOLVED_TARGET_MISSING::1": [
+      "conditional-expression__conditional_resolved_branches__attribute_value",
+      "conditional-expression__conditional_resolved_branches__binding_value",
+      "conditional-expression__conditional_resolved_branches__calc_definition_feature_value",
+      "conditional-expression__conditional_resolved_branches__constraint_predicate",
+      "conditional-expression__conditional_unresolved_branch__attribute_value",
+      "conditional-expression__conditional_unresolved_branch__attribute_value__inherited",
+      "conditional-expression__conditional_unresolved_branch__attribute_value__redefined",
+      "conditional-expression__conditional_unresolved_branch__attribute_value__template",
+      "conditional-expression__conditional_unresolved_branch__binding_value",
+      "conditional-expression__conditional_unresolved_branch__calc_definition_feature_value",
+      "conditional-expression__conditional_unresolved_branch__constraint_predicate",
+      "conditional-expression__conditional_unresolved_branch__constraint_predicate__predicate_root"
+    ],
+    "agentic_mbse/sysml/reference_use.py::_require_supported_invocation::shared-evidence::EXPRESSION_KIND_UNSUPPORTED::1": [
+      "invocation-callable__unsupported_callable__attribute_value",
+      "invocation-callable__unsupported_callable__attribute_value__max",
+      "invocation-callable__unsupported_callable__attribute_value__redefined",
+      "invocation-callable__unsupported_callable__attribute_value__size",
+      "invocation-callable__unsupported_callable__attribute_value__template",
+      "invocation-callable__unsupported_callable__binding_value",
+      "invocation-callable__unsupported_callable__calc_definition_feature_value",
+      "invocation-callable__unsupported_callable__constraint_predicate",
+      "invocation-callable__unsupported_callable__constraint_predicate__predicate_root"
+    ],
+    "sysml_codegen/extraction/calc_compat_renderer.py::_render::free-text::CompilationError::1": [
+      "binding-source__expression_source__owner_instantiated",
+      "binding-source__expression_source__owner_instantiated__constraint_input",
+      "binding-source__expression_source__owner_instantiated__indexed_owner",
+      "binding-source__expression_source__owner_instantiated__nested",
+      "binding-source__expression_source__owner_instantiated__part_usage_owner",
+      "binding-source__expression_source__owner_instantiated__selected_and_overridden",
+      "binding-source__expression_source__owner_instantiated__subtype",
+      "binding-source__expression_source__owner_other",
+      "binding-source__expression_source__owner_other__calc_definition_owner",
+      "binding-source__expression_source__owner_package",
+      "binding-source__expression_source__owner_uninstantiated",
+      "binding-source__expression_source__writer_overridden",
+      "binding-source__expression_source__writer_overridden__tuple",
+      "binding-source__scalar_actual__owner_instantiated",
+      "binding-source__self_reference_source__owner_instantiated",
+      "binding-source__self_reference_source__owner_instantiated__indexed_owner",
+      "binding-source__self_reference_source__owner_instantiated__part_usage_owner",
+      "binding-source__self_reference_source__owner_instantiated__subtype",
+      "binding-source__self_reference_source__owner_package",
+      "binding-source__self_reference_source__owner_uninstantiated",
+      "calc-def-output-stub__invocation"
+    ],
+    "sysml_codegen/extraction/calc_compat_renderer.py::_render::free-text::CompilationError::2": [
+      "calc-def-output-stub__unsupported_operator_node"
+    ],
+    "sysml_codegen/extraction/calc_compat_renderer.py::_render_literal::free-text::CompilationError::1": [
+      "calc-def-output-stub__boolean_literal",
+      "calc-def-output-stub__string_literal"
+    ],
+    "sysml_codegen/extraction/calc_compat_renderer.py::_render_operator::free-text::CompilationError::1": [
+      "calc-def-output-stub__comparison_operator",
+      "calc-def-output-stub__not_operator"
+    ],
+    "sysml_codegen/extraction/calc_compat_renderer.py::_render_reference::free-text::CompilationError::2": [
+      "calc-def-output-stub__library_constant",
+      "calc-def-output-stub__python_keyword_member"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._feature_python_type::coded::SI_EDGE_DANGLING::1": [
+      "candidate-es-011__return_result_arithmetic__attribute_value"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._require_one_writer::coded::SI_REDEFINITION_INVALID::1": [
+      "candidate-es-008__nested_named_subset__part_usage",
+      "candidate-es-008__nested_named_subset__part_usage__single_rack",
+      "candidate-es-008__sibling_subsets_redefine__part_usage"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._resolve_calculation_output::coded::SI_OCCURRENCE_MISSING::1": [
+      "deep-qualified-wiring__qualified_reference"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._resolve_semantic_reference::coded::SI_OCCURRENCE_MISSING::4": [
+      "candidate-es-002__calc_input_through_part__attribute_value",
+      "candidate-es-009__composition_by_subsetting__part_usage",
+      "candidate-es-009__composition_by_subsetting__root_part_usage"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::OccurrenceIndex.resolve_address::coded::SI_OCCURRENCE_MISSING::2": [
+      "candidate-es-009__reference_through_ref_part__attribute_value"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::build_containment_address::coded::SI_OCCURRENCE_MISSING::1": [
+      "candidate-es-002__attribute_reads_calc_input__attribute_value",
+      "candidate-es-002__attribute_usage_feature__attribute_value",
+      "candidate-es-002__calc_binds_calc_input__binding_value",
+      "candidate-es-002__calc_definition_intermediate__attribute_value",
+      "candidate-es-002__constraint_binds_calc_input__binding_value",
+      "candidate-es-002__item_usage_feature__attribute_value"
+    ],
+    "sysml_codegen/elaboration/project.py::_float_default::coded::SI_RENDERING_COLLISION::1": [
+      "candidate-es-010-refusal__string_to_calc_input__binding_value",
+      "candidate-es-010-refusal__string_to_calc_input__binding_value__attribute_declaration",
+      "candidate-es-010-refusal__string_usage_literal__binding_value"
+    ],
+    "sysml_codegen/extraction/extractor.py::SysMLDataExtractor._extract_calculation_definition::coded-fixed::SI_EVIDENCE_INCOMPLETE::2": [
+      "candidate-calc-result-expression__bare_result__calc_result_expression__arithmetic",
+      "candidate-calc-result-expression__bare_result__calc_result_expression__declared_return",
+      "candidate-calc-result-expression__bare_result__calc_result_expression__max",
+      "candidate-calc-result-expression__bare_result__calc_result_expression__unused",
+      "conditional-expression__conditional_resolved_branches__calc_result_expression",
+      "conditional-expression__conditional_unresolved_branch__calc_result_expression",
+      "indexed-reference__indexed_reference__calc_result_expression",
+      "invocation-callable__unsupported_callable__calc_result_expression"
+    ],
+    "sysml_codegen/elaboration/project.py::_Projection._compile_computed_expression.render::coded::SI_SNAPSHOT_INVALID::5": [
+      "push-down-sum-shape__zero_arguments"
+    ],
+    "sysml_codegen/cli/__init__.py::_check_duplicate_output_paths::free-text::CodeGenerationError::1": [
+      "output-naming__module_path_collision"
+    ],
+    "sysml_codegen/cli/__init__.py::_check_duplicate_output_paths::free-text::CodeGenerationError::2": [
+      "output-naming__schema_path_collision"
+    ],
+    "sysml_codegen/cli/__init__.py::_preflight_registry_class_names::unrecognized::residual_class_name_collision_error::1": [
+      "output-naming__registry_class_collision"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._apply_deep_literal_redefinitions::coded::OVERRIDE_TARGET_MISSING::1": [
+      "deep-override__reference_part_target"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._apply_deep_literal_redefinitions::coded::OVERRIDE_TARGET_MISSING::2": [
+      "deep-override__computed_target"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._build_calculation_nodes::coded::SI_EDGE_DANGLING::1": [
+      "calc-usage-typing__library_calc_def"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._collect_bound_members::coded::SI_EDGE_DANGLING::1": [
+      "constraint-typing__untyped_with_bound_input"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._constraint_metadata::coded::SI_EDGE_DANGLING::1": [
+      "constraint-typing__inherited_by_subsetting"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._effective_formal_for_member::coded::SI_EDGE_DANGLING::1": [
+      "calc-usage-binding__undeclared_input"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._feature_python_type::coded::SI_EDGE_DANGLING::2": [
+      "feature-type__subsetting_without_typing"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._feature_python_type::coded::SI_EDGE_DANGLING::3": [
+      "blocked-predicate-unmapped-code__quantity_operands_mixed_units",
+      "blocked-predicate-unmapped-code__quantity_operands_same_units",
+      "feature-type__quantity_value",
+      "feature-type__untyped_attribute"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._index_calculation_payloads::coded::SI_ID_MISSING::1": [
+      "anonymous-declaration__calc_definition",
+      "calc-def-identity__duplicate_name"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._index_calculation_payloads::coded::SI_ID_MISSING::2": [
+      "calc-def-identity__anonymous_parameter"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._index_constraint_associations::coded::SI_EDGE_DANGLING::6": [
+      "blocked-predicate-unmapped-code__constraint_check_typed",
+      "blocked-predicate-unmapped-code__untyped_assert"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._output_ports::coded::SI_EDGE_DANGLING::1": [
+      "calc-def-output__part_usage"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._resolve_bindings::coded::SI_EDGE_DANGLING::1": [
+      "literal-binding__null",
+      "literal-binding__unbounded"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._resolve_calculation_output::coded::SI_OCCURRENCE_AMBIGUOUS::1": [
+      "calc-output-reference__definition_member"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._resolve_semantic_reference::coded::SI_OCCURRENCE_MISSING::1": [
+      "reference-leaf__library_constant",
+      "reference-leaf__library_constant_alias"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._resolve_semantic_reference::coded::SI_OCCURRENCE_MISSING::2": [
+      "bare-reference__imported_nested_feature"
+    ],
+    "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._typed_definition::coded::SI_TYPE_INVALID::1": [
+      "calc-usage-typing__subsetting_only",
+      "calc-usage-typing__untyped"
+    ],
+    "sysml_codegen/elaboration/graph.py::InstanceGraph._expression_reference_count::unrecognized::UnsupportedExpressionIRError::1": [
+      "push-down-sum-shape__sequence_argument"
+    ],
+    "sysml_codegen/elaboration/graph.py::InstanceGraph._validate_occurrences::coded::SI_EDGE_DANGLING::1": [
+      "candidate-es-002__part_inside_item_usage__attribute_value"
+    ],
+    "sysml_codegen/elaboration/identity.py::declaration_id_for::coded-fixed::SI_ID_MISSING|SI_ID_UNSTABLE::1": [
+      "anonymous-declaration__calc_usage",
+      "anonymous-declaration__named_part_in_anonymous_action",
+      "anonymous-declaration__package",
+      "anonymous-declaration__part_usage",
+      "anonymous-declaration__requirement_definition",
+      "blocked-predicate-unmapped-code__anonymous_assert_by_reference",
+      "candidate-anonymous-constraint__inline_assert__owner_instantiated",
+      "candidate-anonymous-constraint__inline_constraint__owner_instantiated"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::FeatureSlotIndex._root_of::coded-fixed::SI_REDEFINITION_INVALID::2": [
+      "multiple-redefinition__unrelated_roots"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::OccurrenceIndex.resolve_address::coded::SI_OCCURRENCE_AMBIGUOUS::1": [
+      "reference-anchor__definition_twice_in_lineage"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::OccurrenceIndex.resolve_address::coded::SI_OCCURRENCE_AMBIGUOUS::2": [
+      "scalar-reference__multi_occurrence_part"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::OccurrenceIndex.resolve_address::coded::SI_OCCURRENCE_MISSING::1": [
+      "reference-anchor__definition_not_in_lineage"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::_effective_type::coded-fixed::SI_REDEFINITION_INVALID::1": [
+      "candidate-ambiguous-typing__incomparable_typings__part_usage",
+      "part-typing__two_definitions"
+    ],
+    "sysml_codegen/elaboration/project.py::_Projection._build_output_aliases::coded::SI_RENDERING_COLLISION::1": [
+      "output-naming__output_alias_collision"
+    ],
+    "sysml_codegen/elaboration/project.py::_Projection._claim_channel::coded::SI_RENDERING_COLLISION::1": [
+      "output-naming__channel_name_collision"
+    ],
+    "sysml_codegen/elaboration/project.py::_Projection._claim_module::coded::SI_RENDERING_COLLISION::1": [
+      "output-naming__module_name_collision"
+    ],
+    "sysml_codegen/elaboration/project.py::_Projection._computed_inputs::coded::SI_RENDERING_COLLISION::1": [
+      "output-naming__expression_parameter_collision"
+    ],
+    "sysml_codegen/elaboration/project.py::_Projection._declaring_package::coded::SI_RENDERING_COLLISION::1": [
+      "output-naming__package_scoped_group_in_model_file"
+    ],
+    "sysml_codegen/elaboration/project.py::_Projection._entry_source::coded::SI_RENDERING_COLLISION::1": [
+      "output-naming__entry_point_name_collision"
+    ],
+    "sysml_codegen/elaboration/project.py::_Projection._entry_source::coded::SI_RENDERING_COLLISION::2": [
+      "output-naming__entry_point_metadata_conflict"
+    ],
+    "sysml_codegen/elaboration/project.py::_Projection._require_unique_params::coded::SI_RENDERING_COLLISION::1": [
+      "output-naming__parameter_name_collision"
+    ],
+    "sysml_codegen/extraction/expression_compiler.py::compile_calc_def_exact.add_node::free-text::CompilationError::1": [
+      "calc-def-reference__package_attribute"
+    ],
+    "sysml_codegen/extraction/extractor.py::SysMLDataExtractor._extract_attribute::coded-fixed::SI_TYPE_INVALID::1": [
+      "calc-def-parameter__untyped"
+    ],
+    "sysml_codegen/extraction/extractor.py::SysMLDataExtractor._extract_attribute::coded-fixed::SI_TYPE_INVALID::2": [
+      "calc-def-parameter__quantity_typed"
+    ],
+    "sysml_codegen/extraction/extractor.py::SysMLDataExtractor._extract_calculation_definition::coded-fixed::SI_EVIDENCE_INCOMPLETE::1": [
+      "calc-def-return__anonymous"
+    ],
+    "sysml_codegen/generation/entry_point.py::_refuse_colliding_field_names::free-text::CodeGenerationError::1": [
+      "output-naming__param_field_collision"
+    ],
+    "sysml_codegen/generation/errors.py::validate_constraint_graph_or_raise::unrecognized::constraint_name_safety_error::1": [
+      "constraint-naming__generated_binding_overlap"
+    ],
+    "sysml_codegen/generation/modules.py::assert_unique_predicate_function_names::unrecognized::_generation_error::1": [
+      "constraint-naming__predicate_function_collision"
+    ]
+  },
+  "screen": {
+    "binding-source/expression_source": [
+      "binding-source__expression_source__owner_instantiated",
+      "binding-source__expression_source__owner_instantiated__arithmetic",
+      "binding-source__expression_source__owner_instantiated__constraint_input",
+      "binding-source__expression_source__owner_instantiated__indexed_owner",
+      "binding-source__expression_source__owner_instantiated__nested",
+      "binding-source__expression_source__owner_instantiated__part_usage_owner",
+      "binding-source__expression_source__owner_instantiated__selected_and_overridden",
+      "binding-source__expression_source__owner_instantiated__subtype",
+      "binding-source__expression_source__owner_package"
+    ],
+    "binding-source/self_reference_source": [
+      "binding-source__self_reference_source__owner_instantiated",
+      "binding-source__self_reference_source__owner_instantiated__indexed_owner",
+      "binding-source__self_reference_source__owner_instantiated__part_usage_owner",
+      "binding-source__self_reference_source__owner_instantiated__subtype",
+      "binding-source__self_reference_source__owner_package"
+    ],
+    "calc-owned-assertion/asserted_constraint": [
+      "calc-owned-assertion__asserted_constraint__calc_definition_owner",
+      "calc-owned-assertion__asserted_constraint__calc_usage_owner",
+      "calc-owned-assertion__asserted_constraint__unmapped_owner_kind",
+      "calc-owned-assertion__asserted_constraint__unmapped_owner_kind__item_usage",
+      "constraint-predicate__blocked_predicate__owner_other",
+      "constraint-predicate__non_numerical_predicate__owner_other"
+    ],
+    "calc-owned-assertion/non_asserted_constraint": [
+      "calc-owned-assertion__non_asserted_constraint__calc_usage_owner",
+      "calc-owned-assertion__non_asserted_constraint__unmapped_owner_kind",
+      "calc-owned-assertion__non_asserted_constraint__unmapped_owner_kind__attribute_definition",
+      "calc-owned-assertion__non_asserted_constraint__unmapped_owner_kind__constraint_definition"
+    ],
+    "conditional-expression/conditional_unresolved_branch": [
+      "conditional-expression__conditional_resolved_branches__attribute_value",
+      "conditional-expression__conditional_resolved_branches__binding_value",
+      "conditional-expression__conditional_resolved_branches__calc_definition_feature_value",
+      "conditional-expression__conditional_resolved_branches__constraint_predicate",
+      "conditional-expression__conditional_unresolved_branch__attribute_value",
+      "conditional-expression__conditional_unresolved_branch__attribute_value__inherited",
+      "conditional-expression__conditional_unresolved_branch__attribute_value__redefined",
+      "conditional-expression__conditional_unresolved_branch__attribute_value__template",
+      "conditional-expression__conditional_unresolved_branch__binding_value",
+      "conditional-expression__conditional_unresolved_branch__calc_definition_feature_value",
+      "conditional-expression__conditional_unresolved_branch__constraint_predicate",
+      "conditional-expression__conditional_unresolved_branch__constraint_predicate__predicate_root"
+    ],
+    "constraint-predicate/blocked_predicate": [
+      "constraint-predicate__blocked_predicate__owner_instantiated",
+      "constraint-predicate__blocked_predicate__owner_instantiated__arithmetic_operand_mismatch",
+      "constraint-predicate__blocked_predicate__owner_instantiated__arithmetic_root",
+      "constraint-predicate__blocked_predicate__owner_instantiated__assert_by_reference",
+      "constraint-predicate__blocked_predicate__owner_instantiated__boolean_ordering",
+      "constraint-predicate__blocked_predicate__owner_instantiated__comparison_in_value_position",
+      "constraint-predicate__blocked_predicate__owner_instantiated__conjunction_in_value_position",
+      "constraint-predicate__blocked_predicate__owner_instantiated__connective_in_value_position",
+      "constraint-predicate__blocked_predicate__owner_instantiated__definition_without_predicate",
+      "constraint-predicate__blocked_predicate__owner_instantiated__feature_chain_root",
+      "constraint-predicate__blocked_predicate__owner_instantiated__implies_with_comparisons",
+      "constraint-predicate__blocked_predicate__owner_instantiated__part_usage_owner",
+      "constraint-predicate__blocked_predicate__owner_instantiated__real_equality",
+      "constraint-predicate__blocked_predicate__owner_instantiated__real_literal_root",
+      "constraint-predicate__blocked_predicate__owner_instantiated__real_reference_root",
+      "constraint-predicate__blocked_predicate__owner_instantiated__subtype",
+      "constraint-predicate__blocked_predicate__owner_instantiated__under_two",
+      "constraint-predicate__blocked_predicate__owner_instantiated__unit_annotation_root",
+      "constraint-predicate__blocked_predicate__owner_package"
+    ],
+    "indexed-reference/indexed_reference": [
+      "indexed-reference__indexed_reference__attribute_value",
+      "indexed-reference__indexed_reference__attribute_value__template",
+      "indexed-reference__indexed_reference__binding_value",
+      "indexed-reference__indexed_reference__calc_definition_feature_value",
+      "indexed-reference__indexed_reference__constraint_predicate"
+    ],
+    "invocation-callable/unsupported_callable": [
+      "invocation-callable__unsupported_callable__attribute_value",
+      "invocation-callable__unsupported_callable__attribute_value__max",
+      "invocation-callable__unsupported_callable__attribute_value__redefined",
+      "invocation-callable__unsupported_callable__attribute_value__size",
+      "invocation-callable__unsupported_callable__attribute_value__template",
+      "invocation-callable__unsupported_callable__binding_value",
+      "invocation-callable__unsupported_callable__calc_definition_feature_value",
+      "invocation-callable__unsupported_callable__constraint_predicate",
+      "invocation-callable__unsupported_callable__constraint_predicate__predicate_root"
+    ],
+    "part-multiplicity/ordered": [
+      "part-multiplicity__ordered__expanded_part_usage",
+      "part-multiplicity__ordered__expanded_part_usage__under_two"
+    ],
+    "part-multiplicity/range": [
+      "part-multiplicity__range__expanded_part_usage",
+      "part-multiplicity__range__expanded_part_usage__depth_two",
+      "part-multiplicity__range__expanded_part_usage__root",
+      "part-multiplicity__range__expanded_part_usage__subtype",
+      "part-multiplicity__range__expanded_part_usage__under_two"
+    ],
+    "part-multiplicity/unresolved_bound": [
+      "part-multiplicity__unresolved_bound__expanded_part_usage",
+      "part-multiplicity__unresolved_bound__expanded_part_usage__lower",
+      "part-multiplicity__unresolved_bound__expanded_part_usage__referenced",
+      "part-multiplicity__unresolved_bound__expanded_part_usage__under_two"
+    ]
+  },
+  "unwitnessed": {
+    "sysml_codegen/elaboration/occurrence.py::_multiplicity_indices::coded::SI_MULTIPLICITY_UNSUPPORTED::2": "The nonunique multiplicity site. SysIDE rejects a nonunique part usage before elaboration, so no loadable model reaches it; part-multiplicity/nonunique left the records in Item 2a P2.1 for the same reason.",
+    "sysml_codegen/elaboration/occurrence.py::_multiplicity_indices::coded::SI_MULTIPLICITY_INVALID::1": "The negative-bound site. SysIDE rejects a negative multiplicity bound before elaboration, so no loadable model reaches it; part-multiplicity/negative_bound left the records in Item 2a P2.1 for the same reason.",
+    "agentic_mbse/sysml/executable_profile.py::_evaluate_usage_against_definition::shared-profile::block_unresolved_definition::1": "No model reaches it in either half: a definition-typed assertion always resolves to a ConstraintDefinition (agentic-mbse scanner.toml [[unwitnessed_site]]).",
+    "agentic_mbse/sysml/reference_use.py::require_exact_reference_use::shared-evidence::INDEXED_REFERENCE_UNSUPPORTED::1": "No model reaches it in either half: only decompose_aggregation_expression calls it, and nothing under either src/ tree calls that (agentic-mbse scanner.toml [[unwitnessed_site]]).",
+    "sysml_codegen/extraction/calc_compat_renderer.py::_render::free-text::CompilationError::3": "Stub cause COMPILE_IR_NODE_UNKNOWN. No model reaches it: the expression IR is a closed union and every member is handled by an earlier branch of _render, so only a new IR node kind would.",
+    "sysml_codegen/extraction/calc_compat_renderer.py::_render_operator::free-text::CompilationError::2": "Stub cause COMPILE_OPERATOR_WITHOUT_OPERANDS. No model found: every operator expression tried (binary, unary, conditional, comparison, not) reached the renderer with at least one operand.",
+    "sysml_codegen/extraction/calc_compat_renderer.py::_render_operator::free-text::CompilationError::3": "Stub cause COMPILE_UNARY_OPERATOR_UNSUPPORTED. No model reaches it: the only one-operand operators SysML has are +, -, not and ~; + and - render, and not and ~ are not in the arithmetic map, so they stub at the unsupported-operator site first.",
+    "sysml_codegen/extraction/calc_compat_renderer.py::_render_reference::free-text::CompilationError::1": "Stub cause COMPILE_FEATURE_CHAIN. No model found: a chain needs a calc input or member with features, and a calc input typed by an item or part def is refused SI_TYPE_INVALID, while a chain into an inner calc is refused SI_EDGE_DANGLING, both before compilation.",
+    "sysml_codegen/extraction/calc_compat_renderer.py::render_calc_expression::free-text::CompilationError::1": "Stub cause COMPILE_OUTPUT_NOT_PYTHON. No model found: the names that would render as invalid Python (a Python keyword, a leading digit) stub at _render_reference's unresolved-reference site first, because the renderer's _sanitize_name and the extractor's sanitizer disagree (case calc-def-output-stub__python_keyword_member)."
+  }
+}

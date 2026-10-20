@@ -1,0 +1,16 @@
+{
+  "id": "candidate-calc-result-expression__bare_result__calc_result_expression__max",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EVIDENCE_INCOMPLETE"
+    ],
+    "reasons": [
+      "extraction_calc_def_no_output"
+    ],
+    "witnesses": [
+      "sysml_codegen/extraction/extractor.py::SysMLDataExtractor._extract_calculation_definition::coded-fixed::SI_EVIDENCE_INCOMPLETE::2"
+    ]
+  }
+}

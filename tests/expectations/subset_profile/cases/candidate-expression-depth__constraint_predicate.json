@@ -1,0 +1,13 @@
+{
+  "id": "candidate-expression-depth__constraint_predicate",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EVIDENCE_INCOMPLETE"
+    ],
+    "reasons": [
+      "evidence_expression_depth_exhausted"
+    ]
+  }
+}

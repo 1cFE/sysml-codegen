@@ -14,7 +14,7 @@ from pathlib import Path
 
 import jinja2
 
-from sysml_codegen.core.errors import CodeGenerationError
+from sysml_codegen.core.errors import CodeGenerationError, GenerationCode
 from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
 from sysml_codegen.resolution.models import ComputationGraph
 
@@ -59,7 +59,8 @@ def generate_test_implementations(
 
         if module.calc_def_name is None:
             raise CodeGenerationError(
-                f"GENERATION_METADATA_MISSING: module {module.name!r} lacks calc_def_name"
+                f"GENERATION_METADATA_MISSING: module {module.name!r} lacks calc_def_name",
+                code=GenerationCode.GENERATION_METADATA_MISSING,
             )
 
         calc_count += 1
@@ -75,7 +76,8 @@ def generate_test_implementations(
         if module.calc_def_qualified_name is None:
             raise CodeGenerationError(
                 f"GENERATION_METADATA_MISSING: module {module.name!r} "
-                "lacks calc_def_qualified_name"
+                "lacks calc_def_qualified_name",
+                code=GenerationCode.GENERATION_METADATA_MISSING,
             )
         sqn = SysMLQualifiedName(module.calc_def_qualified_name)
         python_path = PythonModulePath.from_sysml(sqn)

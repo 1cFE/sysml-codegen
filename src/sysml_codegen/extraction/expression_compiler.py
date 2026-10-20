@@ -14,13 +14,17 @@ import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from agentic_mbse.sysml.constraint_extraction import extract_expression_ir
 
+if TYPE_CHECKING:
+    from sysml_codegen.elaboration.diagnostics import SiteReason
+
 # NOTE: calc_compat_renderer imports CompilationError/_sanitize_name from this module, so
 # render_calc_expression is imported inside compile_calc_def_exact to avoid a circular import.
+# SiteReason is imported there too: `elaboration` imports this module through `graph`.
 
 
 class Compilability(str, Enum):
@@ -40,7 +44,9 @@ class CompilationError(Exception):
     """Raised when the renderer cannot produce a Python expression (unresolved reference,
     unsupported operator, or unparseable output)."""
 
-    pass
+    def __init__(self, message: str, *, reason: SiteReason | None = None) -> None:
+        super().__init__(message)
+        self.reason = reason
 
 
 @dataclass(frozen=True)
@@ -55,6 +61,16 @@ class ExactCompilationResult:
     dependency_ids: tuple[UUID, ...] = ()
     unsupported_reason: str | None = None
     is_undeclared_intermediate: bool = False
+    #: Why the member is a stub: set exactly when ``compilability`` is ``MANUAL_REQUIRED``,
+    #: as ``unsupported_reason`` is.
+    stub_reason: SiteReason | None = None
+
+    def __post_init__(self) -> None:
+        stub = self.compilability is Compilability.MANUAL_REQUIRED
+        if stub != (self.stub_reason is not None) or stub != (self.unsupported_reason is not None):
+            raise ValueError(
+                f"member {self.output_name!r}: a stub names its cause, and only a stub does"
+            )
 
 
 @dataclass(frozen=True)
@@ -183,6 +199,8 @@ def compile_calc_def_exact(
     Names remain renderer metadata. They never classify a reference, select an
     AST, form a dependency edge, or attach the result to a graph node.
     """
+    from sysml_codegen.elaboration.diagnostics import SiteReason
+
     from .calc_compat_renderer import render_calc_expression
 
     definition_id = getattr(calc_def, "element_id", None)
@@ -220,7 +238,8 @@ def compile_calc_def_exact(
                 if reference_id not in all_member_ids:
                     raise CompilationError(
                         f"expression member {member_names[member_id]!r} references "
-                        f"undeclared exact member {reference_id}"
+                        f"undeclared exact member {reference_id}",
+                        reason=SiteReason.COMPILE_REFERENCE_OUTSIDE_CALC_DEF,
                     )
                 dependencies.add(reference_id)
                 if reference_id not in output_id_set:
@@ -245,6 +264,7 @@ def compile_calc_def_exact(
                 output_name=member_names[output_id],
                 compilability=Compilability.MANUAL_REQUIRED,
                 unsupported_reason="circular dependency detected",
+                stub_reason=SiteReason.COMPILE_DEPENDENCY_CYCLE,
             )
             for output_id in sorted(declared_output_ids)
         )
@@ -270,6 +290,7 @@ def compile_calc_def_exact(
                     compilability=Compilability.MANUAL_REQUIRED,
                     unsupported_reason="no expression AST",
                     is_undeclared_intermediate=is_intermediate,
+                    stub_reason=SiteReason.COMPILE_NO_EXPRESSION,
                 )
             )
             continue
@@ -298,6 +319,7 @@ def compile_calc_def_exact(
                     dependency_ids=dependencies,
                     unsupported_reason=str(error),
                     is_undeclared_intermediate=is_intermediate,
+                    stub_reason=error.reason,
                 )
             )
             continue

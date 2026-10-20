@@ -1,0 +1,16 @@
+{
+  "id": "candidate-es-008__sibling_subsets_redefine__part_usage",
+  "home": "agentic",
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_REDEFINITION_INVALID"
+    ],
+    "reasons": [
+      "elaboration_value_writers_incomparable"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._require_one_writer::coded::SI_REDEFINITION_INVALID::1"
+    ]
+  }
+}
