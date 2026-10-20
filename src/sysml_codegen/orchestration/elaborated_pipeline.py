@@ -37,6 +37,7 @@ from sysml_codegen.elaboration import (
 from sysml_codegen.elaboration.diagnostics import ElaborationInvariantError, SiteReason
 from sysml_codegen.elaboration.elaborate import (
     _build_instance_graph,
+    relay_public_failures,
     unexpected_public_failure,
 )
 from sysml_codegen.elaboration.expression_evidence import (
@@ -239,17 +240,8 @@ def elaborate_model_paths(model_paths: list[Path], *, strict: bool = True) -> In
     loaded = load_live_models(model_paths)
     if isinstance(loaded, FailedLoad):
         raise loaded.error
-    try:
+    with relay_public_failures():
         return elaborate_live_load(loaded, strict=strict)
-    except (
-        CodeGenerationError,
-        ElaborationDiagnosticError,
-        ElaborationError,
-        SysMLParsingError,
-    ):
-        raise
-    except Exception as error:
-        raise unexpected_public_failure(error) from error
 
 
 def require_executable_content(graph: InstanceGraph, calc_definitions: Sequence[object]) -> None:
@@ -286,17 +278,8 @@ def elaborate_admitted_sources(
     every node's ``source_file`` is rewritten from its staged absolute path to
     the portable referent the manifest names it by.
     """
-    try:
+    with relay_public_failures():
         return _elaborate_admitted_sources(admission, strict=strict)
-    except (
-        CodeGenerationError,
-        ElaborationDiagnosticError,
-        ElaborationError,
-        SysMLParsingError,
-    ):
-        raise
-    except Exception as error:
-        raise unexpected_public_failure(error) from error
 
 
 def _elaborate_admitted_sources(
