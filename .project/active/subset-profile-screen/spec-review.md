@@ -122,3 +122,71 @@ With both stated, I agree with the Align assumption that this is not RG-1.
 
 **Verdict:** Revise
 **Next Steps:** Once the owner answers summary items 1–6, record them under Resolutions, then return to the spec agent with this review to incorporate. The reviewer does not edit the spec.
+
+---
+
+## Round 2 — 2026-10-20
+
+**Spec:** `.project/active/subset-profile-screen/spec.md` revision 1 (uncommitted, on `86378e9d`). Read with `briefs/align.md`, `briefs/spec_revise.md` and `product-lens.md`.
+
+**Verdict: Approve with minor fixes.** Every round-1 must-fix and should-fix point is resolved, and the revision applied the orchestrator rulings faithfully. Five small fixes remain (R2-1 to R2-5). R2-5 is the F9 disposition, which I reject: the spec has to change. None of them changes the item's direction. The spec agent can make them and record the check; this review does not need a third round.
+
+### Round-1 points
+
+Must-fix, all resolved:
+
+- **L1-1** Resolved. The Problem now names one public late refusal, `PARAM_FIELD_COLLISION`. I re-checked the site account: row 337 is `public_capability` and rows 350 and 379-385 are `internal_invariant`. The order in `cli/__init__.py:1326-1376` matches the spec. Only 8 sites in `generation/`, `cli/` and `contracts/` are public, malformed-input or unknown. Of these, only `entry_point.py:38` runs after the clear. One example citation is wrong (R2-4).
+- **L1-2** Resolved. Success Criterion 7 and Known Requirements line 84 make `check` behave like `generate` under skew. A model that builds gets "not ready", with its own exit status.
+- **L1-3** Resolved. Line 85 and Success Criterion 8 rule out a refusal keyed on the profile version on any route. They argue that a format refusal is about input compatibility, and they cite ADR 0005 only as the v5→v6 precedent.
+- **L1-4** Resolved. Success Criterion 6 defines "supported" for both outcomes of the format choice. Line 87 records how this narrows the two epic criteria.
+- **L2-2** Resolved. "Environment failure" is now a defined outcome, and Success Criterion 2 excludes it. R2-2 is a small follow-on.
+- **L3-1** Resolved. Success Criterion 5 holds under all three carriage options.
+
+Should-fix, all resolved:
+
+- **L1-5** Resolved. Line 84 names the epic line and states how it is narrowed.
+- **L1-6** Resolved on the spec side. The quote stays `[NEED]` (line 86), the reading is `[INFERRED]` (line 87), and the recapture cost is recorded (line 88). The owner-facing half of the question never went to the owner. It is carried by F9 (R2-5).
+- **L2-1** Resolved. Line 90 states both conditions.
+- **L2-3** Resolved by orchestrator ruling 3. The split trigger is in Open Questions, and the estimate is flagged as not re-examined.
+- **L2-4** Resolved. The third carriage option is listed.
+- **L3-2** Resolved. Line 74 says what `check` must cover and leaves how to design.
+- **L3-3** Resolved. Success Criterion 1 names all three destination flags.
+- **L3-4** Resolved. Success Criterion 4 says `check` computes disagreements itself. Line 83 decides to report the 129 generator-refuses-screen-silent entries and keeps them apart from the other kind.
+- **L3-5** Partly resolved. The licensed-lane rule is stated, but it cites stale criterion numbers (R2-1). The baselines still have no source (R2-3).
+- **L3-6** Resolved by orchestrator ruling 5. How the spec applies that ruling is R2-5.
+- **L3-7** Resolved. Line 92 says the adapter test is replaced, not deleted.
+- **L5-1** Resolved. The Outcomes list defines each word, and "clean" and "stops" no longer appear as outcomes (only in the revision note and in prose).
+
+Minor, all resolved: L1-7 (23 snapshots), L1-8 (ADR 0005 narrowed to v5→v6), L4-1 (clear `:1346-1348`, folder creation `:1351`).
+
+### Product-lens dispositions
+
+- **spec-F7: confirmed.** Success Criterion 7 now says `sysml-codegen snapshot` seals under skew whatever it seals today. Success Criterion 9 adds `snapshot` to the screen-failure test. Together they cover the falsifier the lens gave.
+- **spec-F8: confirmed.** Success Criterion 8 now states that it reaches only skew where the package version is unchanged. It also gives design the choice to state that limit or relax the check with a reason. The criterion no longer reads broader than it is.
+- **spec-F9: rejected, the spec must change (R2-5).** The disposition says "no spec change" and carries the rule only to design and the orchestrator. Design treats the spec as its contract, and spec line 89 still tells it to record the website check as "unchecked" and go on. See R2-5.
+
+### Remaining points
+
+**R2-1 · Direct claim (minor, would mislead design):** Spec line 55 says "Criteria 1, 3 and 4 run live models, so they run on the licensed lane." That uses round-1 numbering. In revision 1, the corpus and live-model criteria are 1, 4 and 5. Criterion 9 also runs a corpus case, and 10 to 12 probably run live cases too. Criterion 3 is the reachability guard and may not need a live model. Read as written, design could run criteria 4 and 5 unlicensed and accept a skip as a pass. Ask the spec agent to list the criteria that run live models under the current numbering.
+
+**R2-2 · Direct claim (minor):** Success Criterion 3 fails a test if "a raise site that the 2a site account classifies as anything other than `internal_invariant`" becomes reachable after the first write. One such site is reachable after the first write today, and it should stay there. `contracts/seal.py:52` (site account row 36, class `environment`) is the symlink check that `_seal_package` re-runs over the written tree (`cli/__init__.py:822`, `:839`). As written, the criterion fails on the current code. Ask the spec agent to name the classes the guard covers: `public_capability`, `malformed_input`, `unknown`, and relays of those. It should also exempt `environment` and say so. The Outcomes entry for "environment failure" says "disk, permissions or the OS". It should also cover this seal-time link check, or the guard should name that check.
+
+**R2-3 · Direct claim (baselines), the orchestrator's correction:** The spec should cite the record. Success Criterion 13 says no record of the 9 and 5 counts was found. They are recorded, in two places in 2a's archive:
+
+- `c381fb00:.project/active/subset-profile-conformance/evidence/baseline.md` lists the failing test IDs, the exact commands and the static-check counts. For agentic-mbse, the comparison set is the 5 IDs in its "all extras" section, which needs `uv run --all-extras`. The static counts are mypy 88 and ruff 118 there, and codegen mypy clean with ruff 94 over `src/ tests/`.
+- That file records **10** codegen failures, not 9. The 9 comes from 2a's final audit, `c381fb00:.project/active/subset-profile-conformance/audit.md` line 262: "failures exactly the baseline's 9 IDs (the tenth baseline failure now passes, from Item 4)". The audit does not name which ID passes.
+
+So the spec should cite both files. It should keep its rule that design re-runs both suites at 2b's base and records the IDs before implementation, because `main` has moved since 2a (the 2a and Item 3 merges). The re-run should use the commands in `baseline.md`, including `--all-extras` and the license key. Then the drop from 10 to 9 is resolved by test ID, not by count. I did not run either suite.
+
+**R2-4 · Direct claim (minor):** Problem line 32 cites `PREDICATE_COMPILE_FAILED` (site account row 343) as a public refusal raised by the plan build. Row 343 is `relay_plumbing`, the wrapper at `modules.py:186`, not a public site. The public plan-build refusal in the site account is `PREDICATE_FUNCTION_NAME_COLLISION` (`modules.py:133`, row 341, `public_capability`). It is reached through `compile_shared_predicates` from `constraint_plan.py:53`, before the clear. The argument still holds, since the plan build does raise public refusals before the clear. Only the example needs swapping.
+
+**R2-5 · Direct claim (applies spec-F9; ruling 5 conflicts with an owner-grade source):** Spec line 89 lets design record the website check as "unchecked" if it cannot find the website. Design could then commit an envelope format change without asking. This is the conflict. The owner's Q2 answer (`briefs/align.md`, carried as `[NEED]` at spec line 86) names exactly one thing to check: "the only thing to check is the artifacts on our website". Orchestrator ruling 5 (`briefs/spec_revise.md`) lets an agent close that check without the owner. The product-lens disposition fixes this, but only in `product-lens.md`, which design does not treat as its contract. Ask the spec agent to amend line 89. If design cannot locate the website, it asks the owner before committing any envelope format change, and the same message names the recapture cost for dc3 and fusion-tea. Keeping v6 needs no such question. That message is also where the owner first hears the round-1 L1-6 question about `integrate` reporting `snapshot-drift`.
+
+### Not checked in round 2
+
+- How the plan build orders `PREDICATE_FUNCTION_NAME_COLLISION` against the coverage preflight. I only confirmed that both run before the clear.
+- Whether `predicate_compiler.py:153` (class `unknown`) is reachable from anywhere other than `compile_shared_predicates`. I found only that one caller.
+- The `/tmp` handoff.
+- The dc3 and fusion-tea snapshot paths in line 88. These are the orchestrator's verified finding, and I did not re-list them.
+
+**Round 2 verdict:** Approve with minor fixes. The spec agent fixes R2-1 to R2-5 and records the fixes in the revision note. A spec-review re-run is not needed. Then come the snapshot-carriage spike and `/_my_design`.
