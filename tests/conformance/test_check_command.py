@@ -20,6 +20,8 @@ Licensed.
 from __future__ import annotations
 
 import logging
+import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -223,3 +225,25 @@ def test_generate_prints_the_report_after_writing(monkeypatch, tmp_path, caplog)
     assert sealed and all(builds < i < screen for i in sealed), infos
     assert infos[screen - 1] == "Destination: clean"
     assert infos[-2:] == ["Readiness: not ready", f"  - {readiness.AWAITING_OWNER}"]
+
+
+def test_check_never_loads_the_writing_module(tmp_path):
+    """Invariant 1 by structure: a ``check`` run in a fresh interpreter never imports ``emit``."""
+    driver = (
+        "import sys\n"
+        "from sysml_codegen.cli import main\n"
+        "sys.argv[0] = 'sysml-codegen'\n"
+        "try:\n"
+        "    main()\n"
+        "except SystemExit as done:\n"
+        "    print('exit', done.code, 'emit loaded', 'sysml_codegen.cli.emit' in sys.modules)\n"
+    )
+    models = str(_models(BUILDS_CASE))
+    run = subprocess.run(
+        [sys.executable, "-c", driver, "check", "--models", models, "--output", str(tmp_path)],
+        env=os.environ.copy(),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert run.stdout.strip().splitlines()[-1] == "exit 3 emit loaded False", run.stderr

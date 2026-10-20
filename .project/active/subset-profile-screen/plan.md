@@ -896,6 +896,16 @@ Each fix below is its own commit with its tests.
 - Criteria 7 and 8 re-read. Their proofs in `spec.md` now name the import-failure test. One limit is stated there: when the module cannot be imported, its version cannot be read, so the report names the pin and the import error instead of both versions.
 - The site-account row for `DestinationCheck.__post_init__` is re-keyed to `cli/destination.py`.
 
+**Fix 2, advisory: `check` never loads the writing module, by structure.** Moving the destination check out of `emit.py` was not enough on its own, because `cli/__init__.py` imported `emit` at module level, so `check` loaded it anyway.
+- `inspect_destination`, `DestinationProblem` and `destination_refused` moved from `emit.py` to `cli/destination.py`. `emit_package` imports them from there and still repeats the check before it writes, because the tree can change in between.
+- The report entry is built by the new `destination.destination_check` (was `_destination_check` in `cli/__init__.py`).
+- `cli/__init__.py` imports `emit` only inside `run_codegen`.
+- Tests:
+  - `tests/unit/test_cli_module_boundary.py::test_the_cli_imports_emit_only_inside_run_codegen` reads `cli/__init__.py` and finds `emit` imported only inside `run_codegen`. `destination.py` joins the read-only modules that import nothing that writes.
+  - `tests/conformance/test_check_command.py::test_check_never_loads_the_writing_module` (licensed) runs `check --output` in a fresh interpreter and finds `sysml_codegen.cli.emit` absent from `sys.modules` afterwards, with exit 3.
+- No change to output: the moved code is the same, and the refusal text is built by the same function.
+- Site account: the `DestinationCheck.__post_init__` and `emit_package` rows moved to their new lines.
+
 ### Phase 10 Completion
 
 ---

@@ -17,22 +17,20 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from sysml_codegen.cli import emit, prepare
-from sysml_codegen.cli.destination import (
-    DESTINATION_CLEAN,
-    DESTINATION_NOT_CHECKED,
-    DestinationCheck,
-    DestinationState,
-)
+from sysml_codegen.cli import destination, prepare
 from sysml_codegen.cli.study import STUDY_TOOLS, cmd_study
 
 if TYPE_CHECKING:
+    from sysml_codegen.cli.destination import DestinationCheck
     from sysml_codegen.cli.readiness import ReadinessReport
 
 # Note: the generate route imports its heavy modules inside the functions that use
-# them, so loading the CLI stays fast. Nothing ``generate`` runs before the seal may import
-# agentic-mbse's subset screen or anything that imports it: ``readiness`` and the screen
-# are imported inside ``_report_after_the_seal``'s guard (Item 2b design D17).
+# them, so loading the CLI stays fast. Two of those imports are rules (Item 2b):
+# - ``emit``, the only module that writes under the destination, is imported inside
+#   ``run_codegen`` alone, so ``check`` never loads it (design Invariant 1).
+# - Nothing ``generate`` runs before the seal may import agentic-mbse's subset screen or
+#   anything that imports it: ``readiness`` and the screen are imported inside
+#   ``_report_after_the_seal``'s guard (design D17).
 
 logger = logging.getLogger(__name__)
 
@@ -137,18 +135,11 @@ def run_check(request: CheckRequest) -> ReadinessReport:
 
     loaded = prepare.load_source(request.source)
     generator = prepare.prepare(loaded, request.package_name)
-    destination = DESTINATION_NOT_CHECKED
+    checked = destination.DESTINATION_NOT_CHECKED
     if request.destination is not None and isinstance(generator, prepare.Prepared):
-        problem = emit.inspect_destination(request.destination)
-        destination = _destination_check(problem)
-    return readiness.readiness_report(generator, destination, subset_screen.assess_screen(loaded))
-
-
-def _destination_check(problem: emit.DestinationProblem | None) -> DestinationCheck:
-    """The report's destination entry, worded as the refusal ``generate`` would log."""
-    if problem is None:
-        return DESTINATION_CLEAN
-    return DestinationCheck(DestinationState.PROBLEM, emit.destination_refused(problem).message)
+        problem = destination.inspect_destination(request.destination)
+        checked = destination.destination_check(problem)
+    return readiness.readiness_report(generator, checked, subset_screen.assess_screen(loaded))
 
 
 def cmd_snapshot(args: argparse.Namespace) -> int:
@@ -494,23 +485,25 @@ def run_codegen(config: GenerationConfig) -> bool:
     logger.info(f"Output to {config.output_path}")
     logger.info(f"Package name: {config.package_name}")
 
+    from sysml_codegen.cli import emit
+
     logger.info("Building pipeline context...")
     loaded = prepare.load_source(source)
     generator = prepare.prepare(loaded, config.package_name)
-    destination = DESTINATION_NOT_CHECKED
+    checked = destination.DESTINATION_NOT_CHECKED
     # Only a model that builds has its destination inspected, so a refused run logs one
     # record, the model's.
     if isinstance(generator, prepare.Prepared):
-        problem = emit.inspect_destination(config.output_path)
-        destination = _destination_check(problem)
+        problem = destination.inspect_destination(config.output_path)
+        checked = destination.destination_check(problem)
         if problem is not None:
-            generator = emit.destination_refused(problem)
+            generator = destination.destination_refused(problem)
     prepare.log_generator_answer(generator)
     if isinstance(generator, prepare.Prepared):
         emitted = emit.emit_package(generator, config)
         if emitted is not None:
             generator = emitted
-    _report_after_the_seal(loaded, generator, destination)
+    _report_after_the_seal(loaded, generator, checked)
     return isinstance(generator, prepare.Prepared)
 
 

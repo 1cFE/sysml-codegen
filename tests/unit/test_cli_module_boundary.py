@@ -133,3 +133,22 @@ def test_the_screen_imports_no_cli_module_at_run_time():
         )
     }
     assert not {name for name in runtime if name.startswith("sysml_codegen.cli")}, runtime
+
+
+def _imports_emit(node: ast.AST) -> bool:
+    return any(
+        isinstance(n, ast.ImportFrom)
+        and (
+            n.module == "sysml_codegen.cli.emit"
+            or (n.module == "sysml_codegen.cli" and "emit" in {a.name for a in n.names})
+        )
+        for n in ast.walk(node)
+    )
+
+
+def test_the_cli_imports_emit_only_inside_run_codegen():
+    """So ``check``, which lives in the same package, never loads the writing module."""
+    tree = ast.parse((CLI / "__init__.py").read_text(encoding="utf-8"))
+    functions = [n for n in tree.body if isinstance(n, ast.FunctionDef)]
+    assert not any(_imports_emit(n) for n in tree.body if n not in functions)
+    assert [f.name for f in functions if _imports_emit(f)] == ["run_codegen"]

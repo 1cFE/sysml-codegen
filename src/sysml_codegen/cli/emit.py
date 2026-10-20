@@ -1,7 +1,8 @@
 """The writing half of ``generate``: everything that changes the destination (Item 2b D1).
 
-``emit_package`` takes what ``prepare`` built and writes it: the destination link check, the
-clear, the package folders, the writers and the seal. This is the only module on the generate
+``emit_package`` takes what ``prepare`` built and writes it: the destination link check
+(repeated from ``cli/destination.py``), the clear, the package folders, the writers and the
+seal. This is the only module on the generate
 route that writes under the destination. Each failure is logged once, with the record
 ``generate`` has always logged for it, and returned.
 """
@@ -10,10 +11,10 @@ from __future__ import annotations
 
 import logging
 import shutil
-from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from sysml_codegen.cli.destination import destination_refused, inspect_destination
 from sysml_codegen.cli.prepare import (
     PreparationStep,
     Prepared,
@@ -33,33 +34,6 @@ if TYPE_CHECKING:
 
 #: The CLI's logger, so a record keeps the name it had before the writers moved here.
 logger = logging.getLogger("sysml_codegen.cli")
-
-
-@dataclass(frozen=True)
-class DestinationProblem:
-    """Why the destination cannot take a package: today's sealing-failure detail."""
-
-    detail: str
-
-
-def inspect_destination(path: Path) -> DestinationProblem | None:
-    """Check, without writing, that no link sits on or under the destination."""
-    from sysml_codegen.contracts import PackageSealError, ensure_package_tree_is_link_free
-
-    try:
-        ensure_package_tree_is_link_free(path)
-    except (PackageSealError, OSError) as error:
-        return DestinationProblem(str(error))
-    return None
-
-
-def destination_refused(problem: DestinationProblem) -> Refused:
-    """The refusal ``generate`` logs when the destination cannot take a package."""
-    return Refused(
-        PreparationStep.DESTINATION,
-        Refusal(RefusalKind.PACKAGE_WRITE),
-        f"Package sealing failed: {problem.detail}",
-    )
 
 
 def emit_package(prepared: Prepared, config: GenerationConfig) -> Refused | None:
