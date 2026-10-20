@@ -95,7 +95,8 @@ class CheckRequest:
 def cmd_check(args: argparse.Namespace) -> int:
     """Report whether a model is ready to generate, without writing anything.
 
-    Exit codes (design D6): 0 ready, 1 refused, 3 builds but not ready. 2 stays argparse's.
+    Exit codes (design D6): 0 ready, 1 refused or an environment failure, 3 builds but not
+    ready. 2 stays argparse's.
     """
     level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(level=level, format="%(levelname)s: %(message)s")
@@ -120,7 +121,11 @@ def cmd_check(args: argparse.Namespace) -> int:
         logger.info(f"Checking {args.models}")
     report = run_check(CheckRequest(source, args.package_name, args.output))
     readiness.log_report(report)
-    exit_codes = {readiness.Readiness.READY: 0, readiness.Readiness.REFUSED: 1}
+    exit_codes = {
+        readiness.Readiness.READY: 0,
+        readiness.Readiness.REFUSED: 1,
+        readiness.Readiness.ENVIRONMENT_FAILURE: 1,
+    }
     return exit_codes.get(readiness.readiness(report).value, 3)
 
 

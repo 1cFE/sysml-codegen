@@ -906,6 +906,14 @@ Each fix below is its own commit with its tests.
 - No change to output: the moved code is the same, and the refusal text is built by the same function.
 - Site account: the `DestinationCheck.__post_init__` and `emit_package` rows moved to their new lines.
 
+**Fix 3, advisory: a failed write is reported as an environment failure, not "refused".** The spec's Outcomes say an environment failure "is not a refusal".
+- `Readiness` gains `ENVIRONMENT_FAILURE = "environment failure"`. `readiness()` gives it when the refusal's kind is `PACKAGE_WRITE`, with the reason "generate could not write the package (step <step>)".
+- The rule keys on the kind, not the step. `PACKAGE_WRITE` is exactly the spec's list: a write `OSError`, a sealing failure, or a link on or under the destination. Other failures at the writing step stay refusals: a writer's `CodeGenerationError` keeps its code, and an unclassified exception is the internal-defect diagnostic. Calling those an environment failure would be wrong.
+- `check`'s exit code for it is 1, the same as `generate`'s. `check` reaches it only if a step in `prepare` hits an `OSError`, because a destination problem in `check` is "not ready" with a warning, as before.
+- Display only: the refusal record and `generate`'s exit code are unchanged.
+- Tests: `tests/unit/test_readiness_report.py::test_a_failed_write_is_an_environment_failure_not_a_refusal` pins the destination and emit cases, plus a writer's refusal at emit that stays "refused". The totality test now expects the verdict by refusal kind and covers the new emit-refusal fixture. `tests/conformance/test_emit_writer_failures.py` expects "environment failure" for the `OSError` writer and "refused" for the other two.
+- Design's `ReadinessReport` paragraph records the fourth answer.
+
 ### Phase 10 Completion
 
 ---

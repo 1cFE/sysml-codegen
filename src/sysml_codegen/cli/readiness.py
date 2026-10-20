@@ -9,12 +9,12 @@ A ``ReadinessReport`` holds four answers, each already decided elsewhere:
 - the screen: ``ScreenAssessed`` or ``ScreenNotAssessed``, from ``assess_screen``;
 - at most one disagreement between the generator and the screen (design D9).
 
-Three pure functions read it. ``readiness`` decides ready, not ready or refused, and is the one
-place that rule lives (design D8). ``log_report`` renders it through the CLI's logger, in one
-fixed order: the generator's answer (``prepare.log_generator_answer``), then ``log_assessment``.
-``generate`` prints the generator's answer before it writes and calls ``log_assessment`` after
-the seal. None of them reads a table or raises on any member of the enums it switches on
-(design D17).
+Three pure functions read it. ``readiness`` decides ready, not ready, refused or an
+environment failure, and is the one place that rule lives (design D8). ``log_report`` renders
+it through the CLI's logger, in one fixed order: the generator's answer
+(``prepare.log_generator_answer``), then ``log_assessment``. ``generate`` prints the
+generator's answer before it writes and calls ``log_assessment`` after the seal. None of them
+reads a table or raises on any member of the enums it switches on (design D17).
 
 This module imports no SysIDE, not the adapter and nothing that writes, and it loads without
 agentic-mbse's screen module. The screen's enums are imported only inside the functions that
@@ -32,6 +32,7 @@ from typing import TYPE_CHECKING
 
 from sysml_codegen.cli.destination import DestinationCheck, DestinationState
 from sysml_codegen.cli.prepare import PreparationStep, Prepared, Refused, log_generator_answer
+from sysml_codegen.cli.refusal import RefusalItem, RefusalKind
 from sysml_codegen.subset_screen import (
     NotAssessedCause,
     ScreenAssessed,
@@ -39,7 +40,6 @@ from sysml_codegen.subset_screen import (
 )
 
 if TYPE_CHECKING:
-    from sysml_codegen.cli.refusal import RefusalItem
     from sysml_codegen.subset_profile_adapter import SubsetDiagnostic
 
 #: The CLI's logger, so every report line has the name ``generate``'s lines have.
@@ -106,6 +106,9 @@ class Readiness(Enum):
     READY = "ready"
     NOT_READY = "not ready"
     REFUSED = "refused"
+    #: Writing or sealing failed because of the disk, the OS or a link (``PACKAGE_WRITE``).
+    #: Not a refusal: it says nothing about the model (spec, Outcomes).
+    ENVIRONMENT_FAILURE = "environment failure"
 
 
 @dataclass(frozen=True)
@@ -152,13 +155,18 @@ def readiness_report(
 
 
 def readiness(report: ReadinessReport) -> ReadinessVerdict:
-    """Ready, not ready or refused, with the reasons in the order they are printed.
+    """Ready, not ready, refused or an environment failure, with the reasons in printed order.
 
     Interim rule (plan assumption A1) until the owner decides design D8: it decides only what
     that question does not touch, so READY is unreachable and every model that builds is not
     ready, with every reason that already holds and, failing those, ``AWAITING_OWNER``.
     """
     if isinstance(report.generator, Refused):
+        if report.generator.refusal.kind is RefusalKind.PACKAGE_WRITE:
+            return ReadinessVerdict(
+                Readiness.ENVIRONMENT_FAILURE,
+                (f"generate could not write the package (step {_step(report.generator)})",),
+            )
         return ReadinessVerdict(
             Readiness.REFUSED, (f"the generator refuses at step {_step(report.generator)}",)
         )

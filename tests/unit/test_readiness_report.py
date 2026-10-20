@@ -28,6 +28,7 @@ from sysml_codegen.cli.readiness import (
     DisagreementKind,
     Readiness,
     ReadinessReport,
+    ReadinessVerdict,
     RefusedFinding,
     disagreement_kind,
     log_report,
@@ -67,6 +68,15 @@ GENERATORS = {
     "refused-construction": _refused(PreparationStep.CONSTRUCTION),
     "refused-destination": _refused(PreparationStep.DESTINATION),
     "refused-emit": _refused(PreparationStep.EMIT),
+    "refused-emit-generation": Refused(
+        PreparationStep.EMIT,
+        Refusal(
+            RefusalKind.GENERATION,
+            (RefusalItem(GenerationCode.MODULE_KIND_UNRENDERABLE, None, None, None),),
+        ),
+        "Code generation failed: probe",
+        None,
+    ),
     "refused-generation": Refused(
         PreparationStep.CONSTRAINT_NAMES,
         Refusal(
@@ -76,6 +86,10 @@ GENERATORS = {
         "Code generation failed: probe",
         None,
     ),
+}
+#: A failed write or seal is an environment failure; every other refusal is a refusal.
+_REFUSED_VERDICTS = {kind: Readiness.REFUSED for kind in RefusalKind} | {
+    RefusalKind.PACKAGE_WRITE: Readiness.ENVIRONMENT_FAILURE
 }
 DESTINATIONS = {
     "not-checked": DESTINATION_NOT_CHECKED,
@@ -142,7 +156,7 @@ def test_report_functions_are_total(caplog):
         assert verdict.reasons, key
         assert verdict.value is not Readiness.READY, key
         if isinstance(report.generator, Refused):
-            assert verdict.value is Readiness.REFUSED, key
+            assert verdict.value is _REFUSED_VERDICTS[report.generator.refusal.kind], key
         caplog.clear()
         log_report(report)
         assert caplog.records, key
@@ -196,6 +210,28 @@ def test_a_generate_destination_refusal_logs_its_record_once(caplog):
         "Package sealing failed: probe"
     ]
     assert sum(hasattr(r, "refusal") for r in caplog.records) == 1
+
+
+@pytest.mark.parametrize(
+    ("generator", "verdict", "reason"),
+    [
+        (
+            "refused-destination",
+            Readiness.ENVIRONMENT_FAILURE,
+            "generate could not write the package (step destination)",
+        ),
+        (
+            "refused-emit",
+            Readiness.ENVIRONMENT_FAILURE,
+            "generate could not write the package (step emit)",
+        ),
+        ("refused-emit-generation", Readiness.REFUSED, "the generator refuses at step emit"),
+    ],
+)
+def test_a_failed_write_is_an_environment_failure_not_a_refusal(generator, verdict, reason):
+    """Spec, Outcomes: writing or sealing failing is not a refusal; a writer's refusal still is."""
+    report = REPORTS[f"{generator}/clean/assessed-empty/none"]
+    assert readiness(report) == ReadinessVerdict(verdict, (reason,))
 
 
 @pytest.mark.parametrize(
