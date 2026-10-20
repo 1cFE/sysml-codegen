@@ -18,7 +18,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any, cast
 
-from sysml_codegen.cli import _get_template_env
+from sysml_codegen.cli.prepare import _get_template_env
 from sysml_codegen.elaboration import project
 from sysml_codegen.extraction.source_manifest import admit_sources
 from sysml_codegen.generation.entry_point import (

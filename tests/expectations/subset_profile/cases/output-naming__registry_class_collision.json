@@ -22,7 +22,7 @@
       "generation_registry_class_name_collision"
     ],
     "witnesses": [
-      "sysml_codegen/cli/__init__.py::_preflight_registry_class_names::unrecognized::residual_class_name_collision_error::1"
+      "sysml_codegen/cli/prepare.py::_preflight_registry_class_names::unrecognized::residual_class_name_collision_error::1"
     ]
   }
 }

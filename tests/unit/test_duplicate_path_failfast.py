@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from sysml_codegen.cli import _check_duplicate_output_paths
+from sysml_codegen.cli.prepare import _check_duplicate_output_paths
 from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
 from sysml_codegen.resolution.models import ModuleKind, ModuleOutput, PipelineModule
 

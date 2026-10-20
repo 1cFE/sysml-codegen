@@ -149,7 +149,7 @@ def test_reseal_refuses_an_edit_to_a_codegen_produced_file(package: Path) -> Non
 def test_the_seal_step_refuses_a_symlinked_contracts_directory_before_writing(
     tmp_path: Path,
 ) -> None:
-    from sysml_codegen.cli import _seal_package
+    from sysml_codegen.cli.emit import _seal_package
     from sysml_codegen.contracts.seal import PackageSealError
     from sysml_codegen.resolution.models import ComputationGraph
 

@@ -173,22 +173,28 @@ class TestStaticBoundary:
 
     @pytest.mark.req("REQ-PIPE-07")
     def test_cli_generates_without_extraction_in_generation(self):
-        """CLI _generate_* functions don't use function-scope extraction imports."""
+        """CLI _generate_* functions don't use function-scope extraction imports.
+
+        The writers live in ``cli/emit.py`` (Item 2b D1); the test requires it to find them,
+        so a later move cannot leave it checking an empty file.
+        """
         import ast
 
-        cli_path = (
+        emit_path = (
             Path(__file__).parent.parent.parent
-            / "src" / "sysml_codegen" / "cli" / "__init__.py"
+            / "src" / "sysml_codegen" / "cli" / "emit.py"
         )
-        source = cli_path.read_text()
+        source = emit_path.read_text()
         tree = ast.parse(source)
 
         # Find all _generate_* functions and check for extraction/analysis imports
         violations = []
+        writers = []
         for node in ast.walk(tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 if not node.name.startswith("_generate"):
                     continue
+                writers.append(node.name)
                 # Check body for import statements referencing extraction/analysis
                 for child in ast.walk(node):
                     if isinstance(child, ast.ImportFrom):
@@ -199,6 +205,7 @@ class TestStaticBoundary:
                             violations.append(
                                 f"{node.name}: from {child.module} import ..."
                             )
+        assert len(writers) >= 8, f"cli/emit.py holds the writers; found only {writers}"
         assert len(violations) == 0, (
             f"CLI _generate_* functions have extraction/analysis imports: {violations}"
         )

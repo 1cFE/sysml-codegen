@@ -20,17 +20,17 @@ from pathlib import Path
 
 import pytest
 
-from sysml_codegen.cli import (
-    GenerationConfig,
+from sysml_codegen.cli import GenerationConfig
+from sysml_codegen.cli.emit import (
     _generate_entry_points,
     _generate_modules,
     _generate_pipeline,
     _generate_registry,
     _generate_schemas,
     _generate_stencils,
-    _get_template_env,
     _setup_output_directories,
 )
+from sysml_codegen.cli.prepare import _get_template_env
 from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
 from sysml_codegen.orchestration.exact_pipeline_context import (
     build_exact_pipeline_context,

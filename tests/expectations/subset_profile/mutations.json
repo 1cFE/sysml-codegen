@@ -192,13 +192,13 @@
     "sysml_codegen/elaboration/project.py::_Projection._compile_computed_expression.render::coded::SI_SNAPSHOT_INVALID::5": [
       "push-down-sum-shape__zero_arguments"
     ],
-    "sysml_codegen/cli/__init__.py::_check_duplicate_output_paths::free-text::CodeGenerationError::1": [
+    "sysml_codegen/cli/prepare.py::_check_duplicate_output_paths::free-text::CodeGenerationError::1": [
       "output-naming__module_path_collision"
     ],
-    "sysml_codegen/cli/__init__.py::_check_duplicate_output_paths::free-text::CodeGenerationError::2": [
+    "sysml_codegen/cli/prepare.py::_check_duplicate_output_paths::free-text::CodeGenerationError::2": [
       "output-naming__schema_path_collision"
     ],
-    "sysml_codegen/cli/__init__.py::_preflight_registry_class_names::unrecognized::residual_class_name_collision_error::1": [
+    "sysml_codegen/cli/prepare.py::_preflight_registry_class_names::unrecognized::residual_class_name_collision_error::1": [
       "output-naming__registry_class_collision"
     ],
     "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._apply_deep_literal_redefinitions::coded::OVERRIDE_TARGET_MISSING::1": [

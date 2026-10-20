@@ -13,21 +13,19 @@ from agentic_mbse.sysml.expression_ir import (
     serialize_expression,
 )
 
-from sysml_codegen.cli import (
-    GenerationConfig,
+from sysml_codegen.cli import GenerationConfig, _generate_package_from_graph, run_codegen
+from sysml_codegen.cli.emit import (
     _generate_backlog,
     _generate_entry_points,
     _generate_modules,
-    _generate_package_from_graph,
     _generate_pipeline,
     _generate_registry,
     _generate_schemas,
     _generate_stencils,
     _generate_tests,
-    _get_template_env,
     _seal_package,
-    run_codegen,
 )
+from sysml_codegen.cli.prepare import _get_template_env
 from sysml_codegen.cli.refusal import Refusal, RefusalItem, RefusalKind
 from sysml_codegen.core.errors import GenerationCode
 from sysml_codegen.elaboration.diagnostics import ElaborationCode, SiteReason
@@ -56,7 +54,7 @@ class TestEnsurePackageInitFiles:
     """Bug 7: Intermediate __init__.py creation."""
 
     def test_creates_init_files_in_all_intermediate_dirs(self, tmp_path):
-        from sysml_codegen.cli import _ensure_package_init_files
+        from sysml_codegen.cli.emit import _ensure_package_init_files
 
         (tmp_path / "a" / "b" / "c").mkdir(parents=True)
         _ensure_package_init_files(tmp_path, "a/b/c")
@@ -65,7 +63,7 @@ class TestEnsurePackageInitFiles:
         assert (tmp_path / "a" / "b" / "c" / "__init__.py").exists()
 
     def test_does_not_overwrite_existing_init(self, tmp_path):
-        from sysml_codegen.cli import _ensure_package_init_files
+        from sysml_codegen.cli.emit import _ensure_package_init_files
 
         (tmp_path / "a").mkdir()
         (tmp_path / "a" / "__init__.py").write_text("# custom\n")
@@ -73,14 +71,14 @@ class TestEnsurePackageInitFiles:
         assert (tmp_path / "a" / "__init__.py").read_text() == "# custom\n"
 
     def test_uses_custom_docstring(self, tmp_path):
-        from sysml_codegen.cli import _ensure_package_init_files
+        from sysml_codegen.cli.emit import _ensure_package_init_files
 
         (tmp_path / "x").mkdir()
         _ensure_package_init_files(tmp_path, "x", '"""Custom."""\n')
         assert (tmp_path / "x" / "__init__.py").read_text() == '"""Custom."""\n'
 
     def test_single_dir(self, tmp_path):
-        from sysml_codegen.cli import _ensure_package_init_files
+        from sysml_codegen.cli.emit import _ensure_package_init_files
 
         (tmp_path / "pkg").mkdir()
         _ensure_package_init_files(tmp_path, "pkg")
@@ -91,7 +89,8 @@ class TestSetupOutputDirectories:
     """Bug 7 broader scope: top-level subdirectory __init__.py creation."""
 
     def test_creates_init_py_in_all_subdirectories(self, tmp_path):
-        from sysml_codegen.cli import GenerationConfig, _setup_output_directories
+        from sysml_codegen.cli import GenerationConfig
+        from sysml_codegen.cli.emit import _setup_output_directories
 
         output = tmp_path / "pkg"
         config = GenerationConfig(
@@ -108,7 +107,8 @@ class TestSetupOutputDirectories:
             assert init_file.read_text() == '"""Generated package."""\n'
 
     def test_does_not_create_init_py_in_output_path(self, tmp_path):
-        from sysml_codegen.cli import GenerationConfig, _setup_output_directories
+        from sysml_codegen.cli import GenerationConfig
+        from sysml_codegen.cli.emit import _setup_output_directories
 
         output = tmp_path / "pkg"
         config = GenerationConfig(
@@ -121,7 +121,8 @@ class TestSetupOutputDirectories:
         assert not (output / "__init__.py").exists()
 
     def test_does_not_overwrite_existing_init_py(self, tmp_path):
-        from sysml_codegen.cli import GenerationConfig, _setup_output_directories
+        from sysml_codegen.cli import GenerationConfig
+        from sysml_codegen.cli.emit import _setup_output_directories
 
         output = tmp_path / "pkg"
         (output / "schemas").mkdir(parents=True)
@@ -504,7 +505,7 @@ def test_generation_rejects_symlink_root_before_output_mutation(tmp_path, monkey
         nonlocal clear_reached
         clear_reached = True
 
-    monkeypatch.setattr("sysml_codegen.cli._clear_output_directory", record_clear)
+    monkeypatch.setattr("sysml_codegen.cli.emit._clear_output_directory", record_clear)
     config = GenerationConfig(
         output_path=output,
         models_path=D38_MODEL,

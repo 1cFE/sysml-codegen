@@ -17,11 +17,8 @@ from pathlib import Path
 
 import pytest
 
-from sysml_codegen.cli import (
-    GenerationConfig,
-    _generate_package_from_graph,
-    _preflight_coverage_account,
-)
+from sysml_codegen.cli import GenerationConfig, _generate_package_from_graph
+from sysml_codegen.cli.prepare import _preflight_coverage_account
 from sysml_codegen.core.errors import CodeGenerationError
 from sysml_codegen.elaboration import project
 from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
@@ -36,7 +33,7 @@ D9_FIXTURE = FIXTURES_DIR / "constraint_coverage_eligible_inapplicable"
 
 
 def _graph_and_plan(fixture: Path = FIXTURE):
-    from sysml_codegen.cli import _get_template_env
+    from sysml_codegen.cli.prepare import _get_template_env
 
     graph = project(elaborate_model_paths([fixture]))
     return graph, build_constraint_generation_plan(graph, _get_template_env(), "probe")
@@ -159,7 +156,7 @@ def test_a_reason_item_two_adds_later_refuses_with_the_ruling_instruction(monkey
         graph_module.DISPOSITION_REASONS, "excluded", frozenset({"newly_invented"})
     )
     graph = project(elaborate_model_paths([FIXTURE]))
-    from sysml_codegen.cli import _get_template_env
+    from sysml_codegen.cli.prepare import _get_template_env
 
     # Raises at plan build, which is earlier than the preflight and earlier still than any
     # write. The preflight recomputes through the same function, so it is total over this

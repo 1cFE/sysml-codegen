@@ -1,6 +1,6 @@
 # Implementation Plan: Read-only readiness check, live half (EXEC-SUBSET-CONTRACT Item 2b)
 
-**Status:** In Progress (Phases 0-1 done)
+**Status:** In Progress (Phases 0-2 done)
 **Created:** 2026-10-20
 **Last Updated:** 2026-10-20
 **Branch / base:** sysml-codegen `subset-profile-screen` at `cbbc1100` (design approved); agentic-mbse sibling `/home/reid/src/subset-conformance/agentic-mbse` at `e268357f`, which this plan does not edit (design D12).
@@ -182,17 +182,17 @@ def test_site_rekey_is_a_pure_rename():
 
 See `design.md` D1, Component Overview, Architecture "Churn from D1".
 
-- [ ] `cli/prepare.py` (new): `_get_template_env`, the six preflights, `_check_duplicate_output_paths` and the path helpers both halves use (`_get_python_path`, `_raw_source_name`, `_module_source`). `emit.py` may import from `prepare.py`; never the reverse.
-- [ ] `cli/emit.py` (new): `_ensure_package_init_files`, `_clear_output_directory`, `_setup_output_directories`, `_generate_primitives`, the nine writers, `_seal_package`. Bodies verbatim, re-check calls included.
-- [ ] `cli/__init__.py`: import the moved names; no re-export shims for patched names.
-- [ ] Update every import line and monkeypatch target in `evidence/churn.md`. Each of the four patches must point at the module where the name is now looked up, and its test must still fail when the patch is removed (check by hand once).
-- [ ] Re-key the 16 site account rows and their references in `mutations.json`, `test_mutator.py` and the three case files. Refresh line numbers through the account's own convention (CSV header, "line and the first evidence pointer refreshed at the move").
-- [ ] Add the import-boundary test (Invariant 1, first half).
+- [x] `cli/prepare.py` (new): `_get_template_env`, the six preflights, `_check_duplicate_output_paths` and the path helpers both halves use (`_get_python_path`, `_raw_source_name`, `_module_source`). `emit.py` may import from `prepare.py`; never the reverse.
+- [x] `cli/emit.py` (new): `_ensure_package_init_files`, `_clear_output_directory`, `_setup_output_directories`, `_generate_primitives`, the nine writers, `_seal_package`. Bodies verbatim, re-check calls included.
+- [x] `cli/__init__.py`: import the moved names; no re-export shims for patched names.
+- [x] Update every import line and monkeypatch target in `evidence/churn.md`. Each of the four patches must point at the module where the name is now looked up, and its test must still fail when the patch is removed (check by hand once).
+- [x] Re-key the 16 site account rows and their references in `mutations.json`, `test_mutator.py` and the three case files. Refresh line numbers through the account's own convention (CSV header, "line and the first evidence pointer refreshed at the move").
+- [x] Add the import-boundary test (Invariant 1, first half).
 
 ### Validation
 
-- [ ] Rename-only check on the site account passes; `test_site_account*.py`, `test_site_reach.py`, `test_mutator.py` pass.
-- [ ] Phase exit check, including byte identity and refusal records.
+- [x] Rename-only check on the site account passes; `test_site_account*.py`, `test_site_reach.py`, `test_mutator.py` pass.
+- [x] Phase exit check, including byte identity and refusal records.
 
 **What we know after this phase:** the code lives where the design wants it, with no behaviour change and every test pointed at the real names.
 
@@ -643,6 +643,21 @@ See `design.md#potential-risks` for the full table. Phase-specific mitigations:
 - The new builder calls `elaborate_live_load`, not `elaborate_loaded_extractor` directly; the spy seam D11 needs is unchanged.
 
 ### Phase 2 Completion
+**Completed:** 2026-10-20. Pure move: the 24 moved functions are byte-identical to their base text (checked by comparing each function's source span at `HEAD` with its new home), and every package and refusal record is unchanged.
+
+**Changes Made:**
+- `cli/prepare.py` (new): `_get_template_env`, `_get_python_path`, `_raw_source_name`, `_module_source`, `_check_duplicate_output_paths` and the six `_preflight_*` functions. Imports nothing from `cli/__init__.py` or `cli/emit.py`.
+- `cli/emit.py` (new): `_ensure_package_init_files`, `_clear_output_directory`, `_setup_output_directories`, `_generate_primitives`, the eight `_generate_*` writers and `_seal_package`, re-checks included. Imports `_get_python_path` and `_preflight_constraint_names` from `prepare`; `GenerationConfig` only for type checking. Its logger is `logging.getLogger("sysml_codegen.cli")`, so every record keeps the logger name it had.
+- `cli/__init__.py`: imports the two modules and calls `prepare.X` / `emit.X` from `_generate_package_from_graph`, so a patch on the defining module is the patch that takes effect, now and after Phase 3. No re-export of a moved name. `shutil`, `jinja2` and the moved type-only imports dropped.
+- Tests: imports retargeted in 12 test files and `scripts/assess_v6_snapshot_churn.py` (`evidence/churn.md` §1). Patches retargeted: `test_cli_generation.py:507` → `cli.emit`, `test_public_package_oracle.py:53-66` → `cli.prepare`, and the fifth one the design missed, `test_public_authority_switch.py:483` → `cli.prepare`. The oracle and authority-switch tests were run once with their patch disabled and fail (5 and 1 failures); the clear-recording patch in `test_cli_generation.py:507` is called as `emit._clear_output_directory`, so it is live by construction. `test_generation_boundary.py` now parses `cli/emit.py` and requires it to find at least the eight writers. Comment mentions refreshed (§7).
+- `tests/unit/test_cli_module_boundary.py` (new): `prepare.py` imports neither `emit` nor the CLI package anywhere in the file; the writers are defined in `emit.py` and nowhere else in `cli/`.
+- Site account: the 16 `cli/__init__.py` rows re-keyed to `cli/prepare.py`, with line and first evidence pointer refreshed; the same IDs re-keyed in `mutations.json` and three case files. Checked as a pure rename: with the file part of the ID and the file, line and first-evidence columns set aside, the 498 rows equal Phase 1's.
+
+**Exit check:** licensed suite 7434 passed, 9 failed (the base 9), 9 skipped; every base ID that is missing is a parametrized site ID explained by the `cli/__init__.py` → `cli/prepare.py` or Phase 1 re-key. Byte identity 0 differences (123 subjects); refusal records 0 of 173 differ. mypy clean (89 files), ruff `src/` clean, ruff `src/ tests/` 94. agentic-mbse clean.
+
+**Deviations:**
+- The stencil's `test_site_rekey_is_a_pure_rename` is a one-off check, run and recorded above, not a suite test: pinned to a commit, it would fail on the next legitimate account edit (Phases 3-5 all add or move rows).
+- `test_mutator.py::test_a_package_init_site_imports_the_package_itself` used a site in `cli/__init__.py`. No scanned site lives in any package `__init__.py` now, so the test checks `module_name`'s mapping for an `__init__.py` path on its own and `site_target` on the moved site (`cli.prepare`).
 
 ### Phase 3 Completion
 

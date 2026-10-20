@@ -20,7 +20,7 @@ re-derivations, run through ``run_codegen`` end to end:
 Everything runs license-free from committed v6 snapshots. Regeneration runs pass
 ``smart_regen=True, preserve_handwritten=True`` — the flag pair the clear step
 requires, since only ``preserve_handwritten`` exempts ``handwritten/`` from the
-overwrite clear (`cli/__init__.py`, ``_clear_output_directory``).
+overwrite clear (`cli/emit.py`, ``_clear_output_directory``).
 """
 
 from __future__ import annotations

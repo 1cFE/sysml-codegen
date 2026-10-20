@@ -1,8 +1,8 @@
 """Offline, license-free integration test for Item 7's full constraint generation surface.
 
-Drives every `cli._generate_*` step against a hand-built ComputationGraph carrying a
+Drives every `cli.emit._generate_*` step against a hand-built ComputationGraph carrying a
 CONSTRAINT + REPORT_AGGREGATOR module and a real ConstraintCatalog — the same functions
-`run_codegen` calls, in the same order, writing to a real tmp output tree. Each `cli._generate_*`
+`run_codegen` calls, in the same order, writing to a real tmp output tree. Each writer
 function only reads `ctx.computation_graph`, so a minimal stand-in context is sufficient; no
 live SysIDE model or syside license is needed (contrast the `@requires_license`
 `test_constraint_pipeline_threading.py`, which exercises the live lowering path this test
@@ -25,8 +25,8 @@ from agentic_mbse.sysml.expression_ir import (
     serialize_expression,
 )
 
-from sysml_codegen.cli import (
-    GenerationConfig,
+from sysml_codegen.cli import GenerationConfig
+from sysml_codegen.cli.emit import (
     _generate_backlog,
     _generate_entry_points,
     _generate_modules,
@@ -35,9 +35,9 @@ from sysml_codegen.cli import (
     _generate_schemas,
     _generate_stencils,
     _generate_tests,
-    _get_template_env,
     _setup_output_directories,
 )
+from sysml_codegen.cli.prepare import _get_template_env
 from sysml_codegen.resolution.models import (
     ComputationGraph,
     ConstraintCatalog,

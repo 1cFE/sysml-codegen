@@ -234,17 +234,19 @@ def test_a_package_init_site_imports_the_package_itself() -> None:
     """A site in ``pkg/__init__.py`` targets ``pkg``, the module its callers run.
 
     Importing ``pkg.__init__`` would load a second copy whose functions nothing calls, so a
-    recorder or rewrite there would see nothing.
+    recorder or rewrite there would see nothing. No scanned site lives in a package
+    ``__init__.py`` since the preflights moved to ``cli/prepare.py`` (Item 2b D1), so the
+    mapping is checked on its own and a moved site on its new module.
     """
     assert mutate.module_name("sysml_codegen/cli/__init__.py") == "sysml_codegen.cli"
     assert mutate.module_name("sysml_codegen/elaboration/graph.py") == (
         "sysml_codegen.elaboration.graph"
     )
     target = mutate.site_target(
-        "sysml_codegen/cli/__init__.py::_check_duplicate_output_paths::free-text::"
+        "sysml_codegen/cli/prepare.py::_check_duplicate_output_paths::free-text::"
         "CodeGenerationError::1"
     )
-    assert target.module is sys.modules["sysml_codegen.cli"]
+    assert target.module is sys.modules["sysml_codegen.cli.prepare"]
 
 
 # ---- the mutations the licensed tests apply ---------------------------------------------------

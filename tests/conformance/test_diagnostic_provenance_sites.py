@@ -282,7 +282,7 @@ def test_a_capture_refusal_never_names_the_private_staging_directory(
 
 def test_a_generation_preflight_refusal_carries_its_code_token_and_source() -> None:
     """The preflight family speaks in stable tokens and cites what it measured."""
-    from sysml_codegen.cli import _check_duplicate_output_paths
+    from sysml_codegen.cli.prepare import _check_duplicate_output_paths
     from sysml_codegen.core.errors import CodeGenerationError
     from sysml_codegen.resolution.models import ModuleKind, ModuleOutput, PipelineModule
 
