@@ -50,5 +50,5 @@ Gate: DISPOSED (spec-F7, spec-F8, spec-F9)
 ## spec dispositions (revision 1) — 2026-10-20 — agent (spec stage, revising)
 - spec-F7: criterion extended. Success Criteria 7 and 9 now cover `sysml-codegen snapshot`: capture still seals under skew or a screen failure, with any carried findings or facts recorded as not assessed.
 - spec-F8: limit stated in Success Criterion 8. It reaches only same-package-version profile skew; across released versions the kept package-version check refuses first, as today. Design states that limit or relaxes the check with a reason.
-- spec-F9: no spec change. Carried to design and the orchestrator: if design cannot locate the website, ask the owner where it lives before committing an envelope format change, and name the dc3 and fusion-tea recapture cost in the same message.
-Gate: PASS after dispositions (agent-recorded; owner or spec-review to confirm).
+- spec-F9: spec changed (revision 2, per spec-review Round 2 R2-5, which rejected the earlier "no spec change" disposition). The spec's website line now says: if the website is still unlocated when design would commit any new snapshot envelope format, design asks the owner first, naming the dc3 and fusion-tea recapture cost; keeping v6 needs no question. The website question itself is already with the owner (asked by the orchestrator 2026-10-20, unanswered).
+Gate: PASS after dispositions. spec-review Round 2 confirmed F7 and F8; F9 is amended above as Round 2 R2-5 required.
