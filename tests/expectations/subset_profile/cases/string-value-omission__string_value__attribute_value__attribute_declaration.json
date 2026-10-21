@@ -1,6 +1,13 @@
 {
   "id": "string-value-omission__string_value__attribute_value__attribute_declaration",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "String attribute fuel_unit declared with its value, attribute fuel_unit : String = \"liter\""
+  },
   "generator": {
     "outcome": "generated",
     "codes": [],

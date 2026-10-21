@@ -1,6 +1,5 @@
 {
   "id": "anonymous-declaration__item_usage",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

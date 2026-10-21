@@ -1,6 +1,5 @@
 {
   "id": "candidate-es-010-refusal__real_library_default__unbound_input",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

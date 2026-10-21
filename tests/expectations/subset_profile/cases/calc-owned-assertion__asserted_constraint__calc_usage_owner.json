@@ -1,6 +1,13 @@
 {
   "id": "calc-owned-assertion__asserted_constraint__calc_usage_owner",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      8,
+      12
+    ],
+    "description": "asserted constraint f1 owned by calc usage path; the generator locates the refusal at the owner (line 8)"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

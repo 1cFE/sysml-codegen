@@ -1,6 +1,13 @@
 {
   "id": "string-value-omission__string_value__attribute_value__template",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "String attribute label in part def Spare, which has no occurrence"
+  },
   "generator": {
     "outcome": "generated",
     "codes": [],

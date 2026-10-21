@@ -1,6 +1,13 @@
 {
   "id": "binding-source__expression_source__owner_instantiated__arithmetic",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "calc input v bound to rate * fuel_code; owner Gen instantiated by gen"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

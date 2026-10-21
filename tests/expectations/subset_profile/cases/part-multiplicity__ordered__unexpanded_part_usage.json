@@ -1,6 +1,13 @@
 {
   "id": "part-multiplicity__ordered__unexpanded_part_usage",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "servers : Server[2] ordered in Rack, which nothing instantiates"
+  },
   "generator": {
     "outcome": "generated",
     "codes": [],

@@ -1,6 +1,5 @@
 {
   "id": "calc-def-output-stub__not_operator",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

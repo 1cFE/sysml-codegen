@@ -1,6 +1,13 @@
 {
   "id": "binding-source__self_reference_source__owner_instantiated__indexed_owner",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "self-bound input in Site, instantiated through hall.sites[2] (B5)"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

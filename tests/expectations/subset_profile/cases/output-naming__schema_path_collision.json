@@ -1,6 +1,5 @@
 {
   "id": "output-naming__schema_path_collision",
-  "home": "codegen",
   "construct": {
     "file": "a.sysml",
     "lines": [

@@ -1,6 +1,13 @@
 {
   "id": "calc-owned-assertion__asserted_constraint__calc_definition_owner",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "asserted constraint f1 owned by calc def Eff2"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

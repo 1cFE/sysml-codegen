@@ -1,10 +1,8 @@
 """The conformance cases: one small model each, with the generator's stored answer.
 
-A case's stored answer is ``tests/expectations/subset_profile/cases/<case_id>.json``
-(EXEC-SUBSET-CONTRACT Item 2a design D1, D14). Its model lives either in agentic-mbse package
-data (``agentic_mbse/sysml/subset_cases/<case_id>/``, read through
-``agentic_mbse.sysml.conformance_case``) or under ``tests/fixtures/subset_profile/<case_id>/``,
-where the stored answer also holds the case's construct.
+A case's model is ``tests/fixtures/subset_profile/<case_id>/`` and its stored answer
+``tests/expectations/subset_profile/cases/<case_id>.json`` (EXEC-SUBSET-CONTRACT Item 2a design
+D1, D14). The answer names the construct the case is about and what the generator does with it.
 
 Everything here is pure: it reads stored files.
 """
@@ -19,33 +17,19 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
-from agentic_mbse.sysml.conformance_case import (
-    Construct,
-    load_packaged_case,
-    packaged_case_dir,
-    packaged_case_ids,
-)
-
 from sysml_codegen.elaboration.diagnostics import SiteReason
 
 _TESTS = Path(__file__).resolve().parents[2]
 EXPECTATIONS_DIR = _TESTS / "expectations" / "subset_profile"
 ANSWERS_DIR = EXPECTATIONS_DIR / "cases"
-#: Codegen-home case models (design D14). A model collection, not one model.
-CODEGEN_CASES_DIR = _TESTS / "fixtures" / "subset_profile"
+#: The case models, one folder each. A model collection, not one model.
+CASES_DIR = _TESTS / "fixtures" / "subset_profile"
 
 _RG1_ID = re.compile(r"RG1-[1-9][0-9]*")
 
 
 class CaseAnswerError(ValueError):
     """A stored answer does not have its stored form."""
-
-
-class CaseHome(StrEnum):
-    #: The model and construct are agentic-mbse package data.
-    AGENTIC = "agentic"
-    #: The model lives in this repository, and the construct in the stored answer.
-    CODEGEN = "codegen"
 
 
 class GeneratorOutcome(StrEnum):
@@ -72,6 +56,19 @@ class LossDisposition(StrEnum):
     CANDIDATE_REFUSAL = "candidate_refusal"
     #: A String loss: the policy is the owner's RG-2 decision, so it is neither of the above.
     RG2_PENDING = "rg2_pending"
+
+
+@dataclass(frozen=True)
+class Construct:
+    """The one construct a case is about: its file and inclusive source lines."""
+
+    file: str
+    first_line: int
+    last_line: int
+    description: str
+
+    def contains(self, line: int) -> bool:
+        return self.first_line <= line <= self.last_line
 
 
 @dataclass(frozen=True)
@@ -121,15 +118,9 @@ class LossAnswer:
 @dataclass(frozen=True)
 class StoredAnswer:
     case_id: str
-    home: CaseHome
+    construct: Construct
     generator: GeneratorAnswer
-    #: Present exactly for codegen-home cases.
-    construct: Construct | None
     loss: LossAnswer | None
-
-    @property
-    def subject(self) -> str:
-        return f"case:{self.case_id}"
 
 
 # ---- reading ----------------------------------------------------------------------------------
@@ -276,24 +267,16 @@ def load_stored_answer(path: Path) -> StoredAnswer:
     data = _fields(
         json.loads(path.read_text(encoding="utf-8")),
         where,
-        required=frozenset({"id", "home", "generator"}),
-        optional=frozenset({"construct", "loss"}),
+        required=frozenset({"id", "construct", "generator"}),
+        optional=frozenset({"loss"}),
     )
     case_id = _text(data["id"], f"{where}.id")
     if case_id != path.stem:
         raise CaseAnswerError(f"{where}: id {case_id!r} is not the file name {path.stem!r}")
-    home = _member(CaseHome, data["home"], f"{where}.home")
-    if ("construct" in data) != (home is CaseHome.CODEGEN):
-        raise CaseAnswerError(f"{where}: a construct is stored here exactly for codegen-home cases")
     return StoredAnswer(
         case_id=case_id,
-        home=home,
+        construct=_construct(data["construct"], f"{where}.construct"),
         generator=_generator(data["generator"], f"{where}.generator"),
-        construct=(
-            _construct(data["construct"], f"{where}.construct")
-            if home is CaseHome.CODEGEN
-            else None
-        ),
         loss=_loss(data["loss"], f"{where}.loss") if "loss" in data else None,
     )
 
@@ -306,16 +289,9 @@ def answer_ids() -> frozenset[str]:
     return frozenset(p.stem for p in ANSWERS_DIR.glob("*.json"))
 
 
-def packaged_ids() -> frozenset[str]:
-    """Every case whose model is agentic-mbse package data."""
-    return frozenset(packaged_case_ids())
-
-
-def codegen_ids() -> frozenset[str]:
-    """Every case whose model lives in this repository."""
-    if not CODEGEN_CASES_DIR.is_dir():
-        return frozenset()
-    return frozenset(d.name for d in CODEGEN_CASES_DIR.iterdir() if d.is_dir())
+def model_ids() -> frozenset[str]:
+    """Every case with a model folder."""
+    return frozenset(d.name for d in CASES_DIR.iterdir() if d.is_dir())
 
 
 def load_answer(case_id: str) -> StoredAnswer:
@@ -328,12 +304,4 @@ def all_answers() -> tuple[StoredAnswer, ...]:
 
 def model_root(answer: StoredAnswer) -> Path:
     """The directory holding the case's model files."""
-    if answer.home is CaseHome.AGENTIC:
-        return packaged_case_dir(answer.case_id)
-    return CODEGEN_CASES_DIR / answer.case_id
-
-
-def construct_of(answer: StoredAnswer) -> Construct:
-    if answer.construct is not None:
-        return answer.construct
-    return load_packaged_case(answer.case_id).construct
+    return CASES_DIR / answer.case_id

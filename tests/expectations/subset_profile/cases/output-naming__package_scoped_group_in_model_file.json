@@ -1,6 +1,5 @@
 {
   "id": "output-naming__package_scoped_group_in_model_file",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

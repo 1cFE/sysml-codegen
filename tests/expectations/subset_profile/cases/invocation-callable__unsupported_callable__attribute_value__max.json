@@ -1,6 +1,13 @@
 {
   "id": "invocation-callable__unsupported_callable__attribute_value__max",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "attribute big valued by ScalarFunctions::max(a, b)"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [
@@ -8,6 +15,9 @@
     ],
     "reasons": [
       "evidence_expression_kind_unsupported"
+    ],
+    "witnesses": [
+      "agentic_mbse/sysml/reference_use.py::_require_supported_invocation::shared-evidence::EXPRESSION_KIND_UNSUPPORTED::1"
     ]
   }
 }

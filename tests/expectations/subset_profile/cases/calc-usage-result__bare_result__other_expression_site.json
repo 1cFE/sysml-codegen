@@ -1,6 +1,13 @@
 {
   "id": "calc-usage-result__bare_result__other_expression_site",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "calc usage m ends its body in the bare result v * 3.0; the generator computes r from Twice's 2.0 * v"
+  },
   "generator": {
     "outcome": "generated",
     "codes": [],

@@ -2,7 +2,7 @@
 
 Pure: the scan reads the ``reason=SiteReason.<member>`` a site passes literally, and the
 account's ``reason`` column must name the same member's value, in both directions. Every
-witness a stored answer or packaged case names is a scanned site; that each one fires is
+witness a stored answer names is a scanned site; that each one fires is
 ``test_witnesses.py``'s licensed check. Requiring
 every public row to have a reason and a witness is ``test_site_account_completeness.py``'s job
 (P6), so this test stays green while reasons land.
@@ -54,12 +54,12 @@ def test_the_reach_witnesses_reasons_are_recorded_at_their_sites():
 
 
 def test_every_witness_names_a_scanned_site():
-    named = set(witnesses.codegen_witnesses()) | set(witnesses.agentic_witnesses())
-    assert sorted(named - SCAN.by_id().keys()) == []
+    assert sorted(witnesses.case_witnesses().keys() - SCAN.by_id().keys()) == []
 
 
 def test_every_codegen_witness_names_an_accounted_site():
-    assert sorted(set(witnesses.codegen_witnesses()) - ACCOUNT.ids()) == []
+    codegen = {s for s in witnesses.case_witnesses() if s.startswith("sysml_codegen/")}
+    assert sorted(codegen - ACCOUNT.ids()) == []
 
 
 def test_no_two_sites_share_a_reason():

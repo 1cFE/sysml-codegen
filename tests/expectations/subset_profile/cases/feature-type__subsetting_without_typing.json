@@ -1,6 +1,5 @@
 {
   "id": "feature-type__subsetting_without_typing",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

@@ -1,6 +1,13 @@
 {
   "id": "binding-source__self_reference_source__owner_instantiated__subtype",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "self-bound input in Site, instantiated through subtype BigSite (B5)"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

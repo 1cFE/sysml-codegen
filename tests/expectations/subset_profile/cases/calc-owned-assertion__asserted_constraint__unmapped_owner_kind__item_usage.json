@@ -1,6 +1,13 @@
 {
   "id": "calc-owned-assertion__asserted_constraint__unmapped_owner_kind__item_usage",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      8,
+      8
+    ],
+    "description": "item usage fuel, which owns the asserted constraint dpos; the generator locates the refusal at the owner, line 8"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

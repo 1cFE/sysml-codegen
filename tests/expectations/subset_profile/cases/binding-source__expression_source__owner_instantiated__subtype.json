@@ -1,6 +1,13 @@
 {
   "id": "binding-source__expression_source__owner_instantiated__subtype",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      7
+    ],
+    "description": "calc input xs bound to (a, b) in part def Site, instantiated only through subtype BigSite (B5)"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

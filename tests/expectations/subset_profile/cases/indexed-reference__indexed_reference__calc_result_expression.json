@@ -1,6 +1,13 @@
 {
   "id": "indexed-reference__indexed_reference__calc_result_expression",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      3
+    ],
+    "description": "calc def First whose bare result is xs#(1)"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

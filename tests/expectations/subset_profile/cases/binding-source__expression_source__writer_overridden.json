@@ -1,6 +1,13 @@
 {
   "id": "binding-source__expression_source__writer_overridden",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "Base::c binds v to x * 2.0 and Derived redefines c in its only occurrence d1; control is the winning writer's output"
+  },
   "generator": {
     "outcome": "generated",
     "codes": [],

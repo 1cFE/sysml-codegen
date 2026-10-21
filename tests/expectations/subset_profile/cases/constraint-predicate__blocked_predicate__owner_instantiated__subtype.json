@@ -1,6 +1,13 @@
 {
   "id": "constraint-predicate__blocked_predicate__owner_instantiated__subtype",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "the BLOCK predicate in Site, instantiated through subtype BigSite (B5)"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [
@@ -10,7 +17,8 @@
       "constraint_profile_blocked"
     ],
     "witnesses": [
-      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._build_constraint_nodes::coded::SI_CONSTRAINT_BLOCKED::1"
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._build_constraint_nodes::coded::SI_CONSTRAINT_BLOCKED::1",
+      "agentic_mbse/sysml/executable_profile.py::_walk_proposition::shared-profile::warn_non_numerical_predicate::1"
     ]
   }
 }

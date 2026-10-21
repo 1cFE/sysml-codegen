@@ -1,10 +1,20 @@
 {
   "id": "constraint-predicate__non_numerical_predicate__owner_uninstantiated",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "asserted Boolean predicate enabled in part def Spare, which has no occurrence"
+  },
   "generator": {
     "outcome": "generated",
     "codes": [],
     "reasons": [],
+    "witnesses": [
+      "agentic_mbse/sysml/executable_profile.py::_walk_proposition::shared-profile::warn_non_numerical_predicate::1"
+    ],
     "seams": [
       {
         "kind": "catalog_usage",

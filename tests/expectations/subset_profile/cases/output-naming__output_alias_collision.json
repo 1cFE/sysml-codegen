@@ -1,6 +1,5 @@
 {
   "id": "output-naming__output_alias_collision",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

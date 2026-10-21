@@ -1,6 +1,13 @@
 {
   "id": "candidate-es-008__nested_named_subset__part_usage",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      11,
+      18
+    ],
+    "description": "named server subsets inside named rack subsets, each redefining psu efficiency (dc3 U2)"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

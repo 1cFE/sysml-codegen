@@ -1,6 +1,13 @@
 {
   "id": "candidate-es-011__return_result_arithmetic__attribute_value",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      8,
+      8
+    ],
+    "description": "attribute y = c.r * k, where r is calc def Twice's named return"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

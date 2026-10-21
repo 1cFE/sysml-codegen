@@ -1,6 +1,5 @@
 {
   "id": "bare-reference__imported_nested_feature",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

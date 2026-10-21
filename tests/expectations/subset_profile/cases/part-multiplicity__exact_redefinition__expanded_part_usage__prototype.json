@@ -1,6 +1,13 @@
 {
   "id": "part-multiplicity__exact_redefinition__expanded_part_usage__prototype",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "rack redefines servers[*] as exactly [2] (prototype model; Server has no calc, so the control is meter's)"
+  },
   "generator": {
     "outcome": "generated",
     "codes": [],

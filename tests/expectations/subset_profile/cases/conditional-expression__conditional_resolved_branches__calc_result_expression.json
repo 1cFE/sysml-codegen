@@ -1,6 +1,13 @@
 {
   "id": "conditional-expression__conditional_resolved_branches__calc_result_expression",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      3
+    ],
+    "description": "calc def Pick whose bare result is if a < b ? 1.0 else 2.0, whose branches are literals"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

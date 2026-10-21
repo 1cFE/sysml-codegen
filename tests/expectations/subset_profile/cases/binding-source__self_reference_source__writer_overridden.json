@@ -1,6 +1,13 @@
 {
   "id": "binding-source__self_reference_source__writer_overridden",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "Base::c binds v to itself and Derived redefines c in its only occurrence d1"
+  },
   "generator": {
     "outcome": "generated",
     "codes": [],

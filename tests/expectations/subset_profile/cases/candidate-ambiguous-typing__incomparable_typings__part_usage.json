@@ -1,6 +1,13 @@
 {
   "id": "candidate-ambiguous-typing__incomparable_typings__part_usage",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      7
+    ],
+    "description": "part usage unit typed by A and B, two unrelated specializations of Base that each redefine rate"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

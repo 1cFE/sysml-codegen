@@ -1,6 +1,13 @@
 {
   "id": "binding-source__self_reference_source__owner_instantiated__part_usage_owner",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "self-bound input in root part usage site (B5)"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

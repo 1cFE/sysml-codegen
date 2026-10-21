@@ -1,6 +1,5 @@
 {
   "id": "part-typing__two_definitions",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

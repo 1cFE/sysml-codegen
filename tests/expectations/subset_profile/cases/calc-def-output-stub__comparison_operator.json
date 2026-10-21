@@ -1,6 +1,5 @@
 {
   "id": "calc-def-output-stub__comparison_operator",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

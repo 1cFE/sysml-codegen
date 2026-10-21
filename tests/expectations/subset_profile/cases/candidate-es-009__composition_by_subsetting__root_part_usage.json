@@ -1,6 +1,13 @@
 {
   "id": "candidate-es-009__composition_by_subsetting__root_part_usage",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "root part site subsets the untyped top-level usage ac_facility as facility and reads facility.area"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

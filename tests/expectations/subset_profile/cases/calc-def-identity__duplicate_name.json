@@ -1,6 +1,5 @@
 {
   "id": "calc-def-identity__duplicate_name",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

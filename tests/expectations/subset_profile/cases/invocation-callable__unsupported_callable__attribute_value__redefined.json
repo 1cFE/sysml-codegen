@@ -1,6 +1,13 @@
 {
   "id": "invocation-callable__unsupported_callable__attribute_value__redefined",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "Site redefines Base::big with the value ScalarFunctions::max(a, 2.0)"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [
@@ -8,6 +15,9 @@
     ],
     "reasons": [
       "evidence_expression_kind_unsupported"
+    ],
+    "witnesses": [
+      "agentic_mbse/sysml/reference_use.py::_require_supported_invocation::shared-evidence::EXPRESSION_KIND_UNSUPPORTED::1"
     ]
   }
 }

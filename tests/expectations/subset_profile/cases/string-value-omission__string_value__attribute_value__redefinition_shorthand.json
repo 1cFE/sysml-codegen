@@ -1,6 +1,13 @@
 {
   "id": "string-value-omission__string_value__attribute_value__redefinition_shorthand",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "String attribute fuel_unit valued by the redefinition shorthand :>> fuel_unit = \"liter\""
+  },
   "generator": {
     "outcome": "generated",
     "codes": [],

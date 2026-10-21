@@ -1,6 +1,13 @@
 {
   "id": "string-value-omission__string_value__attribute_value__read_by_attribute",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "String label valued by reading fuel_unit, which is declared with its value \"liter\""
+  },
   "generator": {
     "outcome": "generated",
     "codes": [],

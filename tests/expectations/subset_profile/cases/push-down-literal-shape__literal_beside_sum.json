@@ -1,6 +1,5 @@
 {
   "id": "push-down-literal-shape__literal_beside_sum",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

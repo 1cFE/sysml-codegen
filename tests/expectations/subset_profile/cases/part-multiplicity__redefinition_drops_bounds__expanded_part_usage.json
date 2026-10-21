@@ -1,6 +1,13 @@
 {
   "id": "part-multiplicity__redefinition_drops_bounds__expanded_part_usage",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "rack redefines servers[2] with no multiplicity; the generator expands one occurrence (matrix row G1, design D14 a)"
+  },
   "generator": {
     "outcome": "generated",
     "codes": [],

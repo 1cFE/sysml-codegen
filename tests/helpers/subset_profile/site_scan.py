@@ -6,8 +6,9 @@ the account moved with keep their meaning. Two things are added:
 
 - every other ``raise`` under ``src/sysml_codegen/`` is reported as an ``unrecognized`` site
   named by what it raises, so the inventory is total over ``raise`` statements;
-- agentic-mbse's site IDs are resolved from the installed package's source, so a packaged
-  case's ``agentic_site_witnesses`` can be checked here without reading agentic-mbse's tree.
+- agentic-mbse's site IDs are resolved from the installed package's source, so a case's
+  witnesses at the agentic-mbse sites the generator runs can be checked here without reading
+  agentic-mbse's tree.
 
 A site is where a refusal originates. Its ID is (path, enclosing qualname, channel, code,
 ordinal within that function), which survives line moves. Channels:

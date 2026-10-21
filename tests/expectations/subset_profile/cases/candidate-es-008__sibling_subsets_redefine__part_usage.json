@@ -1,6 +1,13 @@
 {
   "id": "candidate-es-008__sibling_subsets_redefine__part_usage",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      11,
+      12
+    ],
+    "description": "two named subsets of racks, rack_1 and rack_2, each redefine servers.psu.efficiency"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

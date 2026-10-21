@@ -1,6 +1,5 @@
 {
   "id": "constraint-naming__predicate_function_collision",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

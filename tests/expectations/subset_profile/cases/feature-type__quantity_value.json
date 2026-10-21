@@ -1,6 +1,5 @@
 {
   "id": "feature-type__quantity_value",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

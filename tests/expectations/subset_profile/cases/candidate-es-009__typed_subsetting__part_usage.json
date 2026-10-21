@@ -1,6 +1,5 @@
 {
   "id": "candidate-es-009__typed_subsetting__part_usage",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

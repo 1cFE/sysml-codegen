@@ -1,7 +1,7 @@
 """Witnesses and the stored effect of every mutation (Item 2a design D5, D7, § B).
 
-A witness is a case that fires a site. Codegen sites are named in the stored generator answer
-(``generator.witnesses``); agentic-mbse sites in the packaged case (``agentic_site_witnesses``).
+A witness is a case that fires a site. The stored generator answer names them
+(``generator.witnesses``): codegen sites, and the agentic-mbse sites the generator runs.
 
 ``tests/expectations/subset_profile/mutations.json`` (``subset-mutations/2``) holds, by hand:
 
@@ -18,8 +18,6 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-
-from agentic_mbse.sysml.conformance_case import load_packaged_case
 
 from tests.helpers.subset_profile import cases, mutate, observe, site_scan
 from tests.helpers.subset_profile.cases import StoredAnswer
@@ -152,7 +150,8 @@ def recorded_unreached_sites() -> tuple[str, ...]:
     )
 
 
-def codegen_witnesses() -> dict[str, frozenset[str]]:
+def case_witnesses() -> dict[str, frozenset[str]]:
+    """Each witnessed site, with the cases that name it."""
     found: dict[str, set[str]] = {}
     for answer in cases.all_answers():
         for site_id in answer.generator.witnesses:
@@ -160,18 +159,9 @@ def codegen_witnesses() -> dict[str, frozenset[str]]:
     return {k: frozenset(v) for k, v in found.items()}
 
 
-def agentic_witnesses() -> dict[str, frozenset[str]]:
-    found: dict[str, set[str]] = {}
-    for case_id in cases.packaged_ids():
-        for site_id in load_packaged_case(case_id).agentic_site_witnesses:
-            found.setdefault(site_id, set()).add(case_id)
-    return {k: frozenset(v) for k, v in found.items()}
-
-
 def witnesses_of(site_id: str) -> frozenset[str]:
-    """The cases that name ``site_id`` as a witness, in whichever store its repo reads."""
-    store = agentic_witnesses() if site_id.startswith("agentic_mbse/") else codegen_witnesses()
-    return store.get(site_id, frozenset())
+    """The cases that name ``site_id`` as a witness."""
+    return case_witnesses().get(site_id, frozenset())
 
 
 @functools.cache
@@ -182,7 +172,7 @@ def generator_firing() -> dict[str, frozenset[str]]:
     Licensed.
     """
     recorded = sorted(
-        set(mutated_sites()) | set(codegen_witnesses()) | set(recorded_unreached_sites())
+        set(mutated_sites()) | set(case_witnesses()) | set(recorded_unreached_sites())
     )
     fired = {}
     for answer in cases.all_answers():

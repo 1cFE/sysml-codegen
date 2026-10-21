@@ -19,6 +19,6 @@ WITNESSED = sorted(a.case_id for a in cases.all_answers() if a.generator.witness
 
 
 @pytest.mark.parametrize("case_id", WITNESSED, ids=str)
-def test_a_codegen_witness_fires_its_sites_in_the_generator_half(case_id):
+def test_a_witness_fires_its_sites_in_the_generator_half(case_id):
     named = set(cases.load_answer(case_id).generator.witnesses)
     assert named - witnesses.generator_firing()[case_id] == set()

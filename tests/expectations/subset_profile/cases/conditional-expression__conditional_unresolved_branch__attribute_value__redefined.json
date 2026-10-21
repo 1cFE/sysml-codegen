@@ -1,6 +1,13 @@
 {
   "id": "conditional-expression__conditional_unresolved_branch__attribute_value__redefined",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      8,
+      8
+    ],
+    "description": "Site redefines Base::low with the value if x < y ? x else y"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [
@@ -8,6 +15,9 @@
     ],
     "reasons": [
       "evidence_resolved_target_missing"
+    ],
+    "witnesses": [
+      "agentic_mbse/sysml/reference_use.py::_reference_use::shared-evidence::RESOLVED_TARGET_MISSING::1"
     ]
   }
 }

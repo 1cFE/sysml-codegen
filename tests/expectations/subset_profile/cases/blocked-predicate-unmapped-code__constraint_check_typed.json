@@ -1,6 +1,5 @@
 {
   "id": "blocked-predicate-unmapped-code__constraint_check_typed",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

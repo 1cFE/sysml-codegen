@@ -1,6 +1,13 @@
 {
   "id": "conditional-expression__conditional_unresolved_branch__calc_result_expression",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      3
+    ],
+    "description": "calc def Min2 whose bare result is if a < b ? a else b"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

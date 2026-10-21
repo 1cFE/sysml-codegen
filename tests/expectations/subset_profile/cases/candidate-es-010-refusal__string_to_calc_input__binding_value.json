@@ -1,6 +1,13 @@
 {
   "id": "candidate-es-010-refusal__string_to_calc_input__binding_value",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      5
+    ],
+    "description": "String fuel_unit bound to calc input u and valued on the instance; refused at projection"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

@@ -1,6 +1,13 @@
 {
   "id": "calc-usage-result__no_bare_result__other_expression_site",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "calc usage m with no expression of its own; r comes from Twice and the binding in v = x reaches the calculation"
+  },
   "generator": {
     "outcome": "generated",
     "codes": [],

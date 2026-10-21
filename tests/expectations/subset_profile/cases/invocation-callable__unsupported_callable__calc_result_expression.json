@@ -1,6 +1,13 @@
 {
   "id": "invocation-callable__unsupported_callable__calc_result_expression",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      3
+    ],
+    "description": "calc def Big whose bare result is ScalarFunctions::max(a, b)"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

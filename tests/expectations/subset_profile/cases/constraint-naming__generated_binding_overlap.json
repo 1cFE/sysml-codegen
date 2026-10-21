@@ -1,6 +1,5 @@
 {
   "id": "constraint-naming__generated_binding_overlap",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

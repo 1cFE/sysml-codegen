@@ -1,6 +1,13 @@
 {
   "id": "candidate-calc-result-expression__bare_result__calc_result_expression__max",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      3
+    ],
+    "description": "calc def Big whose result is the bare expression ScalarFunctions::max(a, b)"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

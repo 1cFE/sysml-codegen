@@ -1,6 +1,13 @@
 {
   "id": "binding-source__self_reference_source__owner_instantiated",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      7
+    ],
+    "description": "calc input v bound to itself; owner Site instantiated by site"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

@@ -1,6 +1,5 @@
 {
   "id": "candidate-es-009__package_usage_read__attribute_value",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

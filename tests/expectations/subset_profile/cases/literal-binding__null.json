@@ -1,6 +1,5 @@
 {
   "id": "literal-binding__null",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

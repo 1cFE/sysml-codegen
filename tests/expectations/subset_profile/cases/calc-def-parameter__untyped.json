@@ -1,6 +1,5 @@
 {
   "id": "calc-def-parameter__untyped",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

@@ -1,6 +1,13 @@
 {
   "id": "part-multiplicity__ordered__expanded_part_usage__under_two",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "servers : Server[2] ordered under hall.racks[2] (B5)"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

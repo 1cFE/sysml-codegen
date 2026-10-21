@@ -1,6 +1,5 @@
 {
   "id": "push-down-sum-shape__zero_arguments",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

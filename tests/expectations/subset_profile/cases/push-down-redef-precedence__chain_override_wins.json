@@ -1,6 +1,5 @@
 {
   "id": "push-down-redef-precedence__chain_override_wins",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

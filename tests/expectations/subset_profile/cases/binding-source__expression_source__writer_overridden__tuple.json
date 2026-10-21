@@ -1,6 +1,13 @@
 {
   "id": "binding-source__expression_source__writer_overridden__tuple",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "Base::t binds xs to (a, b) and Derived redefines t in d1"
+  },
   "generator": {
     "outcome": "generated",
     "codes": [],

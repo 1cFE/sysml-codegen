@@ -1,6 +1,5 @@
 {
   "id": "push-down-literal-shape__sum_of_literal",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

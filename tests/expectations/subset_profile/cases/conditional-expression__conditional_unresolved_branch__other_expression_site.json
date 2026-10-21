@@ -1,6 +1,13 @@
 {
   "id": "conditional-expression__conditional_unresolved_branch__other_expression_site",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "calc usage m's bare result expression if v < 4273.5 ? v else 1.0, never examined and dropped: the unique literal 4273.5 must appear nowhere in the output; control is m's output"
+  },
   "generator": {
     "outcome": "generated",
     "codes": [],

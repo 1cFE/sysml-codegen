@@ -1,6 +1,13 @@
 {
   "id": "binding-source__expression_source__owner_other",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      7
+    ],
+    "description": "calc usage t owned by item def Box binds xs to (a, b); an item def attaches no occurrences"
+  },
   "generator": {
     "outcome": "generated",
     "codes": [],

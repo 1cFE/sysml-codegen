@@ -1,6 +1,13 @@
 {
   "id": "indexed-reference__indexed_reference__calc_definition_feature_value",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      3
+    ],
+    "description": "calc def First's result feature r valued by xs#(1)"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

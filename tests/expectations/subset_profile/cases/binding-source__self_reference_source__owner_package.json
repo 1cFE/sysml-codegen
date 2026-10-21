@@ -1,6 +1,13 @@
 {
   "id": "binding-source__self_reference_source__owner_package",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "package-owned calc usage t binds v to itself"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

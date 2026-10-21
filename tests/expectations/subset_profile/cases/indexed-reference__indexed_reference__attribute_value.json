@@ -1,6 +1,13 @@
 {
   "id": "indexed-reference__indexed_reference__attribute_value",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      8,
+      8
+    ],
+    "description": "attribute head valued by the indexed reference qs#(1).v"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

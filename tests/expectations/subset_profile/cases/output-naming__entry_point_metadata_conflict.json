@@ -1,6 +1,5 @@
 {
   "id": "output-naming__entry_point_metadata_conflict",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

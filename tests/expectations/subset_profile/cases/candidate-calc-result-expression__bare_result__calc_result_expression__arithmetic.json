@@ -1,6 +1,13 @@
 {
   "id": "candidate-calc-result-expression__bare_result__calc_result_expression__arithmetic",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      3
+    ],
+    "description": "calc def Twice whose result is the bare expression 2.0 * v (return r declared without a value)"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

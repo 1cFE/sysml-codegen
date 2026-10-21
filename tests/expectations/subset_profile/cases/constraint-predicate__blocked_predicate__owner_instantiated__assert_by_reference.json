@@ -1,6 +1,13 @@
 {
   "id": "constraint-predicate__blocked_predicate__owner_instantiated__assert_by_reference",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      9,
+      12
+    ],
+    "description": "Holder::checked asserts the constraint usage positive by reference"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [
@@ -10,7 +17,8 @@
       "constraint_profile_blocked"
     ],
     "witnesses": [
-      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._build_constraint_nodes::coded::SI_CONSTRAINT_BLOCKED::1"
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._build_constraint_nodes::coded::SI_CONSTRAINT_BLOCKED::1",
+      "agentic_mbse/sysml/executable_profile.py::_evaluate_usage_against_definition::shared-profile::block_assert_by_reference::1"
     ]
   }
 }

@@ -1,6 +1,13 @@
 {
   "id": "calc-owned-assertion__non_asserted_constraint__unmapped_owner_kind__attribute_definition",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "attribute def A, which owns the constraint dpos; the generator locates the refusal at the owner, line 4"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

@@ -1,6 +1,13 @@
 {
   "id": "candidate-anonymous-constraint__inline_assert__owner_instantiated",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "anonymous assert constraint { x > 0.0 }"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

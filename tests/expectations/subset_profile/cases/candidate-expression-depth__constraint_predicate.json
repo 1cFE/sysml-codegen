@@ -1,6 +1,13 @@
 {
   "id": "candidate-expression-depth__constraint_predicate",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "an asserted constraint whose predicate holds a 120-term sum, nested past the shared 100-level traversal depth"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

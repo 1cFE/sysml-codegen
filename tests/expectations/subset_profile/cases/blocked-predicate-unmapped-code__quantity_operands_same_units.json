@@ -1,6 +1,5 @@
 {
   "id": "blocked-predicate-unmapped-code__quantity_operands_same_units",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

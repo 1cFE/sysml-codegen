@@ -1,6 +1,5 @@
 {
   "id": "calc-def-output-stub__dependency_cycle",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

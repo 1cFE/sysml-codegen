@@ -1,6 +1,13 @@
 {
   "id": "part-multiplicity__unresolved_bound__unexpanded_part_usage",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "servers : Server[*] in Rack, which nothing instantiates"
+  },
   "generator": {
     "outcome": "generated",
     "codes": [],

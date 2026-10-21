@@ -1,6 +1,13 @@
 {
   "id": "calc-owned-assertion__non_asserted_constraint__unmapped_owner_kind__constraint_definition",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "constraint def Bounded, which owns the nested constraint inner; the generator locates the refusal at the owner, line 4"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

@@ -1,6 +1,13 @@
 {
   "id": "binding-source__expression_source__owner_package",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "package-owned calc usage t binds xs to (a, b)"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

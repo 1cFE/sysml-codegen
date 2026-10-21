@@ -1,6 +1,5 @@
 {
   "id": "calc-def-parameter__quantity_typed",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

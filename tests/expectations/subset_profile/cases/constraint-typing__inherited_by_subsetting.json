@@ -1,6 +1,5 @@
 {
   "id": "constraint-typing__inherited_by_subsetting",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

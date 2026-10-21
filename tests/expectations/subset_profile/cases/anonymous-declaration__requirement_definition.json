@@ -1,6 +1,5 @@
 {
   "id": "anonymous-declaration__requirement_definition",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

@@ -1,6 +1,5 @@
 {
   "id": "scalar-reference__multi_occurrence_part",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

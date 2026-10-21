@@ -1,6 +1,5 @@
 {
   "id": "anonymous-declaration__named_part_in_anonymous_action",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

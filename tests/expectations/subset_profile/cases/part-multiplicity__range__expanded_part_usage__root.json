@@ -1,6 +1,13 @@
 {
   "id": "part-multiplicity__range__expanded_part_usage__root",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "root part usage servers[1..4]"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

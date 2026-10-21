@@ -1,6 +1,13 @@
 {
   "id": "string-value-omission__string_value__attribute_value__read_by_attribute_shorthand",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "String label valued by reading fuel_unit, whose value \"liter\" is set by the :>> shorthand on the instance"
+  },
   "generator": {
     "outcome": "generated",
     "codes": [],

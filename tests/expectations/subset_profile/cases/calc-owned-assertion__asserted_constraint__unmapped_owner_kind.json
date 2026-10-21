@@ -1,6 +1,13 @@
 {
   "id": "calc-owned-assertion__asserted_constraint__unmapped_owner_kind",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      7
+    ],
+    "description": "item def Box, which owns the numeric asserted constraint c; the generator locates the refusal at the owner, line 4"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

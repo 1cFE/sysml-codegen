@@ -1,6 +1,13 @@
 {
   "id": "string-value-omission__numeric_value__attribute_value",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "numeric attribute fuel_code valued by the redefinition shorthand"
+  },
   "generator": {
     "outcome": "generated",
     "codes": [],

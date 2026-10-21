@@ -1,6 +1,13 @@
 {
   "id": "indexed-reference__indexed_reference__constraint_predicate",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      8,
+      8
+    ],
+    "description": "asserted predicate qs#(1).v > 0.0"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

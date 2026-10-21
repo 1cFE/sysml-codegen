@@ -84,7 +84,7 @@ def test_live_stubs_equal_the_stored_stubs(answer: StoredAnswer):
 
 @pytest.mark.parametrize("answer", ANSWERS, ids=lambda a: a.case_id)
 def test_every_located_refusal_sits_on_the_construct(answer: StoredAnswer):
-    construct = cases.construct_of(answer)
+    construct = answer.construct
     stray = []
     for item in _observe(answer.case_id).refusals:
         if item.source_file is None or item.source_line is None:

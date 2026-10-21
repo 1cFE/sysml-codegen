@@ -1,6 +1,5 @@
 {
   "id": "calc-def-output-stub__python_keyword_member",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

@@ -1,6 +1,5 @@
 {
   "id": "deep-override__reference_part_target",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

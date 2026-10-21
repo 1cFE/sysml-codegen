@@ -1,6 +1,5 @@
 {
   "id": "feature-type__untyped_attribute",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

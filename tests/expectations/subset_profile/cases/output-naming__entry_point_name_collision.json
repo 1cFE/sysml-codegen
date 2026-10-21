@@ -1,6 +1,5 @@
 {
   "id": "output-naming__entry_point_name_collision",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

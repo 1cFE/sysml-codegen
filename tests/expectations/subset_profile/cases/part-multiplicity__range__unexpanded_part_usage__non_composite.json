@@ -1,6 +1,13 @@
 {
   "id": "part-multiplicity__range__unexpanded_part_usage__non_composite",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "ref part servers[1..4] in instantiated Rack: never expanded"
+  },
   "generator": {
     "outcome": "generated",
     "codes": [],

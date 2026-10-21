@@ -1,6 +1,5 @@
 {
   "id": "calc-usage-typing__subsetting_only",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

@@ -1,6 +1,5 @@
 {
   "id": "calc-usage-binding__undeclared_input",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

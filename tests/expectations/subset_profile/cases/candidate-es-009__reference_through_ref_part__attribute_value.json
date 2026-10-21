@@ -1,6 +1,13 @@
 {
   "id": "candidate-es-009__reference_through_ref_part__attribute_value",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "attribute double reads facility.area through the reference part usage facility"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

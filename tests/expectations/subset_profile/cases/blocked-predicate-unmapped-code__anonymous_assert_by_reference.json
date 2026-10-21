@@ -1,6 +1,5 @@
 {
   "id": "blocked-predicate-unmapped-code__anonymous_assert_by_reference",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

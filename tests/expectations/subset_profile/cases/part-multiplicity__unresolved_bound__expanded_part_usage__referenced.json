@@ -1,6 +1,13 @@
 {
   "id": "part-multiplicity__unresolved_bound__expanded_part_usage__referenced",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "servers[n] with attribute n declared and never valued"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

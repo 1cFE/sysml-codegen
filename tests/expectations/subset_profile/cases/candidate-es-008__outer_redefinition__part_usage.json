@@ -1,6 +1,5 @@
 {
   "id": "candidate-es-008__outer_redefinition__part_usage",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

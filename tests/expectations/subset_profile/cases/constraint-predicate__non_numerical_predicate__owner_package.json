@@ -1,10 +1,20 @@
 {
   "id": "constraint-predicate__non_numerical_predicate__owner_package",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "package-owned asserted Boolean predicate enabled"
+  },
   "generator": {
     "outcome": "generated",
     "codes": [],
     "reasons": [],
+    "witnesses": [
+      "agentic_mbse/sysml/executable_profile.py::_walk_proposition::shared-profile::warn_non_numerical_predicate::1"
+    ],
     "seams": [
       {
         "kind": "catalog_usage",

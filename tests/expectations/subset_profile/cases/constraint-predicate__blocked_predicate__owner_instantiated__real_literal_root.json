@@ -1,6 +1,13 @@
 {
   "id": "constraint-predicate__blocked_predicate__owner_instantiated__real_literal_root",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "Holder::c asserts '1.0': a Real literal as the whole predicate"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [
@@ -10,7 +17,8 @@
       "constraint_profile_blocked"
     ],
     "witnesses": [
-      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._build_constraint_nodes::coded::SI_CONSTRAINT_BLOCKED::1"
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._build_constraint_nodes::coded::SI_CONSTRAINT_BLOCKED::1",
+      "agentic_mbse/sysml/executable_profile.py::_walk_proposition::shared-profile::block_non_predicate_root::2"
     ]
   }
 }

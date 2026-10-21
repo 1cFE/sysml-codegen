@@ -1,6 +1,5 @@
 {
   "id": "calc-usage-typing__library_calc_def",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

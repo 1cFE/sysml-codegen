@@ -6,7 +6,7 @@ A directory is a model root (``generating`` or ``refusing``), lies inside one, o
 
 - the 23 corpus fixtures ``tests/fixtures/v6_recapture_batch/batch.json`` lists as
   ``refused``, with the codes it records: elaboration refused them, so ``run_codegen`` does too;
-- codegen-home conformance cases: their stored generator answer;
+- conformance cases: their stored generator answer;
 - every other directory: ``tests/expectations/subset_profile/fixture_classes.json``, written
   from one reviewed generator-half run per root and confirmed live by
   ``test_fixture_classes_live.py``. That includes the 14 corpus fixtures the batch lists as
@@ -24,7 +24,7 @@ from typing import Any
 
 from tests.conftest import FIXTURES_DIR
 from tests.helpers.subset_profile import cases
-from tests.helpers.subset_profile.cases import CaseHome, GeneratorOutcome
+from tests.helpers.subset_profile.cases import GeneratorOutcome
 
 FIXTURE_CLASSES_PATH = cases.EXPECTATIONS_DIR / "fixture_classes.json"
 BATCH_PATH = FIXTURES_DIR / "v6_recapture_batch" / "batch.json"
@@ -95,8 +95,8 @@ def batch_classes(path: Path = BATCH_PATH) -> dict[str, StoredClass]:
 
 
 def case_classes() -> dict[str, StoredClass]:
-    """Codegen-home conformance cases, classed by their stored generator answers."""
-    root = cases.CODEGEN_CASES_DIR.relative_to(FIXTURES_DIR)
+    """Conformance cases, classed by their stored generator answers."""
+    root = cases.CASES_DIR.relative_to(FIXTURES_DIR)
     classes = {
         str(root / answer.case_id): StoredClass(
             FixtureClass.REFUSING
@@ -106,11 +106,8 @@ def case_classes() -> dict[str, StoredClass]:
             None,
         )
         for answer in cases.all_answers()
-        if answer.home is CaseHome.CODEGEN
     }
-    if not classes:
-        return {}
-    container = StoredClass(FixtureClass.CONTAINER, (), "codegen-home conformance cases (D14)")
+    container = StoredClass(FixtureClass.CONTAINER, (), "conformance cases (D14)")
     return classes | {str(root): container}
 
 

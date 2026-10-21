@@ -1,6 +1,5 @@
 {
   "id": "calc-def-return__anonymous",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

@@ -1,6 +1,5 @@
 {
   "id": "g2__usage_override_of_referenced_bound",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

@@ -7,9 +7,8 @@ witness per carrier type and per converter branch of
 ``orchestration/elaborated_pipeline.py:_build_from_extractor``, each run through
 ``run_codegen`` exactly as a user runs it.
 
-Each witness is a packaged conformance case where one carries the branch's reason (read
-through agentic-mbse's package, design D14), a committed fixture, or, where neither exists, a
-model written here.
+Each witness is a conformance case where one carries the branch's reason, a committed
+fixture, or, where neither exists, a model written here.
 
 Two branches have no model that reaches them:
 
@@ -35,14 +34,13 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
-from agentic_mbse.sysml.conformance_case import packaged_case_dir
 
 from sysml_codegen.cli.refusal import RefusalKind
 from sysml_codegen.elaboration.diagnostics import ElaborationCode, SiteReason
 from sysml_codegen.elaboration.expression_evidence import ExpressionInventoryError
 from sysml_codegen.orchestration import elaborated_pipeline
 from tests.conftest import FIXTURES_DIR, requires_license
-from tests.helpers.subset_profile import observe
+from tests.helpers.subset_profile import cases, observe
 
 pytestmark = requires_license
 
@@ -70,8 +68,8 @@ def _fixture(name: str) -> Callable[[Path], Path]:
     return lambda _tmp_path: FIXTURES_DIR / name
 
 
-def _packaged(case_id: str) -> Callable[[Path], Path]:
-    return lambda _tmp_path: packaged_case_dir(case_id)
+def _case(case_id: str) -> Callable[[Path], Path]:
+    return lambda _tmp_path: cases.model_root(cases.load_answer(case_id))
 
 
 @dataclass(frozen=True)
@@ -88,25 +86,25 @@ REACH_WITNESSES = (
         "ReadinessFinding__readiness_with_referent",
         SiteReason.BINDING_SOURCE_FORM_UNSUPPORTED,
         RefusalKind.READINESS,
-        _packaged("binding-source__expression_source__owner_instantiated"),
+        _case("binding-source__expression_source__owner_instantiated"),
     ),
     Witness(
         "Diagnostic__GraphValidationError__diagnostic_with_referent",
         SiteReason.CONSTRAINT_PROFILE_BLOCKED,
         RefusalKind.DIAGNOSTIC,
-        _packaged("constraint-predicate__blocked_predicate__owner_instantiated"),
+        _case("constraint-predicate__blocked_predicate__owner_instantiated"),
     ),
     Witness(
         "ElaborationInvariantError__diagnostic_with_referent",
         SiteReason.OCCURRENCE_MULTIPLICITY_ORDERED,
         RefusalKind.DIAGNOSTIC,
-        _packaged("part-multiplicity__ordered__expanded_part_usage"),
+        _case("part-multiplicity__ordered__expanded_part_usage"),
     ),
     Witness(
         "SemanticEvidenceError__semantic_evidence_diagnostic",
         SiteReason.EVIDENCE_INDEXED_REFERENCE_UNSUPPORTED,
         RefusalKind.DIAGNOSTIC,
-        _packaged("indexed-reference__indexed_reference__attribute_value"),
+        _case("indexed-reference__indexed_reference__attribute_value"),
     ),
     Witness(
         "ExactTypeError__diagnostic_with_referent",

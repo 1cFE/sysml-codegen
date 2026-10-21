@@ -1,6 +1,13 @@
 {
   "id": "binding-source__expression_source__owner_instantiated__constraint_input",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      8,
+      8
+    ],
+    "description": "constraint input q bound to a * b; owner Site instantiated by site"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

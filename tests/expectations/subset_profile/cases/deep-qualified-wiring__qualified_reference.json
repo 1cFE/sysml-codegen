@@ -1,6 +1,5 @@
 {
   "id": "deep-qualified-wiring__qualified_reference",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

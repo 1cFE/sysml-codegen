@@ -1,6 +1,5 @@
 {
   "id": "g1__redefinition_drops_ordered_bounds",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

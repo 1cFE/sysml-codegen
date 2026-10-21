@@ -1,6 +1,13 @@
 {
   "id": "constraint-predicate__blocked_predicate__owner_instantiated__real_reference_root",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "Holder::c asserts 'x': a bare Real reference as the whole predicate"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [
@@ -10,7 +17,8 @@
       "constraint_profile_blocked"
     ],
     "witnesses": [
-      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._build_constraint_nodes::coded::SI_CONSTRAINT_BLOCKED::1"
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._build_constraint_nodes::coded::SI_CONSTRAINT_BLOCKED::1",
+      "agentic_mbse/sysml/executable_profile.py::_walk_proposition::shared-profile::block_non_predicate_root::1"
     ]
   }
 }

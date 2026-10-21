@@ -1,6 +1,5 @@
 {
   "id": "calc-def-output-stub__compiled_control",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

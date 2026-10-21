@@ -1,6 +1,13 @@
 {
   "id": "calc-owned-assertion__requirement_owned_constraint__requirement_definition_owner",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "requirement def Limit, which owns the required constraint capped; a requirement def is in the generator's owner map"
+  },
   "generator": {
     "outcome": "generated",
     "codes": [],

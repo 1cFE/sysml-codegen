@@ -1,6 +1,13 @@
 {
   "id": "conditional-expression__conditional_unresolved_branch__constraint_predicate__predicate_root",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "Holder::c asserts 'if flag ? x < 1.0 else x > 2.0': a conditional expression as the whole predicate"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [
@@ -8,6 +15,9 @@
     ],
     "reasons": [
       "evidence_resolved_target_missing"
+    ],
+    "witnesses": [
+      "agentic_mbse/sysml/reference_use.py::_reference_use::shared-evidence::RESOLVED_TARGET_MISSING::1"
     ]
   }
 }

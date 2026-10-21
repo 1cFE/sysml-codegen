@@ -1,6 +1,5 @@
 {
   "id": "candidate-es-002__calc_input_through_part__attribute_value",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

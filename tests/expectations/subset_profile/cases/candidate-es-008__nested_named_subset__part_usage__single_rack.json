@@ -1,6 +1,13 @@
 {
   "id": "candidate-es-008__nested_named_subset__part_usage__single_rack",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      11,
+      14
+    ],
+    "description": "in one named subset rack_1, two nested named subsets server_1 and server_2 each redefine psu.efficiency"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

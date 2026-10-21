@@ -1,6 +1,5 @@
 {
   "id": "calc-output-reference__definition_member",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

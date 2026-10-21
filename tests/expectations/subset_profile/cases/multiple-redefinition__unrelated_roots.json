@@ -1,6 +1,5 @@
 {
   "id": "multiple-redefinition__unrelated_roots",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

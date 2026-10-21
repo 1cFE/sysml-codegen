@@ -1,6 +1,5 @@
 {
   "id": "calc-def-reference__package_attribute",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

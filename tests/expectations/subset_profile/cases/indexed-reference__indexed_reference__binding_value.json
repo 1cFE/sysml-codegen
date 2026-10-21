@@ -1,6 +1,13 @@
 {
   "id": "indexed-reference__indexed_reference__binding_value",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      8,
+      8
+    ],
+    "description": "calc input v bound to the indexed reference qs#(1).v"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

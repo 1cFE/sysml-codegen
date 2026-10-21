@@ -1,6 +1,5 @@
 {
   "id": "candidate-es-011__out_attribute_arithmetic__attribute_value",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

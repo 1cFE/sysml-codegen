@@ -1,6 +1,13 @@
 {
   "id": "conditional-expression__conditional_unresolved_branch__attribute_value__template",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      7
+    ],
+    "description": "attribute low valued by if x < y ? x else y in part def Spare, which has no occurrence"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [
@@ -8,6 +15,9 @@
     ],
     "reasons": [
       "evidence_resolved_target_missing"
+    ],
+    "witnesses": [
+      "agentic_mbse/sysml/reference_use.py::_reference_use::shared-evidence::RESOLVED_TARGET_MISSING::1"
     ]
   }
 }

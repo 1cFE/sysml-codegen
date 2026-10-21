@@ -1,6 +1,5 @@
 {
   "id": "anonymous-declaration__package",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

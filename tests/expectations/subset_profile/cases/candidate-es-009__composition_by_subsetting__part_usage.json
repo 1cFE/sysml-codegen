@@ -1,6 +1,13 @@
 {
   "id": "candidate-es-009__composition_by_subsetting__part_usage",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "part facility subsets top-level usage ac_facility and reads its owned area (dc3 U6)"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

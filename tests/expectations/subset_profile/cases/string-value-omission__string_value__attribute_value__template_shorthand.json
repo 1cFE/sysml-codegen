@@ -1,6 +1,13 @@
 {
   "id": "string-value-omission__string_value__attribute_value__template_shorthand",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "String label valued by the :>> shorthand in part def SpareA, which nothing instantiates"
+  },
   "generator": {
     "outcome": "generated",
     "codes": [],

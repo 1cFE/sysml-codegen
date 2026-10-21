@@ -1,6 +1,13 @@
 {
   "id": "candidate-calc-result-expression__bare_result__calc_result_expression__declared_return",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "calc def Bare declares return r : Real and ends in the bare expression 2.0 * v"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [

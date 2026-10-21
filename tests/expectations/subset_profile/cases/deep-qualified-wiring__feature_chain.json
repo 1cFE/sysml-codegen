@@ -1,6 +1,5 @@
 {
   "id": "deep-qualified-wiring__feature_chain",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

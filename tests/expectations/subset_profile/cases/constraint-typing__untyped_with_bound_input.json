@@ -1,6 +1,5 @@
 {
   "id": "constraint-typing__untyped_with_bound_input",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

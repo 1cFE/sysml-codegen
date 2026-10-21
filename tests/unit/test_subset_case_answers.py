@@ -14,7 +14,6 @@ import pytest
 from sysml_codegen.elaboration.diagnostics import SiteReason
 from tests.helpers.subset_profile.cases import (
     CaseAnswerError,
-    CaseHome,
     GeneratorOutcome,
     LossDisposition,
     SeamKind,
@@ -24,7 +23,6 @@ from tests.helpers.subset_profile.cases import (
 CASE_ID = "binding-source__expression_source__owner_instantiated"
 ANSWER = {
     "id": CASE_ID,
-    "home": "codegen",
     "generator": {
         "outcome": "refused",
         "codes": ["SI_EXPRESSION_SOURCE_UNSUPPORTED", "SI_TYPE_INVALID"],
@@ -51,11 +49,7 @@ def _stored(tmp_path: Path, document: dict, name: str = CASE_ID) -> Path:
 
 def test_stored_answer_loads_every_field(tmp_path):
     answer = load_stored_answer(_stored(tmp_path, ANSWER))
-    assert (answer.case_id, answer.home, answer.subject) == (
-        CASE_ID,
-        CaseHome.CODEGEN,
-        f"case:{CASE_ID}",
-    )
+    assert answer.case_id == CASE_ID
     run = answer.generator.run
     assert run.outcome is GeneratorOutcome.REFUSED
     assert run.codes == ("SI_EXPRESSION_SOURCE_UNSUPPORTED", "SI_TYPE_INVALID")
@@ -64,7 +58,6 @@ def test_stored_answer_loads_every_field(tmp_path):
     assert answer.generator.stubs[0].reason is SiteReason.BINDING_SOURCE_FORM_UNSUPPORTED
     assert answer.generator.seams[0].kind is SeamKind.ENTRY_POINT
     assert answer.generator.seams[0].expect == {"count": 1}
-    assert answer.construct is not None
     assert (answer.construct.first_line, answer.construct.last_line) == (6, 9)
     assert answer.loss is not None
     assert answer.loss.disposition is LossDisposition.CANDIDATE_REFUSAL
@@ -72,10 +65,9 @@ def test_stored_answer_loads_every_field(tmp_path):
     assert answer.loss.control == "a_control_case"
 
 
-def test_agentic_home_answer_has_no_construct(tmp_path):
-    document = {key: ANSWER[key] for key in ("id", "generator")} | {"home": "agentic"}
-    answer = load_stored_answer(_stored(tmp_path, document))
-    assert answer.construct is None and answer.loss is None
+def test_loss_is_optional(tmp_path):
+    document = {key: ANSWER[key] for key in ("id", "construct", "generator")}
+    assert load_stored_answer(_stored(tmp_path, document)).loss is None
 
 
 def _edited(edit) -> dict:
@@ -89,8 +81,7 @@ def _edited(edit) -> dict:
     [
         (_edited(lambda d: d.update(extra=1)), "unknown \\['extra'\\]"),
         (_edited(lambda d: d.pop("generator")), "missing \\['generator'\\]"),
-        (_edited(lambda d: d.pop("construct")), "exactly for codegen-home cases"),
-        (_edited(lambda d: d.update(home="agentic")), "exactly for codegen-home cases"),
+        (_edited(lambda d: d.pop("construct")), "missing \\['construct'\\]"),
         (_edited(lambda d: d["generator"].update(codes=["SI_B", "SI_A"])), "must be sorted"),
         (_edited(lambda d: d["generator"].update(codes=[])), "a refused run has codes"),
         (_edited(lambda d: d["generator"].update(outcome="generated")), "a refused run has"),

@@ -1,6 +1,5 @@
 {
   "id": "reference-anchor__definition_not_in_lineage",
-  "home": "codegen",
   "construct": {
     "file": "model.sysml",
     "lines": [

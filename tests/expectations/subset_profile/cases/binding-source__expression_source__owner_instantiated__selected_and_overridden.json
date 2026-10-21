@@ -1,6 +1,13 @@
 {
   "id": "binding-source__expression_source__owner_instantiated__selected_and_overridden",
-  "home": "agentic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "calc c binds v to x * 2.0; selected in s1, overridden in s2 (B5, design note (a))"
+  },
   "generator": {
     "outcome": "refused",
     "codes": [
