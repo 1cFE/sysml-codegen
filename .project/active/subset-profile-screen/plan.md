@@ -1,6 +1,6 @@
 # Implementation Plan: Read-only check, live half (EXEC-SUBSET-CONTRACT Item 2b)
 
-**Status:** Complete (Phases 0-10 done, 2026-10-20)
+**Status:** Complete (Phases 0-10 done, 2026-10-20). Phase 11 (2026-10-21): the screen step was removed by owner decision; see agentic-mbse `.project/active/retire-subset-profile/plan.md`.
 **Created:** 2026-10-20
 **Last Updated:** 2026-10-20
 **Branch / base:** sysml-codegen `subset-profile-screen` at `cbbc1100` (design approved); agentic-mbse sibling `/home/reid/src/subset-conformance/agentic-mbse` at `e268357f`, which this plan does not edit (design D12).
@@ -555,6 +555,13 @@ Sources, graded:
 - [x] Tests: `check`'s exit code equals `generate`'s and the stored outcome on every 2a case, and no line says ready or clean (`test_report_form.py`); readiness tests replaced (`test_report.py`); exit-3 assertions become `generate`'s answer.
 - [x] Spec, design, CLAUDE.md, `docs/architecture/reference/02-orchestration.md` and `product-lens.md` updated.
 - [x] Exit check: 0 byte and 0 record differences, base 9 failures only, mypy, ruff 94, TEAx lane receipt.
+
+## Phase 11: The screen step is removed (owner decision 2026-10-21)
+
+The owner decided on 2026-10-21 to retire agentic-mbse's copied generator rules (the subset profile) in favour of shipped guidance plus an early `sysml-codegen check`. The plan for that work is agentic-mbse `.project/active/retire-subset-profile/plan.md` (branch `retire-subset-profile`); its Phase 1 is done here. `generate` and `check` no longer run the screen, `check` prints only the generator's answer, and the Item 2a agreement tests are gone. The generator regression assets stay, under `tests/*/refusal_cases/`, with all 246 case models now in `tests/fixtures/refusal_cases/`. Phases 6-8 and 10's screen display above describe code that no longer exists.
+
+- [x] Commits `eab2e910` (screen step), `c670e1a4` (agreement half), `0f47ea83` (case models moved in), `75e0d32d` (rename to `refusal_cases`).
+- [x] Exit check: base 9 failures only; byte manifest 0 of 123 subjects differ; refusal records 0 of 173 differ; mypy clean; ruff `src/ tests/` 94. Evidence: agentic-mbse `.project/active/retire-subset-profile/evidence/phase-1-notes.md`.
 
 ## Environment Setup
 

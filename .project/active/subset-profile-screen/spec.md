@@ -1,6 +1,7 @@
 # Spec: Read-only check, live half (EXEC-SUBSET-CONTRACT Item 2b)
 
 **Status:** Revision 3, not yet reviewed. Revision 2 was approved by spec review round 2 (2026-10-20); revision 3 applies the scope split below. Implementation complete (plan Phases 0-10, 2026-10-20). Phase 10 removed the readiness answer: `check` gives `generate`'s answer, and the screen is information under it.
+**Superseded in part (2026-10-21):** the screen step was removed by owner decision. `generate` and `check` give only the generator's answer; the plan is agentic-mbse `.project/active/retire-subset-profile/plan.md` (this repo's plan, Phase 11).
 **Owner:** Reid Westwood
 **Created:** 2026-10-20
 **Complexity:** HIGH

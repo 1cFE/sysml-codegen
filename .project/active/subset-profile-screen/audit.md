@@ -4,6 +4,7 @@
 **Audited:** 2026-10-20
 **Branch:** `subset-profile-screen` (base `556cbedf`)
 **Commit:** `ccb6bd7f` (`src/` and `tests/` unchanged since `8621bac4`)
+**Later (2026-10-21):** the screen step this audit covers was removed by owner decision (plan Phase 11; agentic-mbse `.project/active/retire-subset-profile/plan.md`).
 
 ---
 
