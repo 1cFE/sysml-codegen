@@ -466,8 +466,6 @@ ACCOUNT_FIELDS = (
     "disposition",
     "role",
     "owner",
-    "matrix_row",
-    "rule",
     "reason",
     "evidence",
     "coverage_limitation",
@@ -506,11 +504,6 @@ class AccountRow:
     disposition: Disposition
     role: Role
     owner: str
-    #: The matrix rows covering the site, ``;``-separated in the file. Required for an in-scope
-    #: site; an explicit follow-up may name the R3 row it is routed to; nothing else has one.
-    matrix_rows: tuple[str, ...]
-    #: The shared-rule record IDs of the site's matrix rows, ``;``-separated in the file.
-    rules: tuple[str, ...]
     #: The ``SiteReason`` value the site passes, once it has one.
     reason: str | None
     #: ``file.py:line`` of the site, then any further pointers, ``;``-separated.
@@ -549,8 +542,6 @@ def _account_row(raw: dict[str, str]) -> AccountRow:
         disposition=disposition,
         role=role,
         owner=raw["owner"].strip(),
-        matrix_rows=_split(raw["matrix_row"]),
-        rules=_split(raw["rule"]),
         reason=raw["reason"].strip() or None,
         evidence=_split(raw["evidence"]),
         coverage_limitation=raw["coverage_limitation"].strip(),
@@ -560,14 +551,6 @@ def _account_row(raw: dict[str, str]) -> AccountRow:
         raise SiteAccountError(f"{where}: owner, evidence and note are required")
     if not row.evidence[0].startswith(f"{row.file}:{row.line}"):
         raise SiteAccountError(f"{where}: evidence must start with the site, {row.file}:{row.line}")
-    if disposition is Disposition.IN_SCOPE and not row.matrix_rows:
-        raise SiteAccountError(f"{where}: an in-scope site names its matrix row")
-    if disposition is Disposition.HANDLED_ELSEWHERE and row.matrix_rows:
-        raise SiteAccountError(f"{where}: a site handled elsewhere names no matrix row")
-    if len(set(row.matrix_rows)) != len(row.matrix_rows):
-        raise SiteAccountError(f"{where}: matrix_row repeats a row")
-    if row.rules and not row.matrix_rows:
-        raise SiteAccountError(f"{where}: a rule needs a matrix row")
     if (disposition is Disposition.EXPLICIT_FOLLOW_UP) != bool(row.coverage_limitation):
         raise SiteAccountError(f"{where}: coverage_limitation is required iff explicit follow-up")
     return row

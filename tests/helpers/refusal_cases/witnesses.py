@@ -60,9 +60,16 @@ def read_mutations(path: Path = MUTATIONS_PATH) -> MutationRecord:
     )
 
 
-def shared_rule_sites() -> tuple[str, ...]:
-    """The codegen account rows a shared rule links to."""
-    return tuple(sorted(r.site_id for r in site_scan.load_account().rows if r.rules))
+def capability_sites() -> tuple[str, ...]:
+    """The codegen account rows whose site refuses a model a modeller can write
+    (role ``public_capability``)."""
+    return tuple(
+        sorted(
+            r.site_id
+            for r in site_scan.load_account().rows
+            if r.role is site_scan.Role.PUBLIC_CAPABILITY
+        )
+    )
 
 
 def stub_cause_sites() -> tuple[str, ...]:
@@ -76,47 +83,15 @@ def stub_cause_sites() -> tuple[str, ...]:
     )
 
 
-def r3_row_sites() -> tuple[str, ...]:
-    """The codegen account rows with a reason that an R3 row names and no shared rule links to.
-
-    These are the reproduced gaps (``evidence/r3-closure.md``): the generator refuses there,
-    the contract has no rule for the shape, and the reason tells the refusing site apart.
-    """
-    return tuple(
-        sorted(
-            r.site_id
-            for r in site_scan.load_account().rows
-            if r.matrix_rows and not r.rules and r.reason is not None
-        )
-    )
-
-
-def tail_sites() -> tuple[str, ...]:
-    """The public codegen account rows with a reason that no rule or R3 row names (plan P6).
-
-    The group E tail: valid models reach these sites, the contract is silent on the shape,
-    and the reason tells the refusing site apart.
-    """
-    return tuple(
-        sorted(
-            r.site_id
-            for r in site_scan.load_account().rows
-            if r.role is site_scan.Role.PUBLIC_CAPABILITY
-            and r.reason is not None
-            and not r.rules
-            and not r.matrix_rows
-            and r.file != STUB_RENDERER
-        )
-    )
-
-
 def mutated_sites() -> tuple[str, ...]:
-    """Every site the generator mutation test neutralizes: codegen's, then the shared ones."""
+    """Every site the generator mutation test neutralizes: codegen's capability refusals and
+    stub causes, then the shared ones.
+
+    It is the set the account's contract columns picked before they were removed (2026-10-21),
+    now chosen by role and file.
+    """
     return (
-        *shared_rule_sites(),
-        *stub_cause_sites(),
-        *r3_row_sites(),
-        *tail_sites(),
+        *sorted(set(capability_sites()) | set(stub_cause_sites())),
         *sorted(mutate.SHARED),
     )
 

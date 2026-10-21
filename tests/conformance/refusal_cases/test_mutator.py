@@ -22,7 +22,7 @@ from types import ModuleType
 
 import pytest
 
-from tests.helpers.refusal_cases import mutate, site_scan
+from tests.helpers.refusal_cases import mutate, witnesses
 from tests.helpers.refusal_cases.mutate import MutationError, Rewrite, Target
 
 SAMPLE = textwrap.dedent(
@@ -260,8 +260,7 @@ def test_every_patched_private_name_resolves(module: str, dotted: str) -> None:
 
 
 def _mutated_sites() -> list[str]:
-    shared_rule = [r.site_id for r in site_scan.load_account().rows if r.rules]
-    return sorted(shared_rule) + sorted(mutate.SHARED)
+    return list(witnesses.mutated_sites())
 
 
 @pytest.mark.parametrize("site_id", _mutated_sites(), ids=str)
