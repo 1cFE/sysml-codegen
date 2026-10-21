@@ -101,7 +101,7 @@ def test_a_refused_generate_leaves_its_destination(answer, flags, sentinel, tmp_
 
 
 def _logged_refused(monkeypatch: pytest.MonkeyPatch) -> list[Refused]:
-    """Every ``Refused`` either command hands to the report's generator answer."""
+    """Every ``Refused`` either command hands to ``log_refused``."""
     seen: list[Refused] = []
     real = prepare.log_refused
 

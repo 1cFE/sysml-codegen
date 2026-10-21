@@ -122,9 +122,9 @@ def log_refused(refused: Refused) -> None:
 
 
 def log_generator_answer(generator: Prepared | Refused) -> None:
-    """The report's first line: a refusal's one record, or that the model builds.
+    """The generator's answer: a refusal's one record, or that the model builds.
 
-    ``generate`` prints it before it writes (design D16), so it needs nothing from the screen.
+    ``generate`` prints it before it writes (design D16); ``check`` prints it instead of writing.
     """
     if isinstance(generator, Refused):
         log_refused(generator)

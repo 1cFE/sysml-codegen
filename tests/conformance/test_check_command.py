@@ -1,16 +1,14 @@
-"""``check`` reports without writing, and ``generate`` prints the same report after the seal.
+"""``check`` gives ``generate``'s answer without writing.
 
-Item 2b design D4, D6, D16, D17, D18; Invariants 1, 3 and 5.
+Item 2b design D4, D6, D16, D18; Invariants 1, 3 and 5.
 
 - ``check`` never calls ``emit_package`` and leaves a populated destination byte-identical.
 - Exit codes: ``generate``'s answer, 0 when it would build and 1 when it would refuse. The
   test over every 2a case is ``subset_profile/test_report_form.py``.
-- A model with parse errors: both commands log today's parsing record, and the screen is not
-  assessed because of the parse errors (M2).
+- A model with parse errors: both commands log today's parsing record (M2).
 - A symlinked destination (M4): ``generate`` and ``check --output`` both log the same one
   ``PACKAGE_WRITE`` record and exit 1. A refused model logs only its own refusal on both.
-- After the seal, nothing in the screen or the report can change ``generate``'s result: each
-  of the three report steps patched to raise leaves the same bytes, exit 0, and one WARNING.
+- ``generate`` prints the generator's answer before it writes.
 
 Licensed.
 """
@@ -44,7 +42,6 @@ _PACKAGE_WRITE_SYMLINK = (
     "Package sealing failed: INVALID_PATH(elsewhere): symlinks are forbidden beneath the "
     "package root"
 )
-_GUARD_WARNING = "the screen report could not be produced: "
 
 
 def _models(case_id: str) -> Path:
@@ -101,13 +98,12 @@ def test_check_without_output_inspects_no_destination(monkeypatch):
         raise AssertionError("check inspected a destination it was not given")
 
     monkeypatch.setattr("sysml_codegen.cli.destination.inspect_destination", inspected)
-    report = run_check(CheckRequest(prepare.LiveModels((_models(BUILDS_CASE),)), "pkg", None))
-    assert isinstance(report.generator, prepare.Prepared)
+    generator = run_check(CheckRequest(prepare.LiveModels((_models(BUILDS_CASE),)), "pkg", None))
+    assert isinstance(generator, prepare.Prepared)
 
 
 @pytest.mark.parametrize("command", ["generate", "check"])
-def test_a_model_with_parse_errors(command, monkeypatch, tmp_path, caplog):
-    caplog.set_level(logging.INFO, logger="sysml_codegen")
+def test_a_model_with_parse_errors(command, monkeypatch, tmp_path):
     model = _parse_error_model(tmp_path)
     output = tmp_path / "pkg"
     with refusal_records.capture_refusals(output) as records:
@@ -116,9 +112,6 @@ def test_a_model_with_parse_errors(command, monkeypatch, tmp_path, caplog):
     [record] = records
     assert record["message"].startswith("SysML parsing failed: ")
     assert record["refusal"]["kind"] == "RefusalKind.PARSING"
-    infos = _messages(caplog, logging.INFO)
-    assert "Screen not assessed: the model has parse errors" in infos
-    assert not any(line.startswith(("  refused ", "Disagreement")) for line in infos)
     assert not output.exists()
 
 
@@ -154,55 +147,15 @@ def test_a_refused_model_with_a_symlinked_destination_logs_only_the_model(
     assert _tree(destination) == before
 
 
-@pytest.mark.parametrize(
-    "target",
-    [
-        "sysml_codegen.subset_screen.assess_screen",
-        "sysml_codegen.cli.report.build_report",
-        "sysml_codegen.cli.report.log_screen_section",
-    ],
-)
-def test_generate_survives_a_report_failure(target, monkeypatch, tmp_path, caplog):
-    """D17's third layer: same bytes, exit 0, one WARNING naming the failure."""
-    unpatched = tmp_path / "unpatched"
-    assert _main(monkeypatch, "generate", "--models", _models(BUILDS_CASE), "-o", unpatched) == 0
-
-    def raising(*_args: object, **_kwargs: object) -> None:
-        raise RuntimeError("probe: the report broke")
-
-    monkeypatch.setattr(target, raising)
-    caplog.clear()
-    caplog.set_level(logging.INFO, logger="sysml_codegen")
-    patched = tmp_path / "patched"
-    assert _main(monkeypatch, "generate", "--models", _models(BUILDS_CASE), "-o", patched) == 0
-    assert _tree(patched) == _tree(unpatched)
-    assert _messages(caplog, logging.WARNING) == [
-        f"{_GUARD_WARNING}RuntimeError: probe: the report broke"
-    ]
-
-
-def test_check_has_no_guard(monkeypatch):
-    """A report bug in ``check`` is a ``check`` bug, so it fails loudly (D17)."""
-
-    def raising(*_args: object, **_kwargs: object) -> None:
-        raise RuntimeError("probe: the report broke")
-
-    monkeypatch.setattr("sysml_codegen.cli.report.log_screen_section", raising)
-    with pytest.raises(RuntimeError, match="probe: the report broke"):
-        _main(monkeypatch, "check", "--models", _models(BUILDS_CASE))
-
-
-def test_generate_prints_the_report_after_writing(monkeypatch, tmp_path, caplog):
-    """D16: the generator's answer, then the writing, then the screen's findings."""
+def test_generate_prints_its_answer_before_writing(monkeypatch, tmp_path, caplog):
+    """D16: the generator's answer, then the writing."""
     caplog.set_level(logging.INFO, logger="sysml_codegen")
     output = tmp_path / "pkg"
     assert _main(monkeypatch, "generate", "--models", _models(BUILDS_CASE), "-o", output) == 0
     infos = _messages(caplog, logging.INFO)
     builds = next(i for i, m in enumerate(infos) if m.startswith("Generator: builds ("))
-    screen = next(i for i, m in enumerate(infos) if m.startswith("Screen "))
     sealed = [i for i, m in enumerate(infos) if "seal" in m.lower()]
-    assert sealed and all(builds < i < screen for i in sealed), infos
-    assert infos[screen - 1] == "Code generation complete"
+    assert sealed and all(builds < i for i in sealed), infos
 
 
 def test_check_never_loads_the_writing_module(tmp_path):

@@ -15,9 +15,8 @@ Where each pin is read at runtime, after the Item 7 retirement:
 - `EXPRESSION_IR_SCHEMA_VERSION` and `PROFILE_SEMANTIC_VERSION` are the v6
   envelope's authority markers (`snapshot/envelope.py`), and the profile version
   also names the admitting profile in `generation/predicate_compiler.py`.
-- `SUBSET_PROFILE_VERSION` is compared by `subset_screen.assess_screen` before it imports
-  `subset_profile_adapter.py`, and again by that module when it is imported
-  (EXEC-SUBSET-CONTRACT Item 2b design D10).
+- `SUBSET_PROFILE_VERSION` is compared by `subset_profile_adapter.py` when it is imported
+  (EXEC-SUBSET-CONTRACT Item 2a design D12).
 - `CONSTRAINT_FACTS_SCHEMA_VERSION` has **no runtime consumer**. Its guard lived
   in the deleted `snapshot/loader.py`, and the v6 envelope seals no
   `ConstraintFacts`, so nothing downstream can be stale against it. It is kept

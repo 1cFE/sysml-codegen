@@ -73,18 +73,17 @@ collapsing them loses which gate refused:
 
 Preflight checks run before any output is written or cleared: exact context receipt, exit-point type support, constraint totality/name safety, duplicate paths, registry class-name collisions, and renderer metadata validity. The gate sequence lives in `prepare` (`cli/prepare.py:200`), whose steps the `PreparationStep` enum names in order (`cli/prepare.py:74`); boundary tests assert refusals preserve the target tree byte for byte.
 
-## The route: read first, write last, then report
+## The route: read first, write last
 
-`run_codegen` runs four steps, and only the third writes:
+`run_codegen` runs three steps, and only the third writes:
 
 1. `load_source` (`cli/prepare.py:65`) loads the live models once, or names the snapshot.
 2. `prepare` (`cli/prepare.py:211`) builds the graph and runs every check that can refuse a model. It returns `Prepared` (the graph, template environment, constraint plan and package name) or `Refused` (the step, the `Refusal` and the message). It writes nothing, so every model refusal is decided before the destination is touched.
 3. When the model builds, `inspect_destination` (`cli/destination.py:26`) checks the destination for links without writing. Then `emit_package` (`cli/emit.py:39`) clears, writes and seals. It repeats the link check first and owns every writer failure.
-4. After the seal, `assess_screen` (`subset_screen.py:84`) runs agentic-mbse's subset screen on the same load, and its findings are printed as information under the generator's answer (`cli/report.py`). This step runs under a guard (`cli/__init__.py:522`): a failure there is one WARNING and never changes the exit code. A snapshot source is never screened, because snapshots do not carry the screen.
 
 Every refusal is logged once, as one record carrying its `Refusal`.
 
-`sysml-codegen check` (`run_check`, `cli/__init__.py:126`) runs steps 1, 2 and 4, plus step 3's link check when `--output` is given. It never calls `emit_package` and writes nothing. It gives `generate`'s answer: exit 0 when `generate` would build, 1 when it would refuse (a destination problem included, with the same record), 2 for a usage error. It prints the same report as `generate`. The screen's findings never change the exit code.
+`sysml-codegen check` (`run_check`, `cli/__init__.py:117`) runs steps 1 and 2, plus step 3's link check when `--output` is given. It never calls `emit_package` and writes nothing. It gives `generate`'s answer: exit 0 when `generate` would build, 1 when it would refuse (a destination problem included, with the same record), 2 for a usage error. It prints the same answer line as `generate`.
 
 ## The single-authority state, stated exactly
 

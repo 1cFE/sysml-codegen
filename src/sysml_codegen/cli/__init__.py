@@ -15,21 +15,14 @@ import logging
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from sysml_codegen.cli import destination, prepare
 from sysml_codegen.cli.study import STUDY_TOOLS, cmd_study
 
-if TYPE_CHECKING:
-    from sysml_codegen.cli.report import Report
-
 # Note: the generate route imports its heavy modules inside the functions that use
-# them, so loading the CLI stays fast. Two of those imports are rules (Item 2b):
-# - ``emit``, the only module that writes under the destination, is imported inside
-#   ``run_codegen`` alone, so ``check`` never loads it (design Invariant 1).
-# - Nothing ``generate`` runs before the seal may import agentic-mbse's subset screen or
-#   anything that imports it: ``report`` and the screen are imported inside
-#   ``_report_after_the_seal``'s guard (design D17).
+# them, so loading the CLI stays fast. One of those imports is a rule (Item 2b): ``emit``,
+# the only module that writes under the destination, is imported inside ``run_codegen``
+# alone, so ``check`` never loads it (design Invariant 1).
 
 logger = logging.getLogger(__name__)
 
@@ -92,10 +85,10 @@ class CheckRequest:
 
 
 def cmd_check(args: argparse.Namespace) -> int:
-    """Give ``generate``'s answer for a model, with the screen's findings, writing nothing.
+    """Give ``generate``'s answer for a model, writing nothing.
 
     Exit codes (design D6): 0 when ``generate`` would build, 1 when it would refuse
-    (environment failures included). 2 stays argparse's. The screen never changes the code.
+    (environment failures included). 2 stays argparse's.
     """
     level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(level=level, format="%(levelname)s: %(message)s")
@@ -109,8 +102,6 @@ def cmd_check(args: argparse.Namespace) -> int:
         )
         return 1
 
-    from sysml_codegen.cli import report
-
     source: prepare.ModelSource
     if args.from_snapshot is not None:
         source = prepare.SnapshotFile(args.from_snapshot)
@@ -118,28 +109,24 @@ def cmd_check(args: argparse.Namespace) -> int:
     else:
         source = prepare.LiveModels((args.models,))
         logger.info(f"Checking {args.models}")
-    checked = run_check(CheckRequest(source, args.package_name, args.output))
-    report.log_report(checked)
-    return 0 if isinstance(checked.generator, prepare.Prepared) else 1
+    generator = run_check(CheckRequest(source, args.package_name, args.output))
+    prepare.log_generator_answer(generator)
+    return 0 if isinstance(generator, prepare.Prepared) else 1
 
 
-def run_check(request: CheckRequest) -> Report:
-    """What ``generate`` would answer for one model, with the screen's findings. Writes nothing.
+def run_check(request: CheckRequest) -> prepare.Prepared | prepare.Refused:
+    """What ``generate`` would answer for one model. Writes nothing.
 
-    The order is design D16's: load, ``prepare``, the destination check (when the model
-    builds and a destination was given), then the screen on the same load. A destination
-    problem refuses exactly as ``generate`` refuses it. Logs no report line.
+    The order is design D16's: load, ``prepare``, then the destination check (when the model
+    builds and a destination was given). A destination problem refuses exactly as
+    ``generate`` refuses it. Logs nothing.
     """
-    from sysml_codegen import subset_screen
-    from sysml_codegen.cli import report
-
-    loaded = prepare.load_source(request.source)
-    generator = prepare.prepare(loaded, request.package_name)
+    generator = prepare.prepare(prepare.load_source(request.source), request.package_name)
     if request.destination is not None and isinstance(generator, prepare.Prepared):
         problem = destination.inspect_destination(request.destination)
         if problem is not None:
             generator = destination.destination_refused(problem)
-    return report.build_report(generator, subset_screen.assess_screen(loaded))
+    return generator
 
 
 def cmd_snapshot(args: argparse.Namespace) -> int:
@@ -353,7 +340,7 @@ def main() -> None:
     gen_parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
     gen_parser.set_defaults(func=cmd_generate)
 
-    # Check subcommand — generate's answer without writing, plus the screen (Item 2b design D6)
+    # Check subcommand — generate's answer without writing (Item 2b design D6)
     check_parser = subparsers.add_parser(
         "check", help="Report whether generate would build or refuse a model, without writing"
     )
@@ -464,9 +451,7 @@ def run_codegen(config: GenerationConfig) -> bool:
 
     The route is ``load_source``, then ``prepare`` (read-only), then the destination
     check, then ``emit_package`` (the only step that writes). A refusal at any step is
-    logged once, as one record carrying its ``Refusal``. After the seal, the screen runs
-    on the same load and its findings are printed as information; nothing there can
-    change the result (design D16, D17).
+    logged once, as one record carrying its ``Refusal`` (design D16).
 
     Args:
         config: Generation configuration with paths and options.
@@ -488,8 +473,7 @@ def run_codegen(config: GenerationConfig) -> bool:
     from sysml_codegen.cli import emit
 
     logger.info("Building pipeline context...")
-    loaded = prepare.load_source(source)
-    generator = prepare.prepare(loaded, config.package_name)
+    generator = prepare.prepare(prepare.load_source(source), config.package_name)
     # Only a model that builds has its destination inspected, so a refused run logs one
     # record, the model's.
     if isinstance(generator, prepare.Prepared):
@@ -501,26 +485,7 @@ def run_codegen(config: GenerationConfig) -> bool:
         emitted = emit.emit_package(generator, config)
         if emitted is not None:
             generator = emitted
-    _report_after_the_seal(loaded, generator)
     return isinstance(generator, prepare.Prepared)
-
-
-def _report_after_the_seal(
-    loaded: prepare.LoadedSource, generator: prepare.Prepared | prepare.Refused
-) -> None:
-    """Run the screen and print its section of the report, never failing ``generate`` (D17).
-
-    The package is already written and sealed, or the run already refused, so a failure
-    here is reported as one WARNING and leaves the result alone.
-    """
-    try:
-        from sysml_codegen import subset_screen
-        from sysml_codegen.cli import report
-
-        screen = subset_screen.assess_screen(loaded)
-        report.log_screen_section(report.build_report(generator, screen))
-    except Exception as error:
-        logger.warning(f"the screen report could not be produced: {type(error).__name__}: {error}")
 
 
 __all__ = [

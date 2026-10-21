@@ -142,7 +142,7 @@ def build_elaborated_pipeline(model_paths: list[Path]) -> ComputationGraph:
 
 @dataclass(frozen=True)
 class LiveLoad:
-    """Live models SysIDE loaded without errors: what elaboration and the screen both read."""
+    """Live models SysIDE loaded without errors: what elaboration reads."""
 
     extractor: SysMLDataExtractor
     model_paths: tuple[Path, ...]
@@ -168,10 +168,9 @@ class FailedLoad:
 def load_live_models(model_paths: Sequence[Path]) -> LiveLoad | FailedLoad:
     """Load live models once, without raising.
 
-    The one SysIDE load a command makes: elaboration and the subset screen read the same
-    loaded model. A load that fails is returned as a ``FailedLoad`` whose error is exactly
-    the refusal ``elaborate_model_paths`` raises for it. It counts as parse errors when
-    SysIDE reported error diagnostics, and as not loaded otherwise.
+    The one SysIDE load a command makes. A load that fails is returned as a ``FailedLoad``
+    whose error is exactly the refusal ``elaborate_model_paths`` raises for it. It counts as
+    parse errors when SysIDE reported error diagnostics, and as not loaded otherwise.
     """
     paths = list(model_paths)
     try:

@@ -3,7 +3,7 @@
 ``inspect_destination`` checks, without writing, that no link sits on or under the destination.
 ``generate`` runs it before it writes and ``check --output`` runs it instead of writing; both
 refuse a problem with ``destination_refused``, so ``check`` gives ``generate``'s answer. This
-module imports nothing that writes and nothing from agentic-mbse's screen. ``emit_package``
+module imports nothing that writes. ``emit_package``
 repeats the check first, because the tree can change in between.
 """
 

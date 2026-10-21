@@ -40,7 +40,6 @@ from agentic_mbse.sysml.conformance_case import (
 )
 from agentic_mbse.sysml.subset_profile import PACKAGED_RULES, Outcome, RuleRecords
 
-from sysml_codegen.cli.report import DisagreementKind, RefusedFinding, disagreement_kind
 from sysml_codegen.elaboration.diagnostics import SiteReason
 from sysml_codegen.subset_profile_adapter import REASON_MAPPING, NoRefusal
 
@@ -63,6 +62,12 @@ class CaseHome(StrEnum):
     AGENTIC = "agentic"
     #: The model and screen answer live in this repository.
     CODEGEN = "codegen"
+
+
+class DisagreementKind(StrEnum):
+    GENERATOR_REFUSES_SCREEN_SILENT = "generator_refuses_screen_silent"
+    SCREEN_REFUSES_GENERATOR_BUILDS = "screen_refuses_generator_builds"
+    CODE_UNMAPPED = "code_unmapped"
 
 
 class GeneratorOutcome(StrEnum):
@@ -457,20 +462,19 @@ def disagreement(
     screen: ScreenAnswer,
     rules: RuleRecords = PACKAGED_RULES,
 ) -> Disagreement | None:
-    """The disagreement between one subject's generator run and screen answer, if any.
-
-    The rule itself is ``sysml_codegen.cli.report.disagreement_kind`` (Item 2b D9); this
-    reads the stored answers into its inputs.
-    """
+    """The disagreement between one subject's generator run and screen answer, if any."""
     refused = [f for f in screen.findings if f.outcome is Outcome.REFUSED]
-    kind = disagreement_kind(
-        run.outcome is GeneratorOutcome.GENERATED,
-        run.codes,
-        [RefusedFinding(_reason(f, rules), mapped_code(f, rules)) for f in refused],
-    )
-    if kind is None:
-        return None
     reasons = tuple(sorted({_reason(f, rules) for f in refused}))
+    if run.outcome is GeneratorOutcome.GENERATED:
+        if not refused:
+            return None
+        kind = DisagreementKind.SCREEN_REFUSES_GENERATOR_BUILDS
+    elif not refused:
+        kind = DisagreementKind.GENERATOR_REFUSES_SCREEN_SILENT
+    elif {mapped_code(f, rules) for f in refused} & set(run.codes):
+        return None
+    else:
+        kind = DisagreementKind.CODE_UNMAPPED
     return Disagreement(subject, kind, run.codes, reasons)
 
 

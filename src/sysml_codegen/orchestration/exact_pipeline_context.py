@@ -305,9 +305,9 @@ def build_exact_pipeline_context_from_live_load(
 ) -> ExactPipelineContext:
     """Elaborate an already-loaded live model set, then seal the projection into a context.
 
-    The same construction as ``build_exact_pipeline_context`` minus the load, so a caller
-    that also screens the model reads the one SysIDE load the graph came from. The
-    elaborator is looked up on its module at call time.
+    The same construction as ``build_exact_pipeline_context`` minus the load, for a caller
+    that already holds the load (``cli/prepare.py``). The elaborator is looked up on its
+    module at call time.
     """
     from sysml_codegen.orchestration import elaborated_pipeline
 

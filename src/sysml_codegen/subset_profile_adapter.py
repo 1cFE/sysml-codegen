@@ -8,12 +8,10 @@ holds the two things codegen owns about them:
 - ``render_finding``: one finding as a ``SubsetDiagnostic``, with that code, the rule
   record's remedy and the finding's location.
 
-Only ``subset_screen.assess_screen`` imports this module at run time, inside the function and
-after it has compared the installed screen's ``SUBSET_PROFILE_VERSION`` with the pin in
-``_upstream_pins.py`` (Item 2b design D10). A skewed screen is therefore reported as not
-assessed and this module is never imported against it. Importing it directly still makes the
-same comparison and raises ``ImportError`` on a mismatch (Item 2a design D12), so a mapping
-reviewed against one contract is never read against another.
+Nothing under ``src/`` imports this module; only the agreement tests read it. Importing it
+compares the installed screen's ``SUBSET_PROFILE_VERSION`` with the pin in ``_upstream_pins.py``
+and raises ``ImportError`` on a mismatch (Item 2a design D12), so a mapping reviewed against
+one contract is never read against another.
 """
 
 from __future__ import annotations
