@@ -9,10 +9,6 @@
     ],
     "description": "attributes 'a b' and a_b, both read by one calc usage; their entry-point keys sanitize to one"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

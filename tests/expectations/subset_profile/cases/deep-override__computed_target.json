@@ -9,10 +9,6 @@
     ],
     "description": "a deep literal redefinition `:>> w.d = 5.0` of an attribute whose value is computed"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

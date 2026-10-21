@@ -9,7 +9,7 @@ A directory is a model root (``generating`` or ``refusing``), lies inside one, o
 - codegen-home conformance cases: their stored generator answer;
 - every other directory: ``tests/expectations/subset_profile/fixture_classes.json``, written
   from one reviewed generator-half run per root and confirmed live by
-  ``test_fixture_agreement.py``. That includes the 14 corpus fixtures the batch lists as
+  ``test_fixture_classes_live.py``. That includes the 14 corpus fixtures the batch lists as
   captured: a captured snapshot means elaboration sealed a graph, not that ``run_codegen``
   generated, and three of them are refused at generation (Item 2a P3 found this).
 """

@@ -1,7 +1,7 @@
-"""Turn off one detector, in-process, and see which cases notice (Item 2a design D5, § B).
+"""Turn off one refusal site, in-process, and see which cases notice (Item 2a design D5, § B).
 
 A ``Target`` is one statement: the one holding a line in a named function. A scanned site
-becomes one through ``site_target(site_id)``. Three tools act on targets or rules:
+becomes one through ``site_target(site_id)``. Two tools act on targets:
 
 - ``recording_fired(targets)`` records which targets a run reaches. A target fires when a
   line of its statement runs, seen through ``sys.monitoring`` line events on the code of the
@@ -14,17 +14,13 @@ becomes one through ``site_target(site_id)``. Three tools act on targets or rule
   existing function's ``__code__``, so every by-name import sees the change; the original
   code comes back on exit. A function behind a caching wrapper is refused, because a cached
   result would hide the change.
-- ``disable_recognizer(rule, shape)`` makes one rule of the screen stop recognizing one
-  shape, by filtering that shape's recognitions out of the rule's function in
-  ``subset_profile._RULES``.
 
 Only a run that executes a site's statement can change under its mutation: the recompiled
 function is the original but for that one statement. So the cases a mutation can flip are
 among the cases that fire the site, and the mutation tests run only those.
 
-``SHARED`` tags the agentic-mbse sites both halves run (design § Independence limits): their
-mutations move the generator and the screen together, so they show drift at the site, not
-that the two sides agree on their own.
+``SHARED`` tags the agentic-mbse sites the generator runs: its refusals there are decided in
+agentic-mbse's executable profile and reference-use checks, so they are mutated here too.
 
 Every private name the helpers patch or rely on, in either repo, is in ``PATCHED_NAMES``, so a
 rename fails by name in ``test_mutator.py``.
@@ -34,12 +30,11 @@ from __future__ import annotations
 import __future__
 
 import ast
-import dataclasses
 import functools
 import importlib
 import inspect
 import sys
-from collections.abc import Callable, Iterable, Iterator, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -54,8 +49,6 @@ from tests.helpers.subset_profile.site_scan import Site
 PATCHED_NAMES: tuple[tuple[str, str], ...] = (
     ("agentic_mbse.sysml.executable_profile", "_evaluate_usage_against_definition"),
     ("agentic_mbse.sysml.executable_profile", "_unassessed"),
-    ("agentic_mbse.sysml.subset_profile", "_RULES"),
-    ("agentic_mbse.sysml.subset_profile", "_Recognized"),
     ("sysml_codegen.elaboration.expression_evidence", "_indexed_refusal"),
     ("sysml_codegen.elaboration.expression_evidence", "_acquire"),
     ("sysml_codegen.elaboration.project", "_Projection._entry_source"),
@@ -399,44 +392,3 @@ def neutralize(site_id: str) -> AbstractContextManager[None]:
     """Run the block with the scanned site unable to refuse, by its hand patch if it has one."""
     target = site_target(site_id)
     return rewritten(target, HAND_PATCHES.get(site_id) or neutral(target))
-
-
-# ---- disabling one screen recognizer ----------------------------------------------------------
-
-
-def _without_shape(
-    function: Callable[..., list[Any]], recognized: type, shape: str
-) -> Callable[..., list[Any]]:
-    def filtered(*args: Any) -> list[Any]:
-        return [
-            out
-            for out in function(*args)
-            if not (isinstance(out, recognized) and out.shape_id == shape)
-        ]
-
-    return filtered
-
-
-@contextmanager
-def disable_recognizer(rule: str, shape: str) -> Iterator[None]:
-    """Run the block with ``rule`` no longer recognizing ``shape``; restore the rule after."""
-    from agentic_mbse.sysml import subset_profile
-
-    table: dict[str, Any] = subset_profile._RULES  # type: ignore[assignment]
-    spec = table[rule]
-    if shape not in spec.shapes:
-        raise MutationError(f"{rule} has no shape {shape!r}")
-    recognized = subset_profile._Recognized
-    if spec.model_wide is not None:
-        mutated = dataclasses.replace(
-            spec, model_wide=_without_shape(spec.model_wide, recognized, shape)
-        )
-    else:
-        mutated = dataclasses.replace(
-            spec, instantiated=_without_shape(spec.instantiated, recognized, shape)
-        )
-    table[rule] = mutated
-    try:
-        yield
-    finally:
-        table[rule] = spec

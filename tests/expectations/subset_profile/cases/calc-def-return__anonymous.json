@@ -9,10 +9,6 @@
     ],
     "description": "a calc def with an anonymous return `return : Real = x * 2;`"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

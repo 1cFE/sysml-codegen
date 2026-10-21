@@ -9,10 +9,6 @@
     ],
     "description": "one Integer attribute n (line 6) bound to a Real formal and to an Integer formal; its one entry point gets two python types"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

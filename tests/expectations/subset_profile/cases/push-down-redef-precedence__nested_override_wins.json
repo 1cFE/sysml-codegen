@@ -9,10 +9,6 @@
     ],
     "description": "FastDriver redefines efficiency default 0.3; root part site overrides it in a nested redefinition of driver, efficiency = 0.35"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

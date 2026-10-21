@@ -9,10 +9,6 @@
     ],
     "description": "calc def C's output r = v % 2.0: an operator the expression IR leaves unsupported"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

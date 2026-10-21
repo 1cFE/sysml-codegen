@@ -1,22 +1,12 @@
-"""The subset-profile conformance cases: stored answers, the case store, agreement and the record.
+"""The conformance cases: one small model each, with the generator's stored answer.
 
-A case is one small model with two stored answers (EXEC-SUBSET-CONTRACT Item 2a design D1, D14):
+A case's stored answer is ``tests/expectations/subset_profile/cases/<case_id>.json``
+(EXEC-SUBSET-CONTRACT Item 2a design D1, D14). Its model lives either in agentic-mbse package
+data (``agentic_mbse/sysml/subset_cases/<case_id>/``, read through
+``agentic_mbse.sysml.conformance_case``) or under ``tests/fixtures/subset_profile/<case_id>/``,
+where the stored answer also holds the case's construct.
 
-- the generator's, ``tests/expectations/subset_profile/cases/<case_id>.json``, which every case
-  has wherever its model lives;
-- the screen's, which lives with the model. A case agentic-mbse tests the screen on is
-  agentic-mbse package data (``agentic_mbse/sysml/subset_cases/<case_id>/``, read through
-  ``agentic_mbse.sysml.conformance_case``); a case only codegen needs keeps its model under
-  ``tests/fixtures/subset_profile/<case_id>/`` and its screen answer and construct in its
-  stored generator answer.
-
-Agreement (design § C) is one rule for every subject. With C the generator's codes and M the
-codes the mapping gives the screen's ``refused`` findings: a run that generated agrees when the
-screen refuses nothing; a run that refused agrees when some code in M is in C. Anything else is
-a disagreement, and a disagreement passes only if the hand-edited record lists it (D3). This
-module is the record's only reader, and it writes nothing.
-
-Everything here is pure: it reads stored files, the packaged records and the mapping.
+Everything here is pure: it reads stored files.
 """
 
 from __future__ import annotations
@@ -31,22 +21,16 @@ from typing import Any
 
 from agentic_mbse.sysml.conformance_case import (
     Construct,
-    ScreenAnswer,
-    ScreenFinding,
     load_packaged_case,
     packaged_case_dir,
     packaged_case_ids,
-    screen_answer_from_json,
 )
-from agentic_mbse.sysml.subset_profile import PACKAGED_RULES, Outcome, RuleRecords
 
 from sysml_codegen.elaboration.diagnostics import SiteReason
-from sysml_codegen.subset_profile_adapter import REASON_MAPPING, NoRefusal
 
 _TESTS = Path(__file__).resolve().parents[2]
 EXPECTATIONS_DIR = _TESTS / "expectations" / "subset_profile"
 ANSWERS_DIR = EXPECTATIONS_DIR / "cases"
-DISAGREEMENTS_PATH = EXPECTATIONS_DIR / "disagreements.json"
 #: Codegen-home case models (design D14). A model collection, not one model.
 CODEGEN_CASES_DIR = _TESTS / "fixtures" / "subset_profile"
 
@@ -54,20 +38,14 @@ _RG1_ID = re.compile(r"RG1-[1-9][0-9]*")
 
 
 class CaseAnswerError(ValueError):
-    """A stored answer or the disagreement record does not have its stored form."""
+    """A stored answer does not have its stored form."""
 
 
 class CaseHome(StrEnum):
-    #: The model and screen answer are agentic-mbse package data.
+    #: The model and construct are agentic-mbse package data.
     AGENTIC = "agentic"
-    #: The model and screen answer live in this repository.
+    #: The model lives in this repository, and the construct in the stored answer.
     CODEGEN = "codegen"
-
-
-class DisagreementKind(StrEnum):
-    GENERATOR_REFUSES_SCREEN_SILENT = "generator_refuses_screen_silent"
-    SCREEN_REFUSES_GENERATOR_BUILDS = "screen_refuses_generator_builds"
-    CODE_UNMAPPED = "code_unmapped"
 
 
 class GeneratorOutcome(StrEnum):
@@ -93,27 +71,6 @@ class LossDisposition(StrEnum):
     #: A loss that should block, pending the owner's RG-1 decision.
     CANDIDATE_REFUSAL = "candidate_refusal"
     #: A String loss: the policy is the owner's RG-2 decision, so it is neither of the above.
-    RG2_PENDING = "rg2_pending"
-
-
-class Decider(StrEnum):
-    """Who assigned the record's resolutions. An entry's ``owner`` is who is accountable."""
-
-    #: The implementing agent assigned every resolution, by family; the owner has not ratified
-    #: them, so none is an owner ruling.
-    AGENT = "agent"
-    #: The owner ratified every resolution (RG-3).
-    OWNER = "owner"
-
-
-class Resolution(StrEnum):
-    #: The generator's refusal is an output fact codegen owns; no shared rule can describe it.
-    CODEGEN_OWNED = "codegen_owned"
-    #: A refusal family with no rule: reproduced, with a stable codegen reason.
-    REPRODUCED_GAP = "reproduced_gap"
-    #: The generator side is an owner decision (RG-1); the entry names its recommendation.
-    RG1_PENDING = "rg1_pending"
-    #: String policy, the owner's (RG-2).
     RG2_PENDING = "rg2_pending"
 
 
@@ -162,50 +119,17 @@ class LossAnswer:
 
 
 @dataclass(frozen=True)
-class CodegenCase:
-    """The parts of a codegen-home case that an agentic-home case keeps in ``case.json``."""
-
-    construct: Construct
-    screen: ScreenAnswer
-
-
-@dataclass(frozen=True)
 class StoredAnswer:
     case_id: str
     home: CaseHome
     generator: GeneratorAnswer
     #: Present exactly for codegen-home cases.
-    codegen: CodegenCase | None
+    construct: Construct | None
     loss: LossAnswer | None
 
     @property
     def subject(self) -> str:
         return f"case:{self.case_id}"
-
-
-@dataclass(frozen=True)
-class Disagreement:
-    """A computed disagreement, keyed as the record keys its entries (design D3)."""
-
-    subject: str
-    kind: DisagreementKind
-    generator_codes: tuple[str, ...]
-    #: Sorted reasons of the screen's ``refused`` findings.
-    screen_reasons: tuple[str, ...]
-
-
-@dataclass(frozen=True)
-class DisagreementEntry:
-    disagreement: Disagreement
-    resolution: Resolution
-    r3_row: str | None
-    #: The person accountable for the disagreement until it closes (spec § Problem's
-    #: "recorded disagreement"). A work item or phase is not an owner: it ends, the entry may not.
-    #: Accountable is not decided: who assigned the resolution is the record's
-    #: ``resolutions_decided_by`` (``resolutions_decided_by()``).
-    owner: str
-    reason: str
-    rg1: str | None
 
 
 # ---- reading ----------------------------------------------------------------------------------
@@ -353,40 +277,25 @@ def load_stored_answer(path: Path) -> StoredAnswer:
         json.loads(path.read_text(encoding="utf-8")),
         where,
         required=frozenset({"id", "home", "generator"}),
-        optional=frozenset({"construct", "screen", "loss"}),
+        optional=frozenset({"construct", "loss"}),
     )
     case_id = _text(data["id"], f"{where}.id")
     if case_id != path.stem:
         raise CaseAnswerError(f"{where}: id {case_id!r} is not the file name {path.stem!r}")
     home = _member(CaseHome, data["home"], f"{where}.home")
-    local_fields = {"construct", "screen"}
-    if local_fields & data.keys() != (local_fields if home is CaseHome.CODEGEN else set()):
-        raise CaseAnswerError(
-            f"{where}: a construct and a screen answer are stored here exactly for "
-            "codegen-home cases"
-        )
-    codegen = (
-        CodegenCase(
-            construct=_construct(data["construct"], f"{where}.construct"),
-            screen=_screen(data["screen"], f"{where}.screen"),
-        )
-        if home is CaseHome.CODEGEN
-        else None
-    )
+    if ("construct" in data) != (home is CaseHome.CODEGEN):
+        raise CaseAnswerError(f"{where}: a construct is stored here exactly for codegen-home cases")
     return StoredAnswer(
         case_id=case_id,
         home=home,
         generator=_generator(data["generator"], f"{where}.generator"),
-        codegen=codegen,
+        construct=(
+            _construct(data["construct"], f"{where}.construct")
+            if home is CaseHome.CODEGEN
+            else None
+        ),
         loss=_loss(data["loss"], f"{where}.loss") if "loss" in data else None,
     )
-
-
-def _screen(value: Any, where: str) -> ScreenAnswer:
-    try:
-        return screen_answer_from_json(value, where)
-    except ValueError as error:
-        raise CaseAnswerError(str(error)) from error
 
 
 # ---- the case store ---------------------------------------------------------------------------
@@ -425,138 +334,6 @@ def model_root(answer: StoredAnswer) -> Path:
 
 
 def construct_of(answer: StoredAnswer) -> Construct:
-    if answer.codegen is not None:
-        return answer.codegen.construct
+    if answer.construct is not None:
+        return answer.construct
     return load_packaged_case(answer.case_id).construct
-
-
-def screen_of(answer: StoredAnswer) -> ScreenAnswer:
-    """The case's stored screen answer, wherever it lives."""
-    if answer.codegen is not None:
-        return answer.codegen.screen
-    return load_packaged_case(answer.case_id).screen
-
-
-# ---- agreement (design § C) -------------------------------------------------------------------
-
-
-def _reason(finding: ScreenFinding, rules: RuleRecords) -> str:
-    return rules.rule(finding.rule).shape(finding.shape).reason
-
-
-def mapped_code(finding: ScreenFinding, rules: RuleRecords = PACKAGED_RULES) -> str:
-    """The code the mapping says the generator refuses a ``refused`` finding with."""
-    reason = _reason(finding, rules)
-    mapping = REASON_MAPPING[reason]
-    if isinstance(mapping, NoRefusal):
-        raise ValueError(
-            f"{finding.rule}/{finding.shape} is refused, but its reason {reason!r} maps to "
-            "NO_REFUSAL: the records and the mapping disagree"
-        )
-    return mapping.code_for(finding.context).value
-
-
-def disagreement(
-    subject: str,
-    run: GeneratorRun,
-    screen: ScreenAnswer,
-    rules: RuleRecords = PACKAGED_RULES,
-) -> Disagreement | None:
-    """The disagreement between one subject's generator run and screen answer, if any."""
-    refused = [f for f in screen.findings if f.outcome is Outcome.REFUSED]
-    reasons = tuple(sorted({_reason(f, rules) for f in refused}))
-    if run.outcome is GeneratorOutcome.GENERATED:
-        if not refused:
-            return None
-        kind = DisagreementKind.SCREEN_REFUSES_GENERATOR_BUILDS
-    elif not refused:
-        kind = DisagreementKind.GENERATOR_REFUSES_SCREEN_SILENT
-    elif {mapped_code(f, rules) for f in refused} & set(run.codes):
-        return None
-    else:
-        kind = DisagreementKind.CODE_UNMAPPED
-    return Disagreement(subject, kind, run.codes, reasons)
-
-
-# ---- the disagreement record (design D3) -------------------------------------------------------
-
-
-def _entry(value: Any, where: str) -> DisagreementEntry:
-    data = _fields(
-        value,
-        where,
-        required=frozenset(
-            {
-                "subject",
-                "kind",
-                "generator_codes",
-                "screen_reasons",
-                "resolution",
-                "r3_row",
-                "owner",
-                "reason",
-            }
-        ),
-        optional=frozenset({"rg1"}),
-    )
-    subject = _text(data["subject"], f"{where}.subject")
-    if not subject.startswith(("case:", "fixture:")):
-        raise CaseAnswerError(f"{where}.subject: expected case:<id> or fixture:<path>")
-    resolution = _member(Resolution, data["resolution"], f"{where}.resolution")
-    rg1 = None if data.get("rg1") is None else _rg1(data["rg1"], f"{where}.rg1")
-    if (resolution is Resolution.RG1_PENDING) != (rg1 is not None):
-        raise CaseAnswerError(f"{where}: an rg1_pending entry names its RG1-<n>, and only one does")
-    r3_row = data["r3_row"]
-    return DisagreementEntry(
-        disagreement=Disagreement(
-            subject=subject,
-            kind=_member(DisagreementKind, data["kind"], f"{where}.kind"),
-            generator_codes=_sorted_texts(data["generator_codes"], f"{where}.generator_codes"),
-            screen_reasons=_sorted_texts(data["screen_reasons"], f"{where}.screen_reasons"),
-        ),
-        resolution=resolution,
-        r3_row=None if r3_row is None else _text(r3_row, f"{where}.r3_row"),
-        owner=_text(data["owner"], f"{where}.owner"),
-        reason=_text(data["reason"], f"{where}.reason"),
-        rg1=rg1,
-    )
-
-
-RECORD_SCHEMA = "subset-disagreements/2"
-
-
-def _record_document(path: Path) -> Mapping[str, Any]:
-    where = str(path)
-    data = _fields(
-        json.loads(path.read_text(encoding="utf-8")),
-        where,
-        required=frozenset({"schema", "resolutions_decided_by", "entries"}),
-    )
-    if data["schema"] != RECORD_SCHEMA:
-        raise CaseAnswerError(f"{where}.schema: unknown schema {data['schema']!r}")
-    _member(Decider, data["resolutions_decided_by"], f"{where}.resolutions_decided_by")
-    return data
-
-
-def resolutions_decided_by(path: Path = DISAGREEMENTS_PATH) -> Decider:
-    """Who assigned the record's resolutions, as the record states it."""
-    return Decider(_record_document(path)["resolutions_decided_by"])
-
-
-def read_disagreements(path: Path = DISAGREEMENTS_PATH) -> tuple[DisagreementEntry, ...]:
-    """Read the hand-edited disagreement record. Nothing writes it."""
-    where = str(path)
-    data = _record_document(path)
-    entries = tuple(
-        _entry(item, f"{where}.entries[{i}]")
-        for i, item in enumerate(_list(data["entries"], f"{where}.entries"))
-    )
-    subjects = [e.disagreement.subject for e in entries]
-    if len(subjects) != len(set(subjects)):
-        raise CaseAnswerError(f"{where}: a subject is listed twice")
-    return entries
-
-
-def recorded(found: Disagreement, entries: tuple[DisagreementEntry, ...]) -> bool:
-    """Whether the record lists exactly this disagreement."""
-    return any(e.disagreement == found for e in entries)

@@ -9,10 +9,6 @@
     ],
     "description": "part p typed by two unrelated part defs A and B"
   },
-  "screen": {
-    "verdict": "incomplete",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

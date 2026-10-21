@@ -9,10 +9,6 @@
     ],
     "description": "calc usage consumer binds d to station.sensor.core.r, the same output through a feature chain"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

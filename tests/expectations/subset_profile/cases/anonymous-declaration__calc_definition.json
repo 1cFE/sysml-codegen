@@ -9,10 +9,6 @@
     ],
     "description": "an anonymous calc def"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

@@ -9,10 +9,6 @@
     ],
     "description": "a calc def with an anonymous input parameter (`in : Real;`)"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

@@ -9,10 +9,6 @@
     ],
     "description": "nested named subsets where only rack_1.server_1 redefines psu.efficiency"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

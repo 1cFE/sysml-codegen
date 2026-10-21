@@ -9,10 +9,6 @@
     ],
     "description": "a bare reference to p's attribute a, imported into another root part q"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

@@ -9,10 +9,6 @@
     ],
     "description": "a package-level attribute read by a package-level calc usage, in a file named model.sysml"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

@@ -9,10 +9,6 @@
     ],
     "description": "an anonymous requirement def"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

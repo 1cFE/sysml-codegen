@@ -9,10 +9,6 @@
     ],
     "description": "calc def C's members a and b are bound to each other (a = b + v, b = a + v)"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

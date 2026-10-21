@@ -275,15 +275,3 @@ def test_every_planned_site_mutation_builds(site_id: str) -> None:
 
 def test_every_hand_patch_is_a_planned_mutation() -> None:
     assert set(mutate.HAND_PATCHES) <= set(_mutated_sites())
-
-
-def test_a_disabled_recognizer_comes_back() -> None:
-    from agentic_mbse.sysml import subset_profile
-
-    spec = subset_profile._RULES["part-multiplicity"]
-    with mutate.disable_recognizer("part-multiplicity", "range"):
-        assert subset_profile._RULES["part-multiplicity"] is not spec
-    assert subset_profile._RULES["part-multiplicity"] is spec
-    with pytest.raises(MutationError, match="no shape"):
-        with mutate.disable_recognizer("part-multiplicity", "no_such_shape"):
-            pass

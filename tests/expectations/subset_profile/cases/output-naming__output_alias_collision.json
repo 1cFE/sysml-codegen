@@ -9,10 +9,6 @@
     ],
     "description": "alias attributes 'out x' and out_x on two calc outputs, rendering one output alias"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

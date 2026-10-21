@@ -9,10 +9,6 @@
     ],
     "description": "attribute total = sum(5.0), a sum over a literal operand"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

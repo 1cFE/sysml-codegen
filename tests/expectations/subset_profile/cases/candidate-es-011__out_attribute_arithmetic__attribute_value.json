@@ -9,10 +9,6 @@
     ],
     "description": "attribute y = c.r * k, where r is calc def Twice's out attribute"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

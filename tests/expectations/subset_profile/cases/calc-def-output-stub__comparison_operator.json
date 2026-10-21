@@ -9,10 +9,6 @@
     ],
     "description": "calc def C's output r : Boolean = v > 1.0: a comparison"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

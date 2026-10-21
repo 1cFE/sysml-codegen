@@ -9,10 +9,6 @@
     ],
     "description": "a deep literal redefinition `:>> w.r = 5.0` through a `ref part`, which has no occurrence to write to"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

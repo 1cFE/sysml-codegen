@@ -9,10 +9,6 @@
     ],
     "description": "a computed attribute reading 'a b' and a_b, whose parameter names sanitize to one"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

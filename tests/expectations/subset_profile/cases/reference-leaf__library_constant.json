@@ -9,10 +9,6 @@
     ],
     "description": "a computed attribute reading the library constant TrigFunctions::pi"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

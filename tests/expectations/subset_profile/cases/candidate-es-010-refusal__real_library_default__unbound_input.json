@@ -9,10 +9,6 @@
     ],
     "description": "calc usage t leaves its Real input u unbound, so the calc def default 3.0 applies (control for the String library-default path)"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

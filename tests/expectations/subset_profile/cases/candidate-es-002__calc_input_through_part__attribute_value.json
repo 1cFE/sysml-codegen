@@ -9,10 +9,6 @@
     ],
     "description": "attribute y reads p.c.v, the input of a calc usage inside part p (a part segment precedes the calc usage)"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

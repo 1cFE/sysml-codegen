@@ -9,10 +9,6 @@
     ],
     "description": "nested named subsets with no value redefinition"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

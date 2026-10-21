@@ -9,10 +9,6 @@
     ],
     "description": "constraint g binds calc usage t's result t.r"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

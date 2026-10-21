@@ -9,10 +9,6 @@
     ],
     "description": "attribute t : NumericalValue = sum(); a sum invocation with no argument in a computed attribute value"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

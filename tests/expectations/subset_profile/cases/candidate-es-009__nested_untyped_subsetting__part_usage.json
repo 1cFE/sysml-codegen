@@ -9,10 +9,6 @@
     ],
     "description": "part facility subsets untyped ac_facility and reads facility.hall.area, an attribute of a nested part"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

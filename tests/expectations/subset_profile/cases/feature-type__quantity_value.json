@@ -9,10 +9,6 @@
     ],
     "description": "a MassValue attribute read in a computed Real expression"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

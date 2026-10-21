@@ -9,10 +9,6 @@
     ],
     "description": "a calc def with outputs 'r x' and r_x, whose channel names sanitize to one"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

@@ -9,10 +9,6 @@
     ],
     "description": "a calc input bound to `null`"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

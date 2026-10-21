@@ -9,10 +9,6 @@
     ],
     "description": "part def BigSite :> Site redefines n default 3; big : BigSite gets three racks (control for G2)"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

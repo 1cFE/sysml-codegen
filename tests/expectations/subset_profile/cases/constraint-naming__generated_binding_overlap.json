@@ -9,10 +9,6 @@
     ],
     "description": "a constraint def whose formal is named value, a name the generated predicate scope already binds"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

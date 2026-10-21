@@ -9,10 +9,6 @@
     ],
     "description": "calc def C's output r = 2.0 * v, a form the renderer compiles (control for every stub cause)"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

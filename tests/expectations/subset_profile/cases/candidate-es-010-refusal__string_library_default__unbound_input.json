@@ -9,10 +9,6 @@
     ],
     "description": "calc usage t leaves its String input u unbound, so the calc def default \"liter\" applies (the library-default entry path)"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

@@ -9,10 +9,6 @@
     ],
     "description": "attribute x redefining both a and b, two features with unrelated redefinition roots"
   },
-  "screen": {
-    "verdict": "incomplete",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

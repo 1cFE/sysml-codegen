@@ -9,10 +9,6 @@
     ],
     "description": "a calc usage `calc c2 :> c;` that subsets a typed calc usage and declares no typing of its own"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

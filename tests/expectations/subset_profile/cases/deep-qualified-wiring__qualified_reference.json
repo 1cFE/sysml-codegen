@@ -9,10 +9,6 @@
     ],
     "description": "calc usage consumer binds d to system::station::sensor::core::r, a qualified reference to a calc output four levels down"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

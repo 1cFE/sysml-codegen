@@ -9,10 +9,6 @@
     ],
     "description": "computed attribute t in part defs a::Site and b::Site; both formula modules alias to one registry class name"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

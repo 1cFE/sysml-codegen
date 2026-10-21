@@ -9,10 +9,6 @@
     ],
     "description": "an anonymous attribute usage `attribute : Real = 2.0;`: a kind the generator does not index"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

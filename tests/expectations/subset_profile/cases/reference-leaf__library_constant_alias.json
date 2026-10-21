@@ -9,10 +9,6 @@
     ],
     "description": "an attribute whose value is the library constant TrigFunctions::pi alone"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

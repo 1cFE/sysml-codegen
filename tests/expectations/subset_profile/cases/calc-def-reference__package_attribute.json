@@ -9,10 +9,6 @@
     ],
     "description": "a calc def result reading k, a package attribute that is neither a member nor an input of the calc def"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

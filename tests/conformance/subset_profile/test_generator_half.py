@@ -1,7 +1,7 @@
 """Every case's live generator half equals its stored answer, and refuses only on its construct.
 
-Item 2a design D1 and § C. Each case's model runs through the generator's own route with the
-screen tripwired (``observe.generator_half``). Its outcome, codes and site reasons must equal the
+Item 2a design D1 and § C. Each case's model runs through the generator's own route
+(``observe.generator_half``). Its outcome, codes and site reasons must equal the
 stored answer, and every refusal the run locates must sit on the case's construct, so a case
 that refuses for an unrelated reason shows up as a broken case rather than as evidence.
 
@@ -19,8 +19,7 @@ generation-stage codes, which name no source, and ``SI_CONSTRAINT_BLOCKED``, who
 the executable profile writes only into the message text (``_render_block_reason`` in
 ``elaboration/elaborate.py``), which the harness does not parse (design D2).
 
-Item 2a P3 added two more, both found on the cases where the generator refuses with a code no
-screen finding maps to. ``SI_ID_UNSTABLE`` is raised from ``elaboration/identity.py:45`` with a
+Item 2a P3 added two more. ``SI_ID_UNSTABLE`` is raised from ``elaboration/identity.py:45`` with a
 message and no source, and the ``SI_EDGE_DANGLING`` raises those cases reach (a
 dangling definition UUID or feature, a producer cycle) name a subject but pass no source.
 A located refusal with either code is still held to the construct.

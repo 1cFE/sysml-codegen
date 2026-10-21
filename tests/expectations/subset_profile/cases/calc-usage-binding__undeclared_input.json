@@ -9,10 +9,6 @@
     ],
     "description": "a calc usage binding an input z its calc def does not declare"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

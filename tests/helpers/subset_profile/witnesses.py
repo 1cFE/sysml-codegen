@@ -3,13 +3,11 @@
 A witness is a case that fires a site. Codegen sites are named in the stored generator answer
 (``generator.witnesses``); agentic-mbse sites in the packaged case (``agentic_site_witnesses``).
 
-``tests/expectations/subset_profile/mutations.json`` (``subset-mutations/1``) holds, by hand:
+``tests/expectations/subset_profile/mutations.json`` (``subset-mutations/2``) holds, by hand:
 
 - ``generator``: for each mutated site, the cases whose generator answer changes when the site
   is neutralized. A site's own witnesses are among them; any others are recorded, not
   forbidden (design § Implementation Notes);
-- ``screen``: for each (rule, shape) with a refused context, the cases whose generator answer
-  the screen stops agreeing with when the shape's recognizer is disabled;
 - ``unwitnessed``: the mutated sites no case fires in the generator half, each with why.
 """
 
@@ -27,7 +25,7 @@ from tests.helpers.subset_profile import cases, mutate, observe, site_scan
 from tests.helpers.subset_profile.cases import StoredAnswer
 
 MUTATIONS_PATH = cases.EXPECTATIONS_DIR / "mutations.json"
-SCHEMA = "subset-mutations/1"
+SCHEMA = "subset-mutations/2"
 #: The renderer whose ``CompilationError`` raises are the stub family's sites (design D9).
 STUB_RENDERER = "sysml_codegen/extraction/calc_compat_renderer.py"
 
@@ -39,7 +37,6 @@ class MutationRecordError(ValueError):
 @dataclass(frozen=True)
 class MutationRecord:
     generator: dict[str, frozenset[str]]
-    screen: dict[tuple[str, str], frozenset[str]]
     unwitnessed: dict[str, str]
 
 
@@ -54,25 +51,13 @@ def _case_set(value: Any, where: str) -> frozenset[str]:
 
 def read_mutations(path: Path = MUTATIONS_PATH) -> MutationRecord:
     data = json.loads(path.read_text(encoding="utf-8"))
-    if data.get("schema") != SCHEMA or set(data) != {
-        "schema",
-        "generator",
-        "screen",
-        "unwitnessed",
-    }:
-        raise MutationRecordError(f"{path}: expected schema, generator, screen and unwitnessed")
-    screen = {}
-    for key, value in data["screen"].items():
-        rule, sep, shape = key.partition("/")
-        if not sep:
-            raise MutationRecordError(f"screen.{key}: expected <rule>/<shape>")
-        screen[(rule, shape)] = _case_set(value, f"screen.{key}")
+    if data.get("schema") != SCHEMA or set(data) != {"schema", "generator", "unwitnessed"}:
+        raise MutationRecordError(f"{path}: expected schema, generator and unwitnessed")
     unwitnessed = data["unwitnessed"]
     if not all(isinstance(v, str) and v.strip() for v in unwitnessed.values()):
         raise MutationRecordError("unwitnessed: each site says why no case fires it")
     return MutationRecord(
         generator={k: _case_set(v, f"generator.{k}") for k, v in data["generator"].items()},
-        screen=screen,
         unwitnessed=dict(unwitnessed),
     )
 

@@ -9,19 +9,6 @@
     ],
     "description": "rack redefines servers[2] ordered with no multiplicity; the generator expands one unindexed occurrence and drops ordered (matrix row G1)"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": [
-      {
-        "rule": "part-multiplicity",
-        "shape": "ordered",
-        "context": "unexpanded_part_usage",
-        "outcome": "admitted",
-        "subject": "fx::Rack::servers",
-        "line": 5
-      }
-    ]
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

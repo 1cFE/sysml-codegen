@@ -9,10 +9,6 @@
     ],
     "description": "a computed attribute in B reading `A::r`, a feature of a part def with no occurrence in the consumer's lineage"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

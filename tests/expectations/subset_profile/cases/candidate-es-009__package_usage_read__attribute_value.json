@@ -9,10 +9,6 @@
     ],
     "description": "attribute double reads ac_facility.area directly, with no subsetting"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

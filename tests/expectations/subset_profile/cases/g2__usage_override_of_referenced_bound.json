@@ -9,10 +9,6 @@
     ],
     "description": "part usage tuned redefines n default 3, the attribute Site's racks[n] bound reads; the generator keeps the definition's 2 (matrix row G2)"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

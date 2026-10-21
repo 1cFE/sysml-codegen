@@ -9,10 +9,6 @@
     ],
     "description": "calc def C's output r : Boolean = not b: the unary not"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

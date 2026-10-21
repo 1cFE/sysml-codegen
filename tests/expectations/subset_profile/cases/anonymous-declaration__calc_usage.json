@@ -9,10 +9,6 @@
     ],
     "description": "an anonymous calc usage `calc : Twice { in v = x; }`"
   },
-  "screen": {
-    "verdict": "incomplete",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

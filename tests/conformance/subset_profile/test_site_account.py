@@ -3,17 +3,12 @@
 A site added under ``src/sysml_codegen/`` without a row, or a row whose site was removed,
 fails here by ID. So does a ``CodeGenerationError`` built without a code (design D15).
 
-agentic-mbse's matrix is not readable from here (spec Boundaries), so a row's ``matrix_row``
-is checked by form only, and its ``rule`` against agentic-mbse's packaged rule records. The
-explicit follow-up rows are checked against agentic-mbse's L6 coverage list.
+A row's ``matrix_row`` is checked by form only.
 """
 
 from __future__ import annotations
 
 import re
-
-from agentic_mbse.sysml.subset_coverage import FOLLOW_UP_SITES
-from agentic_mbse.sysml.subset_profile import PACKAGED_RULES
 
 from tests.helpers.subset_profile import site_scan
 from tests.helpers.subset_profile.site_scan import Disposition, Role
@@ -51,13 +46,6 @@ def test_matrix_rows_have_the_matrix_id_form():
             assert _MATRIX_ROW_ID.fullmatch(matrix_row), (row.site_id, matrix_row)
 
 
-def test_a_rule_is_a_packaged_record_sharing_the_row_s_matrix_row():
-    for row in ACCOUNT.rows:
-        for rule_id in row.rules:
-            record = PACKAGED_RULES.rule(rule_id)
-            assert set(record.matrix_rows) & set(row.matrix_rows), (row.site_id, rule_id)
-
-
 def test_an_in_scope_site_is_a_capability_refusal_or_its_relay():
     for row in ACCOUNT.rows:
         if row.disposition is Disposition.IN_SCOPE:
@@ -71,15 +59,3 @@ def test_an_internal_invariant_cites_the_guard_that_keeps_valid_input_away():
                 ".py:" in e or e.startswith("no caller under src/") for e in row.evidence[1:]
             )
             assert guard, row.site_id
-
-
-def test_agentic_coverage_list_names_exactly_the_codegen_follow_up_sites():
-    """agentic-mbse's L6 coverage limit counts these sites (its ``subset_coverage.py``).
-
-    agentic-mbse checks its own sites there; this account is the authority for codegen's.
-    """
-    listed = [site for site in FOLLOW_UP_SITES if site.startswith("sysml_codegen/")]
-    follow_up = sorted(
-        row.site_id for row in ACCOUNT.rows if row.disposition is Disposition.EXPLICIT_FOLLOW_UP
-    )
-    assert listed == follow_up

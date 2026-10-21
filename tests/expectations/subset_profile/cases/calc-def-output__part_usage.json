@@ -9,10 +9,6 @@
     ],
     "description": "a calc def with an `out part` parameter, which extraction does not record as an output attribute"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

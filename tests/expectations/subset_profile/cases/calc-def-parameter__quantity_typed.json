@@ -9,10 +9,6 @@
     ],
     "description": "a calc def input typed MassValue"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

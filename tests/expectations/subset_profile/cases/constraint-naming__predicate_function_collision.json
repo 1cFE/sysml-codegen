@@ -9,10 +9,6 @@
     ],
     "description": "constraint defs 'Pos-1' and Pos_1, whose predicate function names normalize to one"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

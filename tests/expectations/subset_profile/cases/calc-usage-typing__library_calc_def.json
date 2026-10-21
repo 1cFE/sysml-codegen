@@ -9,10 +9,6 @@
     ],
     "description": "a calc usage typed by the library calc def Calculations::Calculation"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

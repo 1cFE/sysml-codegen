@@ -9,10 +9,6 @@
     ],
     "description": "attribute t : Real = sum((a, b)) * 1.0; sum over a sequence literal of two attributes in a computed attribute value"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

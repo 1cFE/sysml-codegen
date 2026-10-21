@@ -9,10 +9,6 @@
     ],
     "description": "calc def C's output reads a member named 'if', a Python keyword"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

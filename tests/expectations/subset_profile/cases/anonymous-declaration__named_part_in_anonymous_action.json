@@ -9,10 +9,6 @@
     ],
     "description": "a named part usage p inside an anonymous action usage, so p has no qualified name"
   },
-  "screen": {
-    "verdict": "incomplete",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

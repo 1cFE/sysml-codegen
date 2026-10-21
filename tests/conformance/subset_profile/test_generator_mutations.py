@@ -1,4 +1,4 @@
-"""Neutralizing a shared-rule site changes exactly the stored cases (Item 2a D5, § B, B5).
+"""Neutralizing a refusal site changes exactly the stored cases (Item 2a D5, § B, B5).
 
 For each mutated site, the site is neutralized (``mutate.neutralize``) and every case that
 fires it in the generator half is run again. The cases whose outcome or site reasons change
@@ -6,9 +6,8 @@ must be the stored set in ``mutations.json``, which holds at least one of the si
 witnesses (``test_mutation_record.py``). A case that never runs the site's statement cannot
 change, so only the firing cases are run.
 
-Sites in ``mutate.SHARED`` run in both halves: their mutations show drift at the site, not
-independent agreement (design § Independence limits). An ``unwitnessed`` site must fire in no
-case, so a new case that reaches one fails here until the record moves it.
+Sites in ``mutate.SHARED`` are agentic-mbse sites the generator runs. An ``unwitnessed`` site
+must fire in no case, so a new case that reaches one fails here until the record moves it.
 
 Licensed.
 """

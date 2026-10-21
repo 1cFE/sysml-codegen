@@ -42,8 +42,7 @@ class SiteReason(StrEnum):
 
     Many sites share one ``ElaborationCode``, and a later check can refuse with the same
     code as an earlier one it shadows. The reason names the site, so a conformance case
-    can tell which one refused. Members are ``<stage>_<condition>`` and stay distinct from
-    the shared contract's ``SUBSET_REASON_CODES``, which name modelled shapes, not sites.
+    can tell which one refused. Members are ``<stage>_<condition>``.
 
     A reason is carried live only. It is not part of the v6 snapshot encoding, and a
     sealed graph holds no diagnostics to carry one.
@@ -63,8 +62,6 @@ class SiteReason(StrEnum):
     ELABORATION_NO_EXECUTABLE_CONTENT = "elaboration_no_executable_content"
     GENERATION_CONSTRAINT_NAME_UNSAFE = "generation_constraint_name_unsafe"
     INTERNAL_FAILURE_UNCLASSIFIED = "internal_failure_unclassified"
-    # Sites an R3 row of the subset contract names: the generator refuses there and no shared
-    # rule describes the shape, so the reason is how a conformance case tells them apart.
     OCCURRENCE_CONTAINMENT_UNANCHORED = "occurrence_containment_unanchored"
     OCCURRENCE_CONTAINMENT_STEP_MISSING = "occurrence_containment_step_missing"
     ELABORATION_VALUE_WRITERS_INCOMPARABLE = "elaboration_value_writers_incomparable"
@@ -74,8 +71,6 @@ class SiteReason(StrEnum):
     PROJECTION_DEFAULT_NON_NUMERIC = "projection_default_non_numeric"
     PROJECTION_SUM_ARGUMENT_COUNT = "projection_sum_argument_count"
     EXTRACTION_CALC_DEF_NO_OUTPUT = "extraction_calc_def_no_output"
-    # Codegen-only refusals of a valid model: no shared rule or R3 row names the shape, so the
-    # contract is silent and the reason is what a conformance case pins (Item 2a P6).
     EXTRACTION_CALC_DEF_RETURN_UNNAMED = "extraction_calc_def_return_unnamed"
     EXTRACTION_PARAMETER_TYPING_COUNT = "extraction_parameter_typing_count"
     IDENTITY_QUALIFIED_NAME_MISSING = "identity_qualified_name_missing"

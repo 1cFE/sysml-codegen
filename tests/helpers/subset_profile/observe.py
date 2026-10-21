@@ -1,15 +1,13 @@
-"""The two halves of a subset-profile case, each observed through its public surface.
+"""The generator's run on a conformance case, observed through its public surface.
 
-Generator half: the generator's own route on the case model, ``load_source``, ``prepare`` and
-``emit_package`` (``cli/prepare.py``, ``cli/emit.py``), which is ``generate`` with the screen
-left out (Item 2b design D11). The refusal is the ``Refused`` value the route returns, never
+The generator half: the generator's own route on the case model, ``load_source``, ``prepare``
+and ``emit_package`` (``cli/prepare.py``, ``cli/emit.py``), the route ``generate`` runs (Item 2b
+design D11). The refusal is the ``Refused`` value the route returns, never
 message text, where a code can also appear inside detail; a separate test holds it equal to the
 record ``run_codegen`` logs. Stubs come from the ``extra={"manual_stub": ...}`` payload of the
 WARNING elaboration logs once per stubbed calc def member (design D9). The instance graph
 comes from a spy on ``elaborated_pipeline.elaborate_loaded_extractor`` as the exact pipeline
-context calls it, and the catalog from the written ``contracts/model_contract.json``. The
-screen's three entry points are tripwired for the run, so a generator answer can never be the
-screen's answer in disguise.
+context calls it, and the catalog from the written ``contracts/model_contract.json``.
 
 Seams (design D9): a stored answer can assert one fact about one declaration at a named
 point of the generator's output. The declaration is found by qualified name in the loaded
@@ -17,10 +15,7 @@ model and compared by ``DeclarationId``, never by text. Entry points carry no de
 so the harness records the owner node of each one as projection mints it, through a spy on
 ``_Projection._entry_source`` (``elaboration/project.py``), the one private name it patches.
 
-Screen half: ``SysideAdapter.load_model``, then ``extract_subset_facts``, then
-``evaluate_subset_profile``, as an agentic-mbse caller runs them.
-
-Both halves need a syside license.
+Needs a syside license.
 """
 
 from __future__ import annotations
@@ -28,7 +23,6 @@ from __future__ import annotations
 import importlib
 import json
 import logging
-import sys
 import tempfile
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
@@ -37,17 +31,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from agentic_mbse.sysml.subset_profile import SubsetProfileResult
-
     from sysml_codegen.cli.refusal import Refusal, RefusalItem
     from sysml_codegen.elaboration import InstanceGraph
     from sysml_codegen.elaboration.diagnostics import ManualStubNotice
     from sysml_codegen.elaboration.identity import DeclarationId
     from tests.helpers.subset_profile.cases import GeneratorRun, SeamKind, StubAnswer
-
-
-class ScreenCalledError(AssertionError):
-    """The generator half reached one of the screen's entry points."""
 
 
 @dataclass(frozen=True)
@@ -113,56 +101,6 @@ class _LogCapture(logging.Handler):
         stub = getattr(record, "manual_stub", None)
         if stub is not None:
             self.stubs.append(stub)
-
-
-def _rebind_everywhere(original: object, replacement: object) -> list[tuple[object, str]]:
-    """Point every module-level name bound to ``original`` at ``replacement``.
-
-    By-name imports (``from x import f``) hold their own binding, so patching the defining
-    module alone would miss them.
-    """
-    rebound: list[tuple[object, str]] = []
-    for module in list(sys.modules.values()):
-        namespace = getattr(module, "__dict__", None)
-        if not isinstance(namespace, dict):
-            continue
-        for name, value in list(namespace.items()):
-            if value is original:
-                setattr(module, name, replacement)
-                rebound.append((module, name))
-    return rebound
-
-
-@contextmanager
-def screen_tripwire() -> Iterator[None]:
-    """Fail the run, after it ends, if the generator called the screen.
-
-    The tripwire records the call and raises; the route turns that raise into an
-    ``SI_INTERNAL_DEFECT`` refusal, so the record is what makes the call fail the test.
-    """
-    from agentic_mbse.sysml import occurrence_extraction, subset_extraction, subset_profile
-
-    calls: list[str] = []
-    entries: tuple[Callable[..., Any], ...] = (
-        subset_extraction.extract_subset_facts,
-        subset_profile.evaluate_subset_profile,
-        occurrence_extraction.extract_occurrence_structure,
-    )
-    rebound: list[tuple[object, str, object]] = []
-    for entry in entries:
-
-        def tripped(*_args: object, _name: str = entry.__name__, **_kwargs: object) -> Any:
-            calls.append(_name)
-            raise ScreenCalledError(f"the generator half called {_name}")
-
-        rebound += [(m, n, entry) for m, n in _rebind_everywhere(entry, tripped)]
-    try:
-        yield
-    finally:
-        for module, name, original in rebound:
-            setattr(module, name, original)
-    if calls:
-        raise ScreenCalledError(f"the generator half called the screen: {calls}")
 
 
 @contextmanager
@@ -234,7 +172,6 @@ def generator_half(model_root: Path) -> GeneratorObservation:
         _log_capture() as capture,
         _elaboration_spy(graphs),
         _entry_point_spy(minted),
-        screen_tripwire(),
     ):
         config = GenerationConfig(output_path=Path(out) / "pkg", models_path=model_root)
         prepared = prepare(load_source(LiveModels((model_root,))), config.package_name)
@@ -372,15 +309,3 @@ def seam_value(
         SeamKind.OCCURRENCES: _occurrences,
     }
     return readers[kind](observation, declaration)
-
-
-def screen_half(model_root: Path) -> SubsetProfileResult:
-    """Run the screen on ``model_root`` (a file or a directory) as agentic-mbse's callers do."""
-    from agentic_mbse.sysml.subset_extraction import extract_subset_facts
-    from agentic_mbse.sysml.subset_profile import evaluate_subset_profile
-    from agentic_mbse.sysml.syside_adapter import SysideAdapter
-
-    model, diagnostics = SysideAdapter.load_model([model_root])
-    if diagnostics.contains_errors():
-        raise AssertionError([str(d) for d in diagnostics.all])
-    return evaluate_subset_profile(extract_subset_facts(model))

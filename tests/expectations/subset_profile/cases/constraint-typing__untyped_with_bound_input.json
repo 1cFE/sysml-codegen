@@ -9,10 +9,6 @@
     ],
     "description": "an untyped constraint usage that binds an input `constraint k { in x = a; }`"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

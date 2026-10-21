@@ -9,10 +9,6 @@
     ],
     "description": "attribute y reads c.t, an attribute of the calc def that is neither its return nor an out attribute"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

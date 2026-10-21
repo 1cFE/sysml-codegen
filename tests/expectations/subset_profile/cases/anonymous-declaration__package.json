@@ -9,10 +9,6 @@
     ],
     "description": "an anonymous nested package holding a part def"
   },
-  "screen": {
-    "verdict": "incomplete",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

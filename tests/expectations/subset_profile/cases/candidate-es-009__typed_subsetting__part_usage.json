@@ -9,10 +9,6 @@
     ],
     "description": "part facility subsets the top-level usage ac_facility typed by Fac and reads facility.area"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

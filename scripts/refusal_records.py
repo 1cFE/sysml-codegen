@@ -56,11 +56,27 @@ def _case(case_id: str) -> corpus.Subject:
     return corpus.Subject(f"case:{case_id}", cases.model_root(cases.load_answer(case_id)), None)
 
 
+def _rebind_everywhere(original: object, replacement: object) -> list[tuple[object, str]]:
+    """Point every module-level name bound to ``original`` at ``replacement``.
+
+    By-name imports (``from x import f``) hold their own binding, so patching the defining
+    module alone would miss them.
+    """
+    rebound: list[tuple[object, str]] = []
+    for module in list(sys.modules.values()):
+        namespace = getattr(module, "__dict__", None)
+        if not isinstance(namespace, dict):
+            continue
+        for name, value in list(namespace.items()):
+            if value is original:
+                setattr(module, name, replacement)
+                rebound.append((module, name))
+    return rebound
+
+
 @contextmanager
 def _writer_raising(error: Exception) -> Iterator[None]:
     """Rebind ``_generate_pipeline`` wherever a module holds it, so the patch follows a move."""
-    from tests.helpers.subset_profile.observe import _rebind_everywhere
-
     real = _find_pipeline_writer()
 
     def raising(*_args: object, **_kwargs: object) -> None:

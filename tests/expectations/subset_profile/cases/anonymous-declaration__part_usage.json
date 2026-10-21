@@ -9,10 +9,6 @@
     ],
     "description": "an anonymous part usage `part : Rack;`"
   },
-  "screen": {
-    "verdict": "incomplete",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

@@ -9,10 +9,6 @@
     ],
     "description": "a scalar arithmetic read of `w.r` where part w has multiplicity [2]"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

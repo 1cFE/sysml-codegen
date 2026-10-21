@@ -9,10 +9,6 @@
     ],
     "description": "a calc def with inputs 'x y' and x_y, whose module parameter names sanitize to one"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

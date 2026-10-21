@@ -9,10 +9,6 @@
     ],
     "description": "calc usages t_a and T_a, whose display paths lowercase to one public module name; the refusal points at their calc def Twice (line 3)"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

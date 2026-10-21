@@ -9,10 +9,6 @@
     ],
     "description": "calc def C declares out attribute o with no value"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

@@ -9,10 +9,6 @@
     ],
     "description": "two multi-output calc defs named Split in packages fx and gx, used side by side; both derive schemas/split_output.py"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

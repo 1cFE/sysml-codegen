@@ -9,10 +9,6 @@
     ],
     "description": "attribute `a :> b` with no typing of its own, read in a computed expression"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

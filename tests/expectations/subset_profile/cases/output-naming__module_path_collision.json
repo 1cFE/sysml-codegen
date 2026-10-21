@@ -9,10 +9,6 @@
     ],
     "description": "calc defs 'Twice-x' and Twice_x, distinct names that sanitize to one modules/ path"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

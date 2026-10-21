@@ -9,10 +9,6 @@
     ],
     "description": "attribute t in part inner : A, inside site : B :> A, reading r; both occurrences in the lineage are typed by A"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

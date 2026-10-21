@@ -9,10 +9,6 @@
     ],
     "description": "two calc defs named Twice in one package; SysIDE loads both and gives neither a reload-stable UUIDv5"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

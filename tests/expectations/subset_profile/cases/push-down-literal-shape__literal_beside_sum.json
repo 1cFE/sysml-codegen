@@ -9,10 +9,6 @@
     ],
     "description": "attribute total = sum(modules.cost) + 5.0, a literal term beside a sum"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

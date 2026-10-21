@@ -9,10 +9,6 @@
     ],
     "description": "an untyped calc usage `calc c { in x = a; }`"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

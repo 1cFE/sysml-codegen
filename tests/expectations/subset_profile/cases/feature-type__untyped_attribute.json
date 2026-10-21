@@ -9,10 +9,6 @@
     ],
     "description": "an attribute with a value and no declared type, read in a computed expression"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

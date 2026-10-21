@@ -9,10 +9,6 @@
     ],
     "description": "a calc def input `in x;` with no type"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "refused",
     "codes": [

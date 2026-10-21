@@ -9,10 +9,6 @@
     ],
     "description": "calc def C's output r : Boolean = true: a Boolean literal"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],

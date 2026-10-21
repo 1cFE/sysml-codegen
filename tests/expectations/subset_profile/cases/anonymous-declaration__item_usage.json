@@ -9,10 +9,6 @@
     ],
     "description": "an anonymous item usage `item : Thing;`: a kind the generator does not index"
   },
-  "screen": {
-    "verdict": "clear",
-    "findings": []
-  },
   "generator": {
     "outcome": "generated",
     "codes": [],
