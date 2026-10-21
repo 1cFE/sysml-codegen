@@ -1,16 +1,16 @@
 # Current Work
 
-**Updated:** 2026-10-20
+**Updated:** 2026-10-21
 
 ## Active Work
 
-EXEC-SUBSET-CONTRACT Item 2b (`subset-profile-screen`, epic in agentic-mbse), live half: Phases 0-9 implemented and audited, Certify (2026-10-20, `.project/active/subset-profile-screen/audit.md`); Phase 10 done 2026-10-20 (no readiness rule), not yet audited. Branch `subset-profile-screen`. `sysml-codegen check` gives `generate`'s answer without writing (exit 0 builds, 1 refuses) and prints the same report; the screen's findings are information and never change an exit code. The unbound String library default stays under RG-2. Snapshot carriage of the screen was split out as backlog `[SUBSET-SCREEN-SNAPSHOT-CARRIAGE]`. At close, update the agentic-mbse epic's Item 2b to match the split.
+EXEC-SUBSET-CONTRACT Item 2b (`subset-profile-screen`, epic in agentic-mbse), live half: Phases 0-9 implemented and audited, Certify (2026-10-20, `.project/active/subset-profile-screen/audit.md`); Phase 10 done 2026-10-20 (no readiness rule), not yet audited. Branch `subset-profile-screen`. `sysml-codegen check` gives `generate`'s answer without writing (exit 0 builds, 1 refuses) and prints only the generator's answer. The subset screen step was removed by owner decision on 2026-10-21 (agentic-mbse item `retire-subset-profile`, which also retired agentic-mbse's copy of the generator rules), so backlog `[SUBSET-SCREEN-SNAPSHOT-CARRIAGE]` is retired as moot. The unbound String library default stays under RG-2. At close, update the agentic-mbse epic's Item 2b to match the split.
 
 The backlog holds separately scoped capabilities, diagnostics, model work, and assurance limits.
 
 ## Shipped State and Historical Authority
 
-EXEC-SUBSET-CONTRACT Item 2a (`subset-profile-conformance`) closed 2026-10-20, certified (final-audit re-check 2026-10-19), then integrated with the merged epic Item 3 (agentic-mbse PR #32). It is not merged yet: branch `subset-conformance` here and in agentic-mbse, for a coordinated merge. sysml-codegen now checks the shared subset contract (`subset-profile/v2`) against what the generator actually does: 246 conformance cases with stored answers (154 of them packaged in agentic-mbse), a per-site account of every refusal, detector-disable mutations, and the occurrence-parity test. A change to the generator's accept/refuse behaviour fails a test here. Spec, design, plan, audit, evidence and the owner-gate drafts are retained at `c381fb00eb8e51248f68701e00ac997ebf2cd413:.project/active/subset-profile-conformance/`. The agentic-mbse gate receipt names codegen `ceb6796e`; the close touches only `.project/` and `docs/`.
+EXEC-SUBSET-CONTRACT Item 2a (`subset-profile-conformance`) closed 2026-10-20, certified (final-audit re-check 2026-10-19), then integrated with the merged epic Item 3 (agentic-mbse PR #32). It is not merged yet: branch `subset-conformance` here and in agentic-mbse, for a coordinated merge. It checked the shared subset contract (`subset-profile/v2`) against what the generator actually does. Since 2026-10-21 (`retire-subset-profile`) the contract is gone and what remains here is the generator half: 246 cases with stored generator answers (all 154 formerly packaged in agentic-mbse now in `tests/fixtures/refusal_cases/`), a per-site account of every refusal, and detector-disable mutations. A change to the generator's accept/refuse behaviour fails a test here. Spec, design, plan, audit, evidence and the owner-gate drafts are retained at `c381fb00eb8e51248f68701e00ac997ebf2cd413:.project/active/subset-profile-conformance/`. The agentic-mbse gate receipt names codegen `ceb6796e`; the close touches only `.project/` and `docs/`.
 
 Still with the owner, not decided at close:
 
@@ -18,7 +18,7 @@ Still with the owner, not decided at close:
 - **RG-2**: the String metadata policy (`rg2-string-policy.md` in the retained folder).
 - **RG-3**: the coordinated merge, and filing the staged amendments to ADR 0001, ADR 0012, ADR 0016 and P-0001 and the fact-placement ADR draft (all in the retained folder). Check the owner's `adr-0012-occurrence-summary-amendment` branch first: at `8396cb23` it already adds ADR 0018, which amends ADR 0012 for the shared occurrence summary. Whether that covers the staged ADR 0012 amendment was not checked.
 
-The integration changes two things L6 users see, compared with what Item 3 shipped: the verdict line names `subset-profile/v2, subset-coverage/v2`, and the coverage line says 70 follow-up sites instead of 85.
+The integration's L6 changes (verdict line naming `subset-profile/v2, subset-coverage/v2`, 70 follow-up sites) were superseded on 2026-10-21, when `retire-subset-profile` removed the subset profile from L6.
 
 WRAP-SPLIT Item 3 (`study-layer-to-codegen`) closed 2026-10-12, certified with follow-ups, in [PR #20](https://github.com/1cFE/sysml-codegen/pull/20). The study layer ships from this repo: `install-commands` installs `run-study`, and `sysml-codegen study` runs the tools in `sysml_codegen.study` (P-007; ADRs 0015–0017). Its spec, design, plan, audit and evidence are retained at `4dfe275f9d90aa2f07824f48349f373df151ef03:.project/active/study-layer-to-codegen/`. fusion-tea's adoption runbook and its kit moved to agentic-mbse `.project/completed/20261012_study-layer-to-codegen/`. Follow-ups are in the backlog's "Study Layer" section.
 
