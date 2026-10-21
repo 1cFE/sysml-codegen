@@ -291,17 +291,17 @@ a { color: var(--accent); }
 <p>Each option starts with how it works in at most three plain sentences. Your test was "if you can't explain how it works simply, it is not right"; where an option fails that, it says so. Day figures are agent estimates from reading the code, unreviewed, plus or minus 50%.</p>
 
 <div class="scroll"><table>
-<thead><tr><th>Option</th><th>Simple?</th><th>One source of truth?</th><th>dc3: runs to see all problems</th><th>Needs codegen installed</th><th>Build</th><th>Upkeep</th></tr></thead>
+<thead><tr><th>Option</th><th>Simple?</th><th>One source of truth?</th><th>dc3: runs to see all problems</th><th>Build</th><th>Upkeep</th></tr></thead>
 <tbody>
-<tr><td>A. Keep everything</td><td><span class="pill part">with a caveat</span></td><td><span class="pill no">no</span></td><td>1 (via L6)</td><td>no</td><td>done</td><td>high</td></tr>
-<tr><td>B. Copy stays in L6, out of <code>check</code></td><td><span class="pill yes">yes</span></td><td><span class="pill no">no</span></td><td>1 (via L6)</td><td>no</td><td>under 1 d</td><td>high</td></tr>
-<tr><td>C. L6 runs <code>check</code>, copy retired</td><td><span class="pill yes">yes</span></td><td><span class="pill yes">yes</span></td><td>6+, as in dc3's history</td><td>yes</td><td>3–5 d</td><td>low</td></tr>
-<tr><td>D. Python checker function</td><td><span class="pill yes">yes</span></td><td><span class="pill yes">yes</span></td><td>n/a: for project tests, not L6</td><td>yes</td><td>1–2 d</td><td>moderate</td></tr>
-<tr><td>E1. Generator lists all problems per step</td><td><span class="pill yes">yes</span></td><td><span class="pill yes">yes</span></td><td>4+, structural last</td><td>yes</td><td>8–12 d</td><td>low</td></tr>
-<tr><td>E2. Generator continues past failed steps</td><td><span class="pill no">no</span></td><td><span class="pill yes">yes</span></td><td>about 1</td><td>yes</td><td>15+ d</td><td>moderate, risky</td></tr>
-<tr><td>F. Generate the copy from codegen</td><td><span class="pill no">no</span></td><td><span class="pill part">names only</span></td><td>1 (via L6)</td><td>no</td><td>2–3 d</td><td>high</td></tr>
-<tr><td>G. Fix guidance, run <code>check</code> early in the workflow</td><td><span class="pill yes">yes</span></td><td><span class="pill yes">yes</span></td><td>n/a: aims to prevent B1–B3</td><td>yes, to check</td><td>3–4 d</td><td>low</td></tr>
-<tr><td>H. Move generator's checks into agentic-mbse</td><td><span class="pill yes">yes</span></td><td><span class="pill yes">yes</span></td><td>1, for what moved</td><td>no</td><td>25–40 d</td><td>moderate</td></tr>
+<tr><td>A. Keep everything</td><td><span class="pill part">with a caveat</span></td><td><span class="pill no">no</span></td><td>1 (via L6)</td><td>done</td><td>high</td></tr>
+<tr><td>B. Copy stays in L6, out of <code>check</code></td><td><span class="pill yes">yes</span></td><td><span class="pill no">no</span></td><td>1 (via L6)</td><td>under 1 d</td><td>high</td></tr>
+<tr><td>C. L6 runs <code>check</code>, copy retired</td><td><span class="pill yes">yes</span></td><td><span class="pill yes">yes</span></td><td>6+, as in dc3's history</td><td>3–5 d</td><td>low</td></tr>
+<tr><td>D. Python checker function</td><td><span class="pill yes">yes</span></td><td><span class="pill yes">yes</span></td><td>n/a: for project tests, not L6</td><td>1–2 d</td><td>moderate</td></tr>
+<tr><td>E1. Generator lists all problems per step</td><td><span class="pill yes">yes</span></td><td><span class="pill yes">yes</span></td><td>4+, structural last</td><td>8–12 d</td><td>low</td></tr>
+<tr><td>E2. Generator continues past failed steps</td><td><span class="pill no">no</span></td><td><span class="pill yes">yes</span></td><td>about 1</td><td>15+ d</td><td>moderate, risky</td></tr>
+<tr><td>F. Generate the copy from codegen</td><td><span class="pill no">no</span></td><td><span class="pill part">names only</span></td><td>1 (via L6)</td><td>2–3 d</td><td>high</td></tr>
+<tr><td>G. Fix guidance, run <code>check</code> early in the workflow</td><td><span class="pill yes">yes</span></td><td><span class="pill yes">yes</span></td><td>n/a: aims to prevent B1–B3</td><td>3–4 d</td><td>low</td></tr>
+<tr><td>H. Move generator's checks into agentic-mbse</td><td><span class="pill yes">yes</span></td><td><span class="pill yes">yes</span></td><td>1, for what moved</td><td>25–40 d</td><td>moderate</td></tr>
 </tbody></table></div>
 
 <p>The table is the summary. The cards below give each option's parts, what it catches and misses, and its risks. Section 6 then says which to combine.</p>
@@ -332,7 +332,7 @@ a { color: var(--accent); }
 <dl>
 <dt>Parts</dt><dd>A machine-readable output for <code>check</code> (about 100 lines in sysml-codegen). A runner in L6 that finds <code>sysml-codegen</code> in the project's own environment, runs it, and turns its answer into L6 issues (200–300 lines in agentic-mbse). Item 3 already added a project setting for "this project targets generated code"; it decides when the runner runs.</dd>
 <dt>Catches</dt><dd>Everything the generator refuses, with no drift. But only one failing step per run, like <code>generate</code>.</dd>
-<dt>Misses</dt><dd>Nothing works without the generator installed. Both dc3 and fusion-tea install it, so in practice this only affects projects that can't generate anyway.</dd>
+<dt>Misses</dt><dd>Nothing that matters. A project that cares whether its model generates has the generator installed; dc3 and fusion-tea both do. Where it isn't installed, L6 says it couldn't check.</dd>
 <dt>Risks</dt><dd>It must find the generator in the project's own environment, not a global install, and print the version it used. Both tools need the SysIDE licence; the child process inherits it from the environment, but nobody has tried it. The copy's fix texts would need a new home in the generator's refusal messages (cost not estimated).</dd>
 </dl>
 </div>
@@ -380,7 +380,7 @@ a { color: var(--accent); }
 <p class="plain">Move the generator's model checks into the toolkit library, delete them from the generator, and have both call the one copy.</p>
 <dl>
 <dt>Cost</dt><dd>25–40 days, the highest risk of all. It rewrites the generator's core to move it, and every moved check is a chance to change what the generator accepts. The 33 generator-only checks can't move, so L6 would still be incomplete.</dd>
-<dt>When</dt><dd>Only if "a validator answer without the generator installed" is a hard requirement.</dd>
+<dt>When</dt><dd>Only if a machine needs a generation answer but can't have the generator installed. No such case is known; a project that generates has it installed.</dd>
 </dl>
 </div>
 
