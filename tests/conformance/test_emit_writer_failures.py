@@ -3,7 +3,7 @@
 ``emit_package`` owns the writers' failure handling, moved from ``_generate_package_from_graph``
 and ``run_codegen``. One writer is patched to raise each failure class in turn on a case that
 builds, and the single refusal record must equal the one Phase 0 recorded at the base commit
-(``tests/expectations/subset_profile/refusal_records.json``, ``writer_failure:*``), which
+(``tests/expectations/refusal_cases/refusal_records.json``, ``writer_failure:*``), which
 ``scripts/refusal_records.py`` took with the same three exceptions.
 
 Licensed.
@@ -19,7 +19,7 @@ from sysml_codegen.cli import GenerationConfig, run_codegen
 from sysml_codegen.core.errors import CodeGenerationError, GenerationCode
 from tests.conftest import requires_license
 from tests.helpers import refusal_records
-from tests.helpers.subset_profile import cases
+from tests.helpers.refusal_cases import cases
 
 pytestmark = requires_license
 

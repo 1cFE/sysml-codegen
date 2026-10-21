@@ -27,8 +27,8 @@ from sysml_codegen.cli import CheckRequest, prepare, run_check
 from tests.conformance.test_snapshot_v5_gate import _v5_extraction_payload
 from tests.conftest import FIXTURES_DIR, requires_license
 from tests.helpers import refusal_records
-from tests.helpers.subset_profile import cases
-from tests.helpers.subset_profile.cases import GeneratorOutcome
+from tests.helpers.refusal_cases import cases
+from tests.helpers.refusal_cases.cases import GeneratorOutcome
 
 pytestmark = requires_license
 

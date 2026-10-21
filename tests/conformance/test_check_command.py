@@ -4,7 +4,7 @@ Item 2b design D4, D6, D16, D18; Invariants 1, 3 and 5.
 
 - ``check`` never calls ``emit_package`` and leaves a populated destination byte-identical.
 - Exit codes: ``generate``'s answer, 0 when it would build and 1 when it would refuse. The
-  test over every 2a case is ``subset_profile/test_report_form.py``.
+  test over every 2a case is ``refusal_cases/test_report_form.py``.
 - A model with parse errors: both commands log today's parsing record (M2).
 - A symlinked destination (M4): ``generate`` and ``check --output`` both log the same one
   ``PACKAGE_WRITE`` record and exit 1. A refused model logs only its own refusal on both.
@@ -28,7 +28,7 @@ from sysml_codegen.cli import CheckRequest, prepare, run_check
 from tests.conformance.test_refusal_before_first_write import _sentinel, _tree
 from tests.conftest import requires_license
 from tests.helpers import refusal_records
-from tests.helpers.subset_profile import cases
+from tests.helpers.refusal_cases import cases
 
 pytestmark = requires_license
 

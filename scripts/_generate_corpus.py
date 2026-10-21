@@ -35,7 +35,7 @@ class Subject:
 
 def case_subjects(outcome: str) -> Iterator[Subject]:
     """Every 2a case whose stored generator outcome is ``outcome`` (generated or refused)."""
-    from tests.helpers.subset_profile import cases
+    from tests.helpers.refusal_cases import cases
 
     for answer in cases.all_answers():
         if answer.generator.run.outcome.value == outcome:

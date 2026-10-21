@@ -6,7 +6,7 @@ a run logs and serializes it to plain JSON: logger name, level, message, and the
 Paths a run cannot control (its output folder, this checkout, the installed agentic-mbse)
 are replaced by placeholders, so a record taken in one folder equals one taken in another.
 
-``tests/expectations/subset_profile/refusal_records.json`` holds the records the base commit
+``tests/expectations/refusal_cases/refusal_records.json`` holds the records the base commit
 logged, written by ``scripts/refusal_records.py``. Tests compare against it with ``BASE``.
 """
 
@@ -25,7 +25,7 @@ import agentic_mbse
 from pydantic import BaseModel
 
 REPO = Path(__file__).resolve().parents[2]
-RECORDS_PATH = REPO / "tests" / "expectations" / "subset_profile" / "refusal_records.json"
+RECORDS_PATH = REPO / "tests" / "expectations" / "refusal_cases" / "refusal_records.json"
 SCHEMA = "refusal-records/1"
 _AGENTIC = Path(agentic_mbse.__file__).resolve().parents[1]
 

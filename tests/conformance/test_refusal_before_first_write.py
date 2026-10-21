@@ -5,7 +5,7 @@ inspected, cleared, created or written (design D3, D4). Every 2a case the genera
 is run through ``run_codegen`` under each destination flag set, into a populated and into an
 empty destination. The tree must be byte-identical afterwards, with no file added or
 removed, and the run must log exactly one refusal record, equal to the one the base commit
-logged for that case (``tests/expectations/subset_profile/refusal_records.json``).
+logged for that case (``tests/expectations/refusal_cases/refusal_records.json``).
 
 ``check --output`` gets the same matrix, without the flags it does not take (design D6): the
 same tree check, the same single record, and the same ``Refused`` (step, refusal and message)
@@ -31,8 +31,8 @@ from sysml_codegen.cli import GenerationConfig, prepare, run_codegen
 from sysml_codegen.cli.prepare import Refused
 from tests.conftest import requires_license
 from tests.helpers import refusal_records
-from tests.helpers.subset_profile import cases
-from tests.helpers.subset_profile.cases import GeneratorOutcome, StoredAnswer
+from tests.helpers.refusal_cases import cases
+from tests.helpers.refusal_cases.cases import GeneratorOutcome, StoredAnswer
 
 pytestmark = requires_license
 

@@ -82,10 +82,10 @@ REFUSED_BY_DESIGN = frozenset(
 #: model. Loading one as a single fixture means nothing; each model is tested on its own by
 #: the test named here.
 MODEL_COLLECTIONS = {
-    # tests/conformance/subset_profile/test_fixture_classes_live.py
-    "subset_profile_occurrence_seed",
-    # tests/conformance/subset_profile/test_generator_half.py (codegen-home conformance cases)
-    "subset_profile",
+    # tests/conformance/refusal_cases/test_fixture_classes_live.py
+    "occurrence_seed",
+    # tests/conformance/refusal_cases/test_generator_half.py (conformance cases)
+    "refusal_cases",
 }
 
 

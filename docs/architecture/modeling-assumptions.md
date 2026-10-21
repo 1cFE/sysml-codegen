@@ -667,7 +667,7 @@ definitions remain in the lifecycle contract's "Headline states and coverage tru
 
 ## 10. What Generates but Is Not Carried Through
 
-Written in EXEC-SUBSET-CONTRACT Item 2a (2026-10-18). This section states today's behavior for constructs that generate while losing part of the model, or while replacing part of it with a handwritten stub. Each statement is pinned by a case whose stored answer is in `tests/expectations/subset_profile/cases/<case>.json` and is checked live by `tests/conformance/subset_profile/`. The case models are in `tests/fixtures/subset_profile/`. Where a behavior awaits an owner decision, the decision record is named.
+Written in EXEC-SUBSET-CONTRACT Item 2a (2026-10-18). This section states today's behavior for constructs that generate while losing part of the model, or while replacing part of it with a handwritten stub. Each statement is pinned by a case whose stored answer is in `tests/expectations/refusal_cases/cases/<case>.json` and is checked live by `tests/conformance/refusal_cases/`. The case models are in `tests/fixtures/refusal_cases/`. Where a behavior awaits an owner decision, the decision record is named.
 
 ### String values
 

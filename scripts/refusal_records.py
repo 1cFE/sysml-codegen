@@ -17,7 +17,7 @@ Usage (licensed; source the license first)::
     uv run --all-extras python scripts/refusal_records.py record
     uv run --all-extras python scripts/refusal_records.py compare
 
-``record`` writes ``tests/expectations/subset_profile/refusal_records.json``; ``compare``
+``record`` writes ``tests/expectations/refusal_cases/refusal_records.json``; ``compare``
 re-records and exits 1 naming every entry that differs from that file.
 """
 
@@ -51,7 +51,7 @@ def _run(subject: corpus.Subject, output: Path) -> list[dict[str, Any]]:
 
 
 def _case(case_id: str) -> corpus.Subject:
-    from tests.helpers.subset_profile import cases
+    from tests.helpers.refusal_cases import cases
 
     return corpus.Subject(f"case:{case_id}", cases.model_root(cases.load_answer(case_id)), None)
 

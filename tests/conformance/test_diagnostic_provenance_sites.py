@@ -36,7 +36,7 @@ from sysml_codegen.elaboration.occurrence import (
 from sysml_codegen.elaboration.project import ProjectionError, _Projection
 from sysml_codegen.orchestration import elaborated_pipeline
 from tests.conftest import requires_license
-from tests.helpers.subset_profile import site_scan
+from tests.helpers.refusal_cases import site_scan
 
 #: The codes the re-audit named as reaching the user without provenance. A raise
 #: site for one of these must pass both ``reference`` and ``location``.
@@ -59,7 +59,7 @@ GUARDED_FILES = (
 def _sites_missing_provenance(sites: Iterable[site_scan.Site]) -> list[str]:
     """Guarded sites that do not pass both provenance keywords.
 
-    A query over the site scan (``tests/helpers/subset_profile/site_scan.py``), which also
+    A query over the site scan (``tests/helpers/refusal_cases/site_scan.py``), which also
     resolves classes that fix their code at construction, such as
     ``InvalidRedefinitionFamilyError``.
     """
