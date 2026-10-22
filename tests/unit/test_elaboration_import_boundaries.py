@@ -319,11 +319,14 @@ def test_the_shipped_cli_is_on_the_exact_route_and_the_legacy_owners_are_unreach
     after the switch. It retired with the v5 family (retirement step 2), so the
     capture module is now checked for the *absence* of that name, not its presence.
     """
-    cli_source = (ROOT / "src/sysml_codegen/cli/__init__.py").read_text()
+    # ``generate`` constructs in ``cli/prepare.py`` since Item 2b, through the shared load.
+    cli_source = "\n".join(
+        path.read_text() for path in sorted((ROOT / "src/sysml_codegen/cli").glob("*.py"))
+    )
     capture_source = (ROOT / "src/sysml_codegen/snapshot/capture.py").read_text()
     public_orchestration = (ROOT / "src/sysml_codegen/orchestration/__init__.py").read_text()
 
-    assert "build_exact_pipeline_context" in cli_source
+    assert "build_exact_pipeline_context_from_live_load" in cli_source
     assert "build_exact_pipeline_context_from_snapshot" in cli_source
     assert "build_pipeline_context" not in cli_source
     assert "build_pipeline_context_from_snapshot" not in cli_source

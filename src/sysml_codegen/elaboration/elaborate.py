@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, cast
@@ -31,6 +32,7 @@ from agentic_mbse.sysml.reference_use import (
 )
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
+from sysml_codegen.core.errors import CodeGenerationError, SysMLParsingError
 from sysml_codegen.core.models import AutoImplContext, AutoImplOutput, AutoImplStep
 from sysml_codegen.core.type_mapping import QUALIFIED_SYSML_TO_PYTHON
 from sysml_codegen.elaboration.diagnostics import (
@@ -225,6 +227,29 @@ def unexpected_public_failure(error: Exception) -> ElaborationDiagnosticError:
             ),
         )
     )
+
+
+@contextmanager
+def relay_public_failures(*also_public: type[Exception]) -> Iterator[None]:
+    """Let a formed public refusal through as itself; any other failure becomes the defect.
+
+    The public refusals are the generator's four, plus ``also_public`` for a step that forms
+    its own. Anything else is converted by ``unexpected_public_failure``. A parse failure is
+    among the four, so it is never reported as an internal defect at a made-up line.
+    """
+    public: tuple[type[Exception], ...] = (
+        CodeGenerationError,
+        ElaborationDiagnosticError,
+        ElaborationError,
+        SysMLParsingError,
+        *also_public,
+    )
+    try:
+        yield
+    except public:
+        raise
+    except Exception as error:
+        raise unexpected_public_failure(error) from error
 
 
 def _render_public_diagnostic(diagnostic: Diagnostic) -> str:

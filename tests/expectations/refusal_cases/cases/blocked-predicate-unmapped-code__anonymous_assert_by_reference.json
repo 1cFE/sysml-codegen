@@ -1,0 +1,20 @@
+{
+  "id": "blocked-predicate-unmapped-code__anonymous_assert_by_reference",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      7
+    ],
+    "description": "anonymous assert positive; asserting the named constraint by reference"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_ID_UNSTABLE"
+    ],
+    "reasons": [
+      "identity_qualified_name_missing"
+    ]
+  }
+}

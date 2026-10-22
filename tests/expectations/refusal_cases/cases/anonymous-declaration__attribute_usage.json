@@ -1,0 +1,16 @@
+{
+  "id": "anonymous-declaration__attribute_usage",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "an anonymous attribute usage `attribute : Real = 2.0;`: a kind the generator does not index"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": []
+  }
+}

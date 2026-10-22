@@ -1,0 +1,32 @@
+{
+  "id": "string-value-omission__numeric_value__attribute_value",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "numeric attribute fuel_code valued by the redefinition shorthand"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "graph_attr",
+        "declaration": "fx::gen::fuel_code",
+        "expect": {
+          "count": 1
+        }
+      },
+      {
+        "kind": "entry_point",
+        "declaration": "fx::gen::fuel_code",
+        "expect": [
+          "fx__gen__fuel_code"
+        ]
+      }
+    ]
+  }
+}

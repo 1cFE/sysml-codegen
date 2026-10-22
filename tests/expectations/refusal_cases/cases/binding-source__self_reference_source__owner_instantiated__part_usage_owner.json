@@ -1,0 +1,29 @@
+{
+  "id": "binding-source__self_reference_source__owner_instantiated__part_usage_owner",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "self-bound input in root part usage site (B5)"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_SELF_BINDING"
+    ],
+    "reasons": [
+      "binding_source_form_unsupported"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._collect_bound_members::coded-returned::SI_SELF_BINDING|SI_INDEXED_SOURCE_UNSUPPORTED|SI_EXPRESSION_SOURCE_UNSUPPORTED::1"
+    ],
+    "stubs": [
+      {
+        "output": "fx::Total::r",
+        "reason": "compile_invocation"
+      }
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "constraint-predicate__numeric_and__owner_instantiated",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "asserted numeric predicate x > 0.0 and x < 2.0"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "catalog_usage",
+        "declaration": "fx::Site::c",
+        "expect": {
+          "kind": "eligible",
+          "reason": "admitted"
+        }
+      }
+    ]
+  }
+}

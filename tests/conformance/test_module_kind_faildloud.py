@@ -295,7 +295,7 @@ def test_graph_renderers_reject_constraint_module_without_catalog(renderer, temp
 
 
 def test_check_duplicate_output_paths_tolerates_constraint():
-    from sysml_codegen.cli import _check_duplicate_output_paths
+    from sysml_codegen.cli.prepare import _check_duplicate_output_paths
 
     _check_duplicate_output_paths([_constraint_module(), _aggregator_module()])  # no raise
 
@@ -325,10 +325,12 @@ def test_generate_backlog_report_skips_constraint():
 
 
 def test_generate_stencils_skips_constraint(tmp_path):
-    """The stencil seam's skip happens at the orchestration loop (cli._generate_stencils),
+    """The stencil seam's skip happens at the orchestration loop (cli.emit._generate_stencils),
     not inside the single-module `generate_implementation` (which has no rendering for a
     constraint kind by design — the loop never reaches it for one)."""
-    from sysml_codegen.cli import GenerationConfig, _generate_stencils, _get_template_env
+    from sysml_codegen.cli import GenerationConfig
+    from sysml_codegen.cli.emit import _generate_stencils
+    from sysml_codegen.cli.prepare import _get_template_env
 
     config = GenerationConfig(output_path=tmp_path, package_name="pkg")
     (tmp_path / "handwritten").mkdir(parents=True)

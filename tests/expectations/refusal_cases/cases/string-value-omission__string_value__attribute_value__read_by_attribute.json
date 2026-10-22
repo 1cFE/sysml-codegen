@@ -1,0 +1,43 @@
+{
+  "id": "string-value-omission__string_value__attribute_value__read_by_attribute",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "String label valued by reading fuel_unit, which is declared with its value \"liter\""
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "attr_value",
+        "declaration": "fx::Gen::fuel_unit",
+        "expect": [
+          {
+            "value": "liter",
+            "value_site": "definition_default"
+          }
+        ]
+      },
+      {
+        "kind": "attr_value",
+        "declaration": "fx::Gen::label",
+        "expect": [
+          {
+            "value": null,
+            "value_site": "definition_default"
+          }
+        ]
+      },
+      {
+        "kind": "entry_point",
+        "declaration": "fx::Gen::label",
+        "expect": []
+      }
+    ]
+  }
+}

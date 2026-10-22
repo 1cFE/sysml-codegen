@@ -1,0 +1,24 @@
+{
+  "id": "constraint-predicate__blocked_predicate__owner_other",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      7
+    ],
+    "description": "blocked predicate x > 0.0 and enabled asserted inside calc usage t, an owner that attaches nothing"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_CONSTRAINT_UNATTACHED"
+    ],
+    "reasons": [
+      "elaboration_constraint_owner_unmapped"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._owner_kind::coded::SI_CONSTRAINT_UNATTACHED::1",
+      "agentic_mbse/sysml/executable_profile.py::_walk_proposition::shared-profile::warn_non_numerical_predicate::1"
+    ]
+  }
+}

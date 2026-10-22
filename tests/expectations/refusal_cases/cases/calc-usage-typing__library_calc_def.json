@@ -1,0 +1,23 @@
+{
+  "id": "calc-usage-typing__library_calc_def",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "a calc usage typed by the library calc def Calculations::Calculation"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EDGE_DANGLING"
+    ],
+    "reasons": [
+      "elaboration_calc_def_payload_missing"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._build_calculation_nodes::coded::SI_EDGE_DANGLING::1"
+    ]
+  }
+}

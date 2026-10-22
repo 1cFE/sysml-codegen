@@ -1,0 +1,24 @@
+{
+  "id": "output-naming__entry_point_name_collision",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      6
+    ],
+    "description": "attributes 'a b' and a_b, both read by one calc usage; their entry-point keys sanitize to one"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "PROJECTION_FAILED",
+      "SI_RENDERING_COLLISION"
+    ],
+    "reasons": [
+      "projection_entry_point_name_collision"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/project.py::_Projection._entry_source::coded::SI_RENDERING_COLLISION::1"
+    ]
+  }
+}

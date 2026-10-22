@@ -1,0 +1,23 @@
+{
+  "id": "feature-type__untyped_attribute",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "an attribute with a value and no declared type, read in a computed expression"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EDGE_DANGLING"
+    ],
+    "reasons": [
+      "elaboration_feature_type_unsupported"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._feature_python_type::coded::SI_EDGE_DANGLING::3"
+    ]
+  }
+}

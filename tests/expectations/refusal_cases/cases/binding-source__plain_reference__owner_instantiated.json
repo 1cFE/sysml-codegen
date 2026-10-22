@@ -1,0 +1,16 @@
+{
+  "id": "binding-source__plain_reference__owner_instantiated",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      7
+    ],
+    "description": "each input bound to one plain reference"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": []
+  }
+}

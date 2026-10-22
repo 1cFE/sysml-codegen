@@ -16,7 +16,8 @@ the caller's model roots live, the sealed admission manifest during capture.
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import replace
+from dataclasses import dataclass, replace
+from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -36,6 +37,7 @@ from sysml_codegen.elaboration import (
 from sysml_codegen.elaboration.diagnostics import ElaborationInvariantError, SiteReason
 from sysml_codegen.elaboration.elaborate import (
     _build_instance_graph,
+    relay_public_failures,
     unexpected_public_failure,
 )
 from sysml_codegen.elaboration.expression_evidence import (
@@ -58,10 +60,15 @@ if TYPE_CHECKING:
     from sysml_codegen.extraction.source_evidence import ReadinessFinding
 
 __all__ = [
+    "FailedLoad",
+    "LiveLoad",
+    "LoadFailureKind",
     "build_elaborated_pipeline",
     "elaborate_admitted_sources",
+    "elaborate_live_load",
     "elaborate_loaded_extractor",
     "elaborate_model_paths",
+    "load_live_models",
     "require_executable_content",
 ]
 
@@ -133,30 +140,62 @@ def build_elaborated_pipeline(model_paths: list[Path]) -> ComputationGraph:
     return project(elaborate_model_paths(model_paths))
 
 
-def elaborate_model_paths(model_paths: list[Path], *, strict: bool = True) -> InstanceGraph:
-    """Load and elaborate live models, stopping at the exact instance graph.
+@dataclass(frozen=True)
+class LiveLoad:
+    """Live models SysIDE loaded without errors: what elaboration reads."""
 
-    The projection half is deliberately not here: a caller that seals the graph
-    before projecting (``orchestration/exact_pipeline_context.py``) needs the
-    graph itself, and a caller that only wants the public surface takes
-    ``build_elaborated_pipeline``. Both reach the elaborator by this one path.
+    extractor: SysMLDataExtractor
+    model_paths: tuple[Path, ...]
+    #: Every loaded document path, raw and resolved, → its portable ``root-N/<path>`` referent.
+    source_referents: Mapping[str, str]
+
+
+class LoadFailureKind(StrEnum):
+    #: SysIDE loaded the files and reported error diagnostics.
+    PARSE_ERRORS = "parse_errors"
+    #: The load itself failed, or a loaded document lies outside the model roots.
+    NOT_LOADED = "not_loaded"
+
+
+@dataclass(frozen=True)
+class FailedLoad:
+    """Live models that did not load cleanly, carrying the refusal elaboration raises for them."""
+
+    kind: LoadFailureKind
+    error: SysMLParsingError | ElaborationDiagnosticError
+
+
+def load_live_models(model_paths: Sequence[Path]) -> LiveLoad | FailedLoad:
+    """Load live models once, without raising.
+
+    The one SysIDE load a command makes. A load that fails is returned as a ``FailedLoad``
+    whose error is exactly the refusal ``elaborate_model_paths`` raises for it. It counts as
+    parse errors when SysIDE reported error diagnostics, and as not loaded otherwise.
     """
+    paths = list(model_paths)
     try:
-        return _elaborate_model_paths(model_paths, strict=strict)
-    except (
-        CodeGenerationError,
-        ElaborationDiagnosticError,
-        ElaborationError,
-        SysMLParsingError,
-    ):
-        raise
+        extractor = SysMLDataExtractor(paths)
     except Exception as error:
-        raise unexpected_public_failure(error) from error
+        return _unclassified_load_failure(error)
+    try:
+        return _load_live_models(extractor, paths)
+    except SysMLParsingError as error:
+        diagnostics = extractor.diagnostics
+        if diagnostics is not None and diagnostics.contains_errors():
+            return FailedLoad(LoadFailureKind.PARSE_ERRORS, error)
+        return FailedLoad(LoadFailureKind.NOT_LOADED, error)
+    except Exception as error:
+        return _unclassified_load_failure(error)
 
 
-def _elaborate_model_paths(model_paths: list[Path], *, strict: bool) -> InstanceGraph:
-    """Implementation under the total live API boundary."""
-    extractor = SysMLDataExtractor(model_paths)
+def _unclassified_load_failure(error: Exception) -> FailedLoad:
+    failure = unexpected_public_failure(error)
+    failure.__cause__ = error
+    return FailedLoad(LoadFailureKind.NOT_LOADED, failure)
+
+
+def _load_live_models(extractor: SysMLDataExtractor, model_paths: list[Path]) -> LiveLoad:
+    """Implementation under the total load boundary: every refusal raises."""
     try:
         if not extractor.load_models():
             raise SysMLParsingError(
@@ -172,12 +211,36 @@ def _elaborate_model_paths(model_paths: list[Path], *, strict: bool) -> Instance
     if extractor.diagnostics is None:
         raise SysMLParsingError("SysML validation diagnostics are unavailable after model loading")
 
-    return elaborate_loaded_extractor(
-        extractor,
+    return LiveLoad(
+        extractor=extractor,
         model_paths=tuple(model_paths),
         source_referents=_live_source_referents(extractor.model, tuple(model_paths)),
+    )
+
+
+def elaborate_live_load(loaded: LiveLoad, *, strict: bool = True) -> InstanceGraph:
+    """Elaborate an already-loaded live model set through the sole evidence bridge."""
+    return elaborate_loaded_extractor(
+        loaded.extractor,
+        model_paths=loaded.model_paths,
+        source_referents=loaded.source_referents,
         strict=strict,
     )
+
+
+def elaborate_model_paths(model_paths: list[Path], *, strict: bool = True) -> InstanceGraph:
+    """Load and elaborate live models, stopping at the exact instance graph.
+
+    The projection half is deliberately not here: a caller that seals the graph
+    before projecting (``orchestration/exact_pipeline_context.py``) needs the
+    graph itself, and a caller that only wants the public surface takes
+    ``build_elaborated_pipeline``. Both reach the elaborator by this one path.
+    """
+    loaded = load_live_models(model_paths)
+    if isinstance(loaded, FailedLoad):
+        raise loaded.error
+    with relay_public_failures():
+        return elaborate_live_load(loaded, strict=strict)
 
 
 def require_executable_content(graph: InstanceGraph, calc_definitions: Sequence[object]) -> None:
@@ -214,17 +277,8 @@ def elaborate_admitted_sources(
     every node's ``source_file`` is rewritten from its staged absolute path to
     the portable referent the manifest names it by.
     """
-    try:
+    with relay_public_failures():
         return _elaborate_admitted_sources(admission, strict=strict)
-    except (
-        CodeGenerationError,
-        ElaborationDiagnosticError,
-        ElaborationError,
-        SysMLParsingError,
-    ):
-        raise
-    except Exception as error:
-        raise unexpected_public_failure(error) from error
 
 
 def _elaborate_admitted_sources(

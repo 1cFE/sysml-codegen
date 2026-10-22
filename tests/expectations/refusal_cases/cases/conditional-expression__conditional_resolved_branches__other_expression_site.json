@@ -1,0 +1,30 @@
+{
+  "id": "conditional-expression__conditional_resolved_branches__other_expression_site",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "calc usage m whose bare result is if v < 4273.5 ? 1.0 else 2.0, whose branches are literals"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "calc_compilability",
+        "declaration": "fx::Site::m",
+        "expect": [
+          {
+            "compilability": "fully_compilable",
+            "outputs": [
+              "r"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

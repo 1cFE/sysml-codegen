@@ -1,0 +1,23 @@
+{
+  "id": "deep-override__computed_target",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      9,
+      9
+    ],
+    "description": "a deep literal redefinition `:>> w.d = 5.0` of an attribute whose value is computed"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "OVERRIDE_TARGET_MISSING"
+    ],
+    "reasons": [
+      "elaboration_deep_override_target_computed"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._apply_deep_literal_redefinitions::coded::OVERRIDE_TARGET_MISSING::2"
+    ]
+  }
+}

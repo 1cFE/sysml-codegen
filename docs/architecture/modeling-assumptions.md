@@ -667,7 +667,7 @@ definitions remain in the lifecycle contract's "Headline states and coverage tru
 
 ## 10. What Generates but Is Not Carried Through
 
-Written in EXEC-SUBSET-CONTRACT Item 2a (2026-10-18). This section states today's behavior for constructs that generate while losing part of the model, or while replacing part of it with a handwritten stub. Each statement is pinned by a case whose stored answer is in `tests/expectations/subset_profile/cases/<case>.json` and is checked live by `tests/conformance/subset_profile/`. Codegen-home case models are in `tests/fixtures/subset_profile/`; the others are in agentic-mbse `src/agentic_mbse/sysml/subset_cases/`. Where a behavior awaits an owner decision, the decision record is named.
+Written in EXEC-SUBSET-CONTRACT Item 2a (2026-10-18). This section states today's behavior for constructs that generate while losing part of the model, or while replacing part of it with a handwritten stub. Each statement is pinned by a case whose stored answer is in `tests/expectations/refusal_cases/cases/<case>.json` and is checked live by `tests/conformance/refusal_cases/`. The case models are in `tests/fixtures/refusal_cases/`. Where a behavior awaits an owner decision, the decision record is named.
 
 ### String values
 
@@ -684,7 +684,7 @@ A constraint whose predicate is well formed but not numerical (a Boolean attribu
 
 ### A calc usage with its own result expression
 
-A calc usage that ends its body with its own bare expression (`calc m : Twice { in v = x; v * 3.0 }`) generates, but the expression is ignored: the output is computed from the calc def's expression. In the case found, the usage's input binding `in v = x` is lost as well, so `v` becomes an unbound library-default entry point with a `null` default. Case `calc-usage-result__bare_result__other_expression_site`; control `calc-usage-result__no_bare_result__other_expression_site`. The contract reports it (rule `calc-usage-result`, outcome `omitted`, qualified `candidate_refusal`). Whether it should be refused is RG1-3 in `c381fb00:.project/active/subset-profile-conformance/rg1-recommendations.md`. Until then, write the expression in the calc def, and use `default` there if a usage must override it.
+A calc usage that ends its body with its own bare expression (`calc m : Twice { in v = x; v * 3.0 }`) generates, but the expression is ignored: the output is computed from the calc def's expression. In the case found, the usage's input binding `in v = x` is lost as well, so `v` becomes an unbound library-default entry point with a `null` default. Case `calc-usage-result__bare_result__other_expression_site`; control `calc-usage-result__no_bare_result__other_expression_site`. Whether it should be refused is RG1-3 in `c381fb00:.project/active/subset-profile-conformance/rg1-recommendations.md`. Until then, write the expression in the calc def, and use `default` there if a usage must override it.
 
 ### Calc def outputs that become manual stubs
 

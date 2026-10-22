@@ -1,0 +1,35 @@
+{
+  "id": "candidate-es-010-refusal__string_library_default__unbound_input",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      4
+    ],
+    "description": "calc usage t leaves its String input u unbound, so the calc def default \"liter\" applies (the library-default entry path)"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "contract_parameter",
+        "declaration": "fx::Gen::t",
+        "expect": [
+          {
+            "key": "fx__gen__t__u",
+            "entry_type": "library_default",
+            "python_type": "str",
+            "default_value": null
+          }
+        ]
+      }
+    ]
+  },
+  "loss": {
+    "family": "es-010-string",
+    "disposition": "rg2_pending",
+    "control": "candidate-es-010-refusal__real_library_default__unbound_input"
+  }
+}

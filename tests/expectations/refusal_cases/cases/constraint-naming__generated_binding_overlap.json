@@ -1,0 +1,23 @@
+{
+  "id": "constraint-naming__generated_binding_overlap",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      3
+    ],
+    "description": "a constraint def whose formal is named value, a name the generated predicate scope already binds"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "CONSTRAINT_NAME_UNSAFE"
+    ],
+    "reasons": [
+      "generation_constraint_name_unsafe"
+    ],
+    "witnesses": [
+      "sysml_codegen/generation/errors.py::validate_constraint_graph_or_raise::unrecognized::constraint_name_safety_error::1"
+    ]
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "id": "calc-usage-result__bare_result__other_expression_site",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "calc usage m ends its body in the bare result v * 3.0; the generator computes r from Twice's 2.0 * v"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "calc_compilability",
+        "declaration": "fx::Site::m",
+        "expect": [
+          {
+            "compilability": "fully_compilable",
+            "outputs": [
+              "r"
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "contract_parameter",
+        "declaration": "fx::Site::m",
+        "expect": [
+          {
+            "key": "fx__site__m__v",
+            "entry_type": "library_default",
+            "python_type": "float",
+            "default_value": null
+          }
+        ]
+      },
+      {
+        "kind": "entry_point",
+        "declaration": "fx::Site::x",
+        "expect": []
+      }
+    ]
+  },
+  "loss": {
+    "family": "calc-usage-bare-result-drop",
+    "disposition": "candidate_refusal",
+    "rg1": "RG1-3",
+    "control": "calc-usage-result__no_bare_result__other_expression_site"
+  }
+}

@@ -29,6 +29,9 @@ uv run --extra dev ruff check src/
 # Run code generation (live extraction; needs the syside license)
 uv run sysml-codegen generate --models path/to/models --output path/to/output --package-name my_package
 
+# Report whether generate would build or refuse a model, writing nothing (needs the syside license for --models)
+uv run sysml-codegen check --models path/to/models [--output path/to/output] [--package-name my_package]
+
 # Capture a v6 instance-graph snapshot (needs the syside license)
 uv run sysml-codegen snapshot --models path/to/models --output path/to/instance_graph_snapshot.json
 
@@ -70,6 +73,8 @@ two implementations.
    - Module registry (`__init__.py`)
 
    Preflight checks run before any output is written or cleared: exact receipt validation, supported exit-point types, constraint name safety/totality, duplicate paths, registry class-name collisions, and renderer metadata validity. The catalog accounts for every authored constraint usage and agrees with projection's sealed fingerprint.
+
+   The route is read first, write last (`cli/prepare.py`, `cli/emit.py`): `load_source`, then `prepare`, which runs every check that can refuse a model and writes nothing, then `emit_package`, the only step that writes. `sysml-codegen check` runs the same route without `emit_package` and gives `generate`'s answer (exit 0 when it would build, 1 when it would refuse). See `docs/architecture/reference/02-orchestration.md`.
 
 5. **Sealing** (`contracts/`) - A semantic `ModelContract` over the graph and a physical `PackageContract` over the final on-disk bytes, on the live and from-snapshot paths alike.
 

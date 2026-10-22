@@ -1,0 +1,23 @@
+{
+  "id": "anonymous-declaration__package",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      3
+    ],
+    "description": "an anonymous nested package holding a part def"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_ID_UNSTABLE"
+    ],
+    "reasons": [
+      "identity_qualified_name_missing"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/identity.py::declaration_id_for::coded-fixed::SI_ID_MISSING|SI_ID_UNSTABLE::1"
+    ]
+  }
+}

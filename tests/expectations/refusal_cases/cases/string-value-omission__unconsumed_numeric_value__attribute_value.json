@@ -1,0 +1,33 @@
+{
+  "id": "string-value-omission__unconsumed_numeric_value__attribute_value",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "numeric fuel_unit with a value that no calculation reads (control: an unconsumed Real reaches no entry point either)"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "attr_value",
+        "declaration": "fx::Gen::fuel_unit",
+        "expect": [
+          {
+            "value": 1.5,
+            "value_site": "definition_default"
+          }
+        ]
+      },
+      {
+        "kind": "entry_point",
+        "declaration": "fx::Gen::fuel_unit",
+        "expect": []
+      }
+    ]
+  }
+}

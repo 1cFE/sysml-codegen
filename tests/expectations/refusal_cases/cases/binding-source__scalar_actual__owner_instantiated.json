@@ -1,0 +1,22 @@
+{
+  "id": "binding-source__scalar_actual__owner_instantiated",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "ordered nonunique input xs bound to the scalar a"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "stubs": [
+      {
+        "output": "fx::Total::r",
+        "reason": "compile_invocation"
+      }
+    ]
+  }
+}

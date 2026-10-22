@@ -1,0 +1,23 @@
+{
+  "id": "output-naming__registry_class_collision",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      4
+    ],
+    "description": "computed attribute t in part defs a::Site and b::Site; both formula modules alias to one registry class name"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "REGISTRY_CLASS_NAME_COLLISION"
+    ],
+    "reasons": [
+      "generation_registry_class_name_collision"
+    ],
+    "witnesses": [
+      "sysml_codegen/cli/prepare.py::_preflight_registry_class_names::unrecognized::residual_class_name_collision_error::1"
+    ]
+  }
+}

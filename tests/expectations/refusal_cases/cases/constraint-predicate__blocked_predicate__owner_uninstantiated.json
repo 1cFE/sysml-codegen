@@ -1,0 +1,29 @@
+{
+  "id": "constraint-predicate__blocked_predicate__owner_uninstantiated",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      7
+    ],
+    "description": "the BLOCK predicate in part def Site, which nothing instantiates"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "witnesses": [
+      "agentic_mbse/sysml/executable_profile.py::_walk_proposition::shared-profile::warn_non_numerical_predicate::1"
+    ],
+    "seams": [
+      {
+        "kind": "catalog_usage",
+        "declaration": "fx::Site::c",
+        "expect": {
+          "kind": "non_reaching",
+          "reason": "owner_has_no_occurrences"
+        }
+      }
+    ]
+  }
+}

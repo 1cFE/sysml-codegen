@@ -1,0 +1,5 @@
+FAILED tests/test_check.py::TestProbePandoc::test_reports_length_of_converted_markdown
+FAILED tests/test_check.py::TestProbePandoc::test_conversion_error
+FAILED tests/test_check.py::TestRunCheck::test_capability_predicts_whether_extract_substitutes[identified-with-html]
+FAILED tests/test_index.py::TestScriptBackwardCompat::test_generate_index_script_runs
+FAILED tests/test_index.py::TestScriptBackwardCompat::test_read_section_script_runs

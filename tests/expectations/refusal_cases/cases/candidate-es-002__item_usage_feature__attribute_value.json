@@ -1,0 +1,23 @@
+{
+  "id": "candidate-es-002__item_usage_feature__attribute_value",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "attribute y reads fuel.density, a feature of item usage fuel"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_OCCURRENCE_MISSING"
+    ],
+    "reasons": [
+      "occurrence_containment_unanchored"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/occurrence.py::build_containment_address::coded::SI_OCCURRENCE_MISSING::1"
+    ]
+  }
+}

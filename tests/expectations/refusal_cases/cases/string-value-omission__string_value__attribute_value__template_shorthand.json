@@ -1,0 +1,30 @@
+{
+  "id": "string-value-omission__string_value__attribute_value__template_shorthand",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "String label valued by the :>> shorthand in part def SpareA, which nothing instantiates"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "graph_attr",
+        "declaration": "fx::SpareA::label",
+        "expect": {
+          "count": 0
+        }
+      },
+      {
+        "kind": "entry_point",
+        "declaration": "fx::SpareA::label",
+        "expect": []
+      }
+    ]
+  }
+}

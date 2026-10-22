@@ -1,0 +1,16 @@
+{
+  "id": "candidate-es-009__package_usage_read__attribute_value",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "attribute double reads ac_facility.area directly, with no subsetting"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": []
+  }
+}

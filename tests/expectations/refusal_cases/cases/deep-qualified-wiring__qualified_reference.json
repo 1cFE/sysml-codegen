@@ -1,0 +1,23 @@
+{
+  "id": "deep-qualified-wiring__qualified_reference",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      11,
+      11
+    ],
+    "description": "calc usage consumer binds d to system::station::sensor::core::r, a qualified reference to a calc output four levels down"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_OCCURRENCE_MISSING"
+    ],
+    "reasons": [
+      "elaboration_calculation_output_unproduced"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._resolve_calculation_output::coded::SI_OCCURRENCE_MISSING::1"
+    ]
+  }
+}

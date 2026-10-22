@@ -1,0 +1,23 @@
+{
+  "id": "indexed-reference__indexed_reference__constraint_predicate",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      8,
+      8
+    ],
+    "description": "asserted predicate qs#(1).v > 0.0"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_INDEXED_SOURCE_UNSUPPORTED"
+    ],
+    "reasons": [
+      "evidence_indexed_reference_unsupported"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/expression_evidence.py::_indexed_refusal::coded::INDEXED_REFERENCE_UNSUPPORTED::1"
+    ]
+  }
+}

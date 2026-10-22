@@ -1,0 +1,24 @@
+{
+  "id": "output-naming__parameter_name_collision",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      3
+    ],
+    "description": "a calc def with inputs 'x y' and x_y, whose module parameter names sanitize to one"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "PROJECTION_FAILED",
+      "SI_RENDERING_COLLISION"
+    ],
+    "reasons": [
+      "projection_parameter_name_collision"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/project.py::_Projection._require_unique_params::coded::SI_RENDERING_COLLISION::1"
+    ]
+  }
+}

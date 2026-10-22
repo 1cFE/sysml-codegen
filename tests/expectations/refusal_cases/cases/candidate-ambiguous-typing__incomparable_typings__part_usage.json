@@ -1,0 +1,23 @@
+{
+  "id": "candidate-ambiguous-typing__incomparable_typings__part_usage",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      7
+    ],
+    "description": "part usage unit typed by A and B, two unrelated specializations of Base that each redefine rate"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_REDEFINITION_INVALID"
+    ],
+    "reasons": [
+      "occurrence_part_typing_ambiguous"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/occurrence.py::_effective_type::coded-fixed::SI_REDEFINITION_INVALID::1"
+    ]
+  }
+}

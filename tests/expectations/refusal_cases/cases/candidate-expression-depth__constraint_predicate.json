@@ -1,0 +1,20 @@
+{
+  "id": "candidate-expression-depth__constraint_predicate",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "an asserted constraint whose predicate holds a 120-term sum, nested past the shared 100-level traversal depth"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EVIDENCE_INCOMPLETE"
+    ],
+    "reasons": [
+      "evidence_expression_depth_exhausted"
+    ]
+  }
+}

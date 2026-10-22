@@ -1,0 +1,16 @@
+{
+  "id": "part-multiplicity__attribute_multiplicity__attribute_usage",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "attribute loads : Real[1..4] ordered: attribute usages are never expanded"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": []
+  }
+}

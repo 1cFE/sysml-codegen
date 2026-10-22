@@ -1,0 +1,34 @@
+{
+  "id": "g1__redefinition_drops_ordered_bounds",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "rack redefines servers[2] ordered with no multiplicity; the generator expands one unindexed occurrence and drops ordered (matrix row G1)"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "occurrences",
+        "declaration": "fx::rack::servers",
+        "expect": {
+          "count": 1,
+          "indices": [
+            null
+          ]
+        }
+      }
+    ]
+  },
+  "loss": {
+    "family": "g1-redefinition-drops-bounds",
+    "disposition": "candidate_refusal",
+    "rg1": "RG1-1",
+    "control": "part-multiplicity__exact_redefinition__expanded_part_usage"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "id": "constraint-predicate__blocked_predicate__owner_instantiated",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "asserted predicate x > 0.0 and enabled (BLOCK) in Site, instantiated by site"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_CONSTRAINT_BLOCKED"
+    ],
+    "reasons": [
+      "constraint_profile_blocked"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._build_constraint_nodes::coded::SI_CONSTRAINT_BLOCKED::1",
+      "agentic_mbse/sysml/executable_profile.py::_walk_proposition::shared-profile::warn_non_numerical_predicate::1"
+    ]
+  }
+}

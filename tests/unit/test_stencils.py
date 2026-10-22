@@ -550,7 +550,8 @@ class TestSmartRegenStubUpgrade:
         """Run _generate_stencils with smart_regen=True, return stencil path."""
         from types import SimpleNamespace
 
-        from sysml_codegen.cli import GenerationConfig, _generate_stencils
+        from sysml_codegen.cli import GenerationConfig
+        from sysml_codegen.cli.emit import _generate_stencils
 
         output_path = tmp_path / "output"
         handwritten_dir = output_path / "handwritten"

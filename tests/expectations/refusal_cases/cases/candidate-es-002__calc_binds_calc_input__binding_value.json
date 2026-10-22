@@ -1,0 +1,23 @@
+{
+  "id": "candidate-es-002__calc_binds_calc_input__binding_value",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      7
+    ],
+    "description": "calc usage u binds calc usage t's input t.v"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_OCCURRENCE_MISSING"
+    ],
+    "reasons": [
+      "occurrence_containment_unanchored"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/occurrence.py::build_containment_address::coded::SI_OCCURRENCE_MISSING::1"
+    ]
+  }
+}

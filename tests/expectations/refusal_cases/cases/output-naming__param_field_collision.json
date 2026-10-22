@@ -1,0 +1,23 @@
+{
+  "id": "output-naming__param_field_collision",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      8
+    ],
+    "description": "part caster [2] beside part caster_0: the indexed key site__caster[0]__load and the key of caster_0.load render one schema field"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "PARAM_FIELD_COLLISION"
+    ],
+    "reasons": [
+      "generation_param_field_collision"
+    ],
+    "witnesses": [
+      "sysml_codegen/generation/entry_point.py::_refuse_colliding_field_names::free-text::CodeGenerationError::1"
+    ]
+  }
+}

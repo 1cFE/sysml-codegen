@@ -1,0 +1,23 @@
+{
+  "id": "candidate-expression-depth__attribute_value",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "a computed attribute whose value is a 120-term sum, nested past the shared 100-level traversal depth"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EVIDENCE_INCOMPLETE"
+    ],
+    "reasons": [
+      "evidence_expression_depth_exhausted"
+    ],
+    "witnesses": [
+      "agentic_mbse/sysml/reference_use.py::_walk::shared-evidence::EXPRESSION_DEPTH_EXHAUSTED::1"
+    ]
+  }
+}

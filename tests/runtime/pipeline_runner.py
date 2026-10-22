@@ -113,7 +113,7 @@ def _load_entry_values(package_dir: Path) -> dict[str, float]:
 def _module_import_path(package: str, module_type: str) -> tuple[str, str]:
     """Map a YAML module_type (`namespace.ClassNameModule`) to (import_path, class).
 
-    Two file-naming conventions coexist in a generated package (`cli/__init__.py
+    Two file-naming conventions coexist in a generated package (`cli/prepare.py
     _get_python_path`): a calc/aggregation/formula module's file stem strips the
     trailing "Module" from the class name; a constraint/report-aggregator module's
     file stem is the whole class name lowercased, as-is (D9) — no stripping. This

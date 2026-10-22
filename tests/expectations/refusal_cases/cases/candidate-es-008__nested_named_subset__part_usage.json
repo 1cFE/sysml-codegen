@@ -1,0 +1,23 @@
+{
+  "id": "candidate-es-008__nested_named_subset__part_usage",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      11,
+      18
+    ],
+    "description": "named server subsets inside named rack subsets, each redefining psu efficiency (dc3 U2)"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_REDEFINITION_INVALID"
+    ],
+    "reasons": [
+      "elaboration_value_writers_incomparable"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._require_one_writer::coded::SI_REDEFINITION_INVALID::1"
+    ]
+  }
+}

@@ -200,15 +200,17 @@ def test_public_exit_type_refusal_is_status_one_and_byte_preserving(
     called: list[Path] = []
 
     if source_arm == "models":
+        from sysml_codegen.orchestration import elaborated_pipeline
 
-        def build_from_models(paths: list[Path]) -> SimpleNamespace:
+        def load_models(paths: tuple[Path, ...]) -> SimpleNamespace:
             called.extend(paths)
-            return SimpleNamespace(computation_graph=graph)
+            return SimpleNamespace()
 
+        monkeypatch.setattr(elaborated_pipeline, "load_live_models", load_models)
         monkeypatch.setattr(
             exact_pipeline_context,
-            "build_exact_pipeline_context",
-            build_from_models,
+            "build_exact_pipeline_context_from_live_load",
+            lambda _loaded: SimpleNamespace(computation_graph=graph),
         )
         models = tmp_path / "model.sysml"
         snapshot = None

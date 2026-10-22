@@ -1,0 +1,23 @@
+{
+  "id": "part-typing__two_definitions",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "part p typed by two unrelated part defs A and B"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_REDEFINITION_INVALID"
+    ],
+    "reasons": [
+      "occurrence_part_typing_ambiguous"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/occurrence.py::_effective_type::coded-fixed::SI_REDEFINITION_INVALID::1"
+    ]
+  }
+}

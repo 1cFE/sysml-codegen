@@ -1,0 +1,16 @@
+{
+  "id": "anonymous-declaration__item_usage",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "an anonymous item usage `item : Thing;`: a kind the generator does not index"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": []
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "id": "candidate-es-002__calc_input_through_part__attribute_value",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      7
+    ],
+    "description": "attribute y reads p.c.v, the input of a calc usage inside part p (a part segment precedes the calc usage)"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_OCCURRENCE_MISSING"
+    ],
+    "reasons": [
+      "elaboration_owner_address_target_missing"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._resolve_semantic_reference::coded::SI_OCCURRENCE_MISSING::4"
+    ]
+  }
+}

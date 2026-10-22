@@ -50,9 +50,9 @@ def test_public_package_matches_independent_baseline(relative: str, tmp_path: Pa
 def test_oracle_rejects_template_mutation(fixture, template, tmp_path, monkeypatch):
     """Change emitted bytes in each package shape while leaving fixed expectations intact."""
     import jinja2
-    import sysml_codegen.cli as cli
+    from sysml_codegen.cli import prepare
 
-    original = cli._get_template_env
+    original = prepare._get_template_env
 
     def changed_environment():
         env = original()
@@ -63,7 +63,7 @@ def test_oracle_rejects_template_mutation(fixture, template, tmp_path, monkeypat
         ])
         return env
 
-    monkeypatch.setattr(cli, '_get_template_env', changed_environment)
+    monkeypatch.setattr(prepare, '_get_template_env', changed_environment)
     relative = f'tests/fixtures/{fixture}/instance_graph_snapshot.json'
     actual = public_result(ROOT / relative, tmp_path / 'package')
     assert actual['success']

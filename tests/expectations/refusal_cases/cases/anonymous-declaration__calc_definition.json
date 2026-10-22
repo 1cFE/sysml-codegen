@@ -1,0 +1,23 @@
+{
+  "id": "anonymous-declaration__calc_definition",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      3
+    ],
+    "description": "an anonymous calc def"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_ID_MISSING"
+    ],
+    "reasons": [
+      "elaboration_calc_def_id_missing"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._index_calculation_payloads::coded::SI_ID_MISSING::1"
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "id": "output-naming__entry_point_metadata_conflict",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      8
+    ],
+    "description": "one Integer attribute n (line 6) bound to a Real formal and to an Integer formal; its one entry point gets two python types"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "PROJECTION_FAILED",
+      "SI_RENDERING_COLLISION"
+    ],
+    "reasons": [
+      "projection_entry_point_metadata_conflict"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/project.py::_Projection._entry_source::coded::SI_RENDERING_COLLISION::2"
+    ]
+  }
+}

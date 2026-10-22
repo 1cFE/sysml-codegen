@@ -1,0 +1,23 @@
+{
+  "id": "calc-def-parameter__untyped",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "a calc def input `in x;` with no type"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_TYPE_INVALID"
+    ],
+    "reasons": [
+      "extraction_parameter_typing_count"
+    ],
+    "witnesses": [
+      "sysml_codegen/extraction/extractor.py::SysMLDataExtractor._extract_attribute::coded-fixed::SI_TYPE_INVALID::1"
+    ]
+  }
+}

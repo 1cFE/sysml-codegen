@@ -1,0 +1,37 @@
+{
+  "id": "string-value-omission__string_value__attribute_value__attribute_declaration",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "String attribute fuel_unit declared with its value, attribute fuel_unit : String = \"liter\""
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "graph_attr",
+        "declaration": "fx::Gen::fuel_unit",
+        "expect": {
+          "count": 1
+        }
+      },
+      {
+        "kind": "entry_point",
+        "declaration": "fx::Gen::fuel_unit",
+        "expect": []
+      },
+      {
+        "kind": "entry_point",
+        "declaration": "fx::Gen::rate",
+        "expect": [
+          "fx__gen__rate"
+        ]
+      }
+    ]
+  }
+}

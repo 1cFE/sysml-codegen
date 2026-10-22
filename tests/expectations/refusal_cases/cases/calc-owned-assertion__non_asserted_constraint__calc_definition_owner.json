@@ -1,0 +1,16 @@
+{
+  "id": "calc-owned-assertion__non_asserted_constraint__calc_definition_owner",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "plain constraint f1 owned by calc def Eff2 (graded info, never attached); control is the calc usage path's output"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": []
+  }
+}

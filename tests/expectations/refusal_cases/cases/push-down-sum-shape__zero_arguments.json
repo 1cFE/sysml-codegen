@@ -1,0 +1,24 @@
+{
+  "id": "push-down-sum-shape__zero_arguments",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "attribute t : NumericalValue = sum(); a sum invocation with no argument in a computed attribute value"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "PROJECTION_FAILED",
+      "SI_SNAPSHOT_INVALID"
+    ],
+    "reasons": [
+      "projection_sum_argument_count"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/project.py::_Projection._compile_computed_expression.render::coded::SI_SNAPSHOT_INVALID::5"
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "id": "output-naming__expression_parameter_collision",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "a computed attribute reading 'a b' and a_b, whose parameter names sanitize to one"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "PROJECTION_FAILED",
+      "SI_RENDERING_COLLISION"
+    ],
+    "reasons": [
+      "projection_expression_parameter_collision"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/project.py::_Projection._computed_inputs::coded::SI_RENDERING_COLLISION::1"
+    ]
+  }
+}

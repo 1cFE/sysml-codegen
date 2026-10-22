@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from sysml_codegen.cli import _get_template_env
+from sysml_codegen.cli.prepare import _get_template_env
 from sysml_codegen.generation.entry_point import (
     generate_all_derived_jsons,
     generate_all_derived_schemas,

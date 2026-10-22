@@ -1,0 +1,6 @@
+Design review round 2 (`design-review.md`, "Round 2") leaves four points. Orchestrator rulings; apply them, no third review:
+- R2-1: keep the constraint-name validator inside the pipeline writer, the registry writer and the contract builder (`pipeline.py:56`, `registry.py:266`, `model_contract.py:37`), and allow site 338 by name in D14's reachability test, with the reason (defence in depth, pinned by `test_module_kind_faildloud.py:277`). Drop only the repeated checks that nothing pins.
+- R2-2: `emit_package` owns writer failures. It catches them where today's two handler blocks do (`cli/__init__.py:1266-1281`, `:1402-1410`) and logs the same single refusal record as today (`SI_INTERNAL_DEFECT` etc.), byte-identical. Add a test that patches a writer to raise and checks the record.
+- R2-3: `readiness(report)` returns the readiness and its reasons as data that `log_report` prints without switching on a fixed list, so the owner's option (b) changes only `readiness` and its tests.
+- R2-4: state what happens to `_generate_package_from_graph` and its four test users, and add `test_public_diagnostic_totality.py:473` to the churn list.
+Update Resolutions in `design-review.md`. Report briefly. Do not commit.

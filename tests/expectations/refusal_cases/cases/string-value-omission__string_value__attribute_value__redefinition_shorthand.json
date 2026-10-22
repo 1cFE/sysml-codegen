@@ -1,0 +1,37 @@
+{
+  "id": "string-value-omission__string_value__attribute_value__redefinition_shorthand",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "String attribute fuel_unit valued by the redefinition shorthand :>> fuel_unit = \"liter\""
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "graph_attr",
+        "declaration": "fx::gen::fuel_unit",
+        "expect": {
+          "count": 1
+        }
+      },
+      {
+        "kind": "entry_point",
+        "declaration": "fx::gen::fuel_unit",
+        "expect": []
+      },
+      {
+        "kind": "entry_point",
+        "declaration": "fx::gen::rate",
+        "expect": [
+          "fx__gen__rate"
+        ]
+      }
+    ]
+  }
+}

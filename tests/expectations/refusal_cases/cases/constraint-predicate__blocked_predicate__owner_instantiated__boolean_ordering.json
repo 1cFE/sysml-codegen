@@ -1,0 +1,24 @@
+{
+  "id": "constraint-predicate__blocked_predicate__owner_instantiated__boolean_ordering",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "Holder::c asserts 'flag < 1.0': an ordering with a Boolean operand"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_CONSTRAINT_BLOCKED"
+    ],
+    "reasons": [
+      "constraint_profile_blocked"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._build_constraint_nodes::coded::SI_CONSTRAINT_BLOCKED::1",
+      "agentic_mbse/sysml/executable_profile.py::_walk_comparison::coded-DYNAMIC::reason::2"
+    ]
+  }
+}

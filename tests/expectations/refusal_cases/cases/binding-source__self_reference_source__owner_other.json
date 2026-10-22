@@ -1,0 +1,16 @@
+{
+  "id": "binding-source__self_reference_source__owner_other",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "calc usage t owned by item def Box binds v to itself"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": []
+  }
+}

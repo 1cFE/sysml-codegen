@@ -1,0 +1,16 @@
+{
+  "id": "binding-source__exact_ordered_input__owner_instantiated",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "exact [1] ordered nonunique input bound to a"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": []
+  }
+}

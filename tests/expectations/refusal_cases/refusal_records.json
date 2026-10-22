@@ -1,0 +1,3224 @@
+{
+ "records": {
+  "case:anonymous-declaration__calc_definition": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_ID_MISSING: <model>: calculation payload 'unnamed' has no definition UUID (reason: elaboration_calc_def_id_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_ID_MISSING",
+       "reason": "SiteReason.ELABORATION_CALC_DEF_ID_MISSING",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:anonymous-declaration__calc_usage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_ID_UNSTABLE: <model>: CalculationUsage has no reload-stable qualified declaration identity (reason: identity_qualified_name_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_ID_UNSTABLE",
+       "reason": "SiteReason.IDENTITY_QUALIFIED_NAME_MISSING",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:anonymous-declaration__named_part_in_anonymous_action": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_ID_UNSTABLE: <model>: PartUsage has no reload-stable qualified declaration identity (reason: identity_qualified_name_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_ID_UNSTABLE",
+       "reason": "SiteReason.IDENTITY_QUALIFIED_NAME_MISSING",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:anonymous-declaration__package": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_ID_UNSTABLE: <model>: PartDefinition has no reload-stable qualified declaration identity (reason: identity_qualified_name_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_ID_UNSTABLE",
+       "reason": "SiteReason.IDENTITY_QUALIFIED_NAME_MISSING",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:anonymous-declaration__part_usage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_ID_UNSTABLE: <model>: PartUsage has no reload-stable qualified declaration identity (reason: identity_qualified_name_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_ID_UNSTABLE",
+       "reason": "SiteReason.IDENTITY_QUALIFIED_NAME_MISSING",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:anonymous-declaration__requirement_definition": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_ID_UNSTABLE: <model>: RequirementDefinition has no reload-stable qualified declaration identity (reason: identity_qualified_name_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_ID_UNSTABLE",
+       "reason": "SiteReason.IDENTITY_QUALIFIED_NAME_MISSING",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:bare-reference__imported_nested_feature": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_OCCURRENCE_MISSING: fx__q__t: reference='a': a package-anchored nested target requires its modeled containment prefix [root-0/model.sysml:5] (reason: elaboration_bare_reference_prefix_required)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_OCCURRENCE_MISSING",
+       "reason": "SiteReason.ELABORATION_BARE_REFERENCE_PREFIX_REQUIRED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:binding-source__expression_source__owner_instantiated": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model is not ready for the exact route: SI_EXPRESSION_SOURCE_UNSUPPORTED: fx__Site__t.xs: reference='a, b': unsupported exact source form expression_source ('a, b') [root-0/model.sysml:7] (reason: binding_source_form_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ReadinessCode.SI_EXPRESSION_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.BINDING_SOURCE_FORM_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 7
+      }
+     ],
+     "kind": "RefusalKind.READINESS"
+    }
+   }
+  ],
+  "case:binding-source__expression_source__owner_instantiated__arithmetic": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model is not ready for the exact route: SI_EXPRESSION_SOURCE_UNSUPPORTED: fx__Gen__t.v: reference='rate * fuel_code': unsupported exact source form expression_source ('rate * fuel_code') [root-0/model.sysml:4] (reason: binding_source_form_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ReadinessCode.SI_EXPRESSION_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.BINDING_SOURCE_FORM_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 4
+      }
+     ],
+     "kind": "RefusalKind.READINESS"
+    }
+   }
+  ],
+  "case:binding-source__expression_source__owner_instantiated__constraint_input": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model is not ready for the exact route: SI_EXPRESSION_SOURCE_UNSUPPORTED: fx__Site__g.q: reference='a * b': unsupported exact source form expression_source ('a * b') [root-0/model.sysml:8] (reason: binding_source_form_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ReadinessCode.SI_EXPRESSION_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.BINDING_SOURCE_FORM_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 8
+      }
+     ],
+     "kind": "RefusalKind.READINESS"
+    }
+   }
+  ],
+  "case:binding-source__expression_source__owner_instantiated__indexed_owner": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model is not ready for the exact route: SI_EXPRESSION_SOURCE_UNSUPPORTED: fx__Site__t.xs: reference='a, b': unsupported exact source form expression_source ('a, b') [root-0/model.sysml:7] (reason: binding_source_form_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ReadinessCode.SI_EXPRESSION_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.BINDING_SOURCE_FORM_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 7
+      }
+     ],
+     "kind": "RefusalKind.READINESS"
+    }
+   }
+  ],
+  "case:binding-source__expression_source__owner_instantiated__nested": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model is not ready for the exact route: SI_EXPRESSION_SOURCE_UNSUPPORTED: fx__Site__t.xs: reference='a, b': unsupported exact source form expression_source ('a, b') [root-0/model.sysml:7] (reason: binding_source_form_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ReadinessCode.SI_EXPRESSION_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.BINDING_SOURCE_FORM_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 7
+      }
+     ],
+     "kind": "RefusalKind.READINESS"
+    }
+   }
+  ],
+  "case:binding-source__expression_source__owner_instantiated__part_usage_owner": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model is not ready for the exact route: SI_EXPRESSION_SOURCE_UNSUPPORTED: fx__site__t.xs: reference='a, b': unsupported exact source form expression_source ('a, b') [root-0/model.sysml:7] (reason: binding_source_form_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ReadinessCode.SI_EXPRESSION_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.BINDING_SOURCE_FORM_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 7
+      }
+     ],
+     "kind": "RefusalKind.READINESS"
+    }
+   }
+  ],
+  "case:binding-source__expression_source__owner_instantiated__selected_and_overridden": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model is not ready for the exact route: SI_EXPRESSION_SOURCE_UNSUPPORTED: fx__Site__c.v: reference='x * 2.0': unsupported exact source form expression_source ('x * 2.0') [root-0/model.sysml:6] (reason: binding_source_form_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ReadinessCode.SI_EXPRESSION_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.BINDING_SOURCE_FORM_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.READINESS"
+    }
+   }
+  ],
+  "case:binding-source__expression_source__owner_instantiated__subtype": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model is not ready for the exact route: SI_EXPRESSION_SOURCE_UNSUPPORTED: fx__Site__t.xs: reference='a, b': unsupported exact source form expression_source ('a, b') [root-0/model.sysml:7] (reason: binding_source_form_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ReadinessCode.SI_EXPRESSION_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.BINDING_SOURCE_FORM_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 7
+      }
+     ],
+     "kind": "RefusalKind.READINESS"
+    }
+   }
+  ],
+  "case:binding-source__expression_source__owner_package": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model is not ready for the exact route: SI_EXPRESSION_SOURCE_UNSUPPORTED: fx__t.xs: reference='a, b': unsupported exact source form expression_source ('a, b') [root-0/model.sysml:6] (reason: binding_source_form_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ReadinessCode.SI_EXPRESSION_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.BINDING_SOURCE_FORM_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.READINESS"
+    }
+   }
+  ],
+  "case:binding-source__self_reference_source__owner_instantiated": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model is not ready for the exact route: SI_SELF_BINDING: fx__Site__t.v: reference='v': unsupported exact source form reference ('v') [root-0/model.sysml:7] (reason: binding_source_form_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ReadinessCode.SI_SELF_BINDING",
+       "reason": "SiteReason.BINDING_SOURCE_FORM_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 7
+      }
+     ],
+     "kind": "RefusalKind.READINESS"
+    }
+   }
+  ],
+  "case:binding-source__self_reference_source__owner_instantiated__indexed_owner": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model is not ready for the exact route: SI_SELF_BINDING: fx__Site__t.v: reference='v': unsupported exact source form reference ('v') [root-0/model.sysml:5] (reason: binding_source_form_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ReadinessCode.SI_SELF_BINDING",
+       "reason": "SiteReason.BINDING_SOURCE_FORM_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.READINESS"
+    }
+   }
+  ],
+  "case:binding-source__self_reference_source__owner_instantiated__part_usage_owner": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model is not ready for the exact route: SI_SELF_BINDING: fx__site__t.v: reference='v': unsupported exact source form reference ('v') [root-0/model.sysml:5] (reason: binding_source_form_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ReadinessCode.SI_SELF_BINDING",
+       "reason": "SiteReason.BINDING_SOURCE_FORM_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.READINESS"
+    }
+   }
+  ],
+  "case:binding-source__self_reference_source__owner_instantiated__subtype": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model is not ready for the exact route: SI_SELF_BINDING: fx__Site__t.v: reference='v': unsupported exact source form reference ('v') [root-0/model.sysml:5] (reason: binding_source_form_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ReadinessCode.SI_SELF_BINDING",
+       "reason": "SiteReason.BINDING_SOURCE_FORM_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.READINESS"
+    }
+   }
+  ],
+  "case:binding-source__self_reference_source__owner_package": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model is not ready for the exact route: SI_SELF_BINDING: fx__t.v: reference='v': unsupported exact source form reference ('v') [root-0/model.sysml:5] (reason: binding_source_form_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ReadinessCode.SI_SELF_BINDING",
+       "reason": "SiteReason.BINDING_SOURCE_FORM_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.READINESS"
+    }
+   }
+  ],
+  "case:blocked-predicate-unmapped-code__anonymous_assert_by_reference": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_ID_UNSTABLE: <model>: AssertConstraintUsage has no reload-stable qualified declaration identity (reason: identity_qualified_name_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_ID_UNSTABLE",
+       "reason": "SiteReason.IDENTITY_QUALIFIED_NAME_MISSING",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:blocked-predicate-unmapped-code__constraint_check_typed": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EDGE_DANGLING: <model>: constraint profile selected an unrecognized definition UUID 88ee1ede-4630-50fc-bbee-4d6e6eed7bf5 (reason: elaboration_constraint_definition_unindexed)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EDGE_DANGLING",
+       "reason": "SiteReason.ELABORATION_CONSTRAINT_DEFINITION_UNINDEXED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:blocked-predicate-unmapped-code__quantity_operands_mixed_units": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EDGE_DANGLING: <model>: feature de05fdb6-bed9-5ac3-9b27-9c532c7423e3 has unsupported exact type 'ISQBase::LengthValue' (reason: elaboration_feature_type_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EDGE_DANGLING",
+       "reason": "SiteReason.ELABORATION_FEATURE_TYPE_UNSUPPORTED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:blocked-predicate-unmapped-code__quantity_operands_same_units": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EDGE_DANGLING: <model>: feature de05fdb6-bed9-5ac3-9b27-9c532c7423e3 has unsupported exact type 'ISQBase::LengthValue' (reason: elaboration_feature_type_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EDGE_DANGLING",
+       "reason": "SiteReason.ELABORATION_FEATURE_TYPE_UNSUPPORTED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:blocked-predicate-unmapped-code__untyped_assert": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EDGE_DANGLING: <model>: constraint profile selected an unrecognized definition UUID 88ee1ede-4630-50fc-bbee-4d6e6eed7bf5 (reason: elaboration_constraint_definition_unindexed)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EDGE_DANGLING",
+       "reason": "SiteReason.ELABORATION_CONSTRAINT_DEFINITION_UNINDEXED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:calc-def-identity__anonymous_parameter": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_ID_MISSING: <model>: calculation 2a793534-a238-547f-913e-037a4195c6b9 input 'unnamed' has no declaration UUID (reason: elaboration_calc_parameter_id_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_ID_MISSING",
+       "reason": "SiteReason.ELABORATION_CALC_PARAMETER_ID_MISSING",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:calc-def-identity__duplicate_name": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_ID_MISSING: <model>: calculation payload 'Twice' has no definition UUID (reason: elaboration_calc_def_id_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_ID_MISSING",
+       "reason": "SiteReason.ELABORATION_CALC_DEF_ID_MISSING",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:calc-def-output__part_usage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EDGE_DANGLING: <model>: calculation output a99c394c-e5be-5d1b-a504-3938a4c15394 has no exact metadata (reason: elaboration_calc_output_metadata_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EDGE_DANGLING",
+       "reason": "SiteReason.ELABORATION_CALC_OUTPUT_METADATA_MISSING",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:calc-def-parameter__quantity_typed": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_TYPE_INVALID: fx::U::m: reference='fx::U::m': extract_type: typing target 'ISQBase::MassValue' is unsupported; expected one of ScalarValues::Boolean, ScalarValues::Integer, ScalarValues::Real, or ScalarValues::String [root-0/model.sysml:4] (reason: extraction_typing_target_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_TYPE_INVALID",
+       "reason": "SiteReason.EXTRACTION_TYPING_TARGET_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 4
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:calc-def-parameter__untyped": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_TYPE_INVALID: fx::U::x: reference='fx::U::x': extract_type: feature has 0 typings; expected exactly one qualified typing [root-0/model.sysml:4] (reason: extraction_parameter_typing_count)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_TYPE_INVALID",
+       "reason": "SiteReason.EXTRACTION_PARAMETER_TYPING_COUNT",
+       "source_file": "root-0/model.sysml",
+       "source_line": 4
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:calc-def-reference__package_attribute": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EDGE_DANGLING: <model>: calculation f379be92-a9a1-51f3-a574-20b670d833e5 exact compilation failed: expression member 'r' references undeclared exact member e415d794-f720-5f58-9af7-69f6ac7ec439 (reason: compile_reference_outside_calc_def)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EDGE_DANGLING",
+       "reason": "SiteReason.COMPILE_REFERENCE_OUTSIDE_CALC_DEF",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:calc-def-return__anonymous": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: <model>: reference='fx::Anon': Calc def 'Anon' has an anonymous `return` (a result with no name), so no output channel can be built. Give the result a name, e.g. `return result : Real = <expr>`. [root-0/model.sysml:4] (reason: extraction_calc_def_return_unnamed)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EXTRACTION_CALC_DEF_RETURN_UNNAMED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 4
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:calc-output-reference__definition_member": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_OCCURRENCE_AMBIGUOUS: fx__site__t: reference='Twice::r': exact output b8d42569-442e-567c-84f1-59f7daf5bd1d has 2 producers: ['61233135-bb5d-5b14-9e7f-bb9cd0af122f@[\"calculation\",[\"occurrence\",\"[[\\\\\"2e449708-8faa-5b2b-b34d-32a1b820e261\\\\\",null]]\"],[\"declaration\",\"61233135-bb5d-5b14-9e7f-bb9cd0af122f\"]]', 'b11bd411-a1ab-5efe-8561-b5b5edf589e4@[\"calculation\",[\"occurrence\",\"[[\\\\\"2e449708-8faa-5b2b-b34d-32a1b820e261\\\\\",null]]\"],[\"declaration\",\"b11bd411-a1ab-5efe-8561-b5b5edf589e4\"]]'] [root-0/model.sysml:8] (reason: elaboration_calculation_output_ambiguous)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_OCCURRENCE_AMBIGUOUS",
+       "reason": "SiteReason.ELABORATION_CALCULATION_OUTPUT_AMBIGUOUS",
+       "source_file": "root-0/model.sysml",
+       "source_line": 8
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:calc-owned-assertion__asserted_constraint__calc_definition_owner": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_UNATTACHED: fx::Eff2::f1: reference='fx::Eff2::f1': constraint fx::Eff2::f1 (2029e523-6777-5867-96f5-a022b7c3aaa5) is asserted (definition_typed) but its owner fx::Eff2 (calc_def) provides no attachment: owner_kind_unattachable [root-0/model.sysml:6] (reason: elaboration_asserted_constraint_unattached)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_UNATTACHED",
+       "reason": "SiteReason.ELABORATION_ASSERTED_CONSTRAINT_UNATTACHED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:calc-owned-assertion__asserted_constraint__calc_usage_owner": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_UNATTACHED: <model>: reference='fx::Site::path': constraint owner does not match a supported mapped metatype: fx::Site::path [root-0/model.sysml:8] (reason: elaboration_constraint_owner_unmapped)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_UNATTACHED",
+       "reason": "SiteReason.ELABORATION_CONSTRAINT_OWNER_UNMAPPED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 8
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:calc-owned-assertion__asserted_constraint__unmapped_owner_kind": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_UNATTACHED: <model>: reference='fx::Box': constraint owner does not match a supported mapped metatype: fx::Box [root-0/model.sysml:4] (reason: elaboration_constraint_owner_unmapped)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_UNATTACHED",
+       "reason": "SiteReason.ELABORATION_CONSTRAINT_OWNER_UNMAPPED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 4
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:calc-owned-assertion__asserted_constraint__unmapped_owner_kind__item_usage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_UNATTACHED: <model>: reference='fx::Site::fuel': constraint owner does not match a supported mapped metatype: fx::Site::fuel [root-0/model.sysml:8] (reason: elaboration_constraint_owner_unmapped)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_UNATTACHED",
+       "reason": "SiteReason.ELABORATION_CONSTRAINT_OWNER_UNMAPPED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 8
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:calc-owned-assertion__non_asserted_constraint__calc_usage_owner": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_UNATTACHED: <model>: reference='fx::Site::path': constraint owner does not match a supported mapped metatype: fx::Site::path [root-0/model.sysml:7] (reason: elaboration_constraint_owner_unmapped)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_UNATTACHED",
+       "reason": "SiteReason.ELABORATION_CONSTRAINT_OWNER_UNMAPPED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 7
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:calc-owned-assertion__non_asserted_constraint__unmapped_owner_kind": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_UNATTACHED: <model>: reference='fx::Box': constraint owner does not match a supported mapped metatype: fx::Box [root-0/model.sysml:4] (reason: elaboration_constraint_owner_unmapped)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_UNATTACHED",
+       "reason": "SiteReason.ELABORATION_CONSTRAINT_OWNER_UNMAPPED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 4
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:calc-owned-assertion__non_asserted_constraint__unmapped_owner_kind__attribute_definition": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_UNATTACHED: <model>: reference='fx::A': constraint owner does not match a supported mapped metatype: fx::A [root-0/model.sysml:4] (reason: elaboration_constraint_owner_unmapped)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_UNATTACHED",
+       "reason": "SiteReason.ELABORATION_CONSTRAINT_OWNER_UNMAPPED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 4
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:calc-owned-assertion__non_asserted_constraint__unmapped_owner_kind__constraint_definition": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_UNATTACHED: <model>: reference='fx::Bounded': constraint owner does not match a supported mapped metatype: fx::Bounded [root-0/model.sysml:4] (reason: elaboration_constraint_owner_unmapped)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_UNATTACHED",
+       "reason": "SiteReason.ELABORATION_CONSTRAINT_OWNER_UNMAPPED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 4
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:calc-usage-binding__undeclared_input": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EDGE_DANGLING: <model>: input slot FeatureSlotId(root_declaration=DeclarationId(value=UUID('98b7332b-ac4c-572d-88c0-bb2f906fb76f'))) has no effective formal on selected definition 7d05aaaf-c486-5f42-9cfb-9cfab2de8ec1 (reason: elaboration_bound_input_formal_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EDGE_DANGLING",
+       "reason": "SiteReason.ELABORATION_BOUND_INPUT_FORMAL_MISSING",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:calc-usage-typing__library_calc_def": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EDGE_DANGLING: <model>: calculation definition c482be7b-b90a-5027-8883-6525c8b27b48 has no exact payload (reason: elaboration_calc_def_payload_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EDGE_DANGLING",
+       "reason": "SiteReason.ELABORATION_CALC_DEF_PAYLOAD_MISSING",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:calc-usage-typing__subsetting_only": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_TYPE_INVALID: <model>: syside.core.QualifiedName(['fx', 'Site', 'c2']) has 0 exact CalculationDefinition typings [root-0/model.sysml:7] (reason: elaboration_usage_definition_typing_count)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_TYPE_INVALID",
+       "reason": "SiteReason.ELABORATION_USAGE_DEFINITION_TYPING_COUNT",
+       "source_file": "root-0/model.sysml",
+       "source_line": 7
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:calc-usage-typing__untyped": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_TYPE_INVALID: <model>: syside.core.QualifiedName(['fx', 'Site', 'c']) has 0 exact CalculationDefinition typings [root-0/model.sysml:6] (reason: elaboration_usage_definition_typing_count)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_TYPE_INVALID",
+       "reason": "SiteReason.ELABORATION_USAGE_DEFINITION_TYPING_COUNT",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-ambiguous-typing__incomparable_typings__part_usage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_REDEFINITION_INVALID: <model>: reference='fx::Site::unit': part usage fx::Site::unit has incomparable exact user-definition typings [root-0/model.sysml:7] (reason: occurrence_part_typing_ambiguous)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_REDEFINITION_INVALID",
+       "reason": "SiteReason.OCCURRENCE_PART_TYPING_AMBIGUOUS",
+       "source_file": "root-0/model.sysml",
+       "source_line": 7
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-anonymous-constraint__inline_assert__owner_instantiated": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_ID_UNSTABLE: <model>: AssertConstraintUsage has no reload-stable qualified declaration identity (reason: identity_qualified_name_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_ID_UNSTABLE",
+       "reason": "SiteReason.IDENTITY_QUALIFIED_NAME_MISSING",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-anonymous-constraint__inline_constraint__owner_instantiated": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_ID_UNSTABLE: <model>: ConstraintUsage has no reload-stable qualified declaration identity (reason: identity_qualified_name_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_ID_UNSTABLE",
+       "reason": "SiteReason.IDENTITY_QUALIFIED_NAME_MISSING",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-calc-result-expression__bare_result__calc_result_expression__arithmetic": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: <model>: reference='fx::Twice': Calc def 'Twice' extracted with zero output attributes. A pipeline module needs at least one output channel. Likely cause: the calc def declares no result — add one, e.g. 'out attribute y : Real = <expr>' or 'return y : Real = <expr>'. (An anonymous 'return' is reported separately.) [root-0/model.sysml:3] (reason: extraction_calc_def_no_output)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EXTRACTION_CALC_DEF_NO_OUTPUT",
+       "source_file": "root-0/model.sysml",
+       "source_line": 3
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-calc-result-expression__bare_result__calc_result_expression__declared_return": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: <model>: reference='fx::Bare': Calc def 'Bare' extracted with zero output attributes. A pipeline module needs at least one output channel. Likely cause: the calc def declares no result — add one, e.g. 'out attribute y : Real = <expr>' or 'return y : Real = <expr>'. (An anonymous 'return' is reported separately.) [root-0/model.sysml:4] (reason: extraction_calc_def_no_output)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EXTRACTION_CALC_DEF_NO_OUTPUT",
+       "source_file": "root-0/model.sysml",
+       "source_line": 4
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-calc-result-expression__bare_result__calc_result_expression__max": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: <model>: reference='fx::Big': Calc def 'Big' extracted with zero output attributes. A pipeline module needs at least one output channel. Likely cause: the calc def declares no result — add one, e.g. 'out attribute y : Real = <expr>' or 'return y : Real = <expr>'. (An anonymous 'return' is reported separately.) [root-0/model.sysml:3] (reason: extraction_calc_def_no_output)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EXTRACTION_CALC_DEF_NO_OUTPUT",
+       "source_file": "root-0/model.sysml",
+       "source_line": 3
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-calc-result-expression__bare_result__calc_result_expression__unused": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: <model>: reference='fx::Bare': Calc def 'Bare' extracted with zero output attributes. A pipeline module needs at least one output channel. Likely cause: the calc def declares no result — add one, e.g. 'out attribute y : Real = <expr>' or 'return y : Real = <expr>'. (An anonymous 'return' is reported separately.) [root-0/model.sysml:4] (reason: extraction_calc_def_no_output)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EXTRACTION_CALC_DEF_NO_OUTPUT",
+       "source_file": "root-0/model.sysml",
+       "source_line": 4
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-chain-head__conditional_head": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EXPRESSION_SOURCE_UNSUPPORTED: (if true ? w else v).r: reference='(if true ? w else v).r': inspect_reference_uses: feature chain rooted in an unsupported expression kind: (if true ? w else v).r [root-0/model.sysml:7] (reason: evidence_expression_kind_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EXPRESSION_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.EVIDENCE_EXPRESSION_KIND_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 7
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-es-002__attribute_reads_calc_input__attribute_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_OCCURRENCE_MISSING: fx__site__y: reference='t.v': semantic owner kind 'CalculationUsage' cannot anchor containment [root-0/model.sysml:7] (reason: occurrence_containment_unanchored)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_OCCURRENCE_MISSING",
+       "reason": "SiteReason.OCCURRENCE_CONTAINMENT_UNANCHORED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 7
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-es-002__attribute_usage_feature__attribute_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_OCCURRENCE_MISSING: fx__site__y: reference='p.a': semantic owner kind 'AttributeUsage' cannot anchor containment [root-0/model.sysml:6] (reason: occurrence_containment_unanchored)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_OCCURRENCE_MISSING",
+       "reason": "SiteReason.OCCURRENCE_CONTAINMENT_UNANCHORED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-es-002__calc_binds_calc_input__binding_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_OCCURRENCE_MISSING: fx__site__u: reference='t.v': semantic owner kind 'CalculationUsage' cannot anchor containment [root-0/model.sysml:7] (reason: occurrence_containment_unanchored)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_OCCURRENCE_MISSING",
+       "reason": "SiteReason.OCCURRENCE_CONTAINMENT_UNANCHORED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 7
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-es-002__calc_definition_intermediate__attribute_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_OCCURRENCE_MISSING: fx__site__y: reference='c.t': semantic owner kind 'CalculationDefinition' cannot anchor containment [root-0/model.sysml:7] (reason: occurrence_containment_unanchored)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_OCCURRENCE_MISSING",
+       "reason": "SiteReason.OCCURRENCE_CONTAINMENT_UNANCHORED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 7
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-es-002__calc_input_through_part__attribute_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_OCCURRENCE_MISSING: fx__site__y: reference='p.c.v': exact owner address has no target for leaf 7058e691-b036-5611-8118-0603dbabaf30 [root-0/model.sysml:7] (reason: elaboration_owner_address_target_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_OCCURRENCE_MISSING",
+       "reason": "SiteReason.ELABORATION_OWNER_ADDRESS_TARGET_MISSING",
+       "source_file": "root-0/model.sysml",
+       "source_line": 7
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-es-002__constraint_binds_calc_input__binding_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_OCCURRENCE_MISSING: fx__site__g: reference='t.v': semantic owner kind 'CalculationUsage' cannot anchor containment [root-0/model.sysml:8] (reason: occurrence_containment_unanchored)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_OCCURRENCE_MISSING",
+       "reason": "SiteReason.OCCURRENCE_CONTAINMENT_UNANCHORED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 8
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-es-002__item_usage_feature__attribute_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_OCCURRENCE_MISSING: fx__site__y: reference='fuel.density': semantic owner kind 'ItemUsage' cannot anchor containment [root-0/model.sysml:6] (reason: occurrence_containment_unanchored)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_OCCURRENCE_MISSING",
+       "reason": "SiteReason.OCCURRENCE_CONTAINMENT_UNANCHORED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-es-002__part_inside_item_usage__attribute_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EDGE_DANGLING: <instance-graph>: root occurrence has no package display metadata (reason: graph_root_occurrence_package_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EDGE_DANGLING",
+       "reason": "SiteReason.GRAPH_ROOT_OCCURRENCE_PACKAGE_MISSING",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-es-008__nested_named_subset__part_usage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_REDEFINITION_INVALID: <model>: reference='fx::facility::it_system::rack_1::server_2::psu::efficiency': exact scope OccurrenceId(steps=(OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('6ab29f3e-0bdb-5df4-8bd7-81e94fc2bc1f'))), occurrence_index=None), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('8ca134ff-9f0d-5420-ae06-4630c84c7f67'))), occurrence_index=None), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('2622dc36-9275-5ffb-ae28-17168533c0c2'))), occurrence_index=None), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('4f7fc9d1-6782-5c61-b472-ef45313e827c'))), occurrence_index=0), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('d4a5f829-2278-57d2-b0e1-57d555a41a1c'))), occurrence_index=None))) has incomparable value writers fx::facility::it_system::rack_1::server_1::psu::efficiency, fx::facility::it_system::rack_1::server_2::psu::efficiency, fx::facility::it_system::rack_2::server_1::psu::efficiency, fx::facility::it_system::rack_2::server_2::psu::efficiency [root-0/model.sysml:13] (reason: elaboration_value_writers_incomparable)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_REDEFINITION_INVALID",
+       "reason": "SiteReason.ELABORATION_VALUE_WRITERS_INCOMPARABLE",
+       "source_file": "root-0/model.sysml",
+       "source_line": 13
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-es-008__nested_named_subset__part_usage__single_rack": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_REDEFINITION_INVALID: <model>: reference='fx::facility::it_system::rack_1::server_2::psu::efficiency': exact scope OccurrenceId(steps=(OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('6ab29f3e-0bdb-5df4-8bd7-81e94fc2bc1f'))), occurrence_index=None), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('8ca134ff-9f0d-5420-ae06-4630c84c7f67'))), occurrence_index=None), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('5dc7b182-8a56-505e-a761-26ba3c7a6967'))), occurrence_index=0), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('4f7fc9d1-6782-5c61-b472-ef45313e827c'))), occurrence_index=0), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('d4a5f829-2278-57d2-b0e1-57d555a41a1c'))), occurrence_index=None))) has incomparable value writers fx::facility::it_system::rack_1::server_1::psu::efficiency, fx::facility::it_system::rack_1::server_2::psu::efficiency [root-0/model.sysml:13] (reason: elaboration_value_writers_incomparable)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_REDEFINITION_INVALID",
+       "reason": "SiteReason.ELABORATION_VALUE_WRITERS_INCOMPARABLE",
+       "source_file": "root-0/model.sysml",
+       "source_line": 13
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-es-008__sibling_subsets_redefine__part_usage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_REDEFINITION_INVALID: <model>: reference='fx::facility::it_system::rack_1::servers::psu::efficiency': exact scope OccurrenceId(steps=(OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('6ab29f3e-0bdb-5df4-8bd7-81e94fc2bc1f'))), occurrence_index=None), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('8ca134ff-9f0d-5420-ae06-4630c84c7f67'))), occurrence_index=None), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('5dc7b182-8a56-505e-a761-26ba3c7a6967'))), occurrence_index=0), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('4f7fc9d1-6782-5c61-b472-ef45313e827c'))), occurrence_index=0), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('d4a5f829-2278-57d2-b0e1-57d555a41a1c'))), occurrence_index=None))) has incomparable value writers fx::facility::it_system::rack_1::servers::psu::efficiency, fx::facility::it_system::rack_2::servers::psu::efficiency [root-0/model.sysml:11] (reason: elaboration_value_writers_incomparable)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_REDEFINITION_INVALID",
+       "reason": "SiteReason.ELABORATION_VALUE_WRITERS_INCOMPARABLE",
+       "source_file": "root-0/model.sysml",
+       "source_line": 11
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-es-009__composition_by_subsetting__part_usage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_OCCURRENCE_MISSING: fx__site__double: reference='facility.area': exact owner address has no target for leaf a339ea2b-63fb-5013-979b-8747b7d893c6 [root-0/model.sysml:4] (reason: elaboration_owner_address_target_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_OCCURRENCE_MISSING",
+       "reason": "SiteReason.ELABORATION_OWNER_ADDRESS_TARGET_MISSING",
+       "source_file": "root-0/model.sysml",
+       "source_line": 4
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-es-009__composition_by_subsetting__root_part_usage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_OCCURRENCE_MISSING: fx__site__double: reference='facility.area': exact owner address has no target for leaf a339ea2b-63fb-5013-979b-8747b7d893c6 [root-0/model.sysml:4] (reason: elaboration_owner_address_target_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_OCCURRENCE_MISSING",
+       "reason": "SiteReason.ELABORATION_OWNER_ADDRESS_TARGET_MISSING",
+       "source_file": "root-0/model.sysml",
+       "source_line": 4
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-es-009__reference_through_ref_part__attribute_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_OCCURRENCE_MISSING: fx__site__double: reference='facility.area': exact containment step FeatureSlotId(root_declaration=DeclarationId(value=UUID('a74ac7c4-15cc-5195-ace6-8932f57c0c62'))) has no concrete occurrence [root-0/model.sysml:4] (reason: occurrence_containment_step_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_OCCURRENCE_MISSING",
+       "reason": "SiteReason.OCCURRENCE_CONTAINMENT_STEP_MISSING",
+       "source_file": "root-0/model.sysml",
+       "source_line": 4
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-es-010-refusal__string_to_calc_input__binding_value": [
+   {
+    "constraint_name_safety": null,
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Code generation failed: exact graph projection failed: SI_RENDERING_COLLISION: the public EntryPoint seam cannot carry non-numeric default 'liter': reference='fx__gen__fuel_unit' [root-0/model.sysml:5]",
+    "refusal": {
+     "items": [
+      {
+       "code": "GenerationCode.PROJECTION_FAILED",
+       "reason": null,
+       "source_file": null,
+       "source_line": null
+      },
+      {
+       "code": "ElaborationCode.SI_RENDERING_COLLISION",
+       "reason": "SiteReason.PROJECTION_DEFAULT_NON_NUMERIC",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.GENERATION"
+    }
+   }
+  ],
+  "case:candidate-es-010-refusal__string_to_calc_input__binding_value__attribute_declaration": [
+   {
+    "constraint_name_safety": null,
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Code generation failed: exact graph projection failed: SI_RENDERING_COLLISION: the public EntryPoint seam cannot carry non-numeric default 'liter': reference='fx__gen__fuel_unit' [root-0/model.sysml:4]",
+    "refusal": {
+     "items": [
+      {
+       "code": "GenerationCode.PROJECTION_FAILED",
+       "reason": null,
+       "source_file": null,
+       "source_line": null
+      },
+      {
+       "code": "ElaborationCode.SI_RENDERING_COLLISION",
+       "reason": "SiteReason.PROJECTION_DEFAULT_NON_NUMERIC",
+       "source_file": "root-0/model.sysml",
+       "source_line": 4
+      }
+     ],
+     "kind": "RefusalKind.GENERATION"
+    }
+   }
+  ],
+  "case:candidate-es-010-refusal__string_usage_literal__binding_value": [
+   {
+    "constraint_name_safety": null,
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Code generation failed: exact graph projection failed: SI_RENDERING_COLLISION: the public EntryPoint seam cannot carry non-numeric default 'liter': reference='fx__gen__t' [root-0/model.sysml:3]",
+    "refusal": {
+     "items": [
+      {
+       "code": "GenerationCode.PROJECTION_FAILED",
+       "reason": null,
+       "source_file": null,
+       "source_line": null
+      },
+      {
+       "code": "ElaborationCode.SI_RENDERING_COLLISION",
+       "reason": "SiteReason.PROJECTION_DEFAULT_NON_NUMERIC",
+       "source_file": "root-0/model.sysml",
+       "source_line": 3
+      }
+     ],
+     "kind": "RefusalKind.GENERATION"
+    }
+   }
+  ],
+  "case:candidate-es-011__return_result_arithmetic__attribute_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EDGE_DANGLING: <model>: feature d4c65e7a-f5cd-5e32-bb56-93a0cfa01d23 has no exact live declaration (reason: elaboration_feature_declaration_unindexed)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EDGE_DANGLING",
+       "reason": "SiteReason.ELABORATION_FEATURE_DECLARATION_UNINDEXED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-expression-depth__attribute_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a: reference='a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a': inspect_reference_uses: maximum expression traversal depth exhausted before all operands were visited [root-0/model.sysml:5] (reason: evidence_expression_depth_exhausted)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EVIDENCE_EXPRESSION_DEPTH_EXHAUSTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-expression-depth__constraint_predicate": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x > 0.0: reference='x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x > 0.0': inspect_reference_uses: maximum expression traversal depth exhausted before all operands were visited [root-0/model.sysml:5] (reason: evidence_expression_depth_exhausted)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EVIDENCE_EXPRESSION_DEPTH_EXHAUSTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:conditional-expression__conditional_resolved_branches__attribute_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: if x < y ? 1.0 else 2.0: reference='if x < y ? 1.0 else 2.0': inspect_reference_uses: resolved reference has no exact target [root-0/model.sysml:6] (reason: evidence_resolved_target_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EVIDENCE_RESOLVED_TARGET_MISSING",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:conditional-expression__conditional_resolved_branches__binding_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: if x < y ? 1.0 else 2.0: reference='if x < y ? 1.0 else 2.0': inspect_reference_uses: resolved reference has no exact target [root-0/model.sysml:7] (reason: evidence_resolved_target_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EVIDENCE_RESOLVED_TARGET_MISSING",
+       "source_file": "root-0/model.sysml",
+       "source_line": 7
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:conditional-expression__conditional_resolved_branches__calc_definition_feature_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: if a < b ? 1.0 else 2.0: reference='if a < b ? 1.0 else 2.0': inspect_reference_uses: resolved reference has no exact target [root-0/model.sysml:3] (reason: evidence_resolved_target_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EVIDENCE_RESOLVED_TARGET_MISSING",
+       "source_file": "root-0/model.sysml",
+       "source_line": 3
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:conditional-expression__conditional_resolved_branches__calc_result_expression": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: <model>: reference='fx::Pick': Calc def 'Pick' extracted with zero output attributes. A pipeline module needs at least one output channel. Likely cause: the calc def declares no result — add one, e.g. 'out attribute y : Real = <expr>' or 'return y : Real = <expr>'. (An anonymous 'return' is reported separately.) [root-0/model.sysml:3] (reason: extraction_calc_def_no_output)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EXTRACTION_CALC_DEF_NO_OUTPUT",
+       "source_file": "root-0/model.sysml",
+       "source_line": 3
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:conditional-expression__conditional_resolved_branches__constraint_predicate": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: (if x < y ? 1.0 else 2.0) > 0.0: reference='(if x < y ? 1.0 else 2.0) > 0.0': inspect_reference_uses: resolved reference has no exact target [root-0/model.sysml:6] (reason: evidence_resolved_target_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EVIDENCE_RESOLVED_TARGET_MISSING",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:conditional-expression__conditional_unresolved_branch__attribute_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: if x < y ? x else y: reference='if x < y ? x else y': inspect_reference_uses: resolved reference has no exact target [root-0/model.sysml:6] (reason: evidence_resolved_target_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EVIDENCE_RESOLVED_TARGET_MISSING",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:conditional-expression__conditional_unresolved_branch__attribute_value__inherited": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: if x < y ? x else y: reference='if x < y ? x else y': inspect_reference_uses: resolved reference has no exact target [root-0/model.sysml:6] (reason: evidence_resolved_target_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EVIDENCE_RESOLVED_TARGET_MISSING",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:conditional-expression__conditional_unresolved_branch__attribute_value__redefined": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: if x < y ? x else y: reference='if x < y ? x else y': inspect_reference_uses: resolved reference has no exact target [root-0/model.sysml:8] (reason: evidence_resolved_target_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EVIDENCE_RESOLVED_TARGET_MISSING",
+       "source_file": "root-0/model.sysml",
+       "source_line": 8
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:conditional-expression__conditional_unresolved_branch__attribute_value__template": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: if x < y ? x else y: reference='if x < y ? x else y': inspect_reference_uses: resolved reference has no exact target [root-0/model.sysml:7] (reason: evidence_resolved_target_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EVIDENCE_RESOLVED_TARGET_MISSING",
+       "source_file": "root-0/model.sysml",
+       "source_line": 7
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:conditional-expression__conditional_unresolved_branch__binding_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: if x < y ? x else y: reference='if x < y ? x else y': inspect_reference_uses: resolved reference has no exact target [root-0/model.sysml:7] (reason: evidence_resolved_target_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EVIDENCE_RESOLVED_TARGET_MISSING",
+       "source_file": "root-0/model.sysml",
+       "source_line": 7
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:conditional-expression__conditional_unresolved_branch__calc_definition_feature_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: if a < b ? a else b: reference='if a < b ? a else b': inspect_reference_uses: resolved reference has no exact target [root-0/model.sysml:3] (reason: evidence_resolved_target_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EVIDENCE_RESOLVED_TARGET_MISSING",
+       "source_file": "root-0/model.sysml",
+       "source_line": 3
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:conditional-expression__conditional_unresolved_branch__calc_result_expression": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: <model>: reference='fx::Min2': Calc def 'Min2' extracted with zero output attributes. A pipeline module needs at least one output channel. Likely cause: the calc def declares no result — add one, e.g. 'out attribute y : Real = <expr>' or 'return y : Real = <expr>'. (An anonymous 'return' is reported separately.) [root-0/model.sysml:3] (reason: extraction_calc_def_no_output)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EXTRACTION_CALC_DEF_NO_OUTPUT",
+       "source_file": "root-0/model.sysml",
+       "source_line": 3
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:conditional-expression__conditional_unresolved_branch__constraint_predicate": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: (if x < y ? x else y) > 0.0: reference='(if x < y ? x else y) > 0.0': inspect_reference_uses: resolved reference has no exact target [root-0/model.sysml:6] (reason: evidence_resolved_target_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EVIDENCE_RESOLVED_TARGET_MISSING",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:conditional-expression__conditional_unresolved_branch__constraint_predicate__predicate_root": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: if flag ? x < 1.0 else x > 2.0: reference='if flag ? x < 1.0 else x > 2.0': inspect_reference_uses: resolved reference has no exact target [root-0/model.sysml:6] (reason: evidence_resolved_target_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EVIDENCE_RESOLVED_TARGET_MISSING",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-naming__generated_binding_overlap": [
+   {
+    "constraint_name_safety": {
+     "constraint_id": "fx__site__positive__41eec32e97d031db",
+     "final_binding": "value",
+     "generated_binding": "value",
+     "identities": [
+      {
+       "qualified_name": "fx::Positive::value",
+       "raw_name": "value"
+      }
+     ],
+     "kind": "generated_binding_overlap",
+     "predicate_function_name": null,
+     "scope": "predicate",
+     "usage_qualified_name": "fx::Site::positive"
+    },
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Code generation failed: Constraint name-safety violation: constraint_id='fx__site__positive__41eec32e97d031db', usage_qualified_name='fx::Site::positive': scope='predicate', kind='generated_binding_overlap', final_binding='value' collides with generated binding 'value'; identities=[raw_name='value', qualified_name='fx::Positive::value']",
+    "refusal": {
+     "items": [
+      {
+       "code": "GenerationCode.CONSTRAINT_NAME_UNSAFE",
+       "reason": "SiteReason.GENERATION_CONSTRAINT_NAME_UNSAFE",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.GENERATION"
+    }
+   }
+  ],
+  "case:constraint-naming__predicate_function_collision": [
+   {
+    "constraint_name_safety": null,
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Code generation failed: Predicate function-name collision: raw definition keys [\"definition:fx::'Pos-1'\", 'definition:fx::Pos_1'] all normalize to 'constraint_pred_definition_fx__pos_1'. Rename one; generation cannot emit them safely.",
+    "refusal": {
+     "items": [
+      {
+       "code": "GenerationCode.PREDICATE_FUNCTION_NAME_COLLISION",
+       "reason": "SiteReason.GENERATION_PREDICATE_FUNCTION_NAME_COLLISION",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.GENERATION"
+    }
+   }
+  ],
+  "case:constraint-predicate__blocked_predicate__owner_instantiated": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_BLOCKED: fx__site__c: constraint profile blocked execution: block_non_numerical_containment: the numerical assertion contains a non-numerical feature_ref and generation stops; separate it into its own assertion or rewrite it as a numerical comparison [model.sysml:6] (reason: constraint_profile_blocked)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_BLOCKED",
+       "reason": "SiteReason.CONSTRAINT_PROFILE_BLOCKED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-predicate__blocked_predicate__owner_instantiated__arithmetic_operand_mismatch": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_BLOCKED: Witness__holder__c: constraint profile blocked execution: block_unsupported_operand_category: arithmetic: block_unsupported_operand_category [model.sysml:6] (reason: constraint_profile_blocked)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_BLOCKED",
+       "reason": "SiteReason.CONSTRAINT_PROFILE_BLOCKED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-predicate__blocked_predicate__owner_instantiated__arithmetic_root": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_BLOCKED: Witness__holder__c: constraint profile blocked execution: block_non_predicate_root: arithmetic: block_non_predicate_root [model.sysml:5] (reason: constraint_profile_blocked)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_BLOCKED",
+       "reason": "SiteReason.CONSTRAINT_PROFILE_BLOCKED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-predicate__blocked_predicate__owner_instantiated__assert_by_reference": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_BLOCKED: Witness__holder__checked: constraint profile blocked execution: block_assert_by_reference: assert_by_reference: block_assert_by_reference [model.sysml:12] (reason: constraint_profile_blocked)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_BLOCKED",
+       "reason": "SiteReason.CONSTRAINT_PROFILE_BLOCKED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-predicate__blocked_predicate__owner_instantiated__boolean_ordering": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_BLOCKED: Witness__holder__c: constraint profile blocked execution: block_ordering_category_pair: ordering '<' requires Integer/Real operands or two Quantity operands; got boolean/real. Rewrite both operands as one admitted numerical pair. [model.sysml:5] (reason: constraint_profile_blocked)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_BLOCKED",
+       "reason": "SiteReason.CONSTRAINT_PROFILE_BLOCKED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-predicate__blocked_predicate__owner_instantiated__comparison_in_value_position": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_BLOCKED: Witness__holder__c: constraint profile blocked execution: block_non_predicate_root: comparison: block_non_predicate_root [model.sysml:6] (reason: constraint_profile_blocked)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_BLOCKED",
+       "reason": "SiteReason.CONSTRAINT_PROFILE_BLOCKED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-predicate__blocked_predicate__owner_instantiated__conjunction_in_value_position": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_BLOCKED: Witness__holder__c: constraint profile blocked execution: block_non_predicate_root: and: block_non_predicate_root [model.sysml:6] (reason: constraint_profile_blocked)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_BLOCKED",
+       "reason": "SiteReason.CONSTRAINT_PROFILE_BLOCKED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-predicate__blocked_predicate__owner_instantiated__connective_in_value_position": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_BLOCKED: Witness__holder__c: constraint profile blocked execution: block_xor: xor: block_xor [model.sysml:6] (reason: constraint_profile_blocked)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_BLOCKED",
+       "reason": "SiteReason.CONSTRAINT_PROFILE_BLOCKED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-predicate__blocked_predicate__owner_instantiated__definition_without_predicate": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_BLOCKED: Witness__holder__c: constraint profile blocked execution: block_missing_predicate: missing_predicate: block_missing_predicate [model.sysml:8] (reason: constraint_profile_blocked)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_BLOCKED",
+       "reason": "SiteReason.CONSTRAINT_PROFILE_BLOCKED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-predicate__blocked_predicate__owner_instantiated__feature_chain_root": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_BLOCKED: Witness__holder__c: constraint profile blocked execution: block_feature_chain: feature chain 'sensor.ok' is not executable in a predicate body; bind it to a constraint formal in the usage (in ok = sensor.ok;) and use the formal in the predicate [model.sysml:5] (reason: constraint_profile_blocked)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_BLOCKED",
+       "reason": "SiteReason.CONSTRAINT_PROFILE_BLOCKED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-predicate__blocked_predicate__owner_instantiated__implies_with_comparisons": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_BLOCKED: Witness__holder__c: constraint profile blocked execution: block_non_numerical_containment: the numerical assertion contains a non-numerical implies and generation stops; separate it into its own assertion or rewrite it as a numerical comparison [model.sysml:5] (reason: constraint_profile_blocked)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_BLOCKED",
+       "reason": "SiteReason.CONSTRAINT_PROFILE_BLOCKED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-predicate__blocked_predicate__owner_instantiated__part_usage_owner": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_BLOCKED: fx__site__c: constraint profile blocked execution: block_non_numerical_containment: the numerical assertion contains a non-numerical feature_ref and generation stops; separate it into its own assertion or rewrite it as a numerical comparison [model.sysml:6] (reason: constraint_profile_blocked)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_BLOCKED",
+       "reason": "SiteReason.CONSTRAINT_PROFILE_BLOCKED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-predicate__blocked_predicate__owner_instantiated__real_equality": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_BLOCKED: Witness__holder__c: constraint profile blocked execution: block_real_equality_requires_tolerance: numerical equality has no tolerance semantics; rewrite it as a two-inequality tolerance band [model.sysml:5] (reason: constraint_profile_blocked)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_BLOCKED",
+       "reason": "SiteReason.CONSTRAINT_PROFILE_BLOCKED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-predicate__blocked_predicate__owner_instantiated__real_literal_root": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_BLOCKED: Witness__holder__c: constraint profile blocked execution: block_non_predicate_root: literal: block_non_predicate_root [model.sysml:4] (reason: constraint_profile_blocked)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_BLOCKED",
+       "reason": "SiteReason.CONSTRAINT_PROFILE_BLOCKED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-predicate__blocked_predicate__owner_instantiated__real_reference_root": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_BLOCKED: Witness__holder__c: constraint profile blocked execution: block_non_predicate_root: feature_ref: block_non_predicate_root [model.sysml:5] (reason: constraint_profile_blocked)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_BLOCKED",
+       "reason": "SiteReason.CONSTRAINT_PROFILE_BLOCKED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-predicate__blocked_predicate__owner_instantiated__subtype": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_BLOCKED: fx__big__c: constraint profile blocked execution: block_non_numerical_containment: the numerical assertion contains a non-numerical feature_ref and generation stops; separate it into its own assertion or rewrite it as a numerical comparison [model.sysml:6] (reason: constraint_profile_blocked)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_BLOCKED",
+       "reason": "SiteReason.CONSTRAINT_PROFILE_BLOCKED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-predicate__blocked_predicate__owner_instantiated__under_two": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_BLOCKED: fx__hall__sites[0]__c: constraint profile blocked execution: block_non_numerical_containment: the numerical assertion contains a non-numerical feature_ref and generation stops; separate it into its own assertion or rewrite it as a numerical comparison [model.sysml:6] (reason: constraint_profile_blocked); SI_CONSTRAINT_BLOCKED: fx__hall__sites[1]__c: constraint profile blocked execution: block_non_numerical_containment: the numerical assertion contains a non-numerical feature_ref and generation stops; separate it into its own assertion or rewrite it as a numerical comparison [model.sysml:6] (reason: constraint_profile_blocked)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_BLOCKED",
+       "reason": "SiteReason.CONSTRAINT_PROFILE_BLOCKED",
+       "source_file": null,
+       "source_line": null
+      },
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_BLOCKED",
+       "reason": "SiteReason.CONSTRAINT_PROFILE_BLOCKED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-predicate__blocked_predicate__owner_instantiated__unit_annotation_root": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_BLOCKED: Witness__holder__c: constraint profile blocked execution: block_non_predicate_root: unit_annotation: block_non_predicate_root [model.sysml:6] (reason: constraint_profile_blocked)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_BLOCKED",
+       "reason": "SiteReason.CONSTRAINT_PROFILE_BLOCKED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-predicate__blocked_predicate__owner_other": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_UNATTACHED: <model>: reference='fx::Site::t': constraint owner does not match a supported mapped metatype: fx::Site::t [root-0/model.sysml:7] (reason: elaboration_constraint_owner_unmapped)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_UNATTACHED",
+       "reason": "SiteReason.ELABORATION_CONSTRAINT_OWNER_UNMAPPED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 7
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-predicate__blocked_predicate__owner_package": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_BLOCKED: fx__c: constraint profile blocked execution: block_non_numerical_containment: the numerical assertion contains a non-numerical feature_ref and generation stops; separate it into its own assertion or rewrite it as a numerical comparison [model.sysml:5] (reason: constraint_profile_blocked)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_BLOCKED",
+       "reason": "SiteReason.CONSTRAINT_PROFILE_BLOCKED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-predicate__non_numerical_predicate__owner_other": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_CONSTRAINT_UNATTACHED: <model>: reference='fx::Site::t': constraint owner does not match a supported mapped metatype: fx::Site::t [root-0/model.sysml:7] (reason: elaboration_constraint_owner_unmapped)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_CONSTRAINT_UNATTACHED",
+       "reason": "SiteReason.ELABORATION_CONSTRAINT_OWNER_UNMAPPED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 7
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-typing__inherited_by_subsetting": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EDGE_DANGLING: <model>: constraint 'fx::Site::k2' exact definition association disagrees: live=None, profile=03c28d87-1589-5fa9-9e5d-4170a4523bc3 (reason: elaboration_constraint_definition_disagrees)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EDGE_DANGLING",
+       "reason": "SiteReason.ELABORATION_CONSTRAINT_DEFINITION_DISAGREES",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:constraint-typing__untyped_with_bound_input": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EDGE_DANGLING: <model>: bound input 5b5e86d3-e872-5dba-ad11-bf6d7e6829b9 has no selected definition (reason: elaboration_bound_input_definition_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EDGE_DANGLING",
+       "reason": "SiteReason.ELABORATION_BOUND_INPUT_DEFINITION_MISSING",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:deep-override__computed_target": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: OVERRIDE_TARGET_MISSING: fx__site: deep literal override does not target an attribute node [root-0/model.sysml:9] (reason: elaboration_deep_override_target_computed)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.OVERRIDE_TARGET_MISSING",
+       "reason": "SiteReason.ELABORATION_DEEP_OVERRIDE_TARGET_COMPUTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 9
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:deep-override__reference_part_target": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: OVERRIDE_TARGET_MISSING: fx__site: exact containment step FeatureSlotId(root_declaration=DeclarationId(value=UUID('3b04065f-14fb-536a-adda-7a0afef23472'))) has no concrete occurrence [root-0/model.sysml:9] (reason: elaboration_deep_override_target_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.OVERRIDE_TARGET_MISSING",
+       "reason": "SiteReason.ELABORATION_DEEP_OVERRIDE_TARGET_MISSING",
+       "source_file": "root-0/model.sysml",
+       "source_line": 9
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:deep-qualified-wiring__qualified_reference": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_OCCURRENCE_MISSING: fx__system__analyzer__consumer: reference='system::station::sensor::core::r': exact output b8d42569-442e-567c-84f1-59f7daf5bd1d has no producer in the consumer domain [root-0/model.sysml:11] (reason: elaboration_calculation_output_unproduced)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_OCCURRENCE_MISSING",
+       "reason": "SiteReason.ELABORATION_CALCULATION_OUTPUT_UNPRODUCED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 11
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:feature-type__quantity_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EDGE_DANGLING: <model>: feature 398e61eb-3b85-534e-bf6c-07c4186b45c6 has unsupported exact type 'ISQBase::MassValue' (reason: elaboration_feature_type_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EDGE_DANGLING",
+       "reason": "SiteReason.ELABORATION_FEATURE_TYPE_UNSUPPORTED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:feature-type__subsetting_without_typing": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EDGE_DANGLING: <model>: feature 7c0e343e-79c3-51d3-be45-c8e2c7899ed0 has 0 exact typings (reason: elaboration_feature_typing_count)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EDGE_DANGLING",
+       "reason": "SiteReason.ELABORATION_FEATURE_TYPING_COUNT",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:feature-type__untyped_attribute": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EDGE_DANGLING: <model>: feature 7c0e343e-79c3-51d3-be45-c8e2c7899ed0 has unsupported exact type 'ScalarValues::Rational' (reason: elaboration_feature_type_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EDGE_DANGLING",
+       "reason": "SiteReason.ELABORATION_FEATURE_TYPE_UNSUPPORTED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:indexed-reference__indexed_reference__attribute_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_INDEXED_SOURCE_UNSUPPORTED: qs#(1).v: reference='qs#(1).v': expression_evidence: indexed element reference is valid SysML but not implemented by this executable subset; the index is never flattened into a supported source [root-0/model.sysml:8] (reason: evidence_indexed_reference_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.EVIDENCE_INDEXED_REFERENCE_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 8
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:indexed-reference__indexed_reference__attribute_value__template": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_INDEXED_SOURCE_UNSUPPORTED: xs#(1): reference='xs#(1)': expression_evidence: indexed element reference is valid SysML but not implemented by this executable subset; the index is never flattened into a supported source [root-0/model.sysml:6] (reason: evidence_indexed_reference_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.EVIDENCE_INDEXED_REFERENCE_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:indexed-reference__indexed_reference__binding_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_INDEXED_SOURCE_UNSUPPORTED: qs#(1).v: reference='qs#(1).v': expression_evidence: indexed element reference is valid SysML but not implemented by this executable subset; the index is never flattened into a supported source [root-0/model.sysml:8] (reason: evidence_indexed_reference_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.EVIDENCE_INDEXED_REFERENCE_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 8
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:indexed-reference__indexed_reference__calc_definition_feature_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_INDEXED_SOURCE_UNSUPPORTED: xs#(1): reference='xs#(1)': expression_evidence: indexed element reference is valid SysML but not implemented by this executable subset; the index is never flattened into a supported source [root-0/model.sysml:3] (reason: evidence_indexed_reference_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.EVIDENCE_INDEXED_REFERENCE_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 3
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:indexed-reference__indexed_reference__calc_result_expression": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: <model>: reference='fx::First': Calc def 'First' extracted with zero output attributes. A pipeline module needs at least one output channel. Likely cause: the calc def declares no result — add one, e.g. 'out attribute y : Real = <expr>' or 'return y : Real = <expr>'. (An anonymous 'return' is reported separately.) [root-0/model.sysml:3] (reason: extraction_calc_def_no_output)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EXTRACTION_CALC_DEF_NO_OUTPUT",
+       "source_file": "root-0/model.sysml",
+       "source_line": 3
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:indexed-reference__indexed_reference__constraint_predicate": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_INDEXED_SOURCE_UNSUPPORTED: qs#(1).v: reference='qs#(1).v': expression_evidence: indexed element reference is valid SysML but not implemented by this executable subset; the index is never flattened into a supported source [root-0/model.sysml:8] (reason: evidence_indexed_reference_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.EVIDENCE_INDEXED_REFERENCE_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 8
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:invocation-callable__unsupported_callable__attribute_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EXPRESSION_SOURCE_UNSUPPORTED: NumericalFunctions::product((a, b)): reference='NumericalFunctions::product((a, b))': inspect_reference_uses: invocation of 'NumericalFunctions::product' is valid SysML but is not supported by this executable subset; only NumericalFunctions::sum is supported [root-0/model.sysml:6] (reason: evidence_expression_kind_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EXPRESSION_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.EVIDENCE_EXPRESSION_KIND_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:invocation-callable__unsupported_callable__attribute_value__max": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EXPRESSION_SOURCE_UNSUPPORTED: ScalarFunctions::max(a, b): reference='ScalarFunctions::max(a, b)': inspect_reference_uses: invocation of 'ScalarFunctions::max' is valid SysML but is not supported by this executable subset; only NumericalFunctions::sum is supported [root-0/model.sysml:6] (reason: evidence_expression_kind_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EXPRESSION_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.EVIDENCE_EXPRESSION_KIND_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:invocation-callable__unsupported_callable__attribute_value__redefined": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EXPRESSION_SOURCE_UNSUPPORTED: ScalarFunctions::max(a, 2.0): reference='ScalarFunctions::max(a, 2.0)': inspect_reference_uses: invocation of 'ScalarFunctions::max' is valid SysML but is not supported by this executable subset; only NumericalFunctions::sum is supported [root-0/model.sysml:4] (reason: evidence_expression_kind_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EXPRESSION_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.EVIDENCE_EXPRESSION_KIND_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 4
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:invocation-callable__unsupported_callable__attribute_value__size": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EXPRESSION_SOURCE_UNSUPPORTED: SequenceFunctions::size((a, b)): reference='SequenceFunctions::size((a, b))': inspect_reference_uses: invocation of 'SequenceFunctions::size' is valid SysML but is not supported by this executable subset; only NumericalFunctions::sum is supported [root-0/model.sysml:6] (reason: evidence_expression_kind_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EXPRESSION_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.EVIDENCE_EXPRESSION_KIND_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:invocation-callable__unsupported_callable__attribute_value__template": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EXPRESSION_SOURCE_UNSUPPORTED: ScalarFunctions::max(a, 2.0): reference='ScalarFunctions::max(a, 2.0)': inspect_reference_uses: invocation of 'ScalarFunctions::max' is valid SysML but is not supported by this executable subset; only NumericalFunctions::sum is supported [root-0/model.sysml:6] (reason: evidence_expression_kind_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EXPRESSION_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.EVIDENCE_EXPRESSION_KIND_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:invocation-callable__unsupported_callable__binding_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EXPRESSION_SOURCE_UNSUPPORTED: ScalarFunctions::max(a, b): reference='ScalarFunctions::max(a, b)': inspect_reference_uses: invocation of 'ScalarFunctions::max' is valid SysML but is not supported by this executable subset; only NumericalFunctions::sum is supported [root-0/model.sysml:7] (reason: evidence_expression_kind_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EXPRESSION_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.EVIDENCE_EXPRESSION_KIND_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 7
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:invocation-callable__unsupported_callable__calc_definition_feature_value": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EXPRESSION_SOURCE_UNSUPPORTED: ScalarFunctions::max(a, b): reference='ScalarFunctions::max(a, b)': inspect_reference_uses: invocation of 'ScalarFunctions::max' is valid SysML but is not supported by this executable subset; only NumericalFunctions::sum is supported [root-0/model.sysml:3] (reason: evidence_expression_kind_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EXPRESSION_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.EVIDENCE_EXPRESSION_KIND_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 3
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:invocation-callable__unsupported_callable__calc_result_expression": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: <model>: reference='fx::Big': Calc def 'Big' extracted with zero output attributes. A pipeline module needs at least one output channel. Likely cause: the calc def declares no result — add one, e.g. 'out attribute y : Real = <expr>' or 'return y : Real = <expr>'. (An anonymous 'return' is reported separately.) [root-0/model.sysml:3] (reason: extraction_calc_def_no_output)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EVIDENCE_INCOMPLETE",
+       "reason": "SiteReason.EXTRACTION_CALC_DEF_NO_OUTPUT",
+       "source_file": "root-0/model.sysml",
+       "source_line": 3
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:invocation-callable__unsupported_callable__constraint_predicate": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EXPRESSION_SOURCE_UNSUPPORTED: ScalarFunctions::max(a, b): reference='ScalarFunctions::max(a, b)': inspect_reference_uses: invocation of 'ScalarFunctions::max' is valid SysML but is not supported by this executable subset; only NumericalFunctions::sum is supported [root-0/model.sysml:6] (reason: evidence_expression_kind_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EXPRESSION_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.EVIDENCE_EXPRESSION_KIND_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:invocation-callable__unsupported_callable__constraint_predicate__predicate_root": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EXPRESSION_SOURCE_UNSUPPORTED: Check(x): reference='Check(x)': inspect_reference_uses: invocation of 'Witness::Check' is valid SysML but is not supported by this executable subset; only NumericalFunctions::sum is supported [root-0/model.sysml:6] (reason: evidence_expression_kind_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EXPRESSION_SOURCE_UNSUPPORTED",
+       "reason": "SiteReason.EVIDENCE_EXPRESSION_KIND_UNSUPPORTED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:literal-binding__null": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EDGE_DANGLING: <model>: authored literal binding 'fx::Site::c::x' reached wiring with no literal value (reason: elaboration_literal_binding_empty)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EDGE_DANGLING",
+       "reason": "SiteReason.ELABORATION_LITERAL_BINDING_EMPTY",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:literal-binding__unbounded": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EDGE_DANGLING: <model>: authored literal binding 'fx::Site::c::x' reached wiring with no literal value (reason: elaboration_literal_binding_empty)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EDGE_DANGLING",
+       "reason": "SiteReason.ELABORATION_LITERAL_BINDING_EMPTY",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:multiple-redefinition__unrelated_roots": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_REDEFINITION_INVALID: <model>: reference='fx::B::x': redefinition declaration fx::B::x has unrelated roots: fx::A::a, fx::A::b [root-0/model.sysml:5] (reason: occurrence_redefinition_roots_unrelated)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_REDEFINITION_INVALID",
+       "reason": "SiteReason.OCCURRENCE_REDEFINITION_ROOTS_UNRELATED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:output-naming__channel_name_collision": [
+   {
+    "constraint_name_safety": null,
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Code generation failed: exact graph projection failed: SI_RENDERING_COLLISION: distinct semantic outputs 'fx__site__a' and 'fx__site__a' render as public channel 'fx__site__a__r_x': reference='fx__site__a' [root-0/model.sysml:3]",
+    "refusal": {
+     "items": [
+      {
+       "code": "GenerationCode.PROJECTION_FAILED",
+       "reason": null,
+       "source_file": null,
+       "source_line": null
+      },
+      {
+       "code": "ElaborationCode.SI_RENDERING_COLLISION",
+       "reason": "SiteReason.PROJECTION_CHANNEL_NAME_COLLISION",
+       "source_file": "root-0/model.sysml",
+       "source_line": 3
+      }
+     ],
+     "kind": "RefusalKind.GENERATION"
+    }
+   }
+  ],
+  "case:output-naming__entry_point_metadata_conflict": [
+   {
+    "constraint_name_safety": null,
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Code generation failed: exact graph projection failed: SI_RENDERING_COLLISION: entry point 'fx__site__n' has conflicting projected metadata: reference='fx__site__n' [root-0/model.sysml:6]",
+    "refusal": {
+     "items": [
+      {
+       "code": "GenerationCode.PROJECTION_FAILED",
+       "reason": null,
+       "source_file": null,
+       "source_line": null
+      },
+      {
+       "code": "ElaborationCode.SI_RENDERING_COLLISION",
+       "reason": "SiteReason.PROJECTION_ENTRY_POINT_METADATA_CONFLICT",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.GENERATION"
+    }
+   }
+  ],
+  "case:output-naming__entry_point_name_collision": [
+   {
+    "constraint_name_safety": null,
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Code generation failed: exact graph projection failed: SI_RENDERING_COLLISION: distinct semantic sources render as entry point 'fx__site__a_b': reference='fx__site__a_b' [root-0/model.sysml:5]",
+    "refusal": {
+     "items": [
+      {
+       "code": "GenerationCode.PROJECTION_FAILED",
+       "reason": null,
+       "source_file": null,
+       "source_line": null
+      },
+      {
+       "code": "ElaborationCode.SI_RENDERING_COLLISION",
+       "reason": "SiteReason.PROJECTION_ENTRY_POINT_NAME_COLLISION",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.GENERATION"
+    }
+   }
+  ],
+  "case:output-naming__expression_parameter_collision": [
+   {
+    "constraint_name_safety": null,
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Code generation failed: exact graph projection failed: SI_RENDERING_COLLISION: distinct expression sources on 'fx__site__t' render as parameter 'a_b': reference='fx__site__t' [root-0/model.sysml:6]",
+    "refusal": {
+     "items": [
+      {
+       "code": "GenerationCode.PROJECTION_FAILED",
+       "reason": null,
+       "source_file": null,
+       "source_line": null
+      },
+      {
+       "code": "ElaborationCode.SI_RENDERING_COLLISION",
+       "reason": "SiteReason.PROJECTION_EXPRESSION_PARAMETER_COLLISION",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.GENERATION"
+    }
+   }
+  ],
+  "case:output-naming__module_name_collision": [
+   {
+    "constraint_name_safety": null,
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Code generation failed: exact graph projection failed: SI_RENDERING_COLLISION: distinct semantic modules 'fx__site__t_a' and 'fx__site__T_a' render as public name 'fx__site__t_a': reference='fx__site__t_a' [root-0/model.sysml:3]",
+    "refusal": {
+     "items": [
+      {
+       "code": "GenerationCode.PROJECTION_FAILED",
+       "reason": null,
+       "source_file": null,
+       "source_line": null
+      },
+      {
+       "code": "ElaborationCode.SI_RENDERING_COLLISION",
+       "reason": "SiteReason.PROJECTION_MODULE_NAME_COLLISION",
+       "source_file": "root-0/model.sysml",
+       "source_line": 3
+      }
+     ],
+     "kind": "RefusalKind.GENERATION"
+    }
+   }
+  ],
+  "case:output-naming__module_path_collision": [
+   {
+    "constraint_name_safety": null,
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Code generation failed: DUPLICATE_OUTPUT_PATH: SysML names \"fx::'Twice-x'\" and 'fx::Twice_x' both derive modules/fx/twice_x.py. Rename one, or this would silently overwrite. source='root-0/model.sysml:4'",
+    "refusal": {
+     "items": [
+      {
+       "code": "GenerationCode.DUPLICATE_OUTPUT_PATH",
+       "reason": "SiteReason.GENERATION_MODULE_PATH_COLLISION",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.GENERATION"
+    }
+   }
+  ],
+  "case:output-naming__output_alias_collision": [
+   {
+    "constraint_name_safety": null,
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Code generation failed: exact graph projection failed: SI_RENDERING_COLLISION: distinct aliases render as 'site'/'out_x': reference='fx__site__out_x' [root-0/model.sysml:9]",
+    "refusal": {
+     "items": [
+      {
+       "code": "GenerationCode.PROJECTION_FAILED",
+       "reason": null,
+       "source_file": null,
+       "source_line": null
+      },
+      {
+       "code": "ElaborationCode.SI_RENDERING_COLLISION",
+       "reason": "SiteReason.PROJECTION_OUTPUT_ALIAS_COLLISION",
+       "source_file": "root-0/model.sysml",
+       "source_line": 9
+      }
+     ],
+     "kind": "RefusalKind.GENERATION"
+    }
+   }
+  ],
+  "case:output-naming__package_scoped_group_in_model_file": [
+   {
+    "constraint_name_safety": null,
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Code generation failed: exact graph projection failed: SI_RENDERING_COLLISION: package-scoped 'fx__a' in a model.sysml has no root occurrence to take a parameter-group identity from: reference='fx__a' [root-0/model.sysml:4]",
+    "refusal": {
+     "items": [
+      {
+       "code": "GenerationCode.PROJECTION_FAILED",
+       "reason": null,
+       "source_file": null,
+       "source_line": null
+      },
+      {
+       "code": "ElaborationCode.SI_RENDERING_COLLISION",
+       "reason": "SiteReason.PROJECTION_GROUP_PACKAGE_UNNAMED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 4
+      }
+     ],
+     "kind": "RefusalKind.GENERATION"
+    }
+   }
+  ],
+  "case:output-naming__param_field_collision": [
+   {
+    "constraint_name_safety": null,
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Code generation failed: PARAM_FIELD_COLLISION: parameter group 'fx_params': keys 'fx__site__caster[0]__load' and 'fx__site__caster_0__load' both render as the schema field 'fx__site__caster_0__load' — rename one in the model",
+    "refusal": {
+     "items": [
+      {
+       "code": "GenerationCode.PARAM_FIELD_COLLISION",
+       "reason": "SiteReason.GENERATION_PARAM_FIELD_COLLISION",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.GENERATION"
+    }
+   }
+  ],
+  "case:output-naming__parameter_name_collision": [
+   {
+    "constraint_name_safety": null,
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Code generation failed: exact graph projection failed: SI_RENDERING_COLLISION: distinct inputs on 'fx__site__c' render to one parameter name: reference='fx__site__c' [root-0/model.sysml:3]",
+    "refusal": {
+     "items": [
+      {
+       "code": "GenerationCode.PROJECTION_FAILED",
+       "reason": null,
+       "source_file": null,
+       "source_line": null
+      },
+      {
+       "code": "ElaborationCode.SI_RENDERING_COLLISION",
+       "reason": "SiteReason.PROJECTION_PARAMETER_NAME_COLLISION",
+       "source_file": "root-0/model.sysml",
+       "source_line": 3
+      }
+     ],
+     "kind": "RefusalKind.GENERATION"
+    }
+   }
+  ],
+  "case:output-naming__registry_class_collision": [
+   {
+    "constraint_name_safety": null,
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Code generation failed: REGISTRY_CLASS_NAME_COLLISION: module class name collision survives aliasing (grandparent collision): 'Site_tModule' <- ['fx.a.site.tModule', 'fx.b.site.tModule']. The parent-segment alias cannot disambiguate these; rename one scope.",
+    "refusal": {
+     "items": [
+      {
+       "code": "GenerationCode.REGISTRY_CLASS_NAME_COLLISION",
+       "reason": "SiteReason.GENERATION_REGISTRY_CLASS_NAME_COLLISION",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.GENERATION"
+    }
+   }
+  ],
+  "case:output-naming__schema_path_collision": [
+   {
+    "constraint_name_safety": null,
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Code generation failed: DUPLICATE_OUTPUT_PATH: SysML names 'fx::Split' and 'gx::Split' both derive schemas/split_output.py. Rename one, or this would silently overwrite. source='root-0/b.sysml:3'",
+    "refusal": {
+     "items": [
+      {
+       "code": "GenerationCode.DUPLICATE_OUTPUT_PATH",
+       "reason": "SiteReason.GENERATION_SCHEMA_PATH_COLLISION",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.GENERATION"
+    }
+   }
+  ],
+  "case:part-multiplicity__ordered__expanded_part_usage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_UNSUPPORTED: <model>: reference='fx::Rack::servers': ordered multiplicity on 'servers' is outside the supported occurrence model [root-0/model.sysml:5] (reason: occurrence_multiplicity_ordered)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED",
+       "reason": "SiteReason.OCCURRENCE_MULTIPLICITY_ORDERED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:part-multiplicity__ordered__expanded_part_usage__under_two": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_UNSUPPORTED: <model>: reference='fx::Rack::servers': ordered multiplicity on 'servers' is outside the supported occurrence model [root-0/model.sysml:5] (reason: occurrence_multiplicity_ordered)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED",
+       "reason": "SiteReason.OCCURRENCE_MULTIPLICITY_ORDERED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:part-multiplicity__range__expanded_part_usage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_UNSUPPORTED: <model>: reference='fx::Rack::servers': range multiplicity on 'servers' is outside the supported occurrence model [root-0/model.sysml:5] (reason: occurrence_multiplicity_range)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED",
+       "reason": "SiteReason.OCCURRENCE_MULTIPLICITY_RANGE",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:part-multiplicity__range__expanded_part_usage__depth_two": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_UNSUPPORTED: <model>: reference='fx::Rack::servers': range multiplicity on 'servers' is outside the supported occurrence model [root-0/model.sysml:5] (reason: occurrence_multiplicity_range)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED",
+       "reason": "SiteReason.OCCURRENCE_MULTIPLICITY_RANGE",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:part-multiplicity__range__expanded_part_usage__root": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_UNSUPPORTED: <model>: reference='fx::servers': range multiplicity on 'servers' is outside the supported occurrence model [root-0/model.sysml:5] (reason: occurrence_multiplicity_range)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED",
+       "reason": "SiteReason.OCCURRENCE_MULTIPLICITY_RANGE",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:part-multiplicity__range__expanded_part_usage__subtype": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_UNSUPPORTED: <model>: reference='fx::Rack::servers': range multiplicity on 'servers' is outside the supported occurrence model [root-0/model.sysml:5] (reason: occurrence_multiplicity_range)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED",
+       "reason": "SiteReason.OCCURRENCE_MULTIPLICITY_RANGE",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:part-multiplicity__range__expanded_part_usage__under_two": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_UNSUPPORTED: <model>: reference='fx::Rack::servers': range multiplicity on 'servers' is outside the supported occurrence model [root-0/model.sysml:5] (reason: occurrence_multiplicity_range)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED",
+       "reason": "SiteReason.OCCURRENCE_MULTIPLICITY_RANGE",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:part-multiplicity__unresolved_bound__expanded_part_usage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_UNRESOLVED: <model>: reference='fx::Rack::servers': upper multiplicity on 'servers' is not a known finite integer [root-0/model.sysml:5] (reason: occurrence_multiplicity_upper_unresolved)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_MULTIPLICITY_UNRESOLVED",
+       "reason": "SiteReason.OCCURRENCE_MULTIPLICITY_UPPER_UNRESOLVED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:part-multiplicity__unresolved_bound__expanded_part_usage__lower": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_UNRESOLVED: <model>: reference='n': lower multiplicity on 'cells' is not a known finite integer [root-0/model.sysml:8] (reason: occurrence_multiplicity_lower_unresolved)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_MULTIPLICITY_UNRESOLVED",
+       "reason": "SiteReason.OCCURRENCE_MULTIPLICITY_LOWER_UNRESOLVED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 8
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:part-multiplicity__unresolved_bound__expanded_part_usage__referenced": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_UNRESOLVED: <model>: reference='n': upper multiplicity on 'servers' is not a known finite integer [root-0/model.sysml:5] (reason: occurrence_multiplicity_upper_unresolved)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_MULTIPLICITY_UNRESOLVED",
+       "reason": "SiteReason.OCCURRENCE_MULTIPLICITY_UPPER_UNRESOLVED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:part-multiplicity__unresolved_bound__expanded_part_usage__under_two": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_UNRESOLVED: <model>: reference='fx::Rack::servers': upper multiplicity on 'servers' is not a known finite integer [root-0/model.sysml:5] (reason: occurrence_multiplicity_upper_unresolved)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_MULTIPLICITY_UNRESOLVED",
+       "reason": "SiteReason.OCCURRENCE_MULTIPLICITY_UPPER_UNRESOLVED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:part-typing__two_definitions": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_REDEFINITION_INVALID: <model>: reference='fx::p': part usage fx::p has incomparable exact user-definition typings [root-0/model.sysml:6] (reason: occurrence_part_typing_ambiguous)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_REDEFINITION_INVALID",
+       "reason": "SiteReason.OCCURRENCE_PART_TYPING_AMBIGUOUS",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:push-down-sum-shape__sequence_argument": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_EDGE_DANGLING: fx__site__t: computed calculation contains unsupported typed IR (reason: graph_computed_ir_unsupported)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_EDGE_DANGLING",
+       "reason": "SiteReason.GRAPH_COMPUTED_IR_UNSUPPORTED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:push-down-sum-shape__zero_arguments": [
+   {
+    "constraint_name_safety": null,
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Code generation failed: exact graph projection failed: SI_SNAPSHOT_INVALID: sum on 'fx__site__t' must have one argument",
+    "refusal": {
+     "items": [
+      {
+       "code": "GenerationCode.PROJECTION_FAILED",
+       "reason": null,
+       "source_file": null,
+       "source_line": null
+      },
+      {
+       "code": "ElaborationCode.SI_SNAPSHOT_INVALID",
+       "reason": "SiteReason.PROJECTION_SUM_ARGUMENT_COUNT",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.GENERATION"
+    }
+   }
+  ],
+  "case:reference-anchor__definition_not_in_lineage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_OCCURRENCE_MISSING: fx__b__t: reference='A::r': consumer domain has no part_definition anchor ddd40391-0c11-540f-9865-f3987b77f906 [root-0/model.sysml:5] (reason: occurrence_anchor_scope_missing)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_OCCURRENCE_MISSING",
+       "reason": "SiteReason.OCCURRENCE_ANCHOR_SCOPE_MISSING",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:reference-anchor__definition_twice_in_lineage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_OCCURRENCE_AMBIGUOUS: fx__site__inner__t: reference='r': consumer domain has 2 concrete scopes for definition ddd40391-0c11-540f-9865-f3987b77f906 [root-0/model.sysml:6] (reason: occurrence_anchor_definition_ambiguous)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_OCCURRENCE_AMBIGUOUS",
+       "reason": "SiteReason.OCCURRENCE_ANCHOR_DEFINITION_AMBIGUOUS",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:reference-leaf__library_constant": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_OCCURRENCE_MISSING: fx__site__t: reference='pi': leaf declaration bbf4d7c3-c4e8-5206-9237-31f48b21bf92 is absent from the element index [root-0/model.sysml:5] (reason: elaboration_reference_leaf_unindexed)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_OCCURRENCE_MISSING",
+       "reason": "SiteReason.ELABORATION_REFERENCE_LEAF_UNINDEXED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:reference-leaf__library_constant_alias": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_OCCURRENCE_MISSING: fx__site__t: reference='pi': leaf declaration bbf4d7c3-c4e8-5206-9237-31f48b21bf92 is absent from the element index [root-0/model.sysml:5] (reason: elaboration_reference_leaf_unindexed)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_OCCURRENCE_MISSING",
+       "reason": "SiteReason.ELABORATION_REFERENCE_LEAF_UNINDEXED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:scalar-reference__multi_occurrence_part": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_OCCURRENCE_AMBIGUOUS: fx__site__t: reference='w.r': exact containment step FeatureSlotId(root_declaration=DeclarationId(value=UUID('3b04065f-14fb-536a-adda-7a0afef23472'))) has 2 concrete occurrences [root-0/model.sysml:7] (reason: occurrence_containment_step_ambiguous)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_OCCURRENCE_AMBIGUOUS",
+       "reason": "SiteReason.OCCURRENCE_CONTAINMENT_STEP_AMBIGUOUS",
+       "source_file": "root-0/model.sysml",
+       "source_line": 7
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "destination_link:output-naming__param_field_collision": [
+   {
+    "constraint_name_safety": null,
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Code generation failed: PARAM_FIELD_COLLISION: parameter group 'fx_params': keys 'fx__site__caster[0]__load' and 'fx__site__caster_0__load' both render as the schema field 'fx__site__caster_0__load' — rename one in the model",
+    "refusal": {
+     "items": [
+      {
+       "code": "GenerationCode.PARAM_FIELD_COLLISION",
+       "reason": "SiteReason.GENERATION_PARAM_FIELD_COLLISION",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.GENERATION"
+    }
+   }
+  ],
+  "writer_failure:CodeGenerationError": [
+   {
+    "constraint_name_safety": null,
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Code generation failed: probe: the pipeline writer refused",
+    "refusal": {
+     "items": [
+      {
+       "code": "GenerationCode.MODULE_KIND_UNRENDERABLE",
+       "reason": null,
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.GENERATION"
+    }
+   }
+  ],
+  "writer_failure:OSError": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Writing the generated package failed: probe: the disk refused the write",
+    "refusal": {
+     "items": [],
+     "kind": "RefusalKind.PACKAGE_WRITE"
+    }
+   }
+  ],
+  "writer_failure:RuntimeError": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Code generation failed: SI_INTERNAL_DEFECT: <internal defect>: unexpected internal failure: RuntimeError: probe: an unclassified writer failure (reason: internal_failure_unclassified)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_INTERNAL_DEFECT",
+       "reason": "SiteReason.INTERNAL_FAILURE_UNCLASSIFIED",
+       "source_file": null,
+       "source_line": null
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ]
+ },
+ "schema": "refusal-records/1"
+}

@@ -33,14 +33,10 @@ import json
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import NoReturn
+from typing import TYPE_CHECKING, NoReturn
 
-from sysml_codegen.core.errors import CodeGenerationError, GenerationCode, SysMLParsingError
-from sysml_codegen.elaboration.elaborate import (
-    ElaborationDiagnosticError,
-    ElaborationError,
-    unexpected_public_failure,
-)
+from sysml_codegen.core.errors import CodeGenerationError, GenerationCode
+from sysml_codegen.elaboration.elaborate import relay_public_failures
 from sysml_codegen.elaboration.graph import GraphValidationError, InstanceGraph
 from sysml_codegen.elaboration.project import PROJECTOR_SEMANTICS, ProjectionError, project
 from sysml_codegen.resolution.models import ComputationGraph
@@ -50,9 +46,13 @@ from sysml_codegen.snapshot.instance_graph import (
     encode_instance_graph,
 )
 
+if TYPE_CHECKING:
+    from sysml_codegen.orchestration.elaborated_pipeline import LiveLoad
+
 __all__ = [
     "ExactPipelineContext",
     "build_exact_pipeline_context",
+    "build_exact_pipeline_context_from_live_load",
     "build_exact_pipeline_context_from_snapshot",
 ]
 
@@ -294,20 +294,26 @@ def build_exact_pipeline_context(
     from sysml_codegen.orchestration.elaborated_pipeline import elaborate_model_paths
 
     canonical_targets = _canonical_targets(targets)
-    try:
+    with relay_public_failures():
         return _seal(elaborate_model_paths(list(model_paths)), canonical_targets)
-    except (
-        CodeGenerationError,
-        ElaborationDiagnosticError,
-        ElaborationError,
-        SysMLParsingError,
-    ):
-        # Every formed public refusal passes through as itself. A parse failure
-        # that lost its way here was reported as an internal defect at a made-up
-        # line; the sibling tuple in ``elaborated_pipeline`` always had it.
-        raise
-    except Exception as error:
-        raise unexpected_public_failure(error) from error
+
+
+def build_exact_pipeline_context_from_live_load(
+    loaded: LiveLoad,
+    *,
+    targets: Sequence[str] | None = None,
+) -> ExactPipelineContext:
+    """Elaborate an already-loaded live model set, then seal the projection into a context.
+
+    The same construction as ``build_exact_pipeline_context`` minus the load, for a caller
+    that already holds the load (``cli/prepare.py``). The elaborator is looked up on its
+    module at call time.
+    """
+    from sysml_codegen.orchestration import elaborated_pipeline
+
+    canonical_targets = _canonical_targets(targets)
+    with relay_public_failures():
+        return _seal(elaborated_pipeline.elaborate_live_load(loaded), canonical_targets)
 
 
 def build_exact_pipeline_context_from_snapshot(
@@ -328,16 +334,6 @@ def build_exact_pipeline_context_from_snapshot(
     )
 
     canonical_targets = _canonical_targets(targets)
-    try:
+    with relay_public_failures(InstanceGraphSnapshotError):
         graph = load_instance_graph_snapshot(snapshot_path, source_roots=source_roots)
         return _seal(graph, canonical_targets)
-    except (
-        CodeGenerationError,
-        ElaborationDiagnosticError,
-        ElaborationError,
-        InstanceGraphSnapshotError,
-        SysMLParsingError,
-    ):
-        raise
-    except Exception as error:
-        raise unexpected_public_failure(error) from error

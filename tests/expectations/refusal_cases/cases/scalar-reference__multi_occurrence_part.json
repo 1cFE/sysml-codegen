@@ -1,0 +1,23 @@
+{
+  "id": "scalar-reference__multi_occurrence_part",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      7
+    ],
+    "description": "a scalar arithmetic read of `w.r` where part w has multiplicity [2]"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_OCCURRENCE_AMBIGUOUS"
+    ],
+    "reasons": [
+      "occurrence_containment_step_ambiguous"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/occurrence.py::OccurrenceIndex.resolve_address::coded::SI_OCCURRENCE_AMBIGUOUS::2"
+    ]
+  }
+}

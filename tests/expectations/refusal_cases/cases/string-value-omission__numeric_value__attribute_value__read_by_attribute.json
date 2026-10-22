@@ -1,0 +1,43 @@
+{
+  "id": "string-value-omission__numeric_value__attribute_value__read_by_attribute",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "numeric label valued by reading fuel (control for the String read-by-attribute cases)"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "attr_value",
+        "declaration": "fx::Gen::fuel",
+        "expect": [
+          {
+            "value": 1.5,
+            "value_site": "definition_default"
+          }
+        ]
+      },
+      {
+        "kind": "attr_value",
+        "declaration": "fx::Gen::label",
+        "expect": [
+          {
+            "value": null,
+            "value_site": "definition_default"
+          }
+        ]
+      },
+      {
+        "kind": "entry_point",
+        "declaration": "fx::Gen::label",
+        "expect": []
+      }
+    ]
+  }
+}

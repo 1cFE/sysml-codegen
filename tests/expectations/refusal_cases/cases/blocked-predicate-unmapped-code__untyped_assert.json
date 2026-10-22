@@ -1,0 +1,23 @@
+{
+  "id": "blocked-predicate-unmapped-code__untyped_assert",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "assert constraint bare, untyped and with no predicate"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EDGE_DANGLING"
+    ],
+    "reasons": [
+      "elaboration_constraint_definition_unindexed"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._index_constraint_associations::coded::SI_EDGE_DANGLING::6"
+    ]
+  }
+}

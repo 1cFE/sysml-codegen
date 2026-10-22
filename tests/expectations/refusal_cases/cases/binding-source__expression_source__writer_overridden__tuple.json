@@ -1,0 +1,26 @@
+{
+  "id": "binding-source__expression_source__writer_overridden__tuple",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "Base::t binds xs to (a, b) and Derived redefines t in d1"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "stubs": [
+      {
+        "output": "fx::Total2::r",
+        "reason": "compile_invocation"
+      },
+      {
+        "output": "fx::Total::r",
+        "reason": "compile_invocation"
+      }
+    ]
+  }
+}

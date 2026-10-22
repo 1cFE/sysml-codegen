@@ -1,0 +1,23 @@
+{
+  "id": "invocation-callable__unsupported_callable__constraint_predicate__predicate_root",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "Holder::c asserts a call to calc def Check as the whole predicate"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EXPRESSION_SOURCE_UNSUPPORTED"
+    ],
+    "reasons": [
+      "evidence_expression_kind_unsupported"
+    ],
+    "witnesses": [
+      "agentic_mbse/sysml/reference_use.py::_require_supported_invocation::shared-evidence::EXPRESSION_KIND_UNSUPPORTED::1"
+    ]
+  }
+}

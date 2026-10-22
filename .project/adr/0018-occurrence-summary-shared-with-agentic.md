@@ -3,9 +3,9 @@ id: 0018
 title: Occurrence summary has a second reviewed owner in agentic-mbse, held by a parity test
 date: 2026-10-18
 owner: Reid Westwood
-status: active
+status: superseded
 amended_by: []
-superseded_by: null
+superseded_by: 0019
 provenance: "[AGENT] (ratified by owner, 2026-10-18)"
 seams: [elaboration, agentic-mbse]
 supersedes: null

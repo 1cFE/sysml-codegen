@@ -1,0 +1,24 @@
+{
+  "id": "candidate-es-010-refusal__string_usage_literal__binding_value",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      4
+    ],
+    "description": "calc usage t binds its String input u to the literal \"liter\" (the usage-literal entry path)"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "PROJECTION_FAILED",
+      "SI_RENDERING_COLLISION"
+    ],
+    "reasons": [
+      "projection_default_non_numeric"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/project.py::_float_default::coded::SI_RENDERING_COLLISION::1"
+    ]
+  }
+}

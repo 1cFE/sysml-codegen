@@ -1,0 +1,23 @@
+{
+  "id": "anonymous-declaration__part_usage",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "an anonymous part usage `part : Rack;`"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_ID_UNSTABLE"
+    ],
+    "reasons": [
+      "identity_qualified_name_missing"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/identity.py::declaration_id_for::coded-fixed::SI_ID_MISSING|SI_ID_UNSTABLE::1"
+    ]
+  }
+}

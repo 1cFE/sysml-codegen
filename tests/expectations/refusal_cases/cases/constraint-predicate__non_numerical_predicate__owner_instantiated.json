@@ -1,0 +1,34 @@
+{
+  "id": "constraint-predicate__non_numerical_predicate__owner_instantiated",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      7
+    ],
+    "description": "asserted Boolean predicate enabled (NON_NUMERICAL) in instantiated Site; numeric sibling calc t"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "witnesses": [
+      "agentic_mbse/sysml/executable_profile.py::_walk_proposition::shared-profile::warn_non_numerical_predicate::1"
+    ],
+    "seams": [
+      {
+        "kind": "catalog_usage",
+        "declaration": "fx::Site::c",
+        "expect": {
+          "kind": "excluded",
+          "reason": "non_numerical"
+        }
+      }
+    ]
+  },
+  "loss": {
+    "family": "es-007-non-numerical",
+    "disposition": "accepted_omission",
+    "control": "constraint-predicate__numeric_and__owner_instantiated"
+  }
+}

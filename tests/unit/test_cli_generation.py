@@ -1,6 +1,5 @@
 """Unit tests for CLI generation helpers (Bug 7)."""
 
-import os
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -13,20 +12,12 @@ from agentic_mbse.sysml.expression_ir import (
     serialize_expression,
 )
 
-from sysml_codegen.cli import (
-    GenerationConfig,
-    _generate_backlog,
-    _generate_entry_points,
-    _generate_modules,
-    _generate_package_from_graph,
-    _generate_pipeline,
-    _generate_registry,
-    _generate_schemas,
-    _generate_stencils,
-    _generate_tests,
-    _get_template_env,
-    _seal_package,
-    run_codegen,
+from sysml_codegen.cli import GenerationConfig, run_codegen
+from sysml_codegen.cli.prepare import (
+    PreparationStep,
+    Refused,
+    log_refused,
+    prepare_graph,
 )
 from sysml_codegen.cli.refusal import Refusal, RefusalItem, RefusalKind
 from sysml_codegen.core.errors import GenerationCode
@@ -56,7 +47,7 @@ class TestEnsurePackageInitFiles:
     """Bug 7: Intermediate __init__.py creation."""
 
     def test_creates_init_files_in_all_intermediate_dirs(self, tmp_path):
-        from sysml_codegen.cli import _ensure_package_init_files
+        from sysml_codegen.cli.emit import _ensure_package_init_files
 
         (tmp_path / "a" / "b" / "c").mkdir(parents=True)
         _ensure_package_init_files(tmp_path, "a/b/c")
@@ -65,7 +56,7 @@ class TestEnsurePackageInitFiles:
         assert (tmp_path / "a" / "b" / "c" / "__init__.py").exists()
 
     def test_does_not_overwrite_existing_init(self, tmp_path):
-        from sysml_codegen.cli import _ensure_package_init_files
+        from sysml_codegen.cli.emit import _ensure_package_init_files
 
         (tmp_path / "a").mkdir()
         (tmp_path / "a" / "__init__.py").write_text("# custom\n")
@@ -73,14 +64,14 @@ class TestEnsurePackageInitFiles:
         assert (tmp_path / "a" / "__init__.py").read_text() == "# custom\n"
 
     def test_uses_custom_docstring(self, tmp_path):
-        from sysml_codegen.cli import _ensure_package_init_files
+        from sysml_codegen.cli.emit import _ensure_package_init_files
 
         (tmp_path / "x").mkdir()
         _ensure_package_init_files(tmp_path, "x", '"""Custom."""\n')
         assert (tmp_path / "x" / "__init__.py").read_text() == '"""Custom."""\n'
 
     def test_single_dir(self, tmp_path):
-        from sysml_codegen.cli import _ensure_package_init_files
+        from sysml_codegen.cli.emit import _ensure_package_init_files
 
         (tmp_path / "pkg").mkdir()
         _ensure_package_init_files(tmp_path, "pkg")
@@ -91,7 +82,8 @@ class TestSetupOutputDirectories:
     """Bug 7 broader scope: top-level subdirectory __init__.py creation."""
 
     def test_creates_init_py_in_all_subdirectories(self, tmp_path):
-        from sysml_codegen.cli import GenerationConfig, _setup_output_directories
+        from sysml_codegen.cli import GenerationConfig
+        from sysml_codegen.cli.emit import _setup_output_directories
 
         output = tmp_path / "pkg"
         config = GenerationConfig(
@@ -108,7 +100,8 @@ class TestSetupOutputDirectories:
             assert init_file.read_text() == '"""Generated package."""\n'
 
     def test_does_not_create_init_py_in_output_path(self, tmp_path):
-        from sysml_codegen.cli import GenerationConfig, _setup_output_directories
+        from sysml_codegen.cli import GenerationConfig
+        from sysml_codegen.cli.emit import _setup_output_directories
 
         output = tmp_path / "pkg"
         config = GenerationConfig(
@@ -121,7 +114,8 @@ class TestSetupOutputDirectories:
         assert not (output / "__init__.py").exists()
 
     def test_does_not_overwrite_existing_init_py(self, tmp_path):
-        from sysml_codegen.cli import GenerationConfig, _setup_output_directories
+        from sysml_codegen.cli import GenerationConfig
+        from sysml_codegen.cli.emit import _setup_output_directories
 
         output = tmp_path / "pkg"
         (output / "schemas").mkdir(parents=True)
@@ -176,19 +170,6 @@ def _colliding_context():
         modules=[], entry_point_groups=[], execution_order=[], constraint_catalog=catalog
     )
     return graph
-
-
-def _complete_tree_manifest(root: Path):
-    records = []
-    for path in sorted(root.rglob("*")):
-        relative = path.relative_to(root).as_posix()
-        if path.is_symlink():
-            records.append((relative, "symlink", os.readlink(path)))
-        elif path.is_dir():
-            records.append((relative, "directory", None))
-        else:
-            records.append((relative, "file", path.read_bytes()))
-    return records
 
 
 def _unsafe_name_context(name: str = "value"):
@@ -268,130 +249,56 @@ def _missing_catalog_context():
     return _unsafe_name_context("safe_name").model_copy(update={"constraint_catalog": None})
 
 
-GRAPH_AWARE_WRITERS = (
-    _generate_schemas,
-    _generate_modules,
-    _generate_stencils,
-    _generate_pipeline,
-    _generate_registry,
-    _generate_entry_points,
-    _generate_backlog,
-    _generate_tests,
-    _seal_package,
-)
-
-
-@pytest.mark.parametrize("writer", GRAPH_AWARE_WRITERS, ids=lambda writer: writer.__name__)
-@pytest.mark.parametrize("initial_tree", ["absent", "populated"])
-def test_unsafe_graph_rejected_before_writer_io(writer, initial_tree, tmp_path):
-    output = tmp_path / "output"
-    if initial_tree == "populated":
-        (output / "nested").mkdir(parents=True)
-        (output / "nested" / "marker.bin").write_bytes(b"unchanged\x00")
-    before = (output.exists(), _complete_tree_manifest(output))
-    config = GenerationConfig(output_path=output, package_name="pkg")
-    ctx = _unsafe_name_context()
-    template_env = _get_template_env()
-    if writer in (_generate_backlog, _seal_package):
-        args = (ctx, config)
-    elif writer is _generate_modules:
-        from sysml_codegen.generation.constraint_plan import ConstraintGenerationPlan
-
-        args = (ctx, config, template_env, ConstraintGenerationPlan({}, None, {}))
-    else:
-        args = (ctx, config, template_env)
-    with pytest.raises(CodeGenerationError) as error:
-        writer(*args)
-    assert error.value.name_safety_violation is not None
-    assert error.value.name_safety_violation.final_binding == "value"
-    assert (output.exists(), _complete_tree_manifest(output)) == before
-
-
-@pytest.mark.parametrize("writer", GRAPH_AWARE_WRITERS, ids=lambda writer: writer.__name__)
-@pytest.mark.parametrize("initial_tree", ["absent", "populated"])
-def test_missing_catalog_rejected_before_writer_io(writer, initial_tree, tmp_path):
-    output = tmp_path / "output"
-    if initial_tree == "populated":
-        (output / "nested").mkdir(parents=True)
-        (output / "nested" / "marker.bin").write_bytes(b"unchanged\x00")
-    before = (output.exists(), _complete_tree_manifest(output))
-    config = GenerationConfig(output_path=output, package_name="pkg")
-    ctx = _missing_catalog_context()
-    template_env = _get_template_env()
-    if writer in (_generate_backlog, _seal_package):
-        args = (ctx, config)
-    elif writer is _generate_modules:
-        from sysml_codegen.generation.constraint_plan import ConstraintGenerationPlan
-
-        args = (ctx, config, template_env, ConstraintGenerationPlan({}, None, {}))
-    else:
-        args = (ctx, config, template_env)
-    with pytest.raises(CodeGenerationError) as error:
-        writer(*args)
-    assert error.value.name_safety_violation is not None
-    assert error.value.name_safety_violation.kind == "catalog_module_join"
-    assert error.value.name_safety_violation.final_binding == "c1"
-    assert (output.exists(), _complete_tree_manifest(output)) == before
+def _refused(graph: ComputationGraph) -> Refused:
+    refused = prepare_graph(graph, "pkg")
+    assert isinstance(refused, Refused)
+    return refused
 
 
 @pytest.mark.parametrize("name", ["value", "body", "verdict", "self"])
-@pytest.mark.parametrize("initial_tree", ["absent", "populated"])
-def test_run_codegen_name_collision_preserves_tree_and_logs_payload(
-    name, initial_tree, tmp_path, monkeypatch, caplog
-):
-    output = tmp_path / "output"
-    if initial_tree == "populated":
-        (output / "nested").mkdir(parents=True)
-        (output / "nested" / "marker.bin").write_bytes(b"unchanged\x00")
-    before = (output.exists(), _complete_tree_manifest(output))
-    config = GenerationConfig(output_path=output, models_path=tmp_path, overwrite=True)
-    assert _generate_package_from_graph(_unsafe_name_context(name), config) is False
-    assert (output.exists(), _complete_tree_manifest(output)) == before
-    records = [record for record in caplog.records if "name-safety violation" in record.message]
-    assert len(records) == 1
-    violation = records[0].constraint_name_safety
-    assert violation.final_binding == name
+def test_a_name_collision_is_refused_at_the_constraint_names_step(name):
+    refused = _refused(_unsafe_name_context(name))
+    assert refused.step is PreparationStep.CONSTRAINT_NAMES
+    assert "name-safety violation" in refused.message
+    assert refused.constraint_name_safety is not None
+    assert refused.constraint_name_safety.final_binding == name
 
 
-@pytest.mark.parametrize("initial_tree", ["absent", "populated"])
-def test_run_codegen_missing_catalog_preserves_tree_and_logs_payload(
-    initial_tree, tmp_path, monkeypatch, caplog
-):
-    output = tmp_path / "output"
-    if initial_tree == "populated":
-        (output / "nested").mkdir(parents=True)
-        (output / "nested" / "marker.bin").write_bytes(b"unchanged\x00")
-    before = (output.exists(), _complete_tree_manifest(output))
-    config = GenerationConfig(output_path=output, models_path=tmp_path, overwrite=True)
-    assert _generate_package_from_graph(_missing_catalog_context(), config) is False
-    assert (output.exists(), _complete_tree_manifest(output)) == before
-    records = [record for record in caplog.records if "name-safety violation" in record.message]
-    assert len(records) == 1
-    violation = records[0].constraint_name_safety
-    assert violation.kind == "catalog_module_join"
-    assert violation.final_binding == "c1"
+def test_a_missing_catalog_is_refused_at_the_constraint_names_step():
+    refused = _refused(_missing_catalog_context())
+    assert refused.step is PreparationStep.CONSTRAINT_NAMES
+    assert "name-safety violation" in refused.message
+    assert refused.constraint_name_safety is not None
+    assert refused.constraint_name_safety.kind == "catalog_module_join"
+    assert refused.constraint_name_safety.final_binding == "c1"
 
 
 def _logged_refusals(caplog) -> list[Refusal]:
     return [record.refusal for record in caplog.records if hasattr(record, "refusal")]
 
 
-def test_name_collision_refusal_logs_code_and_site_reason(tmp_path, caplog):
-    config = GenerationConfig(output_path=tmp_path / "output", models_path=tmp_path)
-    assert _generate_package_from_graph(_unsafe_name_context("value"), config) is False
-    assert _logged_refusals(caplog) == [
-        Refusal(
-            RefusalKind.GENERATION,
-            (
-                RefusalItem(
-                    GenerationCode.CONSTRAINT_NAME_UNSAFE,
-                    SiteReason.GENERATION_CONSTRAINT_NAME_UNSAFE,
-                    None,
-                    None,
-                ),
+def test_name_collision_refusal_carries_code_and_site_reason():
+    assert _refused(_unsafe_name_context("value")).refusal == Refusal(
+        RefusalKind.GENERATION,
+        (
+            RefusalItem(
+                GenerationCode.CONSTRAINT_NAME_UNSAFE,
+                SiteReason.GENERATION_CONSTRAINT_NAME_UNSAFE,
+                None,
+                None,
             ),
-        )
-    ]
+        ),
+    )
+
+
+def test_a_generation_refusal_logs_one_record_with_its_name_safety_payload(caplog):
+    refused = _refused(_unsafe_name_context("value"))
+    log_refused(refused)
+    [record] = [record for record in caplog.records if hasattr(record, "refusal")]
+    assert record.name == "sysml_codegen.cli"
+    assert record.getMessage() == refused.message
+    assert record.refusal == refused.refusal
+    assert record.constraint_name_safety == refused.constraint_name_safety
 
 
 def test_projection_refusal_logs_the_diagnostics_it_wraps(monkeypatch):
@@ -442,11 +349,21 @@ def _unclassified_failure(*_args, **_kwargs):
     raise RuntimeError("unclassified")
 
 
+def _loaded_without_syside(monkeypatch) -> None:
+    """Make the live load succeed with a stand-in, so construction is the step under test."""
+    monkeypatch.setattr(
+        "sysml_codegen.orchestration.elaborated_pipeline.load_live_models",
+        lambda _paths: SimpleNamespace(),
+    )
+
+
 def test_unclassified_construction_failure_logs_the_internal_defect_refusal(
     tmp_path, monkeypatch, caplog
 ):
+    _loaded_without_syside(monkeypatch)
     monkeypatch.setattr(
-        "sysml_codegen.orchestration.exact_pipeline_context.build_exact_pipeline_context",
+        "sysml_codegen.orchestration.exact_pipeline_context."
+        "build_exact_pipeline_context_from_live_load",
         _unclassified_failure,
     )
     config = GenerationConfig(output_path=tmp_path / "output", models_path=tmp_path)
@@ -457,38 +374,24 @@ def test_unclassified_construction_failure_logs_the_internal_defect_refusal(
 def test_unclassified_generation_failure_logs_the_internal_defect_refusal(
     tmp_path, monkeypatch, caplog
 ):
-    # Generation is patched to fail, so the graph is never read past its module count.
+    # The first preflight is patched to fail, so the graph is never read past its module count.
     context = SimpleNamespace(computation_graph=SimpleNamespace(modules=[]))
+    _loaded_without_syside(monkeypatch)
     monkeypatch.setattr(
-        "sysml_codegen.orchestration.exact_pipeline_context.build_exact_pipeline_context",
-        lambda _paths: context,
+        "sysml_codegen.orchestration.exact_pipeline_context."
+        "build_exact_pipeline_context_from_live_load",
+        lambda _loaded: context,
     )
-    monkeypatch.setattr("sysml_codegen.cli._generate_package_from_graph", _unclassified_failure)
+    monkeypatch.setattr(
+        "sysml_codegen.cli.prepare._preflight_generation_metadata", _unclassified_failure
+    )
     config = GenerationConfig(output_path=tmp_path / "output", models_path=tmp_path)
     assert run_codegen(config) is False
     assert _logged_refusals(caplog) == [_INTERNAL_DEFECT_REFUSAL]
 
 
-def test_collision_rejection_preserves_absent_output(tmp_path):
-    output = tmp_path / "absent"
-    config = GenerationConfig(output_path=output, models_path=tmp_path, overwrite=True)
-    assert _generate_package_from_graph(_colliding_context(), config) is False
-    assert not output.exists()
-
-
-def test_collision_rejection_preserves_populated_tree(tmp_path):
-    output = tmp_path / "populated"
-    (output / "nested").mkdir(parents=True)
-    (output / "one.bin").write_bytes(b"one\x00")
-    (output / "nested" / "two.txt").write_bytes(b"two\n")
-    try:
-        (output / "link").symlink_to("nested/two.txt")
-    except OSError:
-        pass
-    before = _complete_tree_manifest(output)
-    config = GenerationConfig(output_path=output, models_path=tmp_path, overwrite=True)
-    assert _generate_package_from_graph(_colliding_context(), config) is False
-    assert _complete_tree_manifest(output) == before
+def test_a_colliding_constraint_graph_is_refused_before_the_destination():
+    assert _refused(_colliding_context()).step is PreparationStep.CONSTRAINT_NAMES
 
 
 def test_generation_rejects_symlink_root_before_output_mutation(tmp_path, monkeypatch):
@@ -504,7 +407,7 @@ def test_generation_rejects_symlink_root_before_output_mutation(tmp_path, monkey
         nonlocal clear_reached
         clear_reached = True
 
-    monkeypatch.setattr("sysml_codegen.cli._clear_output_directory", record_clear)
+    monkeypatch.setattr("sysml_codegen.cli.emit._clear_output_directory", record_clear)
     config = GenerationConfig(
         output_path=output,
         models_path=D38_MODEL,

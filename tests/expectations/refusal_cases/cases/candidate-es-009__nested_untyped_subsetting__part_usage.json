@@ -1,0 +1,16 @@
+{
+  "id": "candidate-es-009__nested_untyped_subsetting__part_usage",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "part facility subsets untyped ac_facility and reads facility.hall.area, an attribute of a nested part"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": []
+  }
+}

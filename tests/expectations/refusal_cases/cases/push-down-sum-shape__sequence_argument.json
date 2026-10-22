@@ -1,0 +1,23 @@
+{
+  "id": "push-down-sum-shape__sequence_argument",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      7
+    ],
+    "description": "attribute t : Real = sum((a, b)) * 1.0; sum over a sequence literal of two attributes in a computed attribute value"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EDGE_DANGLING"
+    ],
+    "reasons": [
+      "graph_computed_ir_unsupported"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/graph.py::InstanceGraph._expression_reference_count::unrecognized::UnsupportedExpressionIRError::1"
+    ]
+  }
+}

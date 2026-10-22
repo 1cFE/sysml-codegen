@@ -1,0 +1,23 @@
+{
+  "id": "bare-reference__imported_nested_feature",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "a bare reference to p's attribute a, imported into another root part q"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_OCCURRENCE_MISSING"
+    ],
+    "reasons": [
+      "elaboration_bare_reference_prefix_required"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._resolve_semantic_reference::coded::SI_OCCURRENCE_MISSING::2"
+    ]
+  }
+}

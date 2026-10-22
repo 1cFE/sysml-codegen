@@ -1,0 +1,20 @@
+{
+  "id": "candidate-anonymous-constraint__inline_assert__owner_instantiated",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "anonymous assert constraint { x > 0.0 }"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_ID_UNSTABLE"
+    ],
+    "reasons": [
+      "identity_qualified_name_missing"
+    ]
+  }
+}

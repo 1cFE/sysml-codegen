@@ -1,0 +1,23 @@
+{
+  "id": "calc-usage-typing__subsetting_only",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      7
+    ],
+    "description": "a calc usage `calc c2 :> c;` that subsets a typed calc usage and declares no typing of its own"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_TYPE_INVALID"
+    ],
+    "reasons": [
+      "elaboration_usage_definition_typing_count"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._typed_definition::coded::SI_TYPE_INVALID::1"
+    ]
+  }
+}

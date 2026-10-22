@@ -1,0 +1,28 @@
+{
+  "id": "push-down-redef-precedence__chain_override_wins",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      7
+    ],
+    "description": "FastDriver redefines efficiency default 0.3; root part site overrides it through the chain :>> driver.efficiency = 0.35"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "attr_value",
+        "declaration": "fx::FastDriver::efficiency",
+        "expect": [
+          {
+            "value": 0.35,
+            "value_site": "occurrence_override"
+          }
+        ]
+      }
+    ]
+  }
+}

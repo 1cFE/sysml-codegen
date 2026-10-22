@@ -1,0 +1,23 @@
+{
+  "id": "part-multiplicity__ordered__expanded_part_usage__under_two",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "servers : Server[2] ordered under hall.racks[2] (B5)"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_MULTIPLICITY_UNSUPPORTED"
+    ],
+    "reasons": [
+      "occurrence_multiplicity_ordered"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/occurrence.py::_multiplicity_indices::coded::SI_MULTIPLICITY_UNSUPPORTED::1"
+    ]
+  }
+}

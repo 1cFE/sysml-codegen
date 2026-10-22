@@ -1,0 +1,23 @@
+{
+  "id": "binding-source__expression_source__owner_instantiated__arithmetic",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "calc input v bound to rate * fuel_code; owner Gen instantiated by gen"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EXPRESSION_SOURCE_UNSUPPORTED"
+    ],
+    "reasons": [
+      "binding_source_form_unsupported"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._collect_bound_members::coded-returned::SI_SELF_BINDING|SI_INDEXED_SOURCE_UNSUPPORTED|SI_EXPRESSION_SOURCE_UNSUPPORTED::1"
+    ]
+  }
+}

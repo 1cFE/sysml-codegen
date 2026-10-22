@@ -1,0 +1,23 @@
+{
+  "id": "part-multiplicity__unresolved_bound__expanded_part_usage__lower",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      8,
+      8
+    ],
+    "description": "Pack::cells has a lower bound read from attribute n and a literal upper bound"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_MULTIPLICITY_UNRESOLVED"
+    ],
+    "reasons": [
+      "occurrence_multiplicity_lower_unresolved"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/occurrence.py::_multiplicity_indices::coded::SI_MULTIPLICITY_UNRESOLVED::2"
+    ]
+  }
+}

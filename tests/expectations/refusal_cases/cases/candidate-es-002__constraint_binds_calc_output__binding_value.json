@@ -1,0 +1,16 @@
+{
+  "id": "candidate-es-002__constraint_binds_calc_output__binding_value",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      8,
+      8
+    ],
+    "description": "constraint g binds calc usage t's result t.r"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": []
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "id": "conditional-expression__conditional_unresolved_branch__calc_definition_feature_value",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      3
+    ],
+    "description": "conditional `if a < b ? a else b` as the value of calc def Min2's result feature r"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EVIDENCE_INCOMPLETE"
+    ],
+    "reasons": [
+      "evidence_resolved_target_missing"
+    ],
+    "witnesses": [
+      "agentic_mbse/sysml/reference_use.py::_reference_use::shared-evidence::RESOLVED_TARGET_MISSING::1"
+    ]
+  }
+}

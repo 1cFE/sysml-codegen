@@ -1,0 +1,23 @@
+{
+  "id": "calc-def-identity__duplicate_name",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      3,
+      4
+    ],
+    "description": "two calc defs named Twice in one package; SysIDE loads both and gives neither a reload-stable UUIDv5"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_ID_MISSING"
+    ],
+    "reasons": [
+      "elaboration_calc_def_id_missing"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._index_calculation_payloads::coded::SI_ID_MISSING::1"
+    ]
+  }
+}

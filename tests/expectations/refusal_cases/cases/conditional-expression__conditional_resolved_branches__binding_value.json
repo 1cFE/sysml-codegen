@@ -1,0 +1,23 @@
+{
+  "id": "conditional-expression__conditional_resolved_branches__binding_value",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      7
+    ],
+    "description": "calc usage t binds v to if x < y ? 1.0 else 2.0, whose branches are literals"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EVIDENCE_INCOMPLETE"
+    ],
+    "reasons": [
+      "evidence_resolved_target_missing"
+    ],
+    "witnesses": [
+      "agentic_mbse/sysml/reference_use.py::_reference_use::shared-evidence::RESOLVED_TARGET_MISSING::1"
+    ]
+  }
+}

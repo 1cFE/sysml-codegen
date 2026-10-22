@@ -1,0 +1,34 @@
+{
+  "id": "constraint-predicate__non_numerical_predicate__owner_instantiated__boolean_literal_root",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "Holder::c asserts 'true': the literal true as the whole predicate"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "witnesses": [
+      "agentic_mbse/sysml/executable_profile.py::_walk_proposition::shared-profile::warn_non_numerical_predicate::2"
+    ],
+    "seams": [
+      {
+        "kind": "catalog_usage",
+        "declaration": "Witness::Holder::c",
+        "expect": {
+          "kind": "excluded",
+          "reason": "non_numerical"
+        }
+      }
+    ]
+  },
+  "loss": {
+    "family": "es-007-non-numerical",
+    "disposition": "accepted_omission",
+    "control": "constraint-predicate__numeric_and__owner_instantiated"
+  }
+}

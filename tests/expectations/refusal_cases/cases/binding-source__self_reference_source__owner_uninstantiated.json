@@ -1,0 +1,22 @@
+{
+  "id": "binding-source__self_reference_source__owner_uninstantiated",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      7,
+      7
+    ],
+    "description": "self-bound input in part def Site, which nothing instantiates"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "stubs": [
+      {
+        "output": "fx::Total::r",
+        "reason": "compile_invocation"
+      }
+    ]
+  }
+}

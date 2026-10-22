@@ -1,0 +1,16 @@
+{
+  "id": "calc-owned-assertion__part_owned_assert__owner_instantiated",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      9,
+      9
+    ],
+    "description": "asserted constraint f1 owned by part def Site, instantiated by site: not a calc-owned shape"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": []
+  }
+}

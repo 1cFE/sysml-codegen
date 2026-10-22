@@ -1,0 +1,23 @@
+{
+  "id": "feature-type__quantity_value",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      5
+    ],
+    "description": "a MassValue attribute read in a computed Real expression"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EDGE_DANGLING"
+    ],
+    "reasons": [
+      "elaboration_feature_type_unsupported"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._feature_python_type::coded::SI_EDGE_DANGLING::3"
+    ]
+  }
+}

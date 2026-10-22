@@ -17,7 +17,8 @@
 - 0015 · Study tools anchor the project root to the package's git work tree, with an explicit override · seams: study, fusion-tea
 - 0016 · Reuse agentic-mbse's installer through an API version pin, not a package-version bound · seams: installer, agentic-mbse, fusion-tea
 - 0017 · Study location settings are the one environment read reachable from the CLI · seams: study, cli, conformance
-- 0018 · Occurrence summary has a second reviewed owner in agentic-mbse, held by a parity test · seams: elaboration, agentic-mbse
+- 0019 · agentic-mbse keeps no second occurrence reader; ADR 0012's exclusive ownership stands · seams: elaboration, agentic-mbse
 
 - 0005 · Exact-identity elaboration replaces string resolution, with no compatibility layer · seams: extraction, elaboration, snapshot · amended
 - 0012 · Semantic evidence has one acquisition owner and complete closed values · seams: extraction, elaboration, generation, agentic-mbse · amended
+- 0018 · Occurrence summary has a second reviewed owner in agentic-mbse, held by a parity test · seams: elaboration, agentic-mbse · superseded → 0019

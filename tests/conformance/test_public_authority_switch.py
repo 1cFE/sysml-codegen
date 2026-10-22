@@ -38,7 +38,10 @@ from tests.conftest import FIXTURES_DIR, requires_license
 
 pytestmark = requires_license
 
-CLI_SOURCE = Path(__import__("sysml_codegen.cli", fromlist=["cli"]).__file__)
+#: Every module of the CLI package: ``generate`` constructs in ``cli/prepare.py`` since Item 2b.
+CLI_SOURCES = tuple(
+    sorted(Path(__import__("sysml_codegen.cli", fromlist=["cli"]).__file__).parent.glob("*.py"))
+)
 
 #: The exact route resolves ``d38_caret``'s four modelled ``cell`` occurrences
 #: and its exponent; the legacy route drops all five and attributes the one
@@ -191,7 +194,8 @@ def test_the_cli_module_imports_no_legacy_construction_authority() -> None:
     Checked against every import spelling rather than one dotted string, the
     same widening Slice 3C's audit (F2) forced on the constraint-import pin.
     """
-    assert _imported_modules(CLI_SOURCE) & LEGACY_AUTHORITY_MODULES == set()
+    for source in CLI_SOURCES:
+        assert _imported_modules(source) & LEGACY_AUTHORITY_MODULES == set(), source.name
 
 
 def test_the_cli_names_exactly_one_construction_route() -> None:
@@ -201,13 +205,25 @@ def test_the_cli_names_exactly_one_construction_route() -> None:
     seal into an ``ExactPipelineContext``. This pins that the only builders the
     CLI calls are the exact pair, so a re-added legacy fall-back fails here.
     """
-    imported = _imported_modules(CLI_SOURCE)
-    exact_builders = {
-        name for name in imported if name.startswith("sysml_codegen.orchestration.exact_")
-    }
+    exact_builders: set[str] = set()
+    for source in CLI_SOURCES:
+        exact_builders |= {
+            name
+            for name in _imported_modules(source)
+            if name.startswith("sysml_codegen.orchestration.exact_")
+        }
+        # ``prepare`` calls the builders through the module, so a test patch takes effect.
+        exact_builders |= {
+            f"sysml_codegen.orchestration.exact_pipeline_context.{node.attr}"
+            for node in ast.walk(ast.parse(source.read_text(encoding="utf-8")))
+            if isinstance(node, ast.Attribute)
+            and isinstance(node.value, ast.Name)
+            and node.value.id == "exact_pipeline_context"
+        }
     assert exact_builders == {
         "sysml_codegen.orchestration.exact_pipeline_context",
-        "sysml_codegen.orchestration.exact_pipeline_context.build_exact_pipeline_context",
+        "sysml_codegen.orchestration.exact_pipeline_context."
+        "build_exact_pipeline_context_from_live_load",
         "sysml_codegen.orchestration.exact_pipeline_context."
         "build_exact_pipeline_context_from_snapshot",
     }
@@ -273,6 +289,11 @@ def test_the_public_api_exports_no_second_construction_entry_point() -> None:
         "GenerationConfig",
         "cmd_generate",
         "cmd_install_commands",
+        # `check` runs the same `prepare` as `generate` and writes nothing, so it is a reader
+        # of the one construction route, not a second one (Item 2b design D6).
+        "cmd_check",
+        "run_check",
+        "CheckRequest",
         # The study dispatcher hands its arguments to a study tool and constructs nothing.
         "cmd_study",
         # `CODEGEN_COMMANDS` is gone: it was the old installer's file list, and the packaged
@@ -471,7 +492,7 @@ def test_a_refusal_after_the_context_but_before_the_writer_also_leaves_the_tree(
     proves the *ordering* rather than the fixture — the tree is only safe
     because no writer runs before that check.
     """
-    import sysml_codegen.cli as cli
+    from sysml_codegen.cli import prepare
     from sysml_codegen.core.errors import GenerationCode
     from sysml_codegen.generation import CodeGenerationError
 
@@ -480,7 +501,7 @@ def test_a_refusal_after_the_context_but_before_the_writer_also_leaves_the_tree(
             "injected duplicate-output-path refusal", code=GenerationCode.DUPLICATE_OUTPUT_PATH
         )
 
-    monkeypatch.setattr(cli, "_check_duplicate_output_paths", refuse)
+    monkeypatch.setattr(prepare, "_check_duplicate_output_paths", refuse)
 
     before = _tree(populated_output)
     config = GenerationConfig(

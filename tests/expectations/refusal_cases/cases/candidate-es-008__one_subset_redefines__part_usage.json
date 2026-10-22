@@ -1,0 +1,16 @@
+{
+  "id": "candidate-es-008__one_subset_redefines__part_usage",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      11,
+      18
+    ],
+    "description": "nested named subsets where only rack_1.server_1 redefines psu.efficiency"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": []
+  }
+}

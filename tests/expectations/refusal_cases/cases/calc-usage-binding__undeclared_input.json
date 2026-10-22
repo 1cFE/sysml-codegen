@@ -1,0 +1,23 @@
+{
+  "id": "calc-usage-binding__undeclared_input",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      4,
+      4
+    ],
+    "description": "a calc usage binding an input z its calc def does not declare"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_EDGE_DANGLING"
+    ],
+    "reasons": [
+      "elaboration_bound_input_formal_missing"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._effective_formal_for_member::coded::SI_EDGE_DANGLING::1"
+    ]
+  }
+}
