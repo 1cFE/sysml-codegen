@@ -1,9 +1,0 @@
-FAILED tests/study/test_study_cli.py::test_a_missing_or_unknown_tool_is_a_usage_error[argv1-invalid choice: 'bogus' (choose from indicators, preflight, verify, integrate)]
-FAILED tests/unit/test_check_ledger_4a.py::test_the_committed_ledger_covers_the_git_derived_set_exactly
-FAILED tests/unit/test_check_ledger_4a.py::test_the_candidate_set_is_read_from_the_diff_so_deletions_are_visible
-FAILED tests/unit/test_check_ledger_4a.py::test_an_uncovered_path_fails
-FAILED tests/unit/test_check_ledger_4a.py::test_an_orphan_row_fails
-FAILED tests/unit/test_check_ledger_4a.py::test_a_carried_row_that_does_not_exist_at_head_fails
-FAILED tests/unit/test_check_ledger_4a.py::test_a_row_with_no_reason_fails
-FAILED tests/unit/test_check_ledger_4a.py::test_an_executed_carried_delete_is_not_reported_as_a_missing_carried_row
-FAILED tests/unit/test_check_ledger_4a.py::test_the_paths_check_now_fails_on_either_axis

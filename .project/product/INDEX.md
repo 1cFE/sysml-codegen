@@ -9,4 +9,4 @@
 - 0005 · A package never reports full satisfaction while authored gates went unassessed · surfaces: generation, reporting, teax · checked: 2026-08-23 @ f0a7b0a
 - 0006 · A generated package's identity and integrity are verifiable on load · surfaces: contracts, generation, teax · checked: 2026-08-23 @ f0a7b0a
 - 0007 · Targets install the study layer from sysml-codegen, versioned with the generator whose contracts it reads · surfaces: study, installer, cli · checked: 2026-10-12 @ 4dfe275
-- 0008 · check gives generate's answer without writing, and a refused generate writes nothing
+- 0008 · check gives generate's answer without writing, and a refused generate writes nothing · surfaces: cli, generation · checked: 2026-10-22 @ d7366431
