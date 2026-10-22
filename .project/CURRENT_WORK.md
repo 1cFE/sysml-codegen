@@ -1,22 +1,24 @@
 # Current Work
 
-**Updated:** 2026-10-21
+**Updated:** 2026-10-22
 
 ## Active Work
 
-EXEC-SUBSET-CONTRACT Item 2b (`subset-profile-screen`, epic in agentic-mbse), live half: Phases 0-9 implemented and audited, Certify (2026-10-20, `.project/active/subset-profile-screen/audit.md`); Phase 10 done 2026-10-20 (no readiness rule), not yet audited. Branch `subset-profile-screen`. `sysml-codegen check` gives `generate`'s answer without writing (exit 0 builds, 1 refuses) and prints only the generator's answer. The subset screen step was removed by owner decision on 2026-10-21 (agentic-mbse item `retire-subset-profile`, which also retired agentic-mbse's copy of the generator rules), so backlog `[SUBSET-SCREEN-SNAPSHOT-CARRIAGE]` is retired as moot. The unbound String library default stays under RG-2. At close, update the agentic-mbse epic's Item 2b to match the split.
+No item is active.
 
 The backlog holds separately scoped capabilities, diagnostics, model work, and assurance limits.
 
 ## Shipped State and Historical Authority
 
-EXEC-SUBSET-CONTRACT Item 2a (`subset-profile-conformance`) closed 2026-10-20, certified (final-audit re-check 2026-10-19), then integrated with the merged epic Item 3 (agentic-mbse PR #32). It is not merged yet: branch `subset-conformance` here and in agentic-mbse, for a coordinated merge. It checked the shared subset contract (`subset-profile/v2`) against what the generator actually does. Since 2026-10-21 (`retire-subset-profile`) the contract is gone and what remains here is the generator half: 246 cases with stored generator answers (all 154 formerly packaged in agentic-mbse now in `tests/fixtures/refusal_cases/`), a per-site account of every refusal, and detector-disable mutations. A change to the generator's accept/refuse behaviour fails a test here. Spec, design, plan, audit, evidence and the owner-gate drafts are retained at `c381fb00eb8e51248f68701e00ac997ebf2cd413:.project/active/subset-profile-conformance/`. The agentic-mbse gate receipt names codegen `ceb6796e`; the close touches only `.project/` and `docs/`.
+EXEC-SUBSET-CONTRACT Item 2b (`subset-profile-screen`) closed 2026-10-22, in [PR #23](https://github.com/1cFE/sysml-codegen/pull/23) (merge before agentic-mbse PR #34). `sysml-codegen check` gives `generate`'s answer without writing (exit 0 builds, 1 refuses, 2 usage), and every model refusal is decided before anything is written ([P-0008](product/0008-check-answers-as-generate.md)). Live half certified 2026-10-20 on re-check; Phase 10 (no readiness rule) and the 2026-10-21 removal of the agentic-mbse screen were covered by agentic-mbse `retire-subset-profile`'s audit (no blocker, fixes verified). Generator answers unchanged: 0 of 123 packages, 0 of 173 refusal records differ; TEAx 124/124. The architecture review behind the removal is kept at `.project/research/2026-10-21-generator-check-architecture-review/`. Spec, design, plan, audits, briefs and evidence are retained at `d7366431f425459053a46d764d5a327fda4c2f07:.project/active/subset-profile-screen/`. The byte-identity scripts (`scripts/package_manifest.py`, `scripts/refusal_records.py`) read `scripts/snapshot_sources.json`.
+
+EXEC-SUBSET-CONTRACT Item 2a (`subset-profile-conformance`) closed 2026-10-20, certified (final-audit re-check 2026-10-19), then integrated with the merged epic Item 3 (agentic-mbse PR #32). Merged as PR #22 here and agentic-mbse PR #33. It checked the shared subset contract (`subset-profile/v2`) against what the generator actually does. Since 2026-10-21 (`retire-subset-profile`) the contract is gone and what remains here is the generator half: 246 cases with stored generator answers (all 154 formerly packaged in agentic-mbse now in `tests/fixtures/refusal_cases/`), a per-site account of every refusal, and detector-disable mutations. A change to the generator's accept/refuse behaviour fails a test here. Spec, design, plan, audit, evidence and the owner-gate drafts are retained at `c381fb00eb8e51248f68701e00ac997ebf2cd413:.project/active/subset-profile-conformance/`. The agentic-mbse gate receipt names codegen `ceb6796e`; the close touches only `.project/` and `docs/`.
 
 Still with the owner, not decided at close:
 
 - **RG-1**: 12 candidate changes to what the generator accepts or refuses (`rg1-recommendations.md` in the retained folder). Backlog rows `[CALC-USAGE-BINDING-LOST-WITH-RESULT-EXPRESSION]`, `[CALC-DEF-KEYWORD-MEMBER-STUB]` and `[ITEM-OWNED-PART-REFUSED]` depend on it.
 - **RG-2**: the String metadata policy (`rg2-string-policy.md` in the retained folder).
-- **RG-3**: the coordinated merge, and filing the staged amendments to ADR 0001, ADR 0012, ADR 0016 and P-0001 and the fact-placement ADR draft (all in the retained folder). Check the owner's `adr-0012-occurrence-summary-amendment` branch first: at `8396cb23` it already adds ADR 0018, which amends ADR 0012 for the shared occurrence summary. Whether that covers the staged ADR 0012 amendment was not checked.
+- **RG-3**: the staged amendments to ADR 0001, ADR 0012, ADR 0016 and P-0001 and the fact-placement ADR draft (all in the retained folder) were written for the shared subset contract, which was retired on 2026-10-21; they are moot. ADR 0018 (merged in PR #21) is superseded by ADR 0019.
 
 The integration's L6 changes (verdict line naming `subset-profile/v2, subset-coverage/v2`, 70 follow-up sites) were superseded on 2026-10-21, when `retire-subset-profile` removed the subset profile from L6.
 

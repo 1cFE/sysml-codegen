@@ -20,9 +20,10 @@ if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
 #: Committed v6 snapshot → the directory holding its source models. The catf_mfe_d5 sources
-#: are regenerated into an untracked spike folder (``spike-snapshot/resolve_sources.py``);
-#: a subject whose source directory is absent is skipped and named by ``missing_sources``.
-SNAPSHOT_SOURCES = REPO / ".project/active/subset-profile-screen/spike-snapshot/sources.json"
+#: are not committed; they were regenerated into the untracked ``build/snapshot-regen/`` (the
+#: resolver is in Item 2b's history, ``spike-snapshot/resolve_sources.py``). A subject whose
+#: source directory is absent is skipped and named by ``missing_sources``.
+SNAPSHOT_SOURCES = REPO / "scripts/snapshot_sources.json"
 
 
 @dataclass(frozen=True)
