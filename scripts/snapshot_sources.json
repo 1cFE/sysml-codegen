@@ -1,7 +1,7 @@
 {
  "tests/fixtures/agg_literal_probe/instance_graph_snapshot.json": "tests/fixtures/agg_literal_probe",
  "tests/fixtures/attr_expr_probe/instance_graph_snapshot.json": "tests/fixtures/attr_expr_probe",
- "tests/fixtures/catf_mfe_d5/instance_graph_snapshot.json": ".project/active/subset-profile-screen/spike-snapshot/regen/catf_mfe_d5",
+ "tests/fixtures/catf_mfe_d5/instance_graph_snapshot.json": "build/snapshot-regen/catf_mfe_d5",
  "tests/fixtures/catf_mfe_gated/instance_graph_snapshot.json": "tests/fixtures/catf_mfe_gated",
  "tests/fixtures/chain_spike_d5/instance_graph_snapshot.json": "tests/fixtures/chain_spike_d5",
  "tests/fixtures/constraint_domain_satisfy_calc_def/instance_graph_snapshot.json": "tests/fixtures/constraint_domain_satisfy_calc_def",
