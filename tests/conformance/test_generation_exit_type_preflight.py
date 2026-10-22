@@ -200,7 +200,6 @@ def test_public_exit_type_refusal_is_status_one_and_byte_preserving(
     called: list[Path] = []
 
     if source_arm == "models":
-
         from sysml_codegen.orchestration import elaborated_pipeline
 
         def load_models(paths: tuple[Path, ...]) -> SimpleNamespace:

@@ -25,9 +25,7 @@ CONSTRAINT_GRAPH_CHECK = (
     "sysml_codegen/generation/errors.py::validate_constraint_graph_or_raise::unrecognized::"
     "constraint_name_safety_error::1"
 )
-INTERNAL_DEFECT_RELAY = (
-    "sysml_codegen/elaboration/elaborate.py::unexpected_public_failure::coded::SI_INTERNAL_DEFECT::1"
-)
+INTERNAL_DEFECT_RELAY = "sysml_codegen/elaboration/elaborate.py::unexpected_public_failure::coded::SI_INTERNAL_DEFECT::1"
 ALLOWED = {
     # Site 338. It stays inside generate_pipeline_yaml, generate_registry and
     # build_model_contract as their own guard, pinned by test_module_kind_faildloud.py. It
@@ -50,8 +48,7 @@ def _covered_sites_reached_from(root: site_scan.FunctionKey) -> set[str]:
     return {
         row.site_id
         for row in site_scan.load_account().rows
-        if row.role in COVERED
-        and (sites[row.site_id].file, sites[row.site_id].function) in reach
+        if row.role in COVERED and (sites[row.site_id].file, sites[row.site_id].function) in reach
     }
 
 

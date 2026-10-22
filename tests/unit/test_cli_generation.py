@@ -249,7 +249,6 @@ def _missing_catalog_context():
     return _unsafe_name_context("safe_name").model_copy(update={"constraint_catalog": None})
 
 
-
 def _refused(graph: ComputationGraph) -> Refused:
     refused = prepare_graph(graph, "pkg")
     assert isinstance(refused, Refused)

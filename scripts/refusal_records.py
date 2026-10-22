@@ -108,8 +108,11 @@ def _find_pipeline_writer() -> Callable[..., Any]:
 def _writer_failures() -> Iterator[tuple[str, Exception]]:
     from sysml_codegen.core.errors import CodeGenerationError, GenerationCode
 
-    yield "CodeGenerationError", CodeGenerationError(
-        "probe: the pipeline writer refused", code=GenerationCode.MODULE_KIND_UNRENDERABLE
+    yield (
+        "CodeGenerationError",
+        CodeGenerationError(
+            "probe: the pipeline writer refused", code=GenerationCode.MODULE_KIND_UNRENDERABLE
+        ),
     )
     yield "OSError", OSError("probe: the disk refused the write")
     yield "RuntimeError", RuntimeError("probe: an unclassified writer failure")
@@ -152,9 +155,7 @@ def main() -> int:
         return 0
     base = refusal_records.load()
     found = [
-        key
-        for key in sorted(base.keys() | entries.keys())
-        if base.get(key) != entries.get(key)
+        key for key in sorted(base.keys() | entries.keys()) if base.get(key) != entries.get(key)
     ]
     for key in found:
         print(f"{key}:\n  base: {base.get(key)}\n  now:  {entries.get(key)}")

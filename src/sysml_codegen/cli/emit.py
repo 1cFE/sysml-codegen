@@ -557,4 +557,3 @@ def _seal_package(
         config.output_path, config.package_name, DEFAULT_COVERAGE_POLICY
     )
     write_contract_json(contracts_dir / "package_contract.json", package_contract)
-

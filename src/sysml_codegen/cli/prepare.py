@@ -194,9 +194,7 @@ def refused_at_generation(step: PreparationStep, error: Exception) -> Refused:
             f"Writing the generated package failed: {error}",
         )
     diagnostic = unexpected_public_failure(error)
-    return Refused(
-        step, diagnostic_refusal(diagnostic), f"Code generation failed: {diagnostic}"
-    )
+    return Refused(step, diagnostic_refusal(diagnostic), f"Code generation failed: {diagnostic}")
 
 
 def _generation_refused(step: PreparationStep, error: CodeGenerationError) -> Refused:
@@ -221,9 +219,7 @@ def prepare(loaded: LoadedSource, package_name: str) -> Prepared | Refused:
         return refused_at_construction(loaded.error)
     try:
         if isinstance(loaded, SnapshotFile):
-            context = exact_pipeline_context.build_exact_pipeline_context_from_snapshot(
-                loaded.path
-            )
+            context = exact_pipeline_context.build_exact_pipeline_context_from_snapshot(loaded.path)
         else:
             context = exact_pipeline_context.build_exact_pipeline_context_from_live_load(loaded)
         graph = context.computation_graph
@@ -420,7 +416,9 @@ def _preflight_generation_metadata(graph: ComputationGraph) -> None:
 
     for module in graph.modules:
         if module.module_kind in (
-            ModuleKind.CALCULATION, ModuleKind.FORMULA, ModuleKind.AGGREGATION
+            ModuleKind.CALCULATION,
+            ModuleKind.FORMULA,
+            ModuleKind.AGGREGATION,
         ):
             if module.calc_def_name is None:
                 raise CodeGenerationError(
@@ -634,4 +632,3 @@ def _preflight_constraint_names(graph: ComputationGraph) -> None:
         catalog = graph.constraint_catalog
         assert catalog is not None  # ships_constraint_machinery implies it; narrows the type
         assert_unique_predicate_function_names(catalog)
-
