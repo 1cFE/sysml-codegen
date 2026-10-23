@@ -12,6 +12,7 @@
 - 0009 · Compute identifiers once, look up thereafter · seams: extraction, elaboration, generation
 - 0010 · Coverage truth and headline semantics · seams: generation, teax, reporting
 - 0011 · Parser declarations, concrete occurrences, and typed graph projection · seams: extraction, elaboration, projection, snapshot
+- 0012 · Semantic evidence has one acquisition owner and complete closed values · seams: extraction, elaboration, generation, agentic-mbse
 - 0013 · Units come from parser-native values rather than prose guessing · seams: extraction, elaboration, generation
 - 0014 · Constraint verdicts are evidence; raised arithmetic is execution failure · seams: generation, constraint-evaluation, reporting
 - 0015 · Study tools anchor the project root to the package's git work tree, with an explicit override · seams: study, fusion-tea
@@ -20,5 +21,4 @@
 - 0019 · agentic-mbse keeps no second occurrence reader; ADR 0012's exclusive ownership stands · seams: elaboration, agentic-mbse
 
 - 0005 · Exact-identity elaboration replaces string resolution, with no compatibility layer · seams: extraction, elaboration, snapshot · amended
-- 0012 · Semantic evidence has one acquisition owner and complete closed values · seams: extraction, elaboration, generation, agentic-mbse · amended
 - 0018 · Occurrence summary has a second reviewed owner in agentic-mbse, held by a parity test · seams: elaboration, agentic-mbse · superseded → 0019

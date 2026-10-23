@@ -235,10 +235,11 @@ Static evaluation and FORMULA compilation support:
 | `/` | Division | `a / b` |
 | `[` | Unit annotation | `3.0 [m]` |
 
-**NOT supported** (require a calc def):
-- Exponentiation (`**`, `^`)
-- Functions (`sin`, `cos`, `sqrt`)
-- Conditionals (`if`, `?:`)
+Exponentiation (`^`, `**`) also builds, in an attribute value and in a calc def's result (probed 2026-10-23; the computed value was not checked).
+
+**NOT supported anywhere, a calc def included:**
+- Functions other than `NumericalFunctions::sum` (for example `RealFunctions::sqrt`): refused with `SI_EXPRESSION_SOURCE_UNSUPPORTED` ("only NumericalFunctions::sum is supported").
+- Conditionals (`if … ? … else …`): refused with `SI_EVIDENCE_INCOMPLETE` (`evidence_resolved_target_missing`) as an attribute value, a binding value, a constraint predicate and a calc def's result (cases `conditional-expression__conditional_resolved_branches__*`). The one place `check` accepts one is a calc usage's own result expression (`…__other_expression_site`), and there the generated package fails when run, because the usage's result expression is dropped (agentic-mbse probe at sysml-codegen `6190f996`, not rerun here).
 
 ---
 
@@ -711,7 +712,11 @@ A part usage typed by two definitions where neither specializes the other, and b
 ### Multiplicity through redefinition
 
 - A redefinition that gives no multiplicity (`part :>> servers;` over `servers : Server[2]`) expands to one unindexed occurrence, and an `ordered` flag on the redefined part is dropped. The language gives the redefinition the inherited `[2]`. Cases `g1__redefinition_drops_ordered_bounds`, `part-multiplicity__redefinition_drops_bounds__expanded_part_usage`; control `part-multiplicity__exact_redefinition__expanded_part_usage`. Restate the multiplicity on the redefinition. RG1-1.
-- When a multiplicity bound reads a `default` attribute, a specializing definition's override of that default is used, but a part usage's override is ignored. Cases `g2__usage_override_of_referenced_bound` (ignored), `g2__definition_override_of_referenced_bound` (used). Override the default in a specializing definition. RG1-2.
+- When a multiplicity bound reads a `default` attribute, which override is used depends on where it is and on the `attribute` keyword (probed 2026-10-23, base `attribute n : Integer default 2` or `default := 2`):
+  - In a specializing definition, written with the keyword (`attribute :>> n default 3;` or `attribute :>> n = 3;`): used, three occurrences are built. Case `g2__definition_override_of_referenced_bound`.
+  - In a specializing definition, written without the keyword (`:>> n default 3;` or `:>> n = 3;`): ignored, the default count is built, with no warning.
+  - In a part usage, with or without the keyword: ignored. Case `g2__usage_override_of_referenced_bound`.
+  - `default 3` and `= 3` behave the same in every position. Override the count in a specializing definition with `attribute :>>`. Whether the ignored forms should refuse is RG1-2.
 
 ### Formal redefinition order
 
@@ -721,19 +726,16 @@ How a skipped formal is diagnosed when a calc usage redefines formals out of ord
 
 ## Validation Rules
 
-The pipeline enforces these rules to catch modeling violations early. V1–V10 fire at
-extraction time. (V11, a generation-boundary params-coverage abort, was dead by
+The pipeline enforces these rules to catch modeling violations early. There is no V2 or V4: the generator has no static-evaluation or unknown-operator diagnostic (`src/` holds neither message), and the operator limits are in § 3. Only V7 and V8 keep their own messages (`extraction/extractor.py`); the other rows say what the exact route does instead. (V11, a generation-boundary params-coverage abort, was dead by
 construction on the exact route — projection never populates the set it keyed on — and
 was deleted by REPO-CLEANUP Move C, 2026-08-25.)
 
 | Rule | Condition | Error |
 |------|-----------|-------|
-| V1 | Calc def in `designs/` | "Calculation definitions must be in `library/`, not `designs/`" |
-| V2 | Static evaluation failure | "Expression cannot be statically evaluated. Operand is not a literal. Consider extracting to a calc def in `library/`." |
-| V3 | Circular reference | "Circular dependency detected" |
-| V4 | Unknown operator | "Unsupported operator in static expression. Use calc def for complex calculations." |
-| V5 | Unbound input without default | Add default to calc def OR add binding in usage |
-| V6 | Binding to undefined attribute | Fix the binding path |
+| V1 | Calc def in `designs/` | Not enforced: a calc def under `designs/` builds (probed 2026-10-23). The `library/` placement is agentic-mbse's ADR-002 rule, not a generator check. |
+| V3 | Circular reference | Refused, `SI_EDGE_DANGLING`: "typed producer dependency cycle: {a} -> {b}" |
+| V5 | Unbound input without default | Not refused: the input becomes a required entry-point field in the generated params schema (`Field(description="Entry point: v")`) |
+| V6 | Binding to undefined attribute | Refused by the parser before extraction ("No Feature named '…' found") |
 | V7 | Calc def extracts with zero output attributes | "Calc def '{name}' extracted with zero output attributes. A pipeline module needs at least one output channel. Likely cause: the calc def declares no result — add one, e.g. `out attribute y : Real = <expr>` or `return y : Real = <expr>`. (An anonymous `return` is reported separately.)" |
 | V8 | Calc def has an anonymous `return` (a result with no name) | "Calc def '{name}' has an anonymous `return` (a result with no name), so no output channel can be built. Give the result a name, e.g. `return result : Real = <expr>`." |
 | V9 | Two template calcs from different owners (a retyped usage's super- and subtype) resolve to the same virtual QN | Message removed with the legacy extraction lane (REPO-CLEANUP C3, `987836f3`). What the exact route does with this model was not rechecked in EXEC-SUBSET-CONTRACT Item 2a. |
