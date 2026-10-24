@@ -235,7 +235,7 @@ Static evaluation and FORMULA compilation support:
 | `/` | Division | `a / b` |
 | `[` | Unit annotation | `3.0 [m]` |
 
-Exponentiation (`^`, `**`) also builds, in an attribute value and in a calc def's result (probed 2026-10-23; the computed value was not checked).
+Exponentiation (`^`, `**`) also builds, in an attribute value and in a calc def's result (probed 2026-10-23). In dc3, five `^` expressions (`annual_energy_balance.sysml:46-58`) give the native value in the generated package (dc3 audit, 2026-10-24); `**` values were not checked.
 
 **NOT supported anywhere, a calc def included:**
 - Functions other than `NumericalFunctions::sum` (for example `RealFunctions::sqrt`): refused with `SI_EXPRESSION_SOURCE_UNSUPPORTED` ("only NumericalFunctions::sum is supported").
@@ -365,12 +365,11 @@ the def or on a part usage (the two-level shape, REQ-VBR-11) — it is how a con
 declared on a base def reaches a value or channel supplied by the subtype (e.g. the
 `gamma → lcoe` wiring).
 
-**Value-carrying redefinitions use the bare member form.** Every `:>>` shown above is
-the bare form (`:>> attr = value`), which parses as a ReferenceUsage member and is
-captured — on template-instantiating usages (all RHS kinds) and on plain typed usages
-(literal RHS only; Item 9 / REQ-HR-08). The `attribute :>> attr = <expression>` form
-(an AttributeUsage redefinition) is **not captured** — it is currently dropped at
-extraction without a diagnostic. Use the bare form.
+**Both redefinition forms carry a value.** `:>> attr = value` and `attribute :>> attr = value`
+give the same generated value, in a part usage and in a specializing part def, with a literal
+or an expression on the right (probed at `a3429411`, 2026-10-24: all eight combinations match
+native; agentic-mbse `.project/execution/evidence/redef-forms-20261024/`). The `attribute`
+keyword matters only for a part-count override (§ 10).
 
 ### Cross-Part Supplied Values (Item 2, REQ-SVM-01..04)
 
