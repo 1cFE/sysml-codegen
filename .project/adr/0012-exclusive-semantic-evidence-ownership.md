@@ -3,8 +3,8 @@ id: 0012
 title: Semantic evidence has one acquisition owner and complete closed values
 date: 2026-10-12
 owner: Reid W
-status: amended
-amended_by: [0018]
+status: active
+amended_by: []
 superseded_by: null
 provenance: "[INHERITED: approved parser-remediation design cited below]"
 seams: [extraction, elaboration, generation, agentic-mbse]
