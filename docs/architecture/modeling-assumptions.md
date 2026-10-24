@@ -235,7 +235,7 @@ Static evaluation and FORMULA compilation support:
 | `/` | Division | `a / b` |
 | `[` | Unit annotation | `3.0 [m]` |
 
-Exponentiation (`^`, `**`) also builds, in an attribute value and in a calc def's result (probed 2026-10-23; the computed value was not checked).
+Exponentiation (`^`, `**`) also builds, in an attribute value and in a calc def's result (probed 2026-10-23). In dc3, five `^` expressions (`annual_energy_balance.sysml:46-58`) give the native value in the generated package (dc3 audit, 2026-10-24); `**` values were not checked.
 
 **NOT supported anywhere, a calc def included:**
 - Functions other than `NumericalFunctions::sum` (for example `RealFunctions::sqrt`): refused with `SI_EXPRESSION_SOURCE_UNSUPPORTED` ("only NumericalFunctions::sum is supported").
@@ -330,7 +330,7 @@ This generates a virtual CalcUsage: `solar_array__pv_module__cost_model` with `w
 |------|---------|-----------|
 | LITERAL | `:>> wattage = 400.0` | Becomes a DESIGN_ATTRIBUTE entry point |
 | CHAIN | `:>> capital_cost = cost_model.total_cost` | Wired as MODULE_OUTPUT in the pipeline |
-| Deep-path | `:>> pv_module.wattage = 400.0` | Traversed through hierarchy to leaf attribute |
+| Deep-path | `:>> pv_module.wattage = 400.0` | Traversed through hierarchy to leaf attribute; literal only, anything else is dropped |
 | Type (retyping) | `:>> driver : 'HIF Driver'` (where `'HIF Driver' :> 'IFE Driver'`) | Pulls in the subtype's template calcs; supertype templates continue to flow (see below) |
 
 ### Type Redefinition (Retyping)
@@ -365,12 +365,20 @@ the def or on a part usage (the two-level shape, REQ-VBR-11) — it is how a con
 declared on a base def reaches a value or channel supplied by the subtype (e.g. the
 `gamma → lcoe` wiring).
 
-**Value-carrying redefinitions use the bare member form.** Every `:>>` shown above is
-the bare form (`:>> attr = value`), which parses as a ReferenceUsage member and is
-captured — on template-instantiating usages (all RHS kinds) and on plain typed usages
-(literal RHS only; Item 9 / REQ-HR-08). The `attribute :>> attr = <expression>` form
-(an AttributeUsage redefinition) is **not captured** — it is currently dropped at
-extraction without a diagnostic. Use the bare form.
+**Every redefinition form carries a value, except dotted expressions.** `:>> attr = v`,
+`attribute :>> attr = v`, `redefines attr = v`, `attribute redefines attr = v` and
+`:>> attr default v` give the same generated value, in a part usage and in a specializing
+part def, through two levels, with a literal or an expression on the right: the value
+builder takes any Feature with a value expression as a writer
+(`elaboration/elaborate.py:902-1011`). A dotted override (`:>> inner.attr = …`) has no
+qualified name, so only the deep-literal pass reads it, and that pass skips anything but a
+literal node (`elaborate.py:1211-1214`): an expression, or `-5.0`, is dropped without a
+diagnostic and the package uses the base value. The block form
+(`part :>> inner { :>> attr = …; }`) keeps any right-hand side. A base written `= v` or
+`:= v` cannot be overridden (SysIDE refuses the redefinition). Part counts follow § 10.
+Probed at `a3429411`, 2026-10-24 (agentic-mbse
+`.project/execution/evidence/redef-forms-20261024/`); backlog
+`[DOTTED-OVERRIDE-EXPRESSION-DROPPED]`.
 
 ### Cross-Part Supplied Values (Item 2, REQ-SVM-01..04)
 
@@ -387,8 +395,9 @@ one. Four value-provision shapes are supported (see
 
 Precedence is **usage override > specialized-def `:>>` > base def**. Entry points key by
 the **source attribute's QN**, so two differently-named consumers of one source collapse
-onto one parameter. Only LITERAL values apply; a non-literal supplied value falls through
-to an ordinary user-fill entry point. (The V11 uncovered-parameter diagnostic once
+onto one parameter. In shape (c) only a literal applies: a dotted override with any other
+right-hand side is dropped and the entry point keeps the base value (see above). Shapes (b)
+and (d) apply an expression too; (a) with an expression has not been probed. (The V11 uncovered-parameter diagnostic once
 documented here was dead by construction and was deleted — REPO-CLEANUP Move C.)
 
 The nested-occurrence override in `tests/fixtures/nested_occurrence_override_probe/` is supported by the exact route. Its dedicated C19 test (`tests/execution/test_c19_nested_occurrence_teax.py`) checks both consumers through live generation, in-place snapshot replay, and relocated replay. The earlier materializer mismatch belonged to the retired string-resolution route; current lifecycle evidence bounds are recorded in `.project/reference/source-identity-reconciliation.md`.
