@@ -24,6 +24,7 @@ from sysml_codegen.cli.prepare import (
 )
 from sysml_codegen.cli.refusal import Refusal, RefusalKind
 from sysml_codegen.generation.module_paths import module_python_path
+from sysml_codegen.generation.registry import class_owners
 
 if TYPE_CHECKING:
     import jinja2
@@ -262,7 +263,8 @@ def _generate_modules(
             (modules_dir / "constraints" / "predicates.py", constraint_plan.predicates_code)
         )
 
-    for module in graph.modules:
+    # One file per generated class: copies of one formula or rollup class share it.
+    for module in class_owners(graph.modules):
         python_path = module_python_path(module)
         output_path = modules_dir / python_path.full_path
         if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
@@ -315,7 +317,8 @@ def _generate_stencils(
 
     stats = {"new": 0, "preserved": 0, "regenerated": 0}
 
-    for module in graph.modules:
+    # One stencil per generated class, beside the class file it implements.
+    for module in class_owners(graph.modules):
         if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
             # D8: fully generated, no handwritten implementation to stencil.
             continue

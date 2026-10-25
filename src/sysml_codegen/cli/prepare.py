@@ -236,6 +236,7 @@ def prepare_graph(graph: ComputationGraph, package_name: str) -> Prepared | Refu
     """
     from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
     from sysml_codegen.generation.entry_point import refuse_param_field_collisions
+    from sysml_codegen.generation.registry import class_owners
 
     step = PreparationStep.GENERATION_METADATA
     try:
@@ -252,7 +253,7 @@ def prepare_graph(graph: ComputationGraph, package_name: str) -> Prepared | Refu
         # A sanitize-collision, so a duplicate path never wipes or silently overwrites
         # existing files.
         step = PreparationStep.OUTPUT_PATHS
-        _check_duplicate_output_paths(graph.modules)
+        _check_duplicate_output_paths(class_owners(graph.modules))
 
         # Registry class-name collisions the aliasing cannot resolve. The check itself lives
         # at the registry pass, which runs after the tree is cleared; running it here is what
@@ -343,7 +344,9 @@ def _check_duplicate_output_paths(modules: list[PipelineModule]) -> None:
       differ.
 
     Only a collision between *different* raw sources is an error -- multiple
-    usages of one calc def legitimately derive the same path.
+    usages of one calc def legitimately derive the same path. The caller passes the
+    modules whose files are written (``registry.class_owners``): the other copies of a
+    formula or rollup class write no file of their own.
     """
     from sysml_codegen.core.errors import GenerationCode
     from sysml_codegen.elaboration.diagnostics import SiteReason
