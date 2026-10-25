@@ -4,6 +4,8 @@
 
 ## Active Work
 
+`repeated-rollup-collision` (backlog `[REPEATED-ROLLUP-REGISTRY-COLLISION]`, branch `repeated-rollup-collision`): spec drafted 2026-10-25 at `.project/active/repeated-rollup-collision/spec.md`.
+
 EXEC-SUBSET-CONTRACT Item 2b (`subset-profile-screen`, epic in agentic-mbse), live half: Phases 0-9 implemented and audited, Certify (2026-10-20, `.project/active/subset-profile-screen/audit.md`); Phase 10 done 2026-10-20 (no readiness rule), not yet audited. Branch `subset-profile-screen`. `sysml-codegen check` gives `generate`'s answer without writing (exit 0 builds, 1 refuses) and prints only the generator's answer. The subset screen step was removed by owner decision on 2026-10-21 (agentic-mbse item `retire-subset-profile`, which also retired agentic-mbse's copy of the generator rules), so backlog `[SUBSET-SCREEN-SNAPSHOT-CARRIAGE]` is retired as moot. The unbound String library default stays under RG-2. At close, update the agentic-mbse epic's Item 2b to match the split.
 
 The backlog holds separately scoped capabilities, diagnostics, model work, and assurance limits.
