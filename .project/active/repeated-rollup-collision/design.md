@@ -156,9 +156,10 @@ The change sits entirely inside projection and generation; the CLI, snapshot for
 ## Plan
 
 ### Phase 1: Signature and identity at projection
-- [ ] Add `class_signature` to `resolution/models.py` (a removal list; docstring says so) and its unit test (S4).
-- [ ] Add the settlement step at the end of `_build_calculation_modules` (`project.py`): group formula and rollup modules together by module type; split a differing group by signature, one module type per shape from its first copy; refuse a differing formula group as an internal defect (D8), with a unit test.
-- [ ] Graph-level tests: `two` copies share `p.sub.capital_costModule`; `arity` copies get `p.top.a.capital_costModule` and `p.top.b.capital_costModule`; `nestdiv`'s four copies get two module types (`row_0.a`, `row_0.b`); `trio`'s `s[0]` and `s[1]` share one; a target selection of `b` alone gives the same module type as the full build.
+- [x] Add `class_signature` to `resolution/models.py` (a removal list; docstring says so) and its unit test (S4).
+- [x] Add the settlement step at the end of `_build_calculation_modules` (`project.py`): group formula and rollup modules together by module type; split a differing group by signature, one module type per shape from its first copy; refuse a differing formula group as an internal defect (D8), with a unit test.
+- [x] Graph-level tests: `two` copies share `p.sub.capital_costModule`; `arity` copies get `p.top.a.capital_costModule` and `p.top.b.capital_costModule`; `nestdiv`'s four copies get two module types (`row_0.a`, `row_0.b`); `trio`'s `s[0]` and `s[1]` share one; a target selection of `b` alone gives the same module type as the full build.
+- Notes: `class_signature` is in `resolution/models.py`; settlement is the pure function `_shape_split_module_types` in `elaboration/project.py`, applied at the end of `_build_calculation_modules`. The D8 refusal is a plain `AssertionError` (projection's existing internal-invariant style), which the public route reports as `SI_INTERNAL_DEFECT`. Tests: `tests/unit/test_computed_class_identity.py`. The `repeated_rollup` fixtures were added here (not phase 4) because the graph tests need them; their `fixture_classes.json` entries land in phase 4, so `test_every_directory_is_a_classed_root...` fails between phase 1 and phase 4. `PROJECTOR_SEMANTICS` is not bumped: same-shape copies keep their types, and only models that previously could not generate get new types.
 
 ### Phase 2: Registry
 - [ ] Move `_get_python_path` into `generation/`; point `cli/prepare.py`, `cli/emit.py` and `generation/modules.py:42-66` at it (S2).

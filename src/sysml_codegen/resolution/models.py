@@ -240,6 +240,29 @@ class PipelineModule(BaseModel):
     source_line: int | None = None
 
 
+def class_signature(module: PipelineModule) -> str:
+    """What makes two computed modules the same generated class, as a comparable string.
+
+    Two copies of one definition feature (``sub[0].capital_cost`` and
+    ``sub[1].capital_cost``) can share one class only when everything the class body
+    is rendered from is equal. The signature is the module with its occurrence fields
+    removed: ``name``, ``execution_order``, ``module_type``, each input's ``source``
+    (the occurrence's parameter key) and each output's ``channel_name``. Each copy's
+    pipeline entry carries those; the class does not.
+
+    This is a removal list, not a list of fields to keep, and must stay one: a field
+    added to ``PipelineModule``, ``ModuleInput`` or ``ModuleOutput`` later counts by
+    default, so the comparison can only get stricter. (Fields declared
+    ``exclude=True`` are not dumped and so never count.)
+    """
+    dumped = module.model_dump(mode="json", exclude={"name", "execution_order", "module_type"})
+    for module_input in dumped["inputs"]:
+        del module_input["source"]
+    for module_output in dumped["outputs"]:
+        del module_output["channel_name"]
+    return json.dumps(dumped, sort_keys=True)
+
+
 class OutputAlias(BaseModel):
     """A modeler's EXPOSE_PURE name surfaced onto a canonical output channel.
 

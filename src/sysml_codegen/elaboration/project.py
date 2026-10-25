@@ -76,6 +76,7 @@ from sysml_codegen.resolution.models import (
     OutputAlias,
     ParameterGroup,
     PipelineModule,
+    class_signature,
 )
 
 __all__ = ["PROJECTOR_SEMANTICS", "ProjectionError", "project"]
@@ -932,6 +933,9 @@ class _Projection:
                     source_line=node.source_line,
                 ),
             )
+        # Class identity is settled here, once, over every computed module: ``run`` and
+        # ``select`` both read ``modules_by_semantic``, so a selection gets the same types.
+        self.modules_by_semantic.update(_shape_split_module_types(self.modules_by_semantic))
 
     def _constraint_identity(self, node: ConstraintNode) -> tuple[str, str, str]:
         if isinstance(node.scope, OccurrenceId):
@@ -1432,6 +1436,51 @@ def _owning_node(semantic: object) -> NodeId | None:
     if isinstance(semantic, tuple) and semantic and isinstance(semantic[0], NodeId):
         return semantic[0]
     return None
+
+
+def _shape_split_module_types(
+    modules: dict[NodeId | str, PipelineModule],
+) -> dict[NodeId | str, PipelineModule]:
+    """The re-typed copies that give every computed module type one class body.
+
+    A formula or rollup module's type comes from the definition that owns it, so every
+    copy of that definition (``sub[0]``, ``sub[1]``) shares it, and the registry
+    registers it once. That is only sound when the copies render the same class. When
+    they do not (``a : Sub`` sums three leaves, ``b : Sub { leaf[2] }`` sums two), the
+    copies are split by shape: each distinct shape takes the module type of its first
+    copy's occurrence path, by module name, which is also where that class's file is
+    written. Copies with the same shape still share one class. Returns only the modules
+    whose type changes, keyed as given; an empty result means every type already holds.
+
+    Formula and rollup modules are grouped together, so a difference in kind also splits.
+    """
+    groups: dict[str, list[tuple[NodeId | str, PipelineModule]]] = defaultdict(list)
+    for semantic, module in modules.items():
+        if module.module_kind in (ModuleKind.FORMULA, ModuleKind.AGGREGATION):
+            groups[module.module_type].append((semantic, module))
+
+    retyped: dict[NodeId | str, PipelineModule] = {}
+    for module_type, members in groups.items():
+        members.sort(key=lambda member: member[1].name)
+        first_by_shape: dict[str, PipelineModule] = {}
+        for _, module in members:
+            first_by_shape.setdefault(class_signature(module), module)
+        if len(first_by_shape) == 1:
+            continue
+        if any(module.module_kind is ModuleKind.FORMULA for _, module in members):
+            # A formula class's file is the definition's path for every copy, so a
+            # per-shape type would still write one file. No probe reaches this:
+            # formula inputs are named by the expression's references.
+            raise AssertionError(
+                f"copies of computed module type {module_type!r} that include a formula "
+                f"render different classes: {[module.name for _, module in members]}"
+            )
+        for semantic, module in members:
+            first = first_by_shape[class_signature(module)]
+            retyped[semantic] = module.model_copy(
+                update={"module_type": derive_module_type(first.name.replace("__", "::"))}
+            )
+    return retyped
 
 
 def project(graph: InstanceGraph, targets: Sequence[str] | None = None) -> ComputationGraph:
