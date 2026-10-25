@@ -19,11 +19,11 @@ from sysml_codegen.cli.prepare import (
     PreparationStep,
     Prepared,
     Refused,
-    _get_python_path,
     log_refused,
     refused_at_generation,
 )
 from sysml_codegen.cli.refusal import Refusal, RefusalKind
+from sysml_codegen.generation.module_paths import module_python_path
 
 if TYPE_CHECKING:
     import jinja2
@@ -263,7 +263,7 @@ def _generate_modules(
         )
 
     for module in graph.modules:
-        python_path = _get_python_path(module)
+        python_path = module_python_path(module)
         output_path = modules_dir / python_path.full_path
         if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
             code = constraint_plan.rendered_modules[module.name]
@@ -319,7 +319,7 @@ def _generate_stencils(
         if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
             # D8: fully generated, no handwritten implementation to stencil.
             continue
-        python_path = _get_python_path(module)
+        python_path = module_python_path(module)
 
         # Create namespace subdirectory with __init__.py in all intermediates
         if python_path.directory:

@@ -162,13 +162,14 @@ The change sits entirely inside projection and generation; the CLI, snapshot for
 - Notes: `class_signature` is in `resolution/models.py`; settlement is the pure function `_shape_split_module_types` in `elaboration/project.py`, applied at the end of `_build_calculation_modules`. The D8 refusal is a plain `AssertionError` (projection's existing internal-invariant style), which the public route reports as `SI_INTERNAL_DEFECT`. Tests: `tests/unit/test_computed_class_identity.py`. The `repeated_rollup` fixtures were added here (not phase 4) because the graph tests need them; their `fixture_classes.json` entries land in phase 4, so `test_every_directory_is_a_classed_root...` fails between phase 1 and phase 4. `PROJECTOR_SEMANTICS` is not bumped: same-shape copies keep their types, and only models that previously could not generate get new types.
 
 ### Phase 2: Registry
-- [ ] Move `_get_python_path` into `generation/`; point `cli/prepare.py`, `cli/emit.py` and `generation/modules.py:42-66` at it (S2).
-- [ ] Add the class-owners helper; build `_registry_class_entries` from it with `import_module` on each entry.
-- [ ] Alias step assigns names only; render import lines from entries in today's group order; delete the substring search.
-- [ ] Add the internal-defect check over all formula and rollup modules to the registry preflight (D7).
-- [ ] Update `test_sc11_recheck.py` entries with `import_module`.
-- [ ] Run `test_public_package_oracle.py` and `test_public_route_baselines.py`: only `unresolvable_attr_probe` may differ. Stop if anything else does.
-- [ ] Whole-corpus receipt (S1): generate every generating fixture on `main` and on the branch, diff the trees, and record the result in this folder. Only `unresolvable_attr_probe` and `elab_native_plural_scope` may differ; explain or stop on anything else.
+- [x] Move `_get_python_path` into `generation/`; point `cli/prepare.py`, `cli/emit.py` and `generation/modules.py:42-66` at it (S2).
+- [x] Add the class-owners helper; build `_registry_class_entries` from it with `import_module` on each entry.
+- [x] Alias step assigns names only; render import lines from entries in today's group order; delete the substring search.
+- [x] Add the internal-defect check over all formula and rollup modules to the registry preflight (D7).
+- [x] Update `test_sc11_recheck.py` entries with `import_module`.
+- [x] Run `test_public_package_oracle.py` and `test_public_route_baselines.py`: only `unresolvable_attr_probe` may differ. Stop if anything else does.
+- [x] Whole-corpus receipt (S1): generate every generating fixture on `main` and on the branch, diff the trees, and record the result in this folder. Only `unresolvable_attr_probe` and `elab_native_plural_scope` may differ; explain or stop on anything else.
+- Notes: the path function is `module_python_path` in the new `src/sysml_codegen/generation/module_paths.py`; `cli/prepare.py`'s `_get_python_path` and `generation/modules.py`'s `_get_module_sysml_qn` are deleted and their callers use it. `generation/stencils.py` keeps its own `_get_module_sysml_qn` (the design does not list it; it gives the same path for every kind it renders). Registry entries carry `import_path` (package-relative, so `residual_class_name_collisions` needs no package name), `imported_name` and `import_group`, not one `import_module` string; `test_sc11_recheck.py` entries gained those keys and `_resolve_class_name_collisions` now takes and returns entries only. The D7 check is `registry.require_one_class_per_module_type`, called first in `_preflight_registry_class_names`. Oracle and route baselines: only `unresolvable_attr_probe` differs. Corpus receipt: `evidence/corpus-receipt.md` (only the two expected roots differ). `site_account.csv` rows are updated in phase 4, so the site-account tests fail between phases 2 and 4.
 
 ### Phase 3: Writers and preflight
 - [ ] `_generate_modules`, `_generate_stencils` (`emit.py`) and `_check_duplicate_output_paths` (`prepare.py`) iterate class owners.
