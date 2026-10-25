@@ -13,3 +13,16 @@ Findings:
 - spec-F4 [DO] Every value criterion depended on the real-TEAx lane, and `simkit` is not importable on this machine. — README.md "Development" (INHERITED) — disposition: spec now names where the value criteria run (the `pytest -m execution` lane with `TEAX_SIMKIT_PATH`) and adds a registry-based structural check that runs in the default suite.
 
 Gate: DISPOSED (spec-F1, spec-F2, spec-F3, spec-F4)
+
+## design_review — 2026-10-25 — rev 71214b28 (.project/active/repeated-rollup-collision/design.md)
+
+Copied from `design-review.md` § "Product lens (inline)": run by the reviewer, not a separate subagent.
+
+Point: a well-formed model with repeated sub-assemblies builds and computes per-copy values; refusal only for a genuine identity conflict [owner-verbatim 2026-10-25; product 0003 (owner); ADR 0011 / modeling-assumptions §6 (INHERITED)]. Falsifier: identical repeated parents containing differing copies are refused.
+
+Findings:
+- design_review-F1 [DO] Refuses identical rows that each contain differing copies (M1). Source: owner-verbatim intent plus §6, owner/INHERITED. Disposition: design adopts one class per shape (recommended), or files the wider limit with its reason. — round 2: design D3 adopts one class per shape (orchestrator, `briefs/design-round2.md`); `nestdiv` builds; the remaining narrow limit (`repro/divnamed`) is filed.
+- design_review-F2 [DON'T-risk] D7 re-checks at generation what projection guarantees (smell 2, consumer compensating for the producer, mild). Not fired as a structural smell, because it refuses rather than compensates. Disposition: N1. — round 2: D7 is now an internal-defect assertion over all formula and rollup modules.
+- Smell 7 (ownership changed without saying so): not fired. Class identity stays with projection, and the design says so.
+
+Gate: DISPOSE-and-proceed (F1 must be disposed in the design before implementation). Round 2: F1 and F2 disposed in the design.
