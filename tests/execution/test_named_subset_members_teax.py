@@ -65,8 +65,21 @@ def _outputs(models: Path, root: Path) -> dict[str, float]:
             / "named-member__redefined_member__part_usage__specializing_def",
             {"fx__site__total__total": 25.0},
         ),
+        # One usage adds the subsetting (part :>> spare :> servers, 15.0): spare is a member
+        # in rack_a only; rack_b keeps both copies.
+        (
+            FIXTURES / "named_subset_members" / "one_usage_adds_subsetting",
+            {"ns__rack_a__total__total": 25.0, "ns__rack_b__total__total": 20.0},
+        ),
+        # The same through a specializing definition; spare keeps Rack's 1.0, so rack_a holds
+        # spare and one copy (11.0) and a plain Rack keeps both copies.
+        (
+            FIXTURES / "named_subset_members" / "specializing_def_adds_subsetting",
+            {"ns__rack_a__total__total": 11.0, "ns__rack_b__total__total": 20.0},
+        ),
     ],
     ids=lambda value: value.name if isinstance(value, Path) else None,
 )
 def test_a_sum_counts_each_member_once(models: Path, expected: dict[str, float], tmp_path):
     assert _outputs(models, tmp_path) == expected
+

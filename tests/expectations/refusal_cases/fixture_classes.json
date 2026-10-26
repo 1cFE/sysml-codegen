@@ -409,10 +409,16 @@
     "named_subset_members/one_named": {
       "class": "generating"
     },
+    "named_subset_members/one_usage_adds_subsetting": {
+      "class": "generating"
+    },
     "named_subset_members/package_roots": {
       "class": "generating"
     },
     "named_subset_members/specializing_def": {
+      "class": "generating"
+    },
+    "named_subset_members/specializing_def_adds_subsetting": {
       "class": "generating"
     },
     "named_subset_members/two_named": {

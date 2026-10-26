@@ -414,3 +414,22 @@ def test_a_collection_builds_only_the_copies_its_count_leaves(
     built = {o.display_path for o in occurrences.occurrences()}
     servers = {path for path in built if "server" in path.rsplit("__", 1)[-1]}
     assert servers == expected
+
+
+def test_a_subsetting_added_by_one_redefinition_makes_a_member_only_there() -> None:
+    """B1 of the named-subset-members audit: membership is read per parent.
+
+    ``rack_a : Rack { part :>> spare :> servers; }`` makes ``spare`` one of rack_a's two
+    servers. ``rack_b : Rack`` shares the slot of ``spare`` but adds no subsetting, so it
+    keeps both copies of ``servers`` and its own ``spare`` beside them.
+    """
+    model = _load("named_subset_members/one_usage_adds_subsetting")
+    occurrences = build_occurrence_index(model, build_feature_slot_index(model))
+    built = {o.display_path for o in occurrences.occurrences()}
+    rack_a = {path for path in built if path.startswith("ns__rack_a__")}
+    rack_b = {path for path in built if path.startswith("ns__rack_b__")}
+
+    assert rack_a == {"ns__rack_a__servers[0]", "ns__rack_a__spare"}
+    assert rack_b == {"ns__rack_b__servers[0]", "ns__rack_b__servers[1]", "ns__rack_b__spare"}
+    assert _occurrence_named(occurrences, "ns__rack_a__spare").member_of_slot is not None
+    assert _occurrence_named(occurrences, "ns__rack_b__spare").member_of_slot is None

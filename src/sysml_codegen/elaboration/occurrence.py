@@ -1021,19 +1021,6 @@ def _multiplicity_indices(
 
 
 @dataclass(frozen=True)
-class _NamedMembership:
-    """Which part slots are named members of which collection slots, model-wide.
-
-    Keyed by slot, so a redefinition of a member (``part :>> server_1 { ... }``) is the
-    same member.
-    """
-
-    collection_of: Mapping[FeatureSlotId, FeatureSlotId]
-    #: Member slots whose subsetting reaches the collection through a feature chain.
-    chained: frozenset[FeatureSlotId]
-
-
-@dataclass(frozen=True)
 class _SiblingMembers:
     """The named members among one parent's child declarations, or one package's roots."""
 
@@ -1079,35 +1066,22 @@ def _subsetted_part_usages(
     return tuple(subsetted)
 
 
-def _read_named_membership(
-    usages: list[Any], usages_by_id: Mapping[DeclarationId, Any], slots: FeatureSlotIndex
-) -> _NamedMembership:
-    """Read every named member once, or refuse a member that names two collections or
-    subsets another named member."""
-    collection_of: dict[FeatureSlotId, FeatureSlotId] = {}
-    chained: set[FeatureSlotId] = set()
-    declared_by: dict[FeatureSlotId, Any] = {}
-    for usage in sorted(usages, key=lambda item: declaration_id_for(item).to_wire()):
-        subsetted = _subsetted_part_usages(usage, usages_by_id)
-        if not subsetted:
-            continue
-        member_slot = slots.slot_of(declaration_id_for(usage))
-        collections = {slots.slot_of(declaration_id_for(target)) for target, _ in subsetted}
-        if member_slot in collection_of:
-            collections.add(collection_of[member_slot])
-        if len(collections) > 1:
-            _refuse_named_member_form(usage, "subsets more than one part")
-        (collection_slot,) = collections
-        collection_of[member_slot] = collection_slot
-        declared_by.setdefault(member_slot, usage)
-        if any(through_chain for _, through_chain in subsetted):
-            chained.add(member_slot)
-    for member_slot, collection_slot in sorted(collection_of.items()):
-        if collection_slot in collection_of:
-            _refuse_named_member_form(
-                declared_by[member_slot], "subsets a part that is itself a named member"
-            )
-    return _NamedMembership(collection_of, frozenset(chained))
+def _subsetted_through_redefinitions(
+    usage: Any, usages_by_id: Mapping[DeclarationId, Any]
+) -> tuple[tuple[Any, bool], ...]:
+    """The user part usages ``usage`` subsets, itself or through a declaration it redefines.
+
+    A redefinition keeps the subsettings of what it redefines, so ``part :>> server_1;``
+    over ``part server_1 :> servers;`` is still a member. A subsetting added by one
+    redefinition reaches only that redefinition and what redefines it: in
+    ``rack_a : Rack { part :>> spare :> servers; }`` ``spare`` is a member in ``rack_a``
+    and not in another ``Rack``.
+    """
+    return _subsetted_part_usages(usage, usages_by_id) + tuple(
+        item
+        for redefined in _redefined_declarations(usage)
+        for item in _subsetted_through_redefinitions(redefined, usages_by_id)
+    )
 
 
 def _owns_non_part_feature(usage: Any) -> bool:
@@ -1119,22 +1093,32 @@ def _owns_non_part_feature(usage: Any) -> bool:
 
 
 def _sibling_members(
-    siblings: tuple[Any, ...], membership: _NamedMembership, slots: FeatureSlotIndex
+    siblings: tuple[Any, ...],
+    usages_by_id: Mapping[DeclarationId, Any],
+    slots: FeatureSlotIndex,
 ) -> _SiblingMembers:
     """Settle which siblings are named members of a sibling collection, or refuse.
 
-    A named member whose collection is not among its siblings cannot be placed in that
-    collection, so building it would add a part outside the collection's count (D6). A
-    collection whose own declarations own a non-part feature would give its unnamed
-    copies values its named members do not get (D7).
+    Each sibling is read from its own effective declaration and the declarations it
+    redefines, never from other declarations that share its slot. A member may name one
+    collection, and that collection may not itself be a named member (D8). A named member
+    whose collection is not among its siblings cannot be placed in that collection, so
+    building it would add a part outside the collection's count (D6). A collection whose
+    own declarations own a non-part feature would give its unnamed copies values its
+    named members do not get (D7).
     """
     by_slot = {slots.slot_of(declaration_id_for(item)): item for item in siblings}
     collection_of: dict[FeatureSlotId, FeatureSlotId] = {}
     for slot in sorted(by_slot):
-        collection_slot = membership.collection_of.get(slot)
-        if collection_slot is None:
+        subsetted = _subsetted_through_redefinitions(by_slot[slot], usages_by_id)
+        if not subsetted:
             continue
-        if collection_slot not in by_slot or slot in membership.chained:
+        collections = {slots.slot_of(declaration_id_for(target)) for target, _ in subsetted}
+        if len(collections) > 1:
+            _refuse_named_member_form(by_slot[slot], "subsets more than one part")
+        (collection_slot,) = collections
+        chained = any(through_chain for _, through_chain in subsetted)
+        if collection_slot not in by_slot or chained:
             reference, location = authored_site(by_slot[slot])
             collection_reference = slots.site_of(collection_slot.root_declaration)[0]
             raise MultiplicityExpansionError(
@@ -1149,6 +1133,11 @@ def _sibling_members(
                 reason=SiteReason.OCCURRENCE_NAMED_MEMBER_NOT_SIBLING,
             )
         collection_of[slot] = collection_slot
+    for slot, collection_slot in sorted(collection_of.items()):
+        if collection_slot in collection_of:
+            _refuse_named_member_form(
+                by_slot[slot], "subsets a part that is itself a named member"
+            )
     for collection_slot in sorted(set(collection_of.values())):
         collection = by_slot[collection_slot]
         if _owns_non_part_feature(collection):
@@ -1213,7 +1202,6 @@ def build_occurrence_index(model: Any, slots: FeatureSlotIndex) -> OccurrenceInd
         if getattr(attribute, "qualified_name", None) is None:
             continue
         attributes_by_slot[slots.slot_of(declaration_id_for(attribute))].append(attribute)
-    membership = _read_named_membership(usages, usages_by_id, slots)
 
     roots: list[Any] = []
     for usage in usages:
@@ -1301,6 +1289,10 @@ def build_occurrence_index(model: Any, slots: FeatureSlotIndex) -> OccurrenceInd
             indices = _named_member_indices(usage, indices)
         else:
             indices = _unnamed_indices(usage, indices, siblings.named_count(slot))
+        if not indices:
+            return
+        next_active = active_types + ((type_id,) if type_id is not None else ())
+        child_members = _sibling_members(child_declarations, usages_by_id, slots)
         for index in indices:
             step = OccurrenceStep(slot, index)
             steps = (step,) if parent is None else parent.occurrence_id.steps + (step,)
@@ -1348,8 +1340,6 @@ def build_occurrence_index(model: Any, slots: FeatureSlotIndex) -> OccurrenceInd
                     location=location,
                 )
             occurrences[occurrence_id] = occurrence
-            next_active = active_types + ((type_id,) if type_id is not None else ())
-            child_members = _sibling_members(child_declarations, membership, slots)
             for child in child_declarations:
                 add_usage(child, occurrence, next_active, child_members)
 
@@ -1366,7 +1356,7 @@ def build_occurrence_index(model: Any, slots: FeatureSlotIndex) -> OccurrenceInd
     root_members: dict[DeclarationId, _SiblingMembers] = {}
     for owner_id in sorted(roots_by_owner, key=lambda item: item.to_wire() if item else ""):
         group = tuple(roots_by_owner[owner_id])
-        members = _sibling_members(group, membership, slots)
+        members = _sibling_members(group, usages_by_id, slots)
         root_members.update({declaration_id_for(root): members for root in group})
     for root in sorted(roots, key=lambda item: declaration_id_for(item).to_wire()):
         add_usage(root, None, (), root_members[declaration_id_for(root)])
