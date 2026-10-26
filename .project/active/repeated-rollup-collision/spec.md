@@ -1,6 +1,6 @@
 # Spec: Repeated computed attributes register one class per definition
 
-**Status:** Draft
+**Status:** Implementation complete (2026-10-26), awaiting audit
 **Owner:** Reid Westwood
 **Created:** 2026-10-25
 **Complexity:** MEDIUM

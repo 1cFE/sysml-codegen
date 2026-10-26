@@ -1,0 +1,34 @@
+{
+  "artifact_root": "/tmp/claude-1000/-home-reid-src-agentic-mbse/9366fe1c-453c-484d-b30e-782bbdd1390c/scratchpad/impl2/lane/artifacts",
+  "python": {
+    "executable": "/tmp/claude-1000/-home-reid-src-agentic-mbse/9366fe1c-453c-484d-b30e-782bbdd1390c/scratchpad/impl2/lane/venv/bin/python",
+    "version": "3.12.3"
+  },
+  "roots": {
+    "agentic_install": {
+      "artifact_path": "/tmp/claude-1000/-home-reid-src-agentic-mbse/9366fe1c-453c-484d-b30e-782bbdd1390c/scratchpad/impl2/lane/artifacts/agentic_mbse-0.1.3-py3-none-any.whl",
+      "commit": "a2808cb99964d7478d94120b0448a15dbf561cb0",
+      "path": "/tmp/claude-1000/-home-reid-src-agentic-mbse/9366fe1c-453c-484d-b30e-782bbdd1390c/scratchpad/impl2/lane/venv/lib/python3.12/site-packages",
+      "wheel_sha256": "bbcf15a709aa6fb7627679ad22e5a185bfddb83a8c0047b7944c8f80afb30db2"
+    },
+    "codegen_source": {
+      "archive_sha256": "999a6c0c63e25aa246d0d66ad59fbf4ac0d254b1b32574e5831a16982fb91b8c",
+      "artifact_path": "/tmp/claude-1000/-home-reid-src-agentic-mbse/9366fe1c-453c-484d-b30e-782bbdd1390c/scratchpad/impl2/lane/artifacts/codegen-73a69863.tar",
+      "commit": "73a698631779348c25a3143b5960caef073b61b6",
+      "path": "/tmp/claude-1000/-home-reid-src-agentic-mbse/9366fe1c-453c-484d-b30e-782bbdd1390c/scratchpad/impl2/lane/codegen/src"
+    },
+    "teax_simkit": {
+      "archive_sha256": "c566cf44569c95577125fcbdaf6089a3875856e622e2f1a0d10515c1603d8cbf",
+      "artifact_path": "/tmp/claude-1000/-home-reid-src-agentic-mbse/9366fe1c-453c-484d-b30e-782bbdd1390c/scratchpad/impl2/lane/artifacts/teax-8d877460.tar",
+      "commit": "8d877460ac4f6f264561d916e40c1708adb13397",
+      "path": "/tmp/claude-1000/-home-reid-src-agentic-mbse/9366fe1c-453c-484d-b30e-782bbdd1390c/scratchpad/impl2/lane/teax-clone/packages/teax-simkit"
+    },
+    "teax_source": {
+      "archive_sha256": "c566cf44569c95577125fcbdaf6089a3875856e622e2f1a0d10515c1603d8cbf",
+      "artifact_path": "/tmp/claude-1000/-home-reid-src-agentic-mbse/9366fe1c-453c-484d-b30e-782bbdd1390c/scratchpad/impl2/lane/artifacts/teax-8d877460.tar",
+      "commit": "8d877460ac4f6f264561d916e40c1708adb13397",
+      "path": "/tmp/claude-1000/-home-reid-src-agentic-mbse/9366fe1c-453c-484d-b30e-782bbdd1390c/scratchpad/impl2/lane/teax-clone"
+    }
+  },
+  "schema_version": "stop-parser-execution-provenance/v1"
+}
