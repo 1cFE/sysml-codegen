@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import math
 from collections import defaultdict
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any, Literal, NoReturn
 
 from agentic_mbse.sysml.expression import evaluate_true_static_expression
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
@@ -383,6 +384,12 @@ def _most_specific_definition(
     return min(winners)
 
 
+def _chain_endpoint(feature: Any) -> tuple[Any, bool]:
+    """The declaration a feature reference ends at, and whether it ends through a chain."""
+    chain = list(getattr(feature, "chaining_features", ()) or ())
+    return (chain[-1], True) if chain else (feature, False)
+
+
 def build_feature_slot_index(model: Any) -> FeatureSlotIndex:
     declarations: set[DeclarationId] = set()
     parent_sets: dict[DeclarationId, set[DeclarationId]] = defaultdict(set)
@@ -408,8 +415,7 @@ def build_feature_slot_index(model: Any) -> FeatureSlotIndex:
                     reference=reference,
                     location=location,
                 )
-            redefined_chain = list(getattr(redefined, "chaining_features", ()) or ())
-            redefined_endpoint = redefined_chain[-1] if redefined_chain else redefined
+            redefined_endpoint, _chained = _chain_endpoint(redefined)
             if getattr(redefined_endpoint, "qualified_name", None) is None:
                 reference, location = authored_site(feature)
                 raise InvalidRedefinitionFamilyError(
@@ -455,6 +461,9 @@ class ExactOccurrence:
     package_display: str | None
     root_package_id: DeclarationId | None
     display_path: str
+    #: The slot of the collection this occurrence is a named member of (``server_1`` in
+    #: ``part server_1 :> servers``), or ``None`` when it is no named member.
+    member_of_slot: FeatureSlotId | None
 
 
 class OccurrenceIndex:
@@ -480,12 +489,21 @@ class OccurrenceIndex:
         root_buckets: dict[
             tuple[DeclarationId, FeatureSlotId], list[ExactOccurrence]
         ] = defaultdict(list)
+        own_children: dict[OccurrenceId, list[ExactOccurrence]] = defaultdict(list)
         for occurrence in occurrences.values():
-            slot = occurrence.occurrence_id.steps[-1].containment_slot
+            # A named member is filed under its own slot and under its collection's slot,
+            # so a read of the collection reaches it and a read of its own name reaches
+            # only it.
+            filed_slots = [occurrence.occurrence_id.steps[-1].containment_slot]
+            if occurrence.member_of_slot is not None:
+                filed_slots.append(occurrence.member_of_slot)
             if occurrence.parent_id is not None:
-                child_buckets[(occurrence.parent_id, slot)].append(occurrence)
+                own_children[occurrence.parent_id].append(occurrence)
+                for slot in filed_slots:
+                    child_buckets[(occurrence.parent_id, slot)].append(occurrence)
             elif occurrence.root_package_id is not None:
-                root_buckets[(occurrence.root_package_id, slot)].append(occurrence)
+                for slot in filed_slots:
+                    root_buckets[(occurrence.root_package_id, slot)].append(occurrence)
         self._children_by_parent_and_slot = {
             key: tuple(sorted(value, key=lambda item: item.occurrence_id.to_wire()))
             for key, value in child_buckets.items()
@@ -493,6 +511,11 @@ class OccurrenceIndex:
         self._roots_by_package_and_slot = {
             key: tuple(sorted(value, key=lambda item: item.occurrence_id.to_wire()))
             for key, value in root_buckets.items()
+        }
+        #: Each child once, under its own slot only.
+        self._children_by_parent = {
+            key: tuple(sorted(value, key=lambda item: item.occurrence_id.to_wire()))
+            for key, value in own_children.items()
         }
 
     def occurrence_ids(self) -> tuple[OccurrenceId, ...]:
@@ -539,12 +562,8 @@ class OccurrenceIndex:
         return tuple(result)
 
     def children(self, occurrence_id: OccurrenceId) -> tuple[ExactOccurrence, ...]:
-        return tuple(
-            occurrence
-            for (parent, _slot), children in self._children_by_parent_and_slot.items()
-            if parent == occurrence_id
-            for occurrence in children
-        )
+        """Every child occurrence of ``occurrence_id``, each once."""
+        return self._children_by_parent.get(occurrence_id, ())
 
     def children_for_slot(
         self, occurrence_id: OccurrenceId, slot: FeatureSlotId
@@ -837,6 +856,64 @@ def _multiplicity_diagnostic_context(
     return reference, location
 
 
+def _redefined_declarations(usage: Any) -> tuple[Any, ...]:
+    """The declarations ``usage`` redefines directly, each at the end of its feature chain.
+
+    ``build_feature_slot_index`` has already refused a redefinition with a missing endpoint
+    and any redefinition cycle, so every walk over these terminates.
+    """
+    return tuple(
+        _chain_endpoint(relationship.redefined_feature)[0]
+        for relationship in getattr(usage, "owned_redefinitions", ()) or ()
+    )
+
+
+def _stated_multiplicity(usage: Any) -> tuple[Any, Any] | None:
+    """The multiplicity that governs ``usage`` and the declaration that states it.
+
+    A usage's own multiplicity, else the one it inherits from the declarations it
+    redefines (SysML Part 1 7.6.3; KerML 7.3.4.5): ``part :>> servers;`` over
+    ``servers : Server[2]`` holds two. ``None`` when no declaration on the chain states one.
+    The owner is returned so a bound like ``Server[n]`` resolves where ``n`` is written.
+    """
+    own = getattr(usage, "multiplicity", None)
+    if own is not None:
+        return own, usage
+    inherited: dict[int, tuple[Any, Any]] = {}
+    for redefined in _redefined_declarations(usage):
+        stated = _stated_multiplicity(redefined)
+        if stated is not None:
+            inherited[id(stated[0])] = stated
+    if len(inherited) > 1:
+        reference, location = authored_site(usage)
+        raise MultiplicityExpansionError(
+            ElaborationCode.SI_MULTIPLICITY_UNRESOLVED,
+            f"{reference} states no multiplicity and redefines parts with different "
+            "multiplicities; state its multiplicity",
+            reference=reference,
+            location=location,
+            reason=SiteReason.OCCURRENCE_MULTIPLICITY_INHERITED_AMBIGUOUS,
+        )
+    if not inherited:
+        return None
+    (only,) = inherited.values()
+    return only
+
+
+def _is_ordered(usage: Any) -> bool:
+    """Whether ``usage`` or a declaration it redefines is ordered (KerML 7.3.4.5)."""
+    return bool(getattr(usage, "is_ordered", False)) or any(
+        _is_ordered(redefined) for redefined in _redefined_declarations(usage)
+    )
+
+
+def _is_nonunique(usage: Any) -> bool:
+    """Whether ``usage`` or a declaration it redefines is nonunique (KerML 7.3.4.5)."""
+    return bool(getattr(usage, "is_nonunique", False)) or any(
+        _is_nonunique(redefined) for redefined in _redefined_declarations(usage)
+    )
+
+
 def _multiplicity_indices(
     usage: Any,
     *,
@@ -845,11 +922,13 @@ def _multiplicity_indices(
     attributes_by_slot: dict[FeatureSlotId, list[Any]],
     closures: dict[DeclarationId, frozenset[DeclarationId]],
 ) -> tuple[int | None, ...]:
-    multiplicity = getattr(usage, "multiplicity", None)
-    if multiplicity is None:
+    """The indices of every copy ``usage``'s multiplicity builds; ``(None,)`` for one part."""
+    stated = _stated_multiplicity(usage)
+    if stated is None:
         return (None,)
+    multiplicity, multiplicity_owner = stated
     name = str(getattr(usage, "name", None) or "<anonymous>")
-    if getattr(usage, "is_ordered", False):
+    if _is_ordered(usage):
         reference, location = _multiplicity_diagnostic_context(usage, multiplicity)
         raise MultiplicityExpansionError(
             ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED,
@@ -858,7 +937,7 @@ def _multiplicity_indices(
             location=location,
             reason=SiteReason.OCCURRENCE_MULTIPLICITY_ORDERED,
         )
-    if getattr(usage, "is_nonunique", False):
+    if _is_nonunique(usage):
         reference, location = _multiplicity_diagnostic_context(usage, multiplicity)
         raise MultiplicityExpansionError(
             ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED,
@@ -872,7 +951,7 @@ def _multiplicity_indices(
     count = (
         _modeled_integer_bound(
             upper,
-            multiplicity_owner=usage,
+            multiplicity_owner=multiplicity_owner,
             parent=parent,
             slots=slots,
             attributes_by_slot=attributes_by_slot,
@@ -906,7 +985,7 @@ def _multiplicity_indices(
     if lower is not None:
         lower_count = _modeled_integer_bound(
             lower,
-            multiplicity_owner=usage,
+            multiplicity_owner=multiplicity_owner,
             parent=parent,
             slots=slots,
             attributes_by_slot=attributes_by_slot,
@@ -933,6 +1012,194 @@ def _multiplicity_indices(
     return tuple(range(count))
 
 
+# Named members (KerML 7.3.4.4). A part usage that subsets another user part usage
+# (``part server_1 :> servers;``) is one of that collection's members, not an extra part.
+# Members and collections are matched by slot, and only siblings are supported: both are
+# child declarations of one occurrence, or roots of one package. A collection then builds
+# only the copies its count leaves over, and each named member is filed under the
+# collection's slot as well as its own.
+
+
+@dataclass(frozen=True)
+class _NamedMembership:
+    """Which part slots are named members of which collection slots, model-wide.
+
+    Keyed by slot, so a redefinition of a member (``part :>> server_1 { ... }``) is the
+    same member.
+    """
+
+    collection_of: Mapping[FeatureSlotId, FeatureSlotId]
+    #: Member slots whose subsetting reaches the collection through a feature chain.
+    chained: frozenset[FeatureSlotId]
+
+
+@dataclass(frozen=True)
+class _SiblingMembers:
+    """The named members among one parent's child declarations, or one package's roots."""
+
+    collection_of: Mapping[FeatureSlotId, FeatureSlotId]
+
+    def named_count(self, collection_slot: FeatureSlotId) -> int:
+        return sum(1 for slot in self.collection_of.values() if slot == collection_slot)
+
+
+def _refuse_named_member_form(member: Any, problem: str) -> NoReturn:
+    """Refuse a named member written in a form the generator does not count (D8, D9)."""
+    reference, location = authored_site(member)
+    raise MultiplicityExpansionError(
+        ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED,
+        f"named member {reference} {problem}; a named member is one member of one "
+        "collection: give it no multiplicity or [1], and subset the collection itself",
+        reference=reference,
+        location=location,
+        reason=SiteReason.OCCURRENCE_NAMED_MEMBER_FORM,
+    )
+
+
+def _subsetted_part_usages(
+    usage: Any, usages_by_id: Mapping[DeclarationId, Any]
+) -> tuple[tuple[Any, bool], ...]:
+    """The user part usages ``usage`` subsets, each with whether it is reached through a chain.
+
+    Redefinitions, and the usage's own reference and cross subsettings, are not membership.
+    """
+    reference_subsetting = getattr(usage, "owned_reference_subsetting", None)
+    cross_subsetting = getattr(usage, "owned_cross_subsetting", None)
+    subsetted: list[tuple[Any, bool]] = []
+    for relationship in getattr(usage, "owned_subsettings", ()) or ():
+        if SysideAdapter.is_instance(relationship, "Redefinition"):
+            continue
+        if relationship is reference_subsetting or relationship is cross_subsetting:
+            continue
+        endpoint, chained = _chain_endpoint(getattr(relationship, "subsetted_feature", None))
+        if getattr(endpoint, "qualified_name", None) is None:
+            continue
+        if declaration_id_for(endpoint) in usages_by_id:
+            subsetted.append((endpoint, chained))
+    return tuple(subsetted)
+
+
+def _read_named_membership(
+    usages: list[Any], usages_by_id: Mapping[DeclarationId, Any], slots: FeatureSlotIndex
+) -> _NamedMembership:
+    """Read every named member once, or refuse a member that names two collections or
+    subsets another named member."""
+    collection_of: dict[FeatureSlotId, FeatureSlotId] = {}
+    chained: set[FeatureSlotId] = set()
+    declared_by: dict[FeatureSlotId, Any] = {}
+    for usage in sorted(usages, key=lambda item: declaration_id_for(item).to_wire()):
+        subsetted = _subsetted_part_usages(usage, usages_by_id)
+        if not subsetted:
+            continue
+        member_slot = slots.slot_of(declaration_id_for(usage))
+        collections = {slots.slot_of(declaration_id_for(target)) for target, _ in subsetted}
+        if member_slot in collection_of:
+            collections.add(collection_of[member_slot])
+        if len(collections) > 1:
+            _refuse_named_member_form(usage, "subsets more than one part")
+        (collection_slot,) = collections
+        collection_of[member_slot] = collection_slot
+        declared_by.setdefault(member_slot, usage)
+        if any(through_chain for _, through_chain in subsetted):
+            chained.add(member_slot)
+    for member_slot, collection_slot in sorted(collection_of.items()):
+        if collection_slot in collection_of:
+            _refuse_named_member_form(
+                declared_by[member_slot], "subsets a part that is itself a named member"
+            )
+    return _NamedMembership(collection_of, frozenset(chained))
+
+
+def _owns_non_part_feature(usage: Any) -> bool:
+    """Whether ``usage`` or a declaration it redefines owns a feature that is no part usage."""
+    return any(
+        not SysideAdapter.is_instance(feature, "PartUsage")
+        for feature in getattr(usage, "owned_features", ()) or ()
+    ) or any(_owns_non_part_feature(redefined) for redefined in _redefined_declarations(usage))
+
+
+def _sibling_members(
+    siblings: tuple[Any, ...], membership: _NamedMembership, slots: FeatureSlotIndex
+) -> _SiblingMembers:
+    """Settle which siblings are named members of a sibling collection, or refuse.
+
+    A named member whose collection is not among its siblings cannot be placed in that
+    collection, so building it would add a part outside the collection's count (D6). A
+    collection whose own declarations own a non-part feature would give its unnamed
+    copies values its named members do not get (D7).
+    """
+    by_slot = {slots.slot_of(declaration_id_for(item)): item for item in siblings}
+    collection_of: dict[FeatureSlotId, FeatureSlotId] = {}
+    for slot in sorted(by_slot):
+        collection_slot = membership.collection_of.get(slot)
+        if collection_slot is None:
+            continue
+        if collection_slot not in by_slot or slot in membership.chained:
+            reference, location = authored_site(by_slot[slot])
+            collection_reference = slots.site_of(collection_slot.root_declaration)[0]
+            raise MultiplicityExpansionError(
+                ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED,
+                f"named member {reference} subsets {collection_reference}, which is not "
+                "declared beside it in the same part, definition or package, so the "
+                "generator cannot place it in that collection; declare it beside the "
+                "collection, or, to reuse a definition, type the part by it "
+                "(part facility : Fac) instead of subsetting a part declared elsewhere",
+                reference=reference,
+                location=location,
+                reason=SiteReason.OCCURRENCE_NAMED_MEMBER_NOT_SIBLING,
+            )
+        collection_of[slot] = collection_slot
+    for collection_slot in sorted(set(collection_of.values())):
+        collection = by_slot[collection_slot]
+        if _owns_non_part_feature(collection):
+            reference, location = authored_site(collection)
+            raise MultiplicityExpansionError(
+                ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED,
+                f"{reference} has named members, and its own declaration owns a feature "
+                "that is not a part, which the generator does not carry to named members; "
+                "set that value on each named member instead",
+                reference=reference,
+                location=location,
+                reason=SiteReason.OCCURRENCE_NAMED_MEMBER_COLLECTION_OWNS_FEATURES,
+            )
+    return _SiblingMembers(collection_of)
+
+
+def _named_member_indices(
+    member: Any, indices: tuple[int | None, ...]
+) -> tuple[int | None, ...]:
+    """A named member is one unindexed occurrence; its multiplicity may only be ``[1]`` (D9)."""
+    if indices not in ((None,), (0,)):
+        _refuse_named_member_form(member, f"states a multiplicity of {len(indices)}")
+    return (None,)
+
+
+def _unnamed_indices(
+    collection: Any, indices: tuple[int | None, ...], named: int
+) -> tuple[int | None, ...]:
+    """The indices of the copies left once ``named`` named members fill places (D2, D5).
+
+    The copies are numbered from zero; the number claims nothing about which member comes
+    first (ADR 0004). A single part (``(None,)``) with one named member builds no copy.
+    """
+    if named == 0:
+        return indices
+    capacity = len(indices)
+    if named > capacity:
+        reference, location = authored_site(collection)
+        raise MultiplicityExpansionError(
+            ElaborationCode.SI_MULTIPLICITY_INVALID,
+            f"{named} named members subset {reference}, which holds {capacity}; "
+            f"name at most {capacity}",
+            reference=reference,
+            location=location,
+            reason=SiteReason.OCCURRENCE_NAMED_MEMBERS_EXCEED_COUNT,
+        )
+    if indices == (None,):
+        return ()
+    return tuple(range(capacity - named))
+
+
 def build_occurrence_index(model: Any, slots: FeatureSlotIndex) -> OccurrenceIndex:
     definitions = {
         declaration_id_for(definition): definition
@@ -946,6 +1213,7 @@ def build_occurrence_index(model: Any, slots: FeatureSlotIndex) -> OccurrenceInd
         if getattr(attribute, "qualified_name", None) is None:
             continue
         attributes_by_slot[slots.slot_of(declaration_id_for(attribute))].append(attribute)
+    membership = _read_named_membership(usages, usages_by_id, slots)
 
     roots: list[Any] = []
     for usage in usages:
@@ -1000,6 +1268,7 @@ def build_occurrence_index(model: Any, slots: FeatureSlotIndex) -> OccurrenceInd
         usage: Any,
         parent: ExactOccurrence | None,
         active_types: tuple[DeclarationId, ...],
+        siblings: _SiblingMembers,
     ) -> None:
         usage_id = declaration_id_for(usage)
         type_id = _effective_type(usage, definitions, closures)
@@ -1020,13 +1289,19 @@ def build_occurrence_index(model: Any, slots: FeatureSlotIndex) -> OccurrenceInd
         )
         slot = slots.slot_of(usage_id)
         raw_name = str(getattr(usage, "name", None) or "anonymous")
-        for index in _multiplicity_indices(
+        member_of_slot = siblings.collection_of.get(slot)
+        indices = _multiplicity_indices(
             usage,
             parent=parent,
             slots=slots,
             attributes_by_slot=attributes_by_slot,
             closures=closures,
-        ):
+        )
+        if member_of_slot is not None:
+            indices = _named_member_indices(usage, indices)
+        else:
+            indices = _unnamed_indices(usage, indices, siblings.named_count(slot))
+        for index in indices:
             step = OccurrenceStep(slot, index)
             steps = (step,) if parent is None else parent.occurrence_id.steps + (step,)
             occurrence_id = OccurrenceId(steps)
@@ -1062,6 +1337,7 @@ def build_occurrence_index(model: Any, slots: FeatureSlotIndex) -> OccurrenceInd
                 package_display=package_display,
                 root_package_id=root_package_id,
                 display_path=rendered,
+                member_of_slot=member_of_slot,
             )
             existing = occurrences.get(occurrence_id)
             if existing is not None and existing != occurrence:
@@ -1073,11 +1349,27 @@ def build_occurrence_index(model: Any, slots: FeatureSlotIndex) -> OccurrenceInd
                 )
             occurrences[occurrence_id] = occurrence
             next_active = active_types + ((type_id,) if type_id is not None else ())
+            child_members = _sibling_members(child_declarations, membership, slots)
             for child in child_declarations:
-                add_usage(child, occurrence, next_active)
+                add_usage(child, occurrence, next_active, child_members)
 
+    # Roots are siblings when they share an owner (D10).
+    roots_by_owner: dict[DeclarationId | None, list[Any]] = defaultdict(list)
+    for root in roots:
+        owner = semantic_owner(root)
+        owner_id = (
+            declaration_id_for(owner)
+            if getattr(owner, "qualified_name", None) is not None
+            else None
+        )
+        roots_by_owner[owner_id].append(root)
+    root_members: dict[DeclarationId, _SiblingMembers] = {}
+    for owner_id in sorted(roots_by_owner, key=lambda item: item.to_wire() if item else ""):
+        group = tuple(roots_by_owner[owner_id])
+        members = _sibling_members(group, membership, slots)
+        root_members.update({declaration_id_for(root): members for root in group})
     for root in sorted(roots, key=lambda item: declaration_id_for(item).to_wire()):
-        add_usage(root, None, ())
+        add_usage(root, None, (), root_members[declaration_id_for(root)])
 
     return OccurrenceIndex(
         occurrences,

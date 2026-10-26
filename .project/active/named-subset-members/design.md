@@ -177,12 +177,12 @@ Not checked: native SysIDE values for the probes; slow tests; the `snapshot` rou
 
 ### Phase 1: Membership and count in `occurrence.py`
 
-- [ ] Read membership once by slot in `build_occurrence_index` (D1); `ExactOccurrence.member_of_slot`; collection-slot filing and the own-slot `children()` map in `OccurrenceIndex` (D3).
-- [ ] Sibling count per parent and per package; reduced collection expansion and member expansion in `_multiplicity_indices` (D2, D5, D9, D10).
-- [ ] Inherited multiplicity and flags through the redefinition chain (D4).
-- [ ] The refusals of D6, D7 and D8, one site per reason.
-- [ ] Keep the guards green: no first-match selection, literal selectors, manifest rows for the new raw reads.
-- [ ] Rerun `evidence/scripts/corpus_all.py` on base and branch; the diff must equal the fourteen-root list. Rerun dc3 from its committed tree; byte-identical.
+- [x] Read membership once by slot in `build_occurrence_index` (D1); `ExactOccurrence.member_of_slot`; collection-slot filing and the own-slot `children()` map in `OccurrenceIndex` (D3). Note: `_read_named_membership` and `_subsetted_part_usages` in `occurrence.py`; `member_of_slot` is a required field (one constructor).
+- [x] Sibling count per parent and per package; reduced collection expansion and member expansion in `_multiplicity_indices` (D2, D5, D9, D10). Note: `_multiplicity_indices` keeps its job (the copies a multiplicity builds) and its name, so the six existing site IDs stay; `_sibling_members` settles one sibling group, then `_named_member_indices` and `_unnamed_indices` adjust the indices in `add_usage`.
+- [x] Inherited multiplicity and flags through the redefinition chain (D4). Note: `_stated_multiplicity`, `_is_ordered`, `_is_nonunique` over `_redefined_declarations`.
+- [x] The refusals of D6, D7 and D8, one site per reason. Note: five construction sites, one per reason; the `form` reason is raised from the one helper `_refuse_named_member_form` (three conditions call it).
+- [x] Keep the guards green: no first-match selection, literal selectors, manifest rows for the new raw reads. Note: the only reviewed selector read is `chaining_features`; it moved into the shared `_chain_endpoint`, which `build_feature_slot_index` now calls too, so the manifest row moved from `build_feature_slot_index` to `_chain_endpoint` (no second row).
+- [x] Rerun `evidence/scripts/corpus_all.py` on base and branch; the diff must equal the fourteen-root list. Rerun dc3 from its committed tree; byte-identical. Note: exactly the fourteen roots, each with the expected outcome and reason (`evidence/corpus-receipt.md`). dc3 is identical on base and branch; see the receipt for the dc3 commit question.
 
 ### Phase 2: Pins and tests
 

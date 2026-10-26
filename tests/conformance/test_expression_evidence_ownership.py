@@ -152,16 +152,16 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
     ),
     ReviewedRow(
         module="elaboration/occurrence.py",
-        function="build_feature_slot_index",
+        function="_chain_endpoint",
         selector="chaining_features",
         form="getattr",
-        semantic_owner="codegen: redefinition endpoints",
+        semantic_owner="codegen: redefinition and subsetting endpoints",
         route_state="live",
         closure_proof=(
             "tests/conformance/test_occurrence_domain_derivation.py"
             "::test_real_fixture_has_one_redefinition_slot_and_effective_specialized_usage"
         ),
-        receiver="redefined",
+        receiver="feature",
     ),
     # Neutral ExpressionIR reads.  The field name collides with SysIDE's raw selector,
     # but the receiving parameter is annotated at every read site and the kept proof
