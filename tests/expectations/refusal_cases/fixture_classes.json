@@ -305,10 +305,8 @@
       ]
     },
     "elab_native_plural_scope": {
-      "class": "refusing",
-      "codes": [
-        "REGISTRY_CLASS_NAME_COLLISION"
-      ]
+      "class": "generating",
+      "note": "Generated since repeated-rollup-collision: its two BaseContainer copies (selected, shadow) share one rollup class. Refused with REGISTRY_CLASS_NAME_COLLISION before."
     },
     "elab_payload_identity": {
       "class": "refusing",
@@ -451,6 +449,47 @@
       ]
     },
     "quoted_owner_formula": {
+      "class": "generating"
+    },
+    "repeated_rollup": {
+      "class": "container",
+      "note": "Repeated computed sub-assemblies (repeated-rollup-collision): copies of one formula or rollup class share it, one class per distinct shape."
+    },
+    "repeated_rollup/arity": {
+      "class": "generating"
+    },
+    "repeated_rollup/divnamed": {
+      "class": "refusing",
+      "codes": [
+        "REGISTRY_CLASS_NAME_COLLISION"
+      ],
+      "note": "The remaining limit (design D3): two different shapes whose first copies are both named 'a', under different parents, alias to one name. Backlog [REPEATED-ROLLUP-SHAPE-ALIAS-LIMIT]."
+    },
+    "repeated_rollup/leafformula": {
+      "class": "generating"
+    },
+    "repeated_rollup/named": {
+      "class": "generating"
+    },
+    "repeated_rollup/named_total": {
+      "class": "generating"
+    },
+    "repeated_rollup/nestdiv": {
+      "class": "generating"
+    },
+    "repeated_rollup/nested": {
+      "class": "generating"
+    },
+    "repeated_rollup/onenamed": {
+      "class": "generating"
+    },
+    "repeated_rollup/subname": {
+      "class": "generating"
+    },
+    "repeated_rollup/trio": {
+      "class": "generating"
+    },
+    "repeated_rollup/two": {
       "class": "generating"
     },
     "retype_model": {
@@ -750,11 +789,8 @@
       "class": "generating"
     },
     "unresolvable_attr_probe": {
-      "class": "refusing",
-      "codes": [
-        "REGISTRY_CLASS_NAME_COLLISION"
-      ],
-      "note": "The recapture batch lists it as captured: elaboration seals a graph, and run_codegen then refuses at generation."
+      "class": "generating",
+      "note": "Generated since repeated-rollup-collision: the two 'Derived Component' occurrences share one class per formula. Refused with REGISTRY_CLASS_NAME_COLLISION before."
     },
     "usage_owned_reference_consumers": {
       "class": "generating"
