@@ -39,6 +39,7 @@ LIVE_MODELS = [
             "nestdiv",
             "nested",
             "onenamed",
+            "specialized_renamed",
             "subname",
             "trio",
             "two",

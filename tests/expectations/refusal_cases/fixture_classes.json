@@ -483,6 +483,17 @@
     "repeated_rollup/onenamed": {
       "class": "generating"
     },
+    "repeated_rollup/specialized": {
+      "class": "refusing",
+      "codes": [
+        "REGISTRY_CLASS_NAME_COLLISION"
+      ],
+      "note": "The remaining limit reached by specialization (design D3): Mid2 :> Mid redefines sub as Sub2[2], so both shapes' first copies sit under a parent segment 'sub_0'. Backlog [REPEATED-ROLLUP-SHAPE-ALIAS-LIMIT]."
+    },
+    "repeated_rollup/specialized_renamed": {
+      "class": "generating",
+      "note": "The workaround for repeated_rollup/specialized: the redefinition gets a new name (part racks2 :>> sub : Sub2[2])."
+    },
     "repeated_rollup/subname": {
       "class": "generating"
     },

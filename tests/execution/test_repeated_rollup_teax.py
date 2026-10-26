@@ -118,6 +118,20 @@ def _cost(path: str) -> str:
         ),
         # One copy, plus a parent formula whose class shares the rollup's class name.
         ("onenamed", {_cost("P__top"): 35.0, _cost("P__top__a"): 30.0}),
+        # A specialized parent redefines its racks to a two-leaf subtype under a new name
+        # (the workaround for the alias limit pinned by ``specialized``).
+        (
+            "specialized_renamed",
+            {
+                _cost("P__top"): 100.0,
+                _cost("P__top__a"): 60.0,
+                _cost("P__top__a__sub[0]"): 30.0,
+                _cost("P__top__a__sub[1]"): 30.0,
+                _cost("P__top__b"): 40.0,
+                _cost("P__top__b__racks2[0]"): 20.0,
+                _cost("P__top__b__racks2[1]"): 20.0,
+            },
+        ),
         # The part named after its definition, with a different shape.
         (
             "subname",
