@@ -421,6 +421,7 @@ A part that subsets a collection names one of its members. In `part def Rack { p
 
 - The named members fill places in the collection, and only the rest are built as unnamed copies, numbered from zero: `server_1` and `servers[0]`. The number says nothing about which member came first.
 - A read of the whole collection, such as `sum(servers.power)`, reaches the named members and the unnamed copies, each once. That holds when the read is written inside one of the members or inside one of the copies, so a member's share of the total (`power / sum(servers.power)`) divides by the whole collection. A read of `server_1` by its own name reaches only it.
+- Inside a copy, the collection's name still means every member. A single-value read through it, such as `servers : Server[2] { :>> x = servers.power * 1.0; }`, is refused (`occurrence_containment_step_ambiguous`); to read the copy's own value, drop the collection name and write `power`.
 - A redefinition of a named member (`part :>> server_1 { ... }`, or dc3's `part :>> rack_1 { ... }`) is the same member and stays in the collection.
 - A subsetting added by a redefinition makes the part a member only where that redefinition applies. `part rack_a : Rack { part :>> spare :> servers; }` makes `spare` one of `rack_a`'s servers; another `part rack_b : Rack;` keeps both copies of `servers` and its own `spare` beside them.
 - The same rule holds for a part with no multiplicity (it is one part: `comp_b :> comp_a` builds only `comp_b`) and for parts declared at package level.
