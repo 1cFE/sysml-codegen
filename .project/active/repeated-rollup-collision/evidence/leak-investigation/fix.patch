@@ -1,0 +1,15 @@
+diff --git a/src/sysml_codegen/elaboration/occurrence.py b/src/sysml_codegen/elaboration/occurrence.py
+index 5098c8ae..c92bfbf0 100644
+--- a/src/sysml_codegen/elaboration/occurrence.py
++++ b/src/sysml_codegen/elaboration/occurrence.py
+@@ -508,6 +508,10 @@ class OccurrenceIndex:
+             occurrence
+             for occurrence in self.occurrences()
+             if occurrence.occurrence_id.steps[-1].containment_slot == slot
++            and (
++                occurrence.effective_usage_id == declaration
++                or self._slots._redefines(occurrence.effective_usage_id, declaration, ())
++            )
+         )
+ 
+     def occurrences_for_type(self, definition: DeclarationId) -> tuple[ExactOccurrence, ...]:
