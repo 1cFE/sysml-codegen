@@ -73,6 +73,7 @@ Why this is right: identity stays where ADR 0009 puts it (projection), the regis
 - **D6. Each registry entry carries its import module, taken from the writers' path function, and import lines are rendered from the entries after aliasing.** This replaces the substring search at `registry.py:110-118`. Today the file path is worked out in three places: `cli/prepare.py:299-322` (`_get_python_path`, used by the writers), `generation/modules.py:42-66` (`_get_module_sysml_qn`, the module's own path inside its file) and the four import passes in `registry.py:294-354`. The path function moves into `generation/` (so `registry.py` does not import from `cli/`), and all three use it. Then every written class file is imported and every import names a written file, by construction (I5). The function returns the same paths as today for every kind, and imports keep today's order (four groups, each sorted on the line text before ` as Alias` is added, as today), so unaffected packages stay byte-identical. The prototype confirmed byte identity with an exact-line alias match rather than full rendering from entries, so phase 2 re-checks it. This also closes `[SC11-IMPORT-REWRITE]`, which was sized as "not small, cross-module AST rework". The change needed here is local to `registry.py`, because the entry already knows its path. `[AGENT]` *Rejected: keeping the substring search and adding a rollup branch (keeps the first-match defect for every other case).*
 - **D7. Generation checks I1 once more, as an internal-defect assertion.** The registry preflight (`prepare.py:439-458`) checks that all formula and rollup modules (all of them, not the reduced list of class owners, or it could never fire) under one module type have one signature. A failure raises a plain error, which the existing unclassified-failure route reports as an internal defect (`SI_INTERNAL_DEFECT`, see `tests/unit/test_cli_generation.py`), not as a user-facing collision. After D3 it can only fire if a per-shape module type meets an existing one with a different body, or two definitions differ only in letter case. `[AGENT, per review N1]` *Rejected: reporting it as `REGISTRY_CLASS_NAME_COLLISION` (tells the modeller to rename a scope when projection broke its own rule); a new projection diagnostic (a new refusal site for a case no probe reaches).*
 - **D8. A formula group that differs in shape is refused as an internal defect at settlement, not given a per-shape path.** Formula inputs are named by expression references, so I found no way to make formula copies differ, and the review tried three more (`fdiv`, `fdiv2`, `fdiv3`) without reaching it. Building it would need the formula path to follow the per-shape module type; refusing it is a few lines and one unit test. `[AGENT, per review N3]` *Rejected: a defensive path branch for a case no probe reaches.*
+- **D9. An occurrence takes writers only from its own effective declaration and what that redefines.** `[AGENT]` Owner direction 2026-10-26 ("ok fix the leak", `briefs/leak-fix.md`). `OccurrenceIndex.occurrences_for_declaration` (`elaboration/occurrence.py`) used to return every occurrence in the declaration's redefinition-family slot, so anything owned by one copy's `part :>> leaf` (a value, a deeper chain, a new attribute, a constraint) also reached every other copy of `leaf`: `[NESTED-OVERRIDE-LEAKS-TO-SIBLING]`. It now keeps an occurrence only when its effective usage is the declaration or redefines it, through the new public `FeatureSlotIndex.redefines`. Native SysIDE gives the per-copy values the fix gives (`evidence/leak-investigation/report.md`). This item's collision fix had turned the rollup form of the leak from a refusal into a silent wrong number (audit should-fix 1), so it ships here. Side effect: three `candidate-es-008` named-subset refusals, which the leak caused, now build and show a separate double count, filed as `[NAMED-SUBSET-DOUBLE-COUNT]`. *Rejected: leaving the leak to its own item (the wrong number ships on this branch otherwise).*
 
 ## Architecture
 
@@ -115,7 +116,7 @@ The pipeline YAML, schemas, inputs and model contract still iterate every module
 - Changing how the alias is derived. Out, per the spec; this leaves the D3 limit in place.
 - Constraint and report-aggregator modules on repeated parts. Not checked; they keep their current per-module behaviour.
 - Removing stale per-copy handwritten files left over from earlier generations in a preserved `handwritten/` tree.
-- `[NESTED-OVERRIDE-LEAKS-TO-SIBLING]` (review S3): a nested value override in one part also changes its sibling's leaves. Out of scope. This item's tests do not depend on it either way: every fixture sets leaf values at the leaf definition, the arity cases change only multiplicity, and the per-copy separation test changes an input at run time through the evaluator, not through a model override.
+- `[NESTED-OVERRIDE-LEAKS-TO-SIBLING]` (review S3): a nested value override in one part also changes its sibling's leaves. Out of scope at design time; brought in by the owner on 2026-10-26 and fixed under D9. The phase 1 to 5 tests do not depend on it either way: every fixture sets leaf values at the leaf definition, the arity cases change only multiplicity, and the per-copy separation test changes an input at run time through the evaluator, not through a model override.
 - `IMPLEMENTATION_BACKLOG.md` keeps counting auto-implemented modules per copy (review N4). Cosmetic; single-copy output is unchanged.
 
 ## Implementation Notes
@@ -149,7 +150,7 @@ The change sits entirely inside projection and generation; the CLI, snapshot for
 
 ## Next-Stage Handoff
 
-- **Fixed:** D1 to D8 and the invariants.
+- **Fixed:** D1 to D9 and the invariants.
 - **Open, implementer's call:** helper names, and where in `generation/` the path function lands.
 - **De-risk first:** phase 2's byte-identity checks (oracle, then whole corpus).
 
@@ -192,6 +193,13 @@ The change sits entirely inside projection and generation; the CLI, snapshot for
 - [x] Backlog: file the D3 limit as a row, described as in D3 with `repro/divnamed` as its reproducer; mark `[SC11-IMPORT-REWRITE]` resolved by this item.
 - [x] Run the execution lane (adapted `lane.sh`) and record the receipt in this folder.
 - Notes: `20-module-registry-generation.md` states the class-identity rule, the first-copy placement, the D3 limit and the closed import rewrite; the REQ-REG-08 verification cell now names the live checks. Backlog: `[REPEATED-ROLLUP-SHAPE-ALIAS-LIMIT]` filed beside `[REPEATED-ROLLUP-REGISTRY-COLLISION]`; `[SC11-IMPORT-REWRITE]` marked resolved. Execution lane: `evidence/execution-lane/` (adapted `lane.sh` and `lane_manifest.py`, receipt and manifest); at `73a69863`, 137 passed, 0 failed, 0 skipped. The lane used agentic-mbse `a2808cb9` (the editable dependency), not `e268357f`.
+
+### Phase 6: Sibling-override leak (D9)
+- [x] `occurrences_for_declaration` keeps only occurrences whose effective usage is the declaration or redefines it; `FeatureSlotIndex.redefines` made public.
+- [ ] Regression tests per shape group, and `leak_rollup` in the real-TEAx execution test (a 30, b 60, total 90).
+- [ ] Re-capture the three `candidate-es-008` cases as building; file `[NAMED-SUBSET-DOUBLE-COUNT]`; new `_require_one_writer` mutation witness.
+- [ ] Close `[NESTED-OVERRIDE-LEAKS-TO-SIBLING]` in the backlog.
+- [ ] Whole-corpus byte check, default suite, `ruff check src/`, `mypy src/`.
 
 ---
 
