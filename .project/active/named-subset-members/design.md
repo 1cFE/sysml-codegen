@@ -1,6 +1,6 @@
 # Design: Named subsets are members of the collection they subset
 
-**Status:** Draft, round 2 (after `design-review.md`, verdict Revise; orchestrator decisions in `briefs/design-round2.md`)
+**Status:** Implemented 2026-10-26 (all three phases), not yet audited; design round 2 (after `design-review.md`, verdict Revise; orchestrator decisions in `briefs/design-round2.md`)
 **Owner:** Reid Westwood
 **Created:** 2026-10-26
 **Branch:** `named-subset-members` (round 1 at `396dab3d`, round 2 written at `a94e6a1d`; stacks on `repeated-rollup-collision`)
@@ -198,10 +198,10 @@ Not checked: native SysIDE values for the probes; slow tests; the `snapshot` rou
 
 ### Phase 3: Docs and backlog
 
-- [ ] `docs/architecture/modeling-assumptions.md`: the named-member rule; D11's interpretation; the refusals as product limits (subset of a named member, count other than 1, not a sibling, collection owns features, more named than the count); replace the G1 line.
-- [ ] Backlog: close `[NAMED-SUBSET-DOUBLE-COUNT]` and `[REDEFINITION-DROPS-COUNT]`; file rows for carrying a collection's attribute writes to named members (D7) and for placing members into a collection owned by another parent (D6).
-- [ ] Record this item's corpus receipt in `evidence/corpus-receipt.md`.
-- [ ] Hand the agentic-mbse guidance list (Integration Strategy) to the orchestrator.
+- [x] `docs/architecture/modeling-assumptions.md`: the named-member rule; D11's interpretation; the refusals as product limits (subset of a named member, count other than 1, not a sibling, collection owns features, more named than the count); replace the G1 line. Note: new subsection "Named Members of a Collection" in § 6, with a limits table (one row per reason, plus the inherited-count refusal); the G1 bullet in § 10 now says a redefinition takes the count and ordering it redefines.
+- [x] Backlog: close `[NAMED-SUBSET-DOUBLE-COUNT]` and `[REDEFINITION-DROPS-COUNT]`; file rows for carrying a collection's attribute writes to named members (D7) and for placing members into a collection owned by another parent (D6). Note: filed `[NAMED-MEMBER-COLLECTION-VALUES]` (D7) and `[NAMED-MEMBER-FOREIGN-COLLECTION]` (D6). `[MEMBERSHIP-LIST-IGNORED]` stays open with a dated check: s7 sums 35.0 in real TEAx on base and branch, so its "10" was not reproduced.
+- [x] Record this item's corpus receipt in `evidence/corpus-receipt.md`.
+- [x] Hand the agentic-mbse guidance list (Integration Strategy) to the orchestrator. Note: in the implement report.
 
 ## Appendix A: Prototype full-suite run
 

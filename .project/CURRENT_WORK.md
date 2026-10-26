@@ -4,7 +4,7 @@
 
 ## Active Work
 
-`named-subset-members` (backlog `[NAMED-SUBSET-DOUBLE-COUNT]`, branch `named-subset-members`, stacked on `repeated-rollup-collision`): spec drafted 2026-10-26 (`.project/active/named-subset-members/spec.md`), owner chose option A (named subsets count as members).
+`named-subset-members` (backlogs `[NAMED-SUBSET-DOUBLE-COUNT]` and `[REDEFINITION-DROPS-COUNT]`, both now resolved; branch `named-subset-members`, stacked on `repeated-rollup-collision`): implemented 2026-10-26, all three phases of the plan in `.project/active/named-subset-members/design.md`; not yet audited. Named subsets fill their collection's count, a redefinition without a count inherits it, and five shapes are refused by name (limits filed as `[NAMED-MEMBER-FOREIGN-COLLECTION]` and `[NAMED-MEMBER-COLLECTION-VALUES]`). Follow-up in agentic-mbse: the guidance that warns against `sum()` over a collection with named members is now false (list in the design's Integration Strategy).
 
 `repeated-rollup-collision` (backlog `[REPEATED-ROLLUP-REGISTRY-COLLISION]`, branch `repeated-rollup-collision`): implemented 2026-10-26, all five phases of the plan in `.project/active/repeated-rollup-collision/design.md`; not yet audited. Copies of one formula or rollup class now share one registered class (one per distinct shape). Remaining limit filed as `[REPEATED-ROLLUP-SHAPE-ALIAS-LIMIT]`; `[SC11-IMPORT-REWRITE]` resolved. Follow-up in agentic-mbse: the wrong-way example `fails="REGISTRY_CLASS_NAME_COLLISION"` in `docs/patterns/adr002-calculations.md` § "Repeated sub-assemblies" now generates.
 

@@ -415,6 +415,30 @@ When a part contains arrayed children with multiplicity (e.g., `pv_module : 'PV 
 - **The multiplicity must be modelled.** `part cell [count]` where `count` is a modelled attribute with a value produces that many occurrences; the count is read from the model rather than left as a user-supplied array size.
 - **The output grows with the array.** Enumeration means one node per member rather than one multiply. That is a real size change: `solar_battery`'s pipeline YAML grows from 526 to 1343 lines under enumeration.
 
+### Named Members of a Collection
+
+A part that subsets a collection names one of its members. In `part def Rack { part servers : Server[2]; }`, writing `part server_1 :> servers;` in the rack makes `server_1` one of the two servers, as KerML 7.3.4.4 says (a subsetting feature's values are values of the subsetted feature). The generator builds the declared number of parts, not more:
+
+- The named members fill places in the collection, and only the rest are built as unnamed copies, numbered from zero: `server_1` and `servers[0]`. The number says nothing about which member came first.
+- A read of the whole collection, such as `sum(servers.power)`, reaches the named members and the unnamed copies, each once. A read of `server_1` by its own name reaches only it.
+- A redefinition of a named member (`part :>> server_1 { ... }`, or dc3's `part :>> rack_1 { ... }`) is the same member and stays in the collection.
+- The same rule holds for a part with no multiplicity (it is one part: `comp_b :> comp_a` builds only `comp_b`) and for parts declared at package level.
+- A redefinition that states no multiplicity takes the one it redefines, with its `ordered` and `nonunique` flags (SysML Part 1 7.6.3): `part :>> servers;` over `servers : Server[2]` is two servers.
+
+**Interpretation.** A named subset with no multiplicity of its own is one member. A literal reading of SysML Part 1 7.6.3 would give `server_1 :> servers` the collection's multiplicity, which would make `server_1` all of `servers`. The generator takes the one-member reading, because that is what a modeler writing `server_1 :> servers` means and how dc3's 28 named subsets are written. A named member that states `[1]` is accepted and means the same thing.
+
+**Product limits.** These forms are refused by name rather than counted. Several are valid KerML:
+
+| Form | Refusal (`SiteReason`) | Case |
+|---|---|---|
+| More named members than the count (three named members of `servers : Server[2]`) | `occurrence_named_members_exceed_count` (`SI_MULTIPLICITY_INVALID`) | `named-member__exceeds_count__part_usage` |
+| A named member with its own count other than 1 (`part drive_wheels : Wheel[2] :> wheels;`, KerML's own example); a subset of a named member (`a1 :> a` where `a :> servers`); a part subsetting two collections | `occurrence_named_member_form` (`SI_MULTIPLICITY_UNSUPPORTED`) | `named-member__stated_count__part_usage`, `named-member__subset_of_named_member__part_usage` |
+| A named member whose collection is not declared beside it, in the same part, definition or package, or is reached through a feature chain. This includes reusing a package-level part by subsetting it (`part def Site { part facility :> ac_facility; }`); type the part by a definition instead (`part facility : Fac;`) | `occurrence_named_member_not_sibling` (`SI_MULTIPLICITY_UNSUPPORTED`) | `named-member__not_sibling__part_usage`, the four `candidate-es-009__*subsetting*` cases |
+| A collection with named members whose own declaration, or a declaration it redefines, sets a value (`servers : Server[2] { :>> power = 12.0; }`, including in a specializing definition). The generator does not carry those values to the named members; set them on each member | `occurrence_named_member_collection_owns_features` (`SI_MULTIPLICITY_UNSUPPORTED`) | `named-member__collection_owns_features__part_usage`, `…__specializing_def` |
+| A redefinition that states no multiplicity and redefines parts with different ones | `occurrence_multiplicity_inherited_ambiguous` (`SI_MULTIPLICITY_UNRESOLVED`) | `part-multiplicity__inherited_ambiguous__expanded_part_usage` |
+
+Named members of a `[*]` collection stay refused (`occurrence_multiplicity_upper_unresolved`): the generator does not treat the named parts as the only members. Build cases: `named-member__redefined_member__part_usage`, `…__specializing_def`, `named-member__stated_count_one__part_usage`; real-TEAx sums in `tests/execution/test_named_subset_members_teax.py`.
+
 ### Schema Field Names vs JSON Keys
 
 An occurrence-indexed key (`…__battery_pack[0]__capacity_kwh`) is not a legal Python identifier, so it cannot be a schema field name. `core/qualified_names.params_field_name` sanitizes the field, and the generated schema keeps the exact key as the field's **alias**. The JSON key is the graph's entry-point name verbatim; the Python attribute is the sanitized form. See [22-output-schema-rules](reference/22-output-schema-rules.md).
@@ -720,7 +744,7 @@ A part usage typed by two definitions where neither specializes the other, and b
 
 ### Multiplicity through redefinition
 
-- A redefinition that gives no multiplicity (`part :>> servers;` over `servers : Server[2]`) expands to one unindexed occurrence, and an `ordered` flag on the redefined part is dropped. The language gives the redefinition the inherited `[2]`. Cases `g1__redefinition_drops_ordered_bounds`, `part-multiplicity__redefinition_drops_bounds__expanded_part_usage`; control `part-multiplicity__exact_redefinition__expanded_part_usage`. Restate the multiplicity on the redefinition. RG1-1.
+- A redefinition takes the count and ordering it redefines: `part :>> servers;` over `servers : Server[2]` is two servers, and over `Server[2] ordered` it is refused as ordered, like any ordered collection. Cases `part-multiplicity__redefinition_drops_bounds__expanded_part_usage`, `g1__redefinition_drops_ordered_bounds`; control `part-multiplicity__exact_redefinition__expanded_part_usage`. A redefinition of two parts with different counts that states none is refused (§ 6, Named Members of a Collection). This answers RG1-1.
 - When a multiplicity bound reads a `default` attribute, which override is used depends on where it is and on the `attribute` keyword (probed 2026-10-23, base `attribute n : Integer default 2` or `default := 2`):
   - In a specializing definition, written with the keyword (`attribute :>> n default 3;` or `attribute :>> n = 3;`): used, three occurrences are built. Case `g2__definition_override_of_referenced_bound`.
   - In a specializing definition, written without the keyword (`:>> n default 3;` or `:>> n = 3;`): ignored, the default count is built, with no warning.

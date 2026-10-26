@@ -1,6 +1,6 @@
 # Spec: Named subsets are members of the collection they subset
 
-**Status:** Draft
+**Status:** Implemented 2026-10-26, not yet audited
 **Owner:** Reid Westwood
 **Created:** 2026-10-26
 **Complexity:** MEDIUM
