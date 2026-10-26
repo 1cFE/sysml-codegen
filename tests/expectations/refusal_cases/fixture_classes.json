@@ -402,6 +402,22 @@
         "SI_MULTIPLICITY_UNRESOLVED"
       ]
     },
+    "named_subset_members": {
+      "class": "container",
+      "note": "Named subsets are members of the collection they subset (named-subset-members): real-TEAx sums in tests/execution/test_named_subset_members_teax.py."
+    },
+    "named_subset_members/one_named": {
+      "class": "generating"
+    },
+    "named_subset_members/package_roots": {
+      "class": "generating"
+    },
+    "named_subset_members/specializing_def": {
+      "class": "generating"
+    },
+    "named_subset_members/two_named": {
+      "class": "generating"
+    },
     "nested_occurrence_override_probe": {
       "class": "generating"
     },
@@ -723,7 +739,7 @@
     "occurrence_seed/f1_inherited_ordered_redef": {
       "class": "refusing",
       "codes": [
-        "NOTHING_TO_GENERATE"
+        "SI_MULTIPLICITY_UNSUPPORTED"
       ]
     },
     "occurrence_seed/f1_invalid_redefinition_family": {

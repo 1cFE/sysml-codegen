@@ -68,6 +68,7 @@
       "part-multiplicity__unresolved_bound__expanded_part_usage__lower"
     ],
     "sysml_codegen/elaboration/occurrence.py::_multiplicity_indices::coded::SI_MULTIPLICITY_UNSUPPORTED::1": [
+      "g1__redefinition_drops_ordered_bounds",
       "part-multiplicity__ordered__expanded_part_usage",
       "part-multiplicity__ordered__expanded_part_usage__under_two"
     ],
@@ -157,9 +158,7 @@
       "deep-qualified-wiring__qualified_reference"
     ],
     "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._resolve_semantic_reference::coded::SI_OCCURRENCE_MISSING::4": [
-      "candidate-es-002__calc_input_through_part__attribute_value",
-      "candidate-es-009__composition_by_subsetting__part_usage",
-      "candidate-es-009__composition_by_subsetting__root_part_usage"
+      "candidate-es-002__calc_input_through_part__attribute_value"
     ],
     "sysml_codegen/elaboration/occurrence.py::OccurrenceIndex.resolve_address::coded::SI_OCCURRENCE_MISSING::2": [
       "candidate-es-009__reference_through_ref_part__attribute_value"
@@ -334,6 +333,27 @@
     ],
     "sysml_codegen/generation/modules.py::assert_unique_predicate_function_names::unrecognized::_generation_error::1": [
       "constraint-naming__predicate_function_collision"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::_refuse_named_member_form::coded::SI_MULTIPLICITY_UNSUPPORTED::1": [
+      "named-member__stated_count__part_usage",
+      "named-member__subset_of_named_member__part_usage"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::_sibling_members::coded::SI_MULTIPLICITY_UNSUPPORTED::1": [
+      "candidate-es-009__composition_by_subsetting__part_usage",
+      "candidate-es-009__composition_by_subsetting__root_part_usage",
+      "candidate-es-009__nested_untyped_subsetting__part_usage",
+      "candidate-es-009__typed_subsetting__part_usage",
+      "named-member__not_sibling__part_usage"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::_sibling_members::coded::SI_MULTIPLICITY_UNSUPPORTED::2": [
+      "named-member__collection_owns_features__part_usage",
+      "named-member__collection_owns_features__part_usage__specializing_def"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::_stated_multiplicity::coded::SI_MULTIPLICITY_UNRESOLVED::1": [
+      "part-multiplicity__inherited_ambiguous__expanded_part_usage"
+    ],
+    "sysml_codegen/elaboration/occurrence.py::_unnamed_indices::coded::SI_MULTIPLICITY_INVALID::1": [
+      "named-member__exceeds_count__part_usage"
     ]
   },
   "unwitnessed": {

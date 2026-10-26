@@ -186,15 +186,15 @@ Not checked: native SysIDE values for the probes; slow tests; the `snapshot` rou
 
 ### Phase 2: Pins and tests
 
-- [ ] Re-capture the six `candidate-es-008` stored answers with `attr_value` seams at 4 PSUs and the values above.
-- [ ] Update `part-multiplicity__redefinition_drops_bounds__expanded_part_usage` (occurrences seam to two copies; remove its RG1-1 `loss` block) and `g1__redefinition_drops_ordered_bounds` (now refused; remove its `loss` block); update `fixture_classes.json` for g1 and `f1_inherited_ordered_redef`.
-- [ ] Add a witness case for `_resolve_semantic_reference ... SI_OCCURRENCE_MISSING::4`, then re-capture the four `candidate-es-009` cases with their classes and refusal-before-first-write expectations.
-- [ ] Edit `usage_owner_bare_subset_def_owned` as in Implementation Notes; confirm its anchoring tests pass.
-- [ ] One refusal case per new reason (start from p12, p5, r1, r2 and the original `usage_owner_bare_subset_def_owned`), with stored answers, site-account rows and mutation witnesses.
-- [ ] Build cases for p10 and p10b (a redefined member stays a member) and r3b (`[1]` accepted).
-- [ ] A real-TEAx value test for s1, s2, s4, p10 and p10b (25, 35, 35, 25, 25), on `test_sibling_override_leak.py`'s pattern.
-- [ ] Unit tests for I3 and for D2 labels, extending `tests/unit/test_elaboration_occurrence.py:202`.
-- [ ] Full suite green, including slow tests.
+- [x] Re-capture the six `candidate-es-008` stored answers with `attr_value` seams at 4 PSUs and the values above. Note: each answer pins every `efficiency` declaration that has nodes, plus `fx::Psu::efficiency` (an empty list where no PSU keeps the default), four nodes in each case.
+- [x] Update `part-multiplicity__redefinition_drops_bounds__expanded_part_usage` (occurrences seam to two copies; remove its RG1-1 `loss` block) and `g1__redefinition_drops_ordered_bounds` (now refused; remove its `loss` block); update `fixture_classes.json` for g1 and `f1_inherited_ordered_redef`. Note: g1 is a case, so its class comes from its answer; its construct lines are now 5-6, since the ordered refusal points at the inherited `ordered` on line 5. `test_silent_loss_seams.py` no longer lists the closed `g1-redefinition-drops-bounds` family.
+- [x] Add a witness case for `_resolve_semantic_reference ... SI_OCCURRENCE_MISSING::4`, then re-capture the four `candidate-es-009` cases with their classes and refusal-before-first-write expectations. Deviation: no new case was needed. `candidate-es-002__calc_input_through_part__attribute_value` already witnesses that site without subsetting (it was in the site's mutation set); its row's evidence and `mutations.json` now cite only it. The four cases witness `_sibling_members ... ::1`; `refusal_records.json` re-recorded (`scripts/refusal_records.py record`, 181 entries).
+- [x] Edit `usage_owner_bare_subset_def_owned` as in Implementation Notes; confirm its anchoring tests pass. Note: 50 passed in `test_usage_owned_reference_anchoring.py`.
+- [x] One refusal case per new reason (start from p12, p5, r1, r2 and the original `usage_owner_bare_subset_def_owned`), with stored answers, site-account rows and mutation witnesses. Note: seven cases, `named-member__{exceeds_count,subset_of_named_member,stated_count,not_sibling,collection_owns_features,collection_owns_features..specializing_def}__part_usage` and `part-multiplicity__inherited_ambiguous__expanded_part_usage`; five `site_account.csv` rows (explicit follow-up, public capability, each with its product limit as the coverage limitation); mutation sets measured by neutralizing each site. The 36 existing `occurrence.py` rows got their line and first evidence pointer refreshed.
+- [x] Build cases for p10 and p10b (a redefined member stays a member) and r3b (`[1]` accepted). Note: `named-member__redefined_member__part_usage`, `…__specializing_def`, `named-member__stated_count_one__part_usage`, with `occurrences` seams.
+- [x] A real-TEAx value test for s1, s2, s4, p10 and p10b (25, 35, 35, 25, 25), on `test_sibling_override_leak.py`'s pattern. Note: `tests/execution/test_named_subset_members_teax.py`, on `test_repeated_rollup_teax.py`'s harness (the leak test reads inputs only), plus the package-level r7 shape (25). Fixtures `tests/fixtures/named_subset_members/{one_named,two_named,specializing_def,package_roots}`; p10 and p10b reuse their refusal-case fixtures. On the base tree all six give 20.0.
+- [x] Unit tests for I3 and for D2 labels, extending `tests/unit/test_elaboration_occurrence.py:202`.
+- [x] Full suite green, including slow tests. Note: default run 9 failed (the known `test_check_ledger_4a.py` ×8 and one `test_study_cli.py`), 8865 passed. This repo has no `slow` marker; the deselected tests are the execution lane, run with dc3's venv and `--noconftest`: 116 passed, 29 errors, all 29 the `execution_provenance` fixture that `--noconftest` drops (base: 110 passed, the same 29).
 
 ### Phase 3: Docs and backlog
 

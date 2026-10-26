@@ -354,3 +354,63 @@ def test_redefined_chain_wrapper_uses_its_stable_terminal_endpoint(monkeypatch) 
     assert slots.slot_of(DeclarationId(base.element_id)) == slots.slot_of(
         DeclarationId(derived.element_id)
     )
+
+
+def _occurrence_named(occurrences: OccurrenceIndex, display_path: str) -> Any:
+    (match,) = [o for o in occurrences.occurrences() if o.display_path == display_path]
+    return match
+
+
+def test_a_named_member_fills_a_place_and_is_read_under_both_slots() -> None:
+    """I3 and D2 of named-subset-members: ``server_1 :> servers`` with ``servers[2]``.
+
+    The rack holds one unnamed copy, numbered from zero, and the named member, which keeps
+    its own name and no index. A redefinition of the member (``part :>> server_1``) is the
+    same member. Each child is listed once by ``children``; the collection slot reaches both,
+    the member's own slot reaches only the member.
+    """
+    model = _load("refusal_cases/named-member__redefined_member__part_usage")
+    slots = build_feature_slot_index(model)
+    occurrences = build_occurrence_index(model, slots)
+    rack = _occurrence_named(occurrences, "fx__rack")
+    copy = _occurrence_named(occurrences, "fx__rack__servers[0]")
+    member = _occurrence_named(occurrences, "fx__rack__server_1")
+    servers_slot = slots.slot_of(
+        DeclarationId(SysideAdapter.element_id(_by_qn(model, "PartUsage", "fx::Rack::servers")))
+    )
+    member_slot = member.occurrence_id.steps[-1].containment_slot
+
+    assert copy.occurrence_id.steps[-1].occurrence_index == 0
+    assert member.occurrence_id.steps[-1].occurrence_index is None
+    assert member.member_of_slot == servers_slot
+    assert copy.member_of_slot is None
+    assert occurrences.children(rack.occurrence_id) == tuple(
+        sorted((copy, member), key=lambda item: item.occurrence_id.to_wire())
+    )
+    assert set(occurrences.children_for_slot(rack.occurrence_id, servers_slot)) == {copy, member}
+    assert len(occurrences.children_for_slot(rack.occurrence_id, servers_slot)) == 2
+    assert occurrences.children_for_slot(rack.occurrence_id, member_slot) == (member,)
+
+
+@pytest.mark.parametrize(
+    ("fixture", "expected"),
+    [
+        # Both places named: no unnamed copy is left.
+        ("named_subset_members/two_named", {"ns__rack__server_1", "ns__rack__server_2"}),
+        # Package-level parts follow the same rule (D10).
+        ("named_subset_members/package_roots", {"ns__servers[0]", "ns__server_1"}),
+        # A redefinition that states no count keeps the one it redefines (D4).
+        (
+            "refusal_cases/part-multiplicity__redefinition_drops_bounds__expanded_part_usage",
+            {"fx__rack__servers[0]", "fx__rack__servers[1]"},
+        ),
+    ],
+)
+def test_a_collection_builds_only_the_copies_its_count_leaves(
+    fixture: str, expected: set[str]
+) -> None:
+    model = _load(fixture)
+    occurrences = build_occurrence_index(model, build_feature_slot_index(model))
+    built = {o.display_path for o in occurrences.occurrences()}
+    servers = {path for path in built if "server" in path.rsplit("__", 1)[-1]}
+    assert servers == expected
