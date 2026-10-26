@@ -34,12 +34,22 @@ Both sides over the same list: the branch's 471 roots, written to a file by the 
 
 Every other root is byte-identical.
 
+## Round 2 (audit fixes B1 and B2)
+
+Both sides over the branch's 478 roots (the 471 above plus the seven new `named_subset_members` fixtures), with `evidence/scripts/corpus_keys.py`: the round-1 generator (`src/` at `153d09e2`, a detached worktree) against the round-2 working tree. Each side: 197 generated, 281 refused, no crashes.
+
+`diff -rq` finds exactly the seven new fixtures, each generated on both sides with different trees: `one_usage_adds_subsetting` and `specializing_def_adds_subsetting` (round 1 counts `spare` as a member in `rack_b` too), and `member_reads_collection`, `member_in_def_reads_collection`, `member_share_of_total`, `member_fractions`, `copy_fractions` (round 1 narrows the read to the reader itself). The new read rule changes no other root: no existing fixture reads a collection by name from inside one of its own members or copies.
+
+On the base generator (`ed736479`) the seven new fixtures also generate, with trees different from round 2.
+
 ## dc3
 
 From dc3's committed tree, generated with `--package-name dc3_baseline` and the `SYSIDE_LICENSE_KEY` from `/home/reid/src/dc3/.env`, dc3 read only:
 
 - **At `8a98af8`** (the commit the design checked): `git -C /home/reid/src/dc3 archive 8a98af8 models exploration/ac_dc_baseline/dc3_baseline`. Base and branch output are each `diff -rq` identical to that commit's committed `exploration/ac_dc_baseline/dc3_baseline/`.
 - **At dc3 `HEAD` (`8b9fcaf`)**, which moved during this item ("WI-014 P1: costs follow each purchase's own rating"): base and branch output are `diff -rq` identical to each other. Neither matches that commit's committed baseline, because `8b9fcaf` changed four model files (`models/library/analyses/costing/rated_costs.sysml` and others) without regenerating `exploration/ac_dc_baseline/dc3_baseline/` (it adds rated-cost modules and nonnegativity constraints the committed baseline does not have). That gap is dc3's own and is not caused by this branch.
+
+**Round 2:** the round-2 working tree's output from the `8a98af8` tree is `diff -rq` identical to that commit's committed baseline.
 
 ## Not checked
 
