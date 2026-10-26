@@ -19,7 +19,7 @@ The SysML meaning is settled: KerML 7.3.4.4 says a subsetting feature's values a
 
 This breaks ADR 0004 ("exactly one concrete occurrence, a modeled plural result, or a named refusal"). The wrong sum builds silently today. dc3 is not affected today only because no dc3 model reads a whole collection.
 
-**[OWNER] 2026-10-26:** fix it with option A of the report, named subsets count as members of the collection they subset ("ok understood, proceed with the fix", after the orchestrator recommended A).
+**[AGENT] recommended, ratified by owner 2026-10-26:** fix it with option A of the report, named subsets count as members of the collection they subset ("ok understood, proceed with the fix", after the orchestrator recommended A).
 
 ## Success Criteria
 

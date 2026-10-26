@@ -19,3 +19,25 @@ Smells: none fired.
 Gate: DISPOSED (spec-F1, spec-F2, spec-F3)
 
 Not checked by the lens: shape models, fixtures, `corpus-receipt.md`, backlog rows; current-output claims checked against the investigation report only. (The spec author checked the fixture models and stored answers.)
+
+## design_review — 2026-10-26 — rev 90c01150 (named-subset-members), .project/active/named-subset-members/design.md
+
+Copied from `design-review.md` (Product Lens block) by the design session in round 2; dispositions added against the round-2 design and prototype.
+
+Point (re-derived): The generator reproduces the members and count the model states, read from parser evidence (KerML 7.3.4.4: a subsetting part's values are values of the collection). A read of the whole collection reaches every modeled member exactly once, each with its own values. Any shape it cannot derive exactly is refused by name; it never builds a confident wrong number. [source: .project/adr/0004 ([OWNER], active); .project/product/0003 and 0004 ([OWNER-VERBATIM]: "we follow what KerML, SysMLv2 and SysIDE support"); option A in spec.md:22, grade: owner/HARD]
+
+Falsifier: A valid model whose collection has a named subset generates without refusal, and sum() over the collection differs from the KerML value, or the built members do not equal its count.
+
+Findings:
+
+- design_review-F1 [DON'T] D6 refused a non-sibling named subset only if the collection stated a multiplicity, so with D4 a member of an inherited-count collection was built as an extra part left out of the sum (p12: 20.0, KerML 25). — ADR 0004 [OWNER] / P-003, P-004 (owner/HARD) — disposition: DISPOSED. Round-2 D6 refuses every non-sibling named member, whatever the count; p12 is refused `occurrence_named_member_not_sibling` on the round-2 prototype.
+- design_review-F2 [DON'T] D6 built a count-1 non-sibling member beside its target. — P-003 by inference (AGENT) — disposition: DISPOSED. Same D6 rule: p6 and p6b refuse. Cost recorded in the design: the four `candidate-es-009` cases refuse (two of them generated before).
+- design_review-F3 [DO] D7 relied on SysIDE's usages view. — ADR 0004 obligation; remedy inferred (AGENT) — disposition: DISPOSED. Round-2 D7 reads what the collection's declaration and the declarations it redefines own; p5 and p5b refuse `occurrence_named_member_collection_owns_features`; the `KeyError` skip is gone.
+- design_review-F4 [DO] Option A was graded [OWNER]. — capture-fidelity settled rule — disposition: DISPOSED. Regraded `[AGENT] recommended, ratified by owner 2026-10-26` in spec.md:22 and the design.
+- (Reviewer addition) M1, a redefined named member dropping out of its collection (p10, p10b: 20.0, KerML 25). — same grade as F1 — disposition: DISPOSED. Membership is keyed by slot (D1); p10 and p10b give 25.0 in real TEAx.
+
+Smells: none fired.
+
+Gate: DISPOSED (design_review-F1, F2, F3, F4, M1)
+
+Not checked by the lens: native SysIDE values for the probes; slow tests.
