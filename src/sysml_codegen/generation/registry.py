@@ -148,19 +148,16 @@ def class_owners(modules: list[PipelineModule]) -> list[PipelineModule]:
     pass through: their class file is per calc def already, and the registry keys them
     by simple name (``_registry_class_entries``).
     """
-    from sysml_codegen.resolution.models import ModuleKind
+    from sysml_codegen.resolution.models import ModuleKind, first_copy
 
     computed = (ModuleKind.FORMULA, ModuleKind.AGGREGATION)
-    first_name: dict[str, str] = {}
+    copies: dict[str, list[PipelineModule]] = defaultdict(list)
     for module in modules:
         if module.module_kind in computed:
-            prior = first_name.get(module.module_type)
-            if prior is None or module.name < prior:
-                first_name[module.module_type] = module.name
+            copies[module.module_type].append(module)
+    owners = {first_copy(group).name for group in copies.values()}
     return [
-        module
-        for module in modules
-        if module.module_kind not in computed or first_name[module.module_type] == module.name
+        module for module in modules if module.module_kind not in computed or module.name in owners
     ]
 
 

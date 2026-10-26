@@ -77,6 +77,7 @@ from sysml_codegen.resolution.models import (
     ParameterGroup,
     PipelineModule,
     class_signature,
+    first_copy,
 )
 
 __all__ = ["PROJECTOR_SEMANTICS", "ProjectionError", "project"]
@@ -1461,11 +1462,10 @@ def _shape_split_module_types(
 
     retyped: dict[NodeId | str, PipelineModule] = {}
     for module_type, members in groups.items():
-        members.sort(key=lambda member: member[1].name)
-        first_by_shape: dict[str, PipelineModule] = {}
+        by_shape: dict[str, list[PipelineModule]] = defaultdict(list)
         for _, module in members:
-            first_by_shape.setdefault(class_signature(module), module)
-        if len(first_by_shape) == 1:
+            by_shape[class_signature(module)].append(module)
+        if len(by_shape) == 1:
             continue
         if any(module.module_kind is ModuleKind.FORMULA for _, module in members):
             # A formula class's file is the definition's path for every copy, so a
@@ -1476,7 +1476,7 @@ def _shape_split_module_types(
                 f"render different classes: {[module.name for _, module in members]}"
             )
         for semantic, module in members:
-            first = first_by_shape[class_signature(module)]
+            first = first_copy(by_shape[class_signature(module)])
             retyped[semantic] = module.model_copy(
                 update={"module_type": derive_module_type(first.name.replace("__", "::"))}
             )
