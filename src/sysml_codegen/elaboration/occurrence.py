@@ -604,8 +604,17 @@ class OccurrenceIndex:
         consumer_domain: ConsumerDomain,
         *,
         plural: bool,
+        written_from: int | None = None,
     ) -> tuple[ScopeId, ...]:
-        """Instantiate one address without a positional or population fallback."""
+        """Instantiate one address without a positional or population fallback.
+
+        A step the reader's own path passes through narrows to that path: in
+        ``servers : Server[2] { part disk; attribute x = disk.size; }`` each copy reads its
+        own disk. Steps from ``written_from`` on are names the reader wrote, and a written
+        name reaches every occurrence it names (KerML 7.3.4.4): ``sum(servers.power)``
+        written inside ``server_1 :> servers`` or inside a copy of ``servers`` adds every
+        member. ``None`` treats every step as implied by ownership.
+        """
         anchor_scopes = consumer_domain.scopes_for(address.anchor_kind, address.anchor_id)
         if not anchor_scopes:
             raise OccurrenceResolutionError(
@@ -623,7 +632,10 @@ class OccurrenceIndex:
             )
         states = anchor_scopes
         shared_prefix = True
-        for slot in address.steps:
+        implied = len(address.steps) if written_from is None else written_from
+        for position, slot in enumerate(address.steps):
+            if position >= implied:
+                shared_prefix = False
             candidates: list[ExactOccurrence] = []
             for state in states:
                 if isinstance(state, PackageScopeId):

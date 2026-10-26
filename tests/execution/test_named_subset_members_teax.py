@@ -83,3 +83,52 @@ def _outputs(models: Path, root: Path) -> dict[str, float]:
 def test_a_sum_counts_each_member_once(models: Path, expected: dict[str, float], tmp_path):
     assert _outputs(models, tmp_path) == expected
 
+
+@pytest.mark.parametrize(
+    ("models", "expected"),
+    [
+        # sum(servers.power) written inside server_1 (15.0) adds server_1 and the copy.
+        (
+            FIXTURES / "named_subset_members" / "member_reads_collection",
+            {"ns__rack__server_1__seen__seen": 25.0, "ns__rack__total__total": 25.0},
+        ),
+        # The same with server_1 declared in the definition.
+        (
+            FIXTURES / "named_subset_members" / "member_in_def_reads_collection",
+            {"ns__rack__server_1__seen__seen": 25.0, "ns__rack__total__total": 25.0},
+        ),
+        # A share of the total: rack_1 is one of two racks at 20.0 each.
+        (
+            FIXTURES / "named_subset_members" / "member_share_of_total",
+            {
+                "ns__hall__rack_1__share__share": 0.5,
+                "ns__hall__rack_1__total__total": 20.0,
+                "ns__hall__racks[0]__total__total": 20.0,
+                "ns__hall__total__total": 40.0,
+            },
+        ),
+        # Each member's fraction of the rack's power: 30 / 40 and 10 / 40.
+        (
+            FIXTURES / "named_subset_members" / "member_fractions",
+            {
+                "ns__rack__server_1__frac__frac": 0.75,
+                "ns__rack__server_2__frac__frac": 0.25,
+                "ns__rack__total__total": 1.0,
+            },
+        ),
+        # The same read from inside an indexed copy reaches both copies (10 / 20 each).
+        (
+            FIXTURES / "named_subset_members" / "copy_fractions",
+            {
+                "ns__rack__servers[0]__frac__frac": 0.5,
+                "ns__rack__servers[1]__frac__frac": 0.5,
+                "ns__rack__total__total": 1.0,
+            },
+        ),
+    ],
+    ids=lambda value: value.name if isinstance(value, Path) else None,
+)
+def test_a_member_reading_its_own_collection_reaches_every_member(
+    models: Path, expected: dict[str, float], tmp_path
+):
+    assert _outputs(models, tmp_path) == expected

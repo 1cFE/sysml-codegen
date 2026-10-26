@@ -406,6 +406,21 @@
       "class": "container",
       "note": "Named subsets are members of the collection they subset (named-subset-members): real-TEAx sums in tests/execution/test_named_subset_members_teax.py."
     },
+    "named_subset_members/copy_fractions": {
+      "class": "generating"
+    },
+    "named_subset_members/member_fractions": {
+      "class": "generating"
+    },
+    "named_subset_members/member_in_def_reads_collection": {
+      "class": "generating"
+    },
+    "named_subset_members/member_reads_collection": {
+      "class": "generating"
+    },
+    "named_subset_members/member_share_of_total": {
+      "class": "generating"
+    },
     "named_subset_members/one_named": {
       "class": "generating"
     },

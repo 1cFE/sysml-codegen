@@ -2414,7 +2414,7 @@ class _ExactElaborator:
                 reason=SiteReason.ELABORATION_REFERENCE_LEAF_UNINDEXED,
             )
         try:
-            address = self._reference_address(reference, leaf)
+            address, written_from = self._reference_address(reference, leaf)
         except OccurrenceResolutionError as error:
             raise _ReferenceResolutionError(
                 error.code, error.detail, reason=error.reason
@@ -2430,6 +2430,7 @@ class _ExactElaborator:
                 address,
                 self._domain_for_address(address, consumer_scope, explicit=not no_prefix),
                 plural=plural,
+                written_from=written_from,
             )
             slot = self._slots.slot_of(reference.leaf_id)
         except OccurrenceResolutionError as error:
@@ -2485,7 +2486,12 @@ class _ExactElaborator:
 
     def _reference_address(
         self, reference: ResolvedSemanticReference, leaf: Any
-    ) -> ContainmentAddress:
+    ) -> tuple[ContainmentAddress, int]:
+        """The address of ``reference``'s owner, and the index of its first written step.
+
+        Steps before that index come from where the first written part is declared; the
+        reader did not name them. See ``OccurrenceIndex.resolve_address``.
+        """
         part_segments = [
             (segment_id, element)
             for segment_id in reference.segment_ids[:-1]
@@ -2493,15 +2499,21 @@ class _ExactElaborator:
             and SysideAdapter.is_instance(element, "PartUsage")
         ]
         if not part_segments:
-            return build_containment_address(leaf, self._slots)
+            address = build_containment_address(leaf, self._slots)
+            written = 1 if SysideAdapter.is_instance(leaf, "PartUsage") else 0
+            return address, len(address.steps) - written
         _root_id, root = part_segments[0]
         address = build_containment_address(root, self._slots)
+        written_from = len(address.steps) - 1
         steps = list(address.steps)
         for segment_id, _element in part_segments[1:]:
             slot = self._slots.slot_of(segment_id)
             if not steps or steps[-1] != slot:
                 steps.append(slot)
-        return ContainmentAddress(address.anchor_kind, address.anchor_id, tuple(steps))
+        return (
+            ContainmentAddress(address.anchor_kind, address.anchor_id, tuple(steps)),
+            written_from,
+        )
 
     def _resolve_calculation_output(
         self,
@@ -2522,7 +2534,9 @@ class _ExactElaborator:
         ]
         if part_segments:
             try:
-                prefix_address = self._reference_address(reference, part_segments[-1])
+                prefix_address, written_from = self._reference_address(
+                    reference, part_segments[-1]
+                )
                 part_prefix_scopes = self._occurrences.resolve_address(
                     prefix_address,
                     self._domain_for_address(
@@ -2531,6 +2545,7 @@ class _ExactElaborator:
                         explicit=True,
                     ),
                     plural=plural,
+                    written_from=written_from,
                 )
             except OccurrenceResolutionError as error:
                 raise _ReferenceResolutionError(
