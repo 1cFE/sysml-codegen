@@ -6,8 +6,8 @@ the generated package through its own registry and check every copy's number, an
 changing one copy's input moves only that copy and what sums it.
 
 Expected values are worked from the models in ``tests/fixtures/repeated_rollup``: every
-leaf is 10.0 unless stated, and every leaf value is set at the leaf definition (no nested
-value override is used anywhere here).
+leaf is 10.0 unless stated, and every leaf value is set at the leaf definition, except in
+``leak_rollup``, the one nested value override.
 """
 
 from __future__ import annotations
@@ -131,6 +131,12 @@ def _cost(path: str) -> str:
                 _cost("P__top__b__racks2[0]"): 20.0,
                 _cost("P__top__b__racks2[1]"): 20.0,
             },
+        ),
+        # b's nested override sets its own three leaves to 20.0; a keeps 10.0 each
+        # ([NESTED-OVERRIDE-LEAKS-TO-SIBLING] once gave a 20.0 too: 60 / 60 / 120).
+        (
+            "leak_rollup",
+            {_cost("P__top"): 90.0, _cost("P__top__a"): 30.0, _cost("P__top__b"): 60.0},
         ),
         # The part named after its definition, with a different shape.
         (

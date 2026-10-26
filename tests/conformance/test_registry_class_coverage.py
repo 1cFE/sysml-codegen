@@ -34,6 +34,7 @@ LIVE_MODELS = [
         for name in (
             "arity",
             "leafformula",
+            "leak_rollup",
             "named",
             "named_total",
             "nestdiv",

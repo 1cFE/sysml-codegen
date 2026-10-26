@@ -196,7 +196,8 @@ The change sits entirely inside projection and generation; the CLI, snapshot for
 
 ### Phase 6: Sibling-override leak (D9)
 - [x] `occurrences_for_declaration` keeps only occurrences whose effective usage is the declaration or redefines it; `FeatureSlotIndex.redefines` made public.
-- [ ] Regression tests per shape group, and `leak_rollup` in the real-TEAx execution test (a 30, b 60, total 90).
+- [x] Regression tests per shape group, and `leak_rollup` in the real-TEAx execution test (a 30, b 60, total 90).
+- Notes: `tests/conformance/test_sibling_override_leak.py` (5 cases, public route, per-copy `inputs/m_params.json` values and pipeline node presence) over `tests/fixtures/repeated_rollup/leak_rollup` and the new container `tests/fixtures/sibling_override_leak/` (`nested_specdef`, `specialized_top`, `deep_chain`, `new_members`). Each fixture was generated with the fix reverted and leaked (for example `specialized_top` gave `top.a.x` = 5.0, `new_members` gave `a.leaf` its own `x` and `cap`). `leak_rollup` is in `tests/execution/test_repeated_rollup_teax.py` (90 / 30 / 60) and in the I2 coverage list; run directly with dc3's venv and `--noconftest`, 15 passed.
 - [ ] Re-capture the three `candidate-es-008` cases as building; file `[NAMED-SUBSET-DOUBLE-COUNT]`; new `_require_one_writer` mutation witness.
 - [ ] Close `[NESTED-OVERRIDE-LEAKS-TO-SIBLING]` in the backlog.
 - [ ] Whole-corpus byte check, default suite, `ruff check src/`, `mypy src/`.

@@ -468,6 +468,9 @@
     "repeated_rollup/leafformula": {
       "class": "generating"
     },
+    "repeated_rollup/leak_rollup": {
+      "class": "generating"
+    },
     "repeated_rollup/named": {
       "class": "generating"
     },
@@ -517,6 +520,22 @@
       "codes": [
         "SI_EDGE_DANGLING"
       ]
+    },
+    "sibling_override_leak": {
+      "class": "container",
+      "note": "One copy's part redefinition owns a value, a deep chain, an attribute or a constraint; it must stay in that copy ([NESTED-OVERRIDE-LEAKS-TO-SIBLING], repeated-rollup-collision D9)."
+    },
+    "sibling_override_leak/deep_chain": {
+      "class": "generating"
+    },
+    "sibling_override_leak/nested_specdef": {
+      "class": "generating"
+    },
+    "sibling_override_leak/new_members": {
+      "class": "generating"
+    },
+    "sibling_override_leak/specialized_top": {
+      "class": "generating"
     },
     "solar_battery_d5": {
       "class": "generating"
