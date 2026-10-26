@@ -201,7 +201,8 @@ The change sits entirely inside projection and generation; the CLI, snapshot for
 - [x] Re-capture the three `candidate-es-008` cases as building; file `[NAMED-SUBSET-DOUBLE-COUNT]`; new `_require_one_writer` mutation witness.
 - Notes: the three answers are re-captured as `generated` with `attr_value` seams on `fx::Psu::efficiency` and each override that pin today's double count; their stale `witnesses` are removed. The `_require_one_writer` witness is the new case `redefinition-writers__usage_chain_without_exact_writer__part_usage` (the investigation's s17: `c.leaf`'s `capital_cost` has two usage writers on a redefinition chain and no exact one; refused at `model.sysml:5`; native SysIDE gives 20.0, so this is an overcautious refusal, not a wrong number). Updated: `mutations.json`, the `site_account.csv` row for that site, and `refusal_records.json` (re-recorded; `compare` showed exactly the four expected entries differ). `[NAMED-SUBSET-DOUBLE-COUNT]` filed.
 - [x] Close `[NESTED-OVERRIDE-LEAKS-TO-SIBLING]` in the backlog.
-- [ ] Whole-corpus byte check, default suite, `ruff check src/`, `mypy src/`.
+- [x] Whole-corpus byte check, default suite, `ruff check src/`, `mypy src/`.
+- Notes: corpus receipt in `evidence/corpus-receipt.md` (section "Sibling-override leak fix"): besides the three flips and the five new fixtures, two already-generating cases changed, `candidate-es-008__one_subset_redefines__part_usage` and `candidate-es-008__outer_redefinition__part_usage`, only in PSU efficiency defaults where the leaked 0.95 is gone; the investigation had not predicted them, and their stored answers (outcome only) did not see it. `sibling_override_leak` is listed in `test_constraint_population_oracle.py`'s `MODEL_COLLECTIONS` (its `new_members` model holds a constraint). Default suite: 9 failed (the known `test_check_ledger_4a.py` ×8 and one `test_study_cli.py`), 8598 passed, 11 skipped. `ruff check src/` and `mypy src/` clean.
 
 ---
 
