@@ -1,0 +1,46 @@
+{
+  "id": "named-member__redefined_member__part_usage__specializing_def",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      7
+    ],
+    "description": "site redefines rack_1, a named member of racks[2] declared in the specializing Site (dc3's shape); no unnamed copy is left"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "occurrences",
+        "declaration": "fx::Site::racks",
+        "expect": {
+          "count": 0,
+          "indices": []
+        }
+      },
+      {
+        "kind": "occurrences",
+        "declaration": "fx::site::rack_1",
+        "expect": {
+          "count": 1,
+          "indices": [
+            null
+          ]
+        }
+      },
+      {
+        "kind": "occurrences",
+        "declaration": "fx::Site::rack_2",
+        "expect": {
+          "count": 1,
+          "indices": [
+            null
+          ]
+        }
+      }
+    ]
+  }
+}

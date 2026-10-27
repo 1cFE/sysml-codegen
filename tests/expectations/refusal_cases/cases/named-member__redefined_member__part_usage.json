@@ -1,0 +1,38 @@
+{
+  "id": "named-member__redefined_member__part_usage",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      6
+    ],
+    "description": "rack redefines Rack's named member server_1; it stays one of servers' two members (one unnamed copy left)"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "occurrences",
+        "declaration": "fx::Rack::servers",
+        "expect": {
+          "count": 1,
+          "indices": [
+            0
+          ]
+        }
+      },
+      {
+        "kind": "occurrences",
+        "declaration": "fx::rack::server_1",
+        "expect": {
+          "count": 1,
+          "indices": [
+            null
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -6,7 +6,7 @@
       6,
       6
     ],
-    "description": "rack redefines servers[2] with no multiplicity; the generator expands one occurrence (matrix row G1, design D14 a)"
+    "description": "rack redefines servers[2] with no multiplicity; the redefinition inherits [2] and expands two occurrences (matrix row G1, RG1-1)"
   },
   "generator": {
     "outcome": "generated",
@@ -17,18 +17,13 @@
         "kind": "occurrences",
         "declaration": "fx::rack::servers",
         "expect": {
-          "count": 1,
+          "count": 2,
           "indices": [
-            null
+            0,
+            1
           ]
         }
       }
     ]
-  },
-  "loss": {
-    "family": "g1-redefinition-drops-bounds",
-    "disposition": "candidate_refusal",
-    "rg1": "RG1-1",
-    "control": "part-multiplicity__exact_redefinition__expanded_part_usage"
   }
 }

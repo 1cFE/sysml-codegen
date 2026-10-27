@@ -1,0 +1,23 @@
+{
+  "id": "part-multiplicity__inherited_ambiguous__expanded_part_usage",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      8,
+      8
+    ],
+    "description": "Mixed's servers redefines Rack3::servers[3] and Rack4::servers[4] and states no multiplicity"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_MULTIPLICITY_UNRESOLVED"
+    ],
+    "reasons": [
+      "occurrence_multiplicity_inherited_ambiguous"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/occurrence.py::_stated_multiplicity::coded::SI_MULTIPLICITY_UNRESOLVED::1"
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "id": "named-member__collection_owns_features__part_usage",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      6
+    ],
+    "description": "comp_b subsets comp_a, whose own body sets length = 3.0, a value the generator would not carry to comp_b"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_MULTIPLICITY_UNSUPPORTED"
+    ],
+    "reasons": [
+      "occurrence_named_member_collection_owns_features"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/occurrence.py::_sibling_members::coded::SI_MULTIPLICITY_UNSUPPORTED::2"
+    ]
+  }
+}

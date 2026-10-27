@@ -1,0 +1,23 @@
+{
+  "id": "named-member__exceeds_count__part_usage",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      6
+    ],
+    "description": "three named members a, b, c subset servers : Server[2]"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_MULTIPLICITY_INVALID"
+    ],
+    "reasons": [
+      "occurrence_named_members_exceed_count"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/occurrence.py::_unnamed_indices::coded::SI_MULTIPLICITY_INVALID::1"
+    ]
+  }
+}

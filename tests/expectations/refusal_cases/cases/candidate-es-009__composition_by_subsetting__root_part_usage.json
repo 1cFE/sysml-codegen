@@ -11,13 +11,13 @@
   "generator": {
     "outcome": "refused",
     "codes": [
-      "SI_OCCURRENCE_MISSING"
+      "SI_MULTIPLICITY_UNSUPPORTED"
     ],
     "reasons": [
-      "elaboration_owner_address_target_missing"
+      "occurrence_named_member_not_sibling"
     ],
     "witnesses": [
-      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._resolve_semantic_reference::coded::SI_OCCURRENCE_MISSING::4"
+      "sysml_codegen/elaboration/occurrence.py::_sibling_members::coded::SI_MULTIPLICITY_UNSUPPORTED::1"
     ]
   }
 }

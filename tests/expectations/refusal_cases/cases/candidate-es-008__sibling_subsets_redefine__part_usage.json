@@ -16,29 +16,16 @@
       {
         "kind": "attr_value",
         "declaration": "fx::Psu::efficiency",
-        "expect": [
-          {
-            "value": 0.9,
-            "value_site": "definition_default"
-          },
-          {
-            "value": 0.9,
-            "value_site": "definition_default"
-          },
-          {
-            "value": 0.9,
-            "value_site": "definition_default"
-          },
-          {
-            "value": 0.9,
-            "value_site": "definition_default"
-          }
-        ]
+        "expect": []
       },
       {
         "kind": "attr_value",
         "declaration": "fx::facility::it_system::rack_1::servers::psu::efficiency",
         "expect": [
+          {
+            "value": 0.95,
+            "value_site": "occurrence_override"
+          },
           {
             "value": 0.95,
             "value_site": "occurrence_override"
@@ -49,6 +36,10 @@
         "kind": "attr_value",
         "declaration": "fx::facility::it_system::rack_2::servers::psu::efficiency",
         "expect": [
+          {
+            "value": 0.85,
+            "value_site": "occurrence_override"
+          },
           {
             "value": 0.85,
             "value_site": "occurrence_override"

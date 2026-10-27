@@ -1,0 +1,38 @@
+{
+  "id": "named-member__stated_count_one__part_usage",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "named member a states Server[1], which is one member of servers : Server[2]"
+  },
+  "generator": {
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "occurrences",
+        "declaration": "fx::Rack::servers",
+        "expect": {
+          "count": 1,
+          "indices": [
+            0
+          ]
+        }
+      },
+      {
+        "kind": "occurrences",
+        "declaration": "fx::rack::a",
+        "expect": {
+          "count": 1,
+          "indices": [
+            null
+          ]
+        }
+      }
+    ]
+  }
+}

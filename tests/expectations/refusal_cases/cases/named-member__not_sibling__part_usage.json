@@ -1,0 +1,23 @@
+{
+  "id": "named-member__not_sibling__part_usage",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      7
+    ],
+    "description": "Hall's spare subsets rack::servers, a collection owned by another part, whose count rack's redefinition inherits"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_MULTIPLICITY_UNSUPPORTED"
+    ],
+    "reasons": [
+      "occurrence_named_member_not_sibling"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/occurrence.py::_sibling_members::coded::SI_MULTIPLICITY_UNSUPPORTED::1"
+    ]
+  }
+}
