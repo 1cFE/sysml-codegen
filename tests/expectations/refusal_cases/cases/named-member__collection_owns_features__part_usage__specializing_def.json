@@ -1,0 +1,23 @@
+{
+  "id": "named-member__collection_owns_features__part_usage__specializing_def",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      7
+    ],
+    "description": "server_1 subsets servers, whose redefinition in the specializing Rack12 sets power = 12.0"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_MULTIPLICITY_UNSUPPORTED"
+    ],
+    "reasons": [
+      "occurrence_named_member_collection_owns_features"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/occurrence.py::_sibling_members::coded::SI_MULTIPLICITY_UNSUPPORTED::2"
+    ]
+  }
+}

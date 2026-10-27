@@ -1,0 +1,23 @@
+{
+  "id": "named-member__subset_of_named_member__part_usage",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      6,
+      6
+    ],
+    "description": "a1 subsets the named member a, which subsets servers"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_MULTIPLICITY_UNSUPPORTED"
+    ],
+    "reasons": [
+      "occurrence_named_member_form"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/occurrence.py::_refuse_named_member_form::coded::SI_MULTIPLICITY_UNSUPPORTED::1"
+    ]
+  }
+}

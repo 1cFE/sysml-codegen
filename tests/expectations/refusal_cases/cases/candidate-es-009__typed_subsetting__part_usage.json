@@ -9,8 +9,15 @@
     "description": "part facility subsets the top-level usage ac_facility typed by Fac and reads facility.area"
   },
   "generator": {
-    "outcome": "generated",
-    "codes": [],
-    "reasons": []
+    "outcome": "refused",
+    "codes": [
+      "SI_MULTIPLICITY_UNSUPPORTED"
+    ],
+    "reasons": [
+      "occurrence_named_member_not_sibling"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/occurrence.py::_sibling_members::coded::SI_MULTIPLICITY_UNSUPPORTED::1"
+    ]
   }
 }

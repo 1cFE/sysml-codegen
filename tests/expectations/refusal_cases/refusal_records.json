@@ -1120,12 +1120,12 @@
    {
     "level": "ERROR",
     "logger": "sysml_codegen.cli",
-    "message": "Model failed exact-route validation: SI_OCCURRENCE_MISSING: fx__site__double: reference='facility.area': exact owner address has no target for leaf a339ea2b-63fb-5013-979b-8747b7d893c6 [root-0/model.sysml:4] (reason: elaboration_owner_address_target_missing)",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_UNSUPPORTED: <model>: reference='fx::Site::facility': named member fx::Site::facility subsets fx::ac_facility, which is not declared beside it in the same part, definition or package, so the generator cannot place it in that collection; declare it beside the collection, or, to reuse a definition, type the part by it (part facility : Fac) instead of subsetting a part declared elsewhere [root-0/model.sysml:4] (reason: occurrence_named_member_not_sibling)",
     "refusal": {
      "items": [
       {
-       "code": "ElaborationCode.SI_OCCURRENCE_MISSING",
-       "reason": "SiteReason.ELABORATION_OWNER_ADDRESS_TARGET_MISSING",
+       "code": "ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED",
+       "reason": "SiteReason.OCCURRENCE_NAMED_MEMBER_NOT_SIBLING",
        "source_file": "root-0/model.sysml",
        "source_line": 4
       }
@@ -1138,12 +1138,30 @@
    {
     "level": "ERROR",
     "logger": "sysml_codegen.cli",
-    "message": "Model failed exact-route validation: SI_OCCURRENCE_MISSING: fx__site__double: reference='facility.area': exact owner address has no target for leaf a339ea2b-63fb-5013-979b-8747b7d893c6 [root-0/model.sysml:4] (reason: elaboration_owner_address_target_missing)",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_UNSUPPORTED: <model>: reference='fx::site::facility': named member fx::site::facility subsets fx::ac_facility, which is not declared beside it in the same part, definition or package, so the generator cannot place it in that collection; declare it beside the collection, or, to reuse a definition, type the part by it (part facility : Fac) instead of subsetting a part declared elsewhere [root-0/model.sysml:4] (reason: occurrence_named_member_not_sibling)",
     "refusal": {
      "items": [
       {
-       "code": "ElaborationCode.SI_OCCURRENCE_MISSING",
-       "reason": "SiteReason.ELABORATION_OWNER_ADDRESS_TARGET_MISSING",
+       "code": "ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED",
+       "reason": "SiteReason.OCCURRENCE_NAMED_MEMBER_NOT_SIBLING",
+       "source_file": "root-0/model.sysml",
+       "source_line": 4
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-es-009__nested_untyped_subsetting__part_usage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_UNSUPPORTED: <model>: reference='fx::Site::facility': named member fx::Site::facility subsets fx::ac_facility, which is not declared beside it in the same part, definition or package, so the generator cannot place it in that collection; declare it beside the collection, or, to reuse a definition, type the part by it (part facility : Fac) instead of subsetting a part declared elsewhere [root-0/model.sysml:4] (reason: occurrence_named_member_not_sibling)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED",
+       "reason": "SiteReason.OCCURRENCE_NAMED_MEMBER_NOT_SIBLING",
        "source_file": "root-0/model.sysml",
        "source_line": 4
       }
@@ -1164,6 +1182,24 @@
        "reason": "SiteReason.OCCURRENCE_CONTAINMENT_STEP_MISSING",
        "source_file": "root-0/model.sysml",
        "source_line": 4
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:candidate-es-009__typed_subsetting__part_usage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_UNSUPPORTED: <model>: reference='fx::Site::facility': named member fx::Site::facility subsets fx::ac_facility, which is not declared beside it in the same part, definition or package, so the generator cannot place it in that collection; declare it beside the collection, or, to reuse a definition, type the part by it (part facility : Fac) instead of subsetting a part declared elsewhere [root-0/model.sysml:5] (reason: occurrence_named_member_not_sibling)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED",
+       "reason": "SiteReason.OCCURRENCE_NAMED_MEMBER_NOT_SIBLING",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
       }
      ],
      "kind": "RefusalKind.DIAGNOSTIC"
@@ -2131,6 +2167,24 @@
     }
    }
   ],
+  "case:g1__redefinition_drops_ordered_bounds": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_UNSUPPORTED: <model>: reference='fx::rack::servers': ordered multiplicity on 'servers' is outside the supported occurrence model [root-0/model.sysml:5] (reason: occurrence_multiplicity_ordered)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED",
+       "reason": "SiteReason.OCCURRENCE_MULTIPLICITY_ORDERED",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
   "case:indexed-reference__indexed_reference__attribute_value": [
    {
     "level": "ERROR",
@@ -2473,6 +2527,114 @@
     }
    }
   ],
+  "case:named-member__collection_owns_features__part_usage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_UNSUPPORTED: <model>: reference='fx::Plant::comp_a': fx::Plant::comp_a has named members, and its own declaration owns a feature that is not a part, which the generator does not carry to named members; set that value on each named member instead [root-0/model.sysml:5] (reason: occurrence_named_member_collection_owns_features)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED",
+       "reason": "SiteReason.OCCURRENCE_NAMED_MEMBER_COLLECTION_OWNS_FEATURES",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:named-member__collection_owns_features__part_usage__specializing_def": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_UNSUPPORTED: <model>: reference='fx::Rack12::servers': fx::Rack12::servers has named members, and its own declaration owns a feature that is not a part, which the generator does not carry to named members; set that value on each named member instead [root-0/model.sysml:6] (reason: occurrence_named_member_collection_owns_features)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED",
+       "reason": "SiteReason.OCCURRENCE_NAMED_MEMBER_COLLECTION_OWNS_FEATURES",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:named-member__exceeds_count__part_usage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_INVALID: <model>: reference='fx::Rack::servers': 3 named members subset fx::Rack::servers, which holds 2; name at most 2 [root-0/model.sysml:5] (reason: occurrence_named_members_exceed_count)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_MULTIPLICITY_INVALID",
+       "reason": "SiteReason.OCCURRENCE_NAMED_MEMBERS_EXCEED_COUNT",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:named-member__not_sibling__part_usage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_UNSUPPORTED: <model>: reference='fx::Hall::spare': named member fx::Hall::spare subsets fx::Rack::servers, which is not declared beside it in the same part, definition or package, so the generator cannot place it in that collection; declare it beside the collection, or, to reuse a definition, type the part by it (part facility : Fac) instead of subsetting a part declared elsewhere [root-0/model.sysml:7] (reason: occurrence_named_member_not_sibling)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED",
+       "reason": "SiteReason.OCCURRENCE_NAMED_MEMBER_NOT_SIBLING",
+       "source_file": "root-0/model.sysml",
+       "source_line": 7
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:named-member__stated_count__part_usage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_UNSUPPORTED: <model>: reference='fx::rack::a': named member fx::rack::a states a multiplicity of 2; a named member is one member of one collection: give it no multiplicity or [1], and subset the collection itself [root-0/model.sysml:6] (reason: occurrence_named_member_form)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED",
+       "reason": "SiteReason.OCCURRENCE_NAMED_MEMBER_FORM",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
+  "case:named-member__subset_of_named_member__part_usage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_UNSUPPORTED: <model>: reference='fx::rack::a1': named member fx::rack::a1 subsets a part that is itself a named member; a named member is one member of one collection: give it no multiplicity or [1], and subset the collection itself [root-0/model.sysml:6] (reason: occurrence_named_member_form)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED",
+       "reason": "SiteReason.OCCURRENCE_NAMED_MEMBER_FORM",
+       "source_file": "root-0/model.sysml",
+       "source_line": 6
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
+    }
+   }
+  ],
   "case:output-naming__channel_name_collision": [
    {
     "constraint_name_safety": null,
@@ -2746,6 +2908,24 @@
       }
      ],
      "kind": "RefusalKind.GENERATION"
+    }
+   }
+  ],
+  "case:part-multiplicity__inherited_ambiguous__expanded_part_usage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_MULTIPLICITY_UNRESOLVED: <model>: reference='fx::Mixed::servers': fx::Mixed::servers states no multiplicity and redefines parts with different multiplicities; state its multiplicity [root-0/model.sysml:8] (reason: occurrence_multiplicity_inherited_ambiguous)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_MULTIPLICITY_UNRESOLVED",
+       "reason": "SiteReason.OCCURRENCE_MULTIPLICITY_INHERITED_AMBIGUOUS",
+       "source_file": "root-0/model.sysml",
+       "source_line": 8
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
     }
    }
   ],

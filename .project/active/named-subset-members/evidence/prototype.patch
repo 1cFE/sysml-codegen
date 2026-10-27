@@ -1,0 +1,391 @@
+--- a/src/sysml_codegen/elaboration/occurrence.py	2026-10-26 01:47:34.000000000 +0000
++++ b/src/sysml_codegen/elaboration/occurrence.py	2026-10-26 02:22:49.780583733 +0000
+@@ -455,6 +455,8 @@
+     package_display: str | None
+     root_package_id: DeclarationId | None
+     display_path: str
++    #: The collection slot this occurrence fills as a named member, if any.
++    member_of_slot: FeatureSlotId | None = None
+ 
+ 
+ class OccurrenceIndex:
+@@ -480,12 +482,19 @@
+         root_buckets: dict[
+             tuple[DeclarationId, FeatureSlotId], list[ExactOccurrence]
+         ] = defaultdict(list)
++        own_children: dict[OccurrenceId, list[ExactOccurrence]] = defaultdict(list)
+         for occurrence in occurrences.values():
+             slot = occurrence.occurrence_id.steps[-1].containment_slot
++            member = occurrence.member_of_slot
+             if occurrence.parent_id is not None:
++                own_children[occurrence.parent_id].append(occurrence)
+                 child_buckets[(occurrence.parent_id, slot)].append(occurrence)
++                if member is not None:
++                    child_buckets[(occurrence.parent_id, member)].append(occurrence)
+             elif occurrence.root_package_id is not None:
+                 root_buckets[(occurrence.root_package_id, slot)].append(occurrence)
++                if member is not None:
++                    root_buckets[(occurrence.root_package_id, member)].append(occurrence)
+         self._children_by_parent_and_slot = {
+             key: tuple(sorted(value, key=lambda item: item.occurrence_id.to_wire()))
+             for key, value in child_buckets.items()
+@@ -494,6 +503,12 @@
+             key: tuple(sorted(value, key=lambda item: item.occurrence_id.to_wire()))
+             for key, value in root_buckets.items()
+         }
++        #: Each child once, under its own slot only (a named member is also filed
++        #: under its collection's slot in the buckets above).
++        self._children_by_parent = {
++            key: tuple(sorted(value, key=lambda item: item.occurrence_id.to_wire()))
++            for key, value in own_children.items()
++        }
+ 
+     def occurrence_ids(self) -> tuple[OccurrenceId, ...]:
+         return tuple(sorted(self._occurrences, key=lambda item: item.to_wire()))
+@@ -539,12 +554,7 @@
+         return tuple(result)
+ 
+     def children(self, occurrence_id: OccurrenceId) -> tuple[ExactOccurrence, ...]:
+-        return tuple(
+-            occurrence
+-            for (parent, _slot), children in self._children_by_parent_and_slot.items()
+-            if parent == occurrence_id
+-            for occurrence in children
+-        )
++        return self._children_by_parent.get(occurrence_id, ())
+ 
+     def children_for_slot(
+         self, occurrence_id: OccurrenceId, slot: FeatureSlotId
+@@ -837,6 +847,68 @@
+     return reference, location
+ 
+ 
++def _redefined_endpoints(usage: Any) -> tuple[Any, ...]:
++    """The parser declarations ``usage`` redefines (chain endpoints)."""
++    endpoints: list[Any] = []
++    for relationship in getattr(usage, "owned_redefinitions", ()) or ():
++        redefined = getattr(relationship, "redefined_feature", None)
++        if redefined is None:
++            continue
++        chain = list(getattr(redefined, "chaining_features", ()) or ())
++        endpoints.append(chain[-1] if chain else redefined)
++    return tuple(endpoints)
++
++
++def _effective_multiplicity(usage: Any) -> tuple[Any, Any]:
++    """The usage's own multiplicity, else the one it inherits through redefinition.
++
++    SysML Part 1 7.6.3 and KerML 7.3.4.5: a usage that declares no multiplicity
++    inherits that of the usages it redefines. Returns (multiplicity, its owner).
++    """
++    own = getattr(usage, "multiplicity", None)
++    if own is not None:
++        return own, usage
++    inherited: dict[int, tuple[Any, Any]] = {}
++    for endpoint in _redefined_endpoints(usage):
++        multiplicity, owner = _effective_multiplicity(endpoint)
++        if multiplicity is not None:
++            inherited[id(multiplicity)] = (multiplicity, owner)
++    if len(inherited) > 1:
++        reference, location = authored_site(usage)
++        raise MultiplicityExpansionError(
++            ElaborationCode.SI_MULTIPLICITY_UNRESOLVED,
++            f"{reference} redefines parts with different multiplicities and states none",
++            reference=reference,
++            location=location,
++            reason=SiteReason.OCCURRENCE_MULTIPLICITY_INHERITED_AMBIGUOUS,
++        )
++    if not inherited:
++        return None, usage
++    ((multiplicity, owner),) = inherited.values()
++    return multiplicity, owner
++
++
++def _is_ordered(usage: Any) -> bool:
++    """KerML 7.3.4.4/7.3.4.5: a redefinition of an ordered feature is ordered."""
++    return bool(getattr(usage, "is_ordered", False)) or any(
++        _is_ordered(endpoint) for endpoint in _redefined_endpoints(usage)
++    )
++
++
++def _is_nonunique(usage: Any) -> bool:
++    return bool(getattr(usage, "is_nonunique", False)) or any(
++        _is_nonunique(endpoint) for endpoint in _redefined_endpoints(usage)
++    )
++
++
++def _owns_non_part_features(usage: Any) -> bool:
++    """Whether ``usage`` or a declaration it redefines owns a non-part feature."""
++    return any(
++        not SysideAdapter.is_instance(feature, "PartUsage")
++        for feature in getattr(usage, "owned_features", ()) or ()
++    ) or any(_owns_non_part_features(endpoint) for endpoint in _redefined_endpoints(usage))
++
++
+ def _multiplicity_indices(
+     usage: Any,
+     *,
+@@ -844,12 +916,17 @@
+     slots: FeatureSlotIndex,
+     attributes_by_slot: dict[FeatureSlotId, list[Any]],
+     closures: dict[DeclarationId, frozenset[DeclarationId]],
++    named_members: int = 0,
++    is_named_member: bool = False,
+ ) -> tuple[int | None, ...]:
+-    multiplicity = getattr(usage, "multiplicity", None)
++    multiplicity, multiplicity_owner = _effective_multiplicity(usage)
+     if multiplicity is None:
+-        return (None,)
++        count_if_single = 1
++        if named_members > count_if_single:
++            _raise_exceed(usage, named_members, count_if_single)
++        return (None,) if named_members == 0 else ()
+     name = str(getattr(usage, "name", None) or "<anonymous>")
+-    if getattr(usage, "is_ordered", False):
++    if _is_ordered(usage):
+         reference, location = _multiplicity_diagnostic_context(usage, multiplicity)
+         raise MultiplicityExpansionError(
+             ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED,
+@@ -858,7 +935,7 @@
+             location=location,
+             reason=SiteReason.OCCURRENCE_MULTIPLICITY_ORDERED,
+         )
+-    if getattr(usage, "is_nonunique", False):
++    if _is_nonunique(usage):
+         reference, location = _multiplicity_diagnostic_context(usage, multiplicity)
+         raise MultiplicityExpansionError(
+             ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED,
+@@ -872,7 +949,7 @@
+     count = (
+         _modeled_integer_bound(
+             upper,
+-            multiplicity_owner=usage,
++            multiplicity_owner=multiplicity_owner,
+             parent=parent,
+             slots=slots,
+             attributes_by_slot=attributes_by_slot,
+@@ -906,7 +983,7 @@
+     if lower is not None:
+         lower_count = _modeled_integer_bound(
+             lower,
+-            multiplicity_owner=usage,
++            multiplicity_owner=multiplicity_owner,
+             parent=parent,
+             slots=slots,
+             attributes_by_slot=attributes_by_slot,
+@@ -930,7 +1007,32 @@
+                 location=location,
+                 reason=SiteReason.OCCURRENCE_MULTIPLICITY_RANGE,
+             )
+-    return tuple(range(count))
++    if is_named_member:
++        if count != 1:
++            reference, location = authored_site(usage)
++            raise MultiplicityExpansionError(
++                ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED,
++                f"named subset {reference} states a count of {count}; a named subset "
++                "is one member of its collection",
++                reference=reference,
++                location=location,
++                reason=SiteReason.OCCURRENCE_NAMED_MEMBER_FORM,
++            )
++        return (None,)
++    if named_members > count:
++        _raise_exceed(usage, named_members, count)
++    return tuple(range(count - named_members))
++
++
++def _raise_exceed(usage: Any, named_members: int, count: int) -> None:
++    reference, location = authored_site(usage)
++    raise MultiplicityExpansionError(
++        ElaborationCode.SI_MULTIPLICITY_INVALID,
++        f"{named_members} named subsets of {reference}, which holds {count}",
++        reference=reference,
++        location=location,
++        reason=SiteReason.OCCURRENCE_NAMED_MEMBERS_EXCEED_COUNT,
++    )
+ 
+ 
+ def build_occurrence_index(model: Any, slots: FeatureSlotIndex) -> OccurrenceIndex:
+@@ -947,6 +1049,106 @@
+             continue
+         attributes_by_slot[slots.slot_of(declaration_id_for(attribute))].append(attribute)
+ 
++    # Named members (KerML 7.3.4.4): a part usage that subsets another user part
++    # usage is one member of it. Keyed by slot, so a redefinition of the member
++    # (``part :>> server_1 { ... }``) stays a member.
++    member_target_by_slot: dict[FeatureSlotId, FeatureSlotId] = {}
++    member_sites: dict[FeatureSlotId, Any] = {}
++    not_sibling_capable: set[FeatureSlotId] = set()
++    for usage in usages:
++        targets: list[tuple[FeatureSlotId, bool]] = []
++        for relationship in getattr(usage, "owned_subsettings", ()) or ():
++            if SysideAdapter.is_instance(relationship, "Redefinition"):
++                continue
++            if relationship is getattr(usage, "owned_reference_subsetting", None):
++                continue
++            if relationship is getattr(usage, "owned_cross_subsetting", None):
++                continue
++            target = getattr(relationship, "subsetted_feature", None)
++            chain = list(getattr(target, "chaining_features", ()) or ()) if target else []
++            endpoint = chain[-1] if chain else target
++            if endpoint is None or getattr(endpoint, "qualified_name", None) is None:
++                continue
++            endpoint_id = declaration_id_for(endpoint)
++            if endpoint_id not in usages_by_id:
++                continue
++            targets.append((slots.slot_of(endpoint_id), bool(chain)))
++        if not targets:
++            continue
++        member_slot = slots.slot_of(declaration_id_for(usage))
++        collection_slots = {slot for slot, _chained in targets}
++        recorded = member_target_by_slot.get(member_slot)
++        if recorded is not None:
++            collection_slots.add(recorded)
++        problem = None
++        if len(collection_slots) > 1:
++            problem = "subsets more than one part collection"
++        if problem is not None:
++            reference, location = authored_site(usage)
++            raise MultiplicityExpansionError(
++                ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED,
++                f"named subset {reference} {problem}",
++                reference=reference,
++                location=location,
++                reason=SiteReason.OCCURRENCE_NAMED_MEMBER_FORM,
++            )
++        (collection_slot,) = collection_slots
++        member_target_by_slot[member_slot] = collection_slot
++        member_sites.setdefault(member_slot, usage)
++        if any(chained for _slot, chained in targets):
++            not_sibling_capable.add(member_slot)
++    for member_slot, collection_slot in member_target_by_slot.items():
++        if collection_slot in member_target_by_slot:
++            reference, location = authored_site(member_sites[member_slot])
++            raise MultiplicityExpansionError(
++                ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED,
++                f"named subset {reference} subsets a part that is itself a named subset",
++                reference=reference,
++                location=location,
++                reason=SiteReason.OCCURRENCE_NAMED_MEMBER_FORM,
++            )
++
++    def named_member_counts(
++        siblings: tuple[Any, ...],
++    ) -> tuple[dict[FeatureSlotId, int], dict[FeatureSlotId, FeatureSlotId]]:
++        """Named members per collection slot among one parent's children.
++
++        Siblings are the child declarations of one occurrence, or the roots of one
++        package. Returns (count per collection slot, member slot -> collection slot).
++        """
++        by_slot = {slots.slot_of(declaration_id_for(item)): item for item in siblings}
++        counts: dict[FeatureSlotId, int] = defaultdict(int)
++        members: dict[FeatureSlotId, FeatureSlotId] = {}
++        for slot, item in by_slot.items():
++            collection_slot = member_target_by_slot.get(slot)
++            if collection_slot is None:
++                continue
++            if collection_slot not in by_slot or slot in not_sibling_capable:
++                reference, location = authored_site(item)
++                raise MultiplicityExpansionError(
++                    ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED,
++                    f"named subset {reference} subsets a part that is not declared "
++                    "beside it, so the generator cannot place it in that collection",
++                    reference=reference,
++                    location=location,
++                    reason=SiteReason.OCCURRENCE_NAMED_MEMBER_NOT_SIBLING,
++                )
++            counts[collection_slot] += 1
++            members[slot] = collection_slot
++        for collection_slot in counts:
++            collection = by_slot[collection_slot]
++            if _owns_non_part_features(collection):
++                reference, location = authored_site(collection)
++                raise MultiplicityExpansionError(
++                    ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED,
++                    f"{reference} has named subsets and its own declaration owns "
++                    "features, which the generator does not carry to named subsets",
++                    reference=reference,
++                    location=location,
++                    reason=SiteReason.OCCURRENCE_NAMED_MEMBER_COLLECTION_OWNS_FEATURES,
++                )
++        return counts, members
++
+     roots: list[Any] = []
+     for usage in usages:
+         owner = semantic_owner(usage)
+@@ -1000,6 +1202,8 @@
+         usage: Any,
+         parent: ExactOccurrence | None,
+         active_types: tuple[DeclarationId, ...],
++        named_members: int,
++        member_of_slot: FeatureSlotId | None,
+     ) -> None:
+         usage_id = declaration_id_for(usage)
+         type_id = _effective_type(usage, definitions, closures)
+@@ -1026,6 +1230,8 @@
+             slots=slots,
+             attributes_by_slot=attributes_by_slot,
+             closures=closures,
++            named_members=named_members,
++            is_named_member=member_of_slot is not None,
+         ):
+             step = OccurrenceStep(slot, index)
+             steps = (step,) if parent is None else parent.occurrence_id.steps + (step,)
+@@ -1058,6 +1264,7 @@
+                 type_closure=type_closure,
+                 parent_id=parent.occurrence_id if parent is not None else None,
+                 child_declaration_ids=child_declaration_ids,
++                member_of_slot=member_of_slot,
+                 display_segment=display_segment,
+                 package_display=package_display,
+                 root_package_id=root_package_id,
+@@ -1073,11 +1280,32 @@
+                 )
+             occurrences[occurrence_id] = occurrence
+             next_active = active_types + ((type_id,) if type_id is not None else ())
++            counts, members = named_member_counts(child_declarations)
+             for child in child_declarations:
+-                add_usage(child, occurrence, next_active)
++                child_slot = slots.slot_of(declaration_id_for(child))
++                add_usage(
++                    child,
++                    occurrence,
++                    next_active,
++                    counts.get(child_slot, 0),
++                    members.get(child_slot),
++                )
+ 
++    roots_by_package: dict[DeclarationId | None, list[Any]] = defaultdict(list)
++    for root in roots:
++        owner = semantic_owner(root)
++        roots_by_package[declaration_id_for(owner) if owner is not None else None].append(root)
++    root_counts: dict[DeclarationId, tuple[int, FeatureSlotId | None]] = {}
++    for group in roots_by_package.values():
++        counts, members = named_member_counts(tuple(group))
++        for root in group:
++            root_slot = slots.slot_of(declaration_id_for(root))
++            root_counts[declaration_id_for(root)] = (
++                counts.get(root_slot, 0),
++                members.get(root_slot),
++            )
+     for root in sorted(roots, key=lambda item: declaration_id_for(item).to_wire()):
+-        add_usage(root, None, ())
++        add_usage(root, None, (), *root_counts[declaration_id_for(root)])
+ 
+     return OccurrenceIndex(
+         occurrences,
+--- a/src/sysml_codegen/elaboration/diagnostics.py	2026-10-26 01:47:34.000000000 +0000
++++ b/src/sysml_codegen/elaboration/diagnostics.py	2026-10-26 02:22:38.499405908 +0000
+@@ -54,6 +54,11 @@
+     OCCURRENCE_MULTIPLICITY_NEGATIVE = "occurrence_multiplicity_negative"
+     OCCURRENCE_MULTIPLICITY_LOWER_UNRESOLVED = "occurrence_multiplicity_lower_unresolved"
+     OCCURRENCE_MULTIPLICITY_RANGE = "occurrence_multiplicity_range"
++    OCCURRENCE_NAMED_MEMBERS_EXCEED_COUNT = "occurrence_named_members_exceed_count"
++    OCCURRENCE_NAMED_MEMBER_FORM = "occurrence_named_member_form"
++    OCCURRENCE_NAMED_MEMBER_NOT_SIBLING = "occurrence_named_member_not_sibling"
++    OCCURRENCE_NAMED_MEMBER_COLLECTION_OWNS_FEATURES = "occurrence_named_member_collection_owns_features"
++    OCCURRENCE_MULTIPLICITY_INHERITED_AMBIGUOUS = "occurrence_multiplicity_inherited_ambiguous"
+     ELABORATION_CONSTRAINT_OWNER_UNMAPPED = "elaboration_constraint_owner_unmapped"
+     ELABORATION_ASSERTED_CONSTRAINT_UNATTACHED = "elaboration_asserted_constraint_unattached"
+     CONSTRAINT_PROFILE_BLOCKED = "constraint_profile_blocked"

@@ -11,6 +11,36 @@
   "generator": {
     "outcome": "generated",
     "codes": [],
-    "reasons": []
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "attr_value",
+        "declaration": "fx::Psu::efficiency",
+        "expect": [
+          {
+            "value": 0.9,
+            "value_site": "definition_default"
+          },
+          {
+            "value": 0.9,
+            "value_site": "definition_default"
+          },
+          {
+            "value": 0.9,
+            "value_site": "definition_default"
+          }
+        ]
+      },
+      {
+        "kind": "attr_value",
+        "declaration": "fx::facility::it_system::rack_1::server_1::psu::efficiency",
+        "expect": [
+          {
+            "value": 0.95,
+            "value_site": "occurrence_override"
+          }
+        ]
+      }
+    ]
   }
 }

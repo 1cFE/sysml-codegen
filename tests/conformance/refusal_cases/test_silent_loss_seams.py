@@ -16,12 +16,13 @@ import pytest
 from tests.helpers.refusal_cases import cases
 from tests.helpers.refusal_cases.cases import StoredAnswer
 
-#: The families design § D names, by the ``family`` id their cases use.
+#: The families design § D names, by the ``family`` id their cases use, less the ones since
+#: closed. ``g1-redefinition-drops-bounds`` closed with named-subset-members (2026-10-26): a
+#: redefinition that states no multiplicity now inherits it, with its ordering.
 SPEC_FAMILIES = {
     "es-010-string",
     "calc-usage-bare-result-drop",
     "es-007-non-numerical",
-    "g1-redefinition-drops-bounds",
     "g2-usage-override-of-referenced-bound",
     "calc-def-output-stub",
 }
