@@ -151,9 +151,7 @@
       "candidate-es-011__return_result_arithmetic__attribute_value"
     ],
     "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._require_one_writer::coded::SI_REDEFINITION_INVALID::1": [
-      "candidate-es-008__nested_named_subset__part_usage",
-      "candidate-es-008__nested_named_subset__part_usage__single_rack",
-      "candidate-es-008__sibling_subsets_redefine__part_usage"
+      "redefinition-writers__usage_chain_without_exact_writer__part_usage"
     ],
     "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._resolve_calculation_output::coded::SI_OCCURRENCE_MISSING::1": [
       "deep-qualified-wiring__qualified_reference"

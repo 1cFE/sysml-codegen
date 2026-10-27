@@ -240,6 +240,41 @@ class PipelineModule(BaseModel):
     source_line: int | None = None
 
 
+def class_signature(module: PipelineModule) -> str:
+    """What makes two computed modules the same generated class, as a comparable string.
+
+    Two copies of one definition feature (``sub[0].capital_cost`` and
+    ``sub[1].capital_cost``) can share one class only when everything the class body
+    is rendered from is equal. The signature is the module with its occurrence fields
+    removed: ``name``, ``execution_order``, ``module_type``, each input's ``source``
+    (the occurrence's parameter key) and each output's ``channel_name``. Each copy's
+    pipeline entry carries those; the class does not. (The module template reads the
+    last ``__`` segment of a single output's ``channel_name`` as the output's field
+    name; that segment is the attribute name, which every copy of one definition
+    feature shares, so dropping ``channel_name`` loses nothing the class renders.)
+
+    This is a removal list, not a list of fields to keep, and must stay one: a field
+    added to ``PipelineModule``, ``ModuleInput`` or ``ModuleOutput`` later counts by
+    default, so the comparison can only get stricter. (Fields declared
+    ``exclude=True`` are not dumped and so never count.)
+    """
+    dumped = module.model_dump(mode="json", exclude={"name", "execution_order", "module_type"})
+    for module_input in dumped["inputs"]:
+        del module_input["source"]
+    for module_output in dumped["outputs"]:
+        del module_output["channel_name"]
+    return json.dumps(dumped, sort_keys=True)
+
+
+def first_copy(copies: list[PipelineModule]) -> PipelineModule:
+    """The copy that names and places a shared class: the smallest module name.
+
+    Projection takes a split shape's module type from it, and generation writes the
+    shared class file at its path, so both must pick the same copy; both call this.
+    """
+    return min(copies, key=lambda module: module.name)
+
+
 class OutputAlias(BaseModel):
     """A modeler's EXPOSE_PURE name surfaced onto a canonical output channel.
 

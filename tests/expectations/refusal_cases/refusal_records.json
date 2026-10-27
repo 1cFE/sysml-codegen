@@ -1116,60 +1116,6 @@
     }
    }
   ],
-  "case:candidate-es-008__nested_named_subset__part_usage": [
-   {
-    "level": "ERROR",
-    "logger": "sysml_codegen.cli",
-    "message": "Model failed exact-route validation: SI_REDEFINITION_INVALID: <model>: reference='fx::facility::it_system::rack_1::server_2::psu::efficiency': exact scope OccurrenceId(steps=(OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('6ab29f3e-0bdb-5df4-8bd7-81e94fc2bc1f'))), occurrence_index=None), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('8ca134ff-9f0d-5420-ae06-4630c84c7f67'))), occurrence_index=None), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('2622dc36-9275-5ffb-ae28-17168533c0c2'))), occurrence_index=None), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('4f7fc9d1-6782-5c61-b472-ef45313e827c'))), occurrence_index=0), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('d4a5f829-2278-57d2-b0e1-57d555a41a1c'))), occurrence_index=None))) has incomparable value writers fx::facility::it_system::rack_1::server_1::psu::efficiency, fx::facility::it_system::rack_1::server_2::psu::efficiency, fx::facility::it_system::rack_2::server_1::psu::efficiency, fx::facility::it_system::rack_2::server_2::psu::efficiency [root-0/model.sysml:13] (reason: elaboration_value_writers_incomparable)",
-    "refusal": {
-     "items": [
-      {
-       "code": "ElaborationCode.SI_REDEFINITION_INVALID",
-       "reason": "SiteReason.ELABORATION_VALUE_WRITERS_INCOMPARABLE",
-       "source_file": "root-0/model.sysml",
-       "source_line": 13
-      }
-     ],
-     "kind": "RefusalKind.DIAGNOSTIC"
-    }
-   }
-  ],
-  "case:candidate-es-008__nested_named_subset__part_usage__single_rack": [
-   {
-    "level": "ERROR",
-    "logger": "sysml_codegen.cli",
-    "message": "Model failed exact-route validation: SI_REDEFINITION_INVALID: <model>: reference='fx::facility::it_system::rack_1::server_2::psu::efficiency': exact scope OccurrenceId(steps=(OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('6ab29f3e-0bdb-5df4-8bd7-81e94fc2bc1f'))), occurrence_index=None), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('8ca134ff-9f0d-5420-ae06-4630c84c7f67'))), occurrence_index=None), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('5dc7b182-8a56-505e-a761-26ba3c7a6967'))), occurrence_index=0), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('4f7fc9d1-6782-5c61-b472-ef45313e827c'))), occurrence_index=0), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('d4a5f829-2278-57d2-b0e1-57d555a41a1c'))), occurrence_index=None))) has incomparable value writers fx::facility::it_system::rack_1::server_1::psu::efficiency, fx::facility::it_system::rack_1::server_2::psu::efficiency [root-0/model.sysml:13] (reason: elaboration_value_writers_incomparable)",
-    "refusal": {
-     "items": [
-      {
-       "code": "ElaborationCode.SI_REDEFINITION_INVALID",
-       "reason": "SiteReason.ELABORATION_VALUE_WRITERS_INCOMPARABLE",
-       "source_file": "root-0/model.sysml",
-       "source_line": 13
-      }
-     ],
-     "kind": "RefusalKind.DIAGNOSTIC"
-    }
-   }
-  ],
-  "case:candidate-es-008__sibling_subsets_redefine__part_usage": [
-   {
-    "level": "ERROR",
-    "logger": "sysml_codegen.cli",
-    "message": "Model failed exact-route validation: SI_REDEFINITION_INVALID: <model>: reference='fx::facility::it_system::rack_1::servers::psu::efficiency': exact scope OccurrenceId(steps=(OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('6ab29f3e-0bdb-5df4-8bd7-81e94fc2bc1f'))), occurrence_index=None), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('8ca134ff-9f0d-5420-ae06-4630c84c7f67'))), occurrence_index=None), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('5dc7b182-8a56-505e-a761-26ba3c7a6967'))), occurrence_index=0), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('4f7fc9d1-6782-5c61-b472-ef45313e827c'))), occurrence_index=0), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('d4a5f829-2278-57d2-b0e1-57d555a41a1c'))), occurrence_index=None))) has incomparable value writers fx::facility::it_system::rack_1::servers::psu::efficiency, fx::facility::it_system::rack_2::servers::psu::efficiency [root-0/model.sysml:11] (reason: elaboration_value_writers_incomparable)",
-    "refusal": {
-     "items": [
-      {
-       "code": "ElaborationCode.SI_REDEFINITION_INVALID",
-       "reason": "SiteReason.ELABORATION_VALUE_WRITERS_INCOMPARABLE",
-       "source_file": "root-0/model.sysml",
-       "source_line": 11
-      }
-     ],
-     "kind": "RefusalKind.DIAGNOSTIC"
-    }
-   }
-  ],
   "case:candidate-es-009__composition_by_subsetting__part_usage": [
    {
     "level": "ERROR",
@@ -3059,6 +3005,24 @@
       }
      ],
      "kind": "RefusalKind.GENERATION"
+    }
+   }
+  ],
+  "case:redefinition-writers__usage_chain_without_exact_writer__part_usage": [
+   {
+    "level": "ERROR",
+    "logger": "sysml_codegen.cli",
+    "message": "Model failed exact-route validation: SI_REDEFINITION_INVALID: <model>: reference='P::Sub::leaf::capital_cost': exact scope OccurrenceId(steps=(OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('32a7d44e-07bf-515b-a188-c140732115b4'))), occurrence_index=None), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('2854034b-b01d-5cae-8104-e4cb9e6218ec'))), occurrence_index=None), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('3251a456-758f-5e8b-a999-2e10533908c2'))), occurrence_index=None))) has incomparable value writers P::Sub20::leaf::capital_cost, P::Sub::leaf::capital_cost [root-0/model.sysml:5] (reason: elaboration_value_writers_incomparable)",
+    "refusal": {
+     "items": [
+      {
+       "code": "ElaborationCode.SI_REDEFINITION_INVALID",
+       "reason": "SiteReason.ELABORATION_VALUE_WRITERS_INCOMPARABLE",
+       "source_file": "root-0/model.sysml",
+       "source_line": 5
+      }
+     ],
+     "kind": "RefusalKind.DIAGNOSTIC"
     }
    }
   ],

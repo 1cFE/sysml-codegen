@@ -18,9 +18,9 @@ from typing import TYPE_CHECKING
 import jinja2
 
 from sysml_codegen.core.errors import CodeGenerationError, GenerationCode
-from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
 from sysml_codegen.core.qualified_names import sanitize_qualified_name
 from sysml_codegen.elaboration.diagnostics import SiteReason
+from sysml_codegen.generation.module_paths import module_python_path
 
 if TYPE_CHECKING:
     from sysml_codegen.generation.coverage import CoverageAccountData
@@ -37,33 +37,6 @@ def _output_attr_name(out: ModuleOutput) -> str:
     if out.field_name != "root":
         return out.field_name
     return out.channel_name.split("__")[-1]
-
-
-def _get_module_sysml_qn(module: PipelineModule) -> str:
-    """Get the full SysML qualified name for path/import derivation.
-
-    Module types store calc_def_qualified_name differently:
-    - CalcUsage: full calc def QN (e.g., "Package::CalcDef")
-    - FORMULA: owning part QN only → append "::calc_def_name"
-    - Aggregation: owning part QN with __ separator → use module.name with :: separator
-    """
-    from sysml_codegen.generation.errors import unrenderable_module_kind_error
-    from sysml_codegen.resolution.models import ModuleKind
-
-    if module.module_kind == ModuleKind.FORMULA:
-        return f"{module.calc_def_qualified_name}::{module.calc_def_name}"
-    elif module.module_kind == ModuleKind.AGGREGATION:
-        return module.name.replace("__", "::")
-    elif module.module_kind == ModuleKind.CALCULATION:
-        if module.calc_def_qualified_name is None:
-            raise CodeGenerationError(
-                f"GENERATION_METADATA_MISSING: module {module.name!r} "
-                "lacks calc_def_qualified_name",
-                code=GenerationCode.GENERATION_METADATA_MISSING,
-            )
-        return module.calc_def_qualified_name
-    else:
-        raise unrenderable_module_kind_error(module, "module-wrapper")
 
 
 def _build_module_docstring_from_graph(module: PipelineModule) -> str:
@@ -495,11 +468,8 @@ def generate_teax_module(
     primitive_types.add("Float")
     primitive_imports = sorted(primitive_types)
 
-    # Derive path from full SysML QN (module-type-aware)
-    sysml_qn = _get_module_sysml_qn(module)
-    sqn = SysMLQualifiedName(sysml_qn)
-    python_path = PythonModulePath.from_sysml(sqn)
-    impl_import_path = python_path.impl_import_path
+    # The class's own file path, from the derivation the writers and registry share
+    impl_import_path = module_python_path(module).impl_import_path
 
     # Class name from module_type (correct PascalCase for all module types)
     class_name = module.module_type.split(".")[-1]

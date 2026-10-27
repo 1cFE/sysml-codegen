@@ -519,17 +519,19 @@ def test_a_registry_class_name_collision_refuses_before_the_writer_runs(
 ) -> None:
     """The row-36 refusal, typed and ordered — the Slice 3E audit's F5, second half.
 
-    ``unresolvable_attr_probe`` projects two formulas whose registry class names
-    collide past the parent-segment alias. The guard that catches it lives at the
+    ``refusal_cases/output-naming__registry_class_collision`` projects two different
+    formulas, ``a::Site::t`` and ``b::Site::t``, whose registry class names collide
+    past the parent-segment alias. The guard that catches it lived only at the
     registry pass, which runs *after* the output tree is cleared, and it raised a
     bare ``ValueError``: the operator saw "Unexpected error" with a traceback and
-    kept a 34-file package with no contracts and no seal. Both halves are the
+    kept a half-written package with no contracts and no seal. Both halves are the
     subject here — the message is the package's own refusal, and the tree the run
-    was pointed at is exactly as it was.
+    was pointed at is exactly as it was. (``unresolvable_attr_probe`` was the model
+    here until repeated copies of one class stopped colliding; it now generates.)
     """
     before = _tree(populated_output)
     config = GenerationConfig(
-        models_path=FIXTURES_DIR / "unresolvable_attr_probe",
+        models_path=FIXTURES_DIR / "refusal_cases" / "output-naming__registry_class_collision",
         output_path=populated_output,
         package_name="switch_probe",
         overwrite=True,

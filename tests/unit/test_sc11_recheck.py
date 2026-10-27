@@ -2,8 +2,7 @@
 
 The class-name collision aliaser keys on the parent segment only, so two modules
 with the same class name AND parent but different grandparents alias identically.
-The Item-5 static scan proved no committed model hits this, so the re-check lands
-as a hard fail-fast (Phase-0 gate: CLEAN).
+The re-check is a hard fail-fast.
 
 Gate 4B-G0 split detection from the raise: the aliaser aliases, ``_residual_collisions``
 reports what survived, and the two callers decide. That is what let the generation
@@ -22,6 +21,17 @@ from sysml_codegen.generation.registry import (
 )
 
 
+def _entry(class_name: str, module_type: str, import_path: str) -> dict:
+    """A registry entry as ``_registry_class_entries`` builds it."""
+    return {
+        "class_name": class_name,
+        "module_type": module_type,
+        "imported_name": class_name,
+        "import_path": import_path,
+        "import_group": "formula",
+    }
+
+
 def test_grandparent_collision_survives_aliasing_and_is_refused_by_type():
     """Same class + parent, different grandparent -> alias still collides.
 
@@ -30,14 +40,10 @@ def test_grandparent_collision_survives_aliasing_and_is_refused_by_type():
     catches it instead of the bottom "Unexpected error" arm.
     """
     all_modules = [
-        {"class_name": "Pump", "module_type": "a.pump.Pump"},
-        {"class_name": "Pump", "module_type": "b.pump.Pump"},
+        _entry("Pump", "a.pump.Pump", "a.pump"),
+        _entry("Pump", "b.pump.Pump", "b.pump"),
     ]
-    imports = [
-        "from pkg.modules.a.pump import Pump",
-        "from pkg.modules.b.pump import Pump",
-    ]
-    aliased, _ = _resolve_class_name_collisions(all_modules, imports)
+    aliased = _resolve_class_name_collisions(all_modules)
     residual = _residual_collisions(aliased)
     assert sorted(residual) == ["Pump_Pump"]
 
@@ -53,14 +59,10 @@ def test_grandparent_collision_survives_aliasing_and_is_refused_by_type():
 def test_distinct_parents_alias_cleanly():
     """Same class, different parents -> distinct aliases -> no residual, no raise."""
     all_modules = [
-        {"class_name": "Pump", "module_type": "a.foo.Pump"},
-        {"class_name": "Pump", "module_type": "a.bar.Pump"},
+        _entry("Pump", "a.foo.Pump", "a.foo"),
+        _entry("Pump", "a.bar.Pump", "a.bar"),
     ]
-    imports = [
-        "from pkg.modules.a.foo import Pump",
-        "from pkg.modules.a.bar import Pump",
-    ]
-    resolved, _ = _resolve_class_name_collisions(all_modules, imports)
+    resolved = _resolve_class_name_collisions(all_modules)
     aliases = sorted(m["class_name"] for m in resolved)
     assert aliases == ["Bar_Pump", "Foo_Pump"]
     assert _residual_collisions(resolved) == {}

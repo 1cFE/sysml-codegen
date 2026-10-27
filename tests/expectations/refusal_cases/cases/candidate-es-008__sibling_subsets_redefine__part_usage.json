@@ -9,15 +9,52 @@
     "description": "two named subsets of racks, rack_1 and rack_2, each redefine servers.psu.efficiency"
   },
   "generator": {
-    "outcome": "refused",
-    "codes": [
-      "SI_REDEFINITION_INVALID"
-    ],
-    "reasons": [
-      "elaboration_value_writers_incomparable"
-    ],
-    "witnesses": [
-      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._require_one_writer::coded::SI_REDEFINITION_INVALID::1"
+    "outcome": "generated",
+    "codes": [],
+    "reasons": [],
+    "seams": [
+      {
+        "kind": "attr_value",
+        "declaration": "fx::Psu::efficiency",
+        "expect": [
+          {
+            "value": 0.9,
+            "value_site": "definition_default"
+          },
+          {
+            "value": 0.9,
+            "value_site": "definition_default"
+          },
+          {
+            "value": 0.9,
+            "value_site": "definition_default"
+          },
+          {
+            "value": 0.9,
+            "value_site": "definition_default"
+          }
+        ]
+      },
+      {
+        "kind": "attr_value",
+        "declaration": "fx::facility::it_system::rack_1::servers::psu::efficiency",
+        "expect": [
+          {
+            "value": 0.95,
+            "value_site": "occurrence_override"
+          }
+        ]
+      },
+      {
+        "kind": "attr_value",
+        "declaration": "fx::facility::it_system::rack_2::servers::psu::efficiency",
+        "expect": [
+          {
+            "value": 0.85,
+            "value_site": "occurrence_override"
+          }
+        ]
+      }
     ]
   }
 }

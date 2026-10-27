@@ -27,7 +27,6 @@ from sysml_codegen.cli.refusal import (
 
 if TYPE_CHECKING:
     from sysml_codegen.core.errors import CodeGenerationError
-    from sysml_codegen.core.identifier_types import PythonModulePath
     from sysml_codegen.generation.constraint_name_safety import ConstraintNameViolation
     from sysml_codegen.generation.constraint_plan import ConstraintGenerationPlan
     from sysml_codegen.orchestration.elaborated_pipeline import FailedLoad, LiveLoad
@@ -237,6 +236,7 @@ def prepare_graph(graph: ComputationGraph, package_name: str) -> Prepared | Refu
     """
     from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
     from sysml_codegen.generation.entry_point import refuse_param_field_collisions
+    from sysml_codegen.generation.registry import class_owners
 
     step = PreparationStep.GENERATION_METADATA
     try:
@@ -253,7 +253,7 @@ def prepare_graph(graph: ComputationGraph, package_name: str) -> Prepared | Refu
         # A sanitize-collision, so a duplicate path never wipes or silently overwrites
         # existing files.
         step = PreparationStep.OUTPUT_PATHS
-        _check_duplicate_output_paths(graph.modules)
+        _check_duplicate_output_paths(class_owners(graph.modules))
 
         # Registry class-name collisions the aliasing cannot resolve. The check itself lives
         # at the registry pass, which runs after the tree is cleared; running it here is what
@@ -297,31 +297,6 @@ def _get_template_env() -> jinja2.Environment:
     )
 
 
-def _get_python_path(module: PipelineModule) -> PythonModulePath:
-    """Get PythonModulePath from PipelineModule (all module types)."""
-    from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
-    from sysml_codegen.generation.errors import unrenderable_module_kind_error
-    from sysml_codegen.resolution.models import ModuleKind
-
-    if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
-        # module_type is already a Python-dotted path (D9 naming), not a SysML "::"
-        # qualified name — derive directly rather than routing through from_sysml.
-        # D9: "file stem lowercased" — the whole final segment, lowercased as-is.
-        parts = module.module_type.split(".")
-        return PythonModulePath(directory="/".join(parts[:-1]), filename=parts[-1].lower())
-    if module.module_kind == ModuleKind.FORMULA:
-        sysml_qn = f"{module.calc_def_qualified_name}::{module.calc_def_name}"
-    elif module.module_kind == ModuleKind.AGGREGATION:
-        sysml_qn = module.name.replace("__", "::")
-    elif module.module_kind == ModuleKind.CALCULATION:
-        assert module.calc_def_qualified_name is not None
-        sysml_qn = module.calc_def_qualified_name
-    else:
-        raise unrenderable_module_kind_error(module, "python-path")
-    sqn = SysMLQualifiedName(sysml_qn)
-    return PythonModulePath.from_sysml(sqn)
-
-
 def _raw_source_name(module: PipelineModule) -> str:
     """Raw SysML spelling of a module, for duplicate-path provenance.
 
@@ -361,7 +336,7 @@ def _check_duplicate_output_paths(modules: list[PipelineModule]) -> None:
     sanitize-collision spans (D2):
 
     - Modules + stencils share the derived python path (stencils are
-      `{filename}_impl.py` from the same _get_python_path output), so one path
+      `{filename}_impl.py` from the same module_python_path output), so one path
       check covers both.
     - Schemas are keyed on `calc_def_name.lower()` (only multi-output modules
       reach the schema pass), a *different* key space: two calc defs whose names
@@ -369,15 +344,18 @@ def _check_duplicate_output_paths(modules: list[PipelineModule]) -> None:
       differ.
 
     Only a collision between *different* raw sources is an error -- multiple
-    usages of one calc def legitimately derive the same path.
+    usages of one calc def legitimately derive the same path. The caller passes the
+    modules whose files are written (``registry.class_owners``): the other copies of a
+    formula or rollup class write no file of their own.
     """
     from sysml_codegen.core.errors import GenerationCode
     from sysml_codegen.elaboration.diagnostics import SiteReason
     from sysml_codegen.generation import CodeGenerationError
+    from sysml_codegen.generation.module_paths import module_python_path
 
     module_paths: dict[str, str] = {}
     for module in modules:
-        path = _get_python_path(module).full_path
+        path = module_python_path(module).full_path
         raw = _raw_source_name(module)
         prior = module_paths.get(path)
         if prior is not None and prior != raw:
@@ -449,8 +427,14 @@ def _preflight_registry_class_names(graph: ComputationGraph) -> None:
     """
     from sysml_codegen.elaboration.diagnostics import SiteReason
     from sysml_codegen.generation.errors import residual_class_name_collision_error
-    from sysml_codegen.generation.registry import residual_class_name_collisions
+    from sysml_codegen.generation.registry import (
+        require_one_class_per_module_type,
+        residual_class_name_collisions,
+    )
 
+    # Projection settled one class body per computed module type; a breach is the
+    # generator's defect, raised plainly so it is reported as one (design D7).
+    require_one_class_per_module_type(graph.modules)
     residual = residual_class_name_collisions(graph)
     if residual:
         raise residual_class_name_collision_error(

@@ -305,10 +305,8 @@
       ]
     },
     "elab_native_plural_scope": {
-      "class": "refusing",
-      "codes": [
-        "REGISTRY_CLASS_NAME_COLLISION"
-      ]
+      "class": "generating",
+      "note": "Generated since repeated-rollup-collision: its two BaseContainer copies (selected, shadow) share one rollup class. Refused with REGISTRY_CLASS_NAME_COLLISION before."
     },
     "elab_payload_identity": {
       "class": "refusing",
@@ -453,6 +451,61 @@
     "quoted_owner_formula": {
       "class": "generating"
     },
+    "repeated_rollup": {
+      "class": "container",
+      "note": "Repeated computed sub-assemblies (repeated-rollup-collision): copies of one formula or rollup class share it, one class per distinct shape."
+    },
+    "repeated_rollup/arity": {
+      "class": "generating"
+    },
+    "repeated_rollup/divnamed": {
+      "class": "refusing",
+      "codes": [
+        "REGISTRY_CLASS_NAME_COLLISION"
+      ],
+      "note": "The remaining limit (design D3): two different shapes whose first copies are both named 'a', under different parents, alias to one name. Backlog [REPEATED-ROLLUP-SHAPE-ALIAS-LIMIT]."
+    },
+    "repeated_rollup/leafformula": {
+      "class": "generating"
+    },
+    "repeated_rollup/leak_rollup": {
+      "class": "generating"
+    },
+    "repeated_rollup/named": {
+      "class": "generating"
+    },
+    "repeated_rollup/named_total": {
+      "class": "generating"
+    },
+    "repeated_rollup/nestdiv": {
+      "class": "generating"
+    },
+    "repeated_rollup/nested": {
+      "class": "generating"
+    },
+    "repeated_rollup/onenamed": {
+      "class": "generating"
+    },
+    "repeated_rollup/specialized": {
+      "class": "refusing",
+      "codes": [
+        "REGISTRY_CLASS_NAME_COLLISION"
+      ],
+      "note": "The remaining limit reached by specialization (design D3): Mid2 :> Mid redefines sub as Sub2[2], so both shapes' first copies sit under a parent segment 'sub_0'. Backlog [REPEATED-ROLLUP-SHAPE-ALIAS-LIMIT]."
+    },
+    "repeated_rollup/specialized_renamed": {
+      "class": "generating",
+      "note": "The workaround for repeated_rollup/specialized: the redefinition gets a new name (part racks2 :>> sub : Sub2[2])."
+    },
+    "repeated_rollup/subname": {
+      "class": "generating"
+    },
+    "repeated_rollup/trio": {
+      "class": "generating"
+    },
+    "repeated_rollup/two": {
+      "class": "generating"
+    },
     "retype_model": {
       "class": "generating"
     },
@@ -467,6 +520,22 @@
       "codes": [
         "SI_EDGE_DANGLING"
       ]
+    },
+    "sibling_override_leak": {
+      "class": "container",
+      "note": "One copy's part redefinition owns a value, a deep chain, an attribute or a constraint; it must stay in that copy ([NESTED-OVERRIDE-LEAKS-TO-SIBLING], repeated-rollup-collision D9)."
+    },
+    "sibling_override_leak/deep_chain": {
+      "class": "generating"
+    },
+    "sibling_override_leak/nested_specdef": {
+      "class": "generating"
+    },
+    "sibling_override_leak/new_members": {
+      "class": "generating"
+    },
+    "sibling_override_leak/specialized_top": {
+      "class": "generating"
     },
     "solar_battery_d5": {
       "class": "generating"
@@ -750,11 +819,8 @@
       "class": "generating"
     },
     "unresolvable_attr_probe": {
-      "class": "refusing",
-      "codes": [
-        "REGISTRY_CLASS_NAME_COLLISION"
-      ],
-      "note": "The recapture batch lists it as captured: elaboration seals a graph, and run_codegen then refuses at generation."
+      "class": "generating",
+      "note": "Generated since repeated-rollup-collision: the two 'Derived Component' occurrences share one class per formula. Refused with REGISTRY_CLASS_NAME_COLLISION before."
     },
     "usage_owned_reference_consumers": {
       "class": "generating"

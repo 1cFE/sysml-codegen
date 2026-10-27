@@ -86,6 +86,8 @@ MODEL_COLLECTIONS = {
     "occurrence_seed",
     # tests/conformance/refusal_cases/test_generator_half.py (conformance cases)
     "refusal_cases",
+    # tests/conformance/test_sibling_override_leak.py
+    "sibling_override_leak",
 }
 
 

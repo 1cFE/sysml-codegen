@@ -1,0 +1,23 @@
+{
+  "id": "redefinition-writers__usage_chain_without_exact_writer__part_usage",
+  "construct": {
+    "file": "model.sysml",
+    "lines": [
+      5,
+      7
+    ],
+    "description": "c.leaf's capital_cost has two usage writers on a redefinition chain (Sub's leaf 15.0, Sub20's leaf 20.0) and no exact one; the generator refuses, native SysIDE gives 20.0"
+  },
+  "generator": {
+    "outcome": "refused",
+    "codes": [
+      "SI_REDEFINITION_INVALID"
+    ],
+    "reasons": [
+      "elaboration_value_writers_incomparable"
+    ],
+    "witnesses": [
+      "sysml_codegen/elaboration/elaborate.py::_ExactElaborator._require_one_writer::coded::SI_REDEFINITION_INVALID::1"
+    ]
+  }
+}

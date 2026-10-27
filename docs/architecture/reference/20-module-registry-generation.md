@@ -33,15 +33,18 @@ Since `module_type_override` is a dict keyed by class name, unresolved
 collisions cause silent overwrites. The registry uses aliased imports to
 disambiguate (see `_resolve_class_name_collisions()` in `generation/registry.py`).
 
-The alias keys on the **parent** segment only, so two scopes with the same class
-name and parent but different grandparents (e.g. `a.pump.Pump` and `b.pump.Pump`)
-would alias identically — a residual hole (SC-11). This is now closed: after
-aliasing, the registry re-checks uniqueness and **fails fast** on any residual
-collision (REQ-REG-08). SC-11 itself is confirmed intended, documented, and
-tested (REQ-REG-03/04/07 PASS, aliased baseline parseable); a static scan proved
-no committed model hits the grandparent case, so the re-check is a hard error,
-not a warning. The AST-based import rewrite (substring, first-match) remains a
-filed follow-up.
+The alias keys on the **parent** segment only, so two different module types with the same class name and parent but different grandparents (e.g. `a.pump.Pump` and `b.pump.Pump`) alias identically. After aliasing, the registry re-checks uniqueness and **fails fast** on any residual collision (REQ-REG-08), before the output tree is touched. The committed fixture `tests/fixtures/refusal_cases/output-naming__registry_class_collision` (formulas `a::Site::t` and `b::Site::t`) is refused this way. Each import line is rendered from its own registry entry, so an alias always lands on the import of the file that defines that class (this closed `[SC11-IMPORT-REWRITE]`, where a substring search could alias the wrong line).
+
+**Class identity: one class per module type.** A formula or rollup module's `module_type` comes from the definition feature that owns it, so every copy of that definition (`sub[0].capital_cost`, `sub[1].capital_cost`, or two named parts `a : Sub; b : Sub`) has the same module type. The registry registers each module type once, as it always did for calc defs; each copy keeps its own pipeline entry, inputs and output channel. TEAx requires this: it refuses a module type registered twice.
+
+- **Same shape, one class.** Copies whose modules are equal apart from their occurrence fields (`resolution/models.py` `class_signature`) share one class, one file and one stencil.
+- **Different shapes, one class per shape.** When copies differ (`a : Sub` sums three leaves, `b : Sub { part :>> leaf[2]; }` sums two), projection splits them (`elaboration/project.py` `_shape_split_module_types`): each distinct shape takes the module type of its first copy's occurrence path, by module name (`p.top.a.capital_costModule`, `p.top.b.capital_costModule`). Identical rows each holding such copies still share one class per shape.
+- **Named and placed by the first copy.** A rollup class's file is its first copy's path (`modules/p/top/sub_0/capital_cost.py` for `Sub[2]`; no `sub_1` file is written). Renaming or removing that copy moves the class file and its stencil. These stencils are auto-implemented, so nothing handwritten is lost. A formula class's file is the definition's path, as before.
+- **Remaining limit.** The alias uses only the parent segment of the module type, so two different shapes whose first copies sit under the same parent segment alias to one name and are refused with `REGISTRY_CLASS_NAME_COLLISION` (backlog `[REPEATED-ROLLUP-SHAPE-ALIAS-LIMIT]`). Two ways to reach it:
+  - Same part name under different parents: `x.a` with three leaves, `y.a` with two (`tests/fixtures/repeated_rollup/divnamed`). Renaming `x.a` or `y.a` builds it.
+  - A specialized parent that redefines a repeated part to a different shape: `Mid { part sub : Sub[2]; }`, `Mid2 :> Mid { part :>> sub : Sub2[2]; }` where `Sub2` has two leaves, used as `a : Mid; b : Mid2`. Both first copies are `sub[0]` (`p.top.a.sub_0...`, `p.top.b.sub_0...`), so renaming `a` or `b` does not help. Giving the redefinition a new name, `part racks2 :>> sub : Sub2[2];`, builds it (`tests/fixtures/repeated_rollup/specialized` refuses, `specialized_renamed` builds and computes 100.0).
+
+The module and stencil writers (`cli/emit.py`), the module and stencil templates' own paths (`generation/modules.py`, `generation/stencils.py`), the duplicate-path preflight and the registry's import lines read a module's file path from one function, `generation/module_paths.py` `module_python_path`. The writers, the preflight and the registry iterate the class owners (`generation/registry.py` `class_owners`), so every class file written is imported and every import names a written file. Projection and `class_owners` pick a shared class's first copy with one function, `resolution/models.py` `first_copy`.
 
 **Graph-derived schema authority**: The immutable `ComputationGraph` is the only account of root
 outputs. `required_exit_point_wrapper_types()` walks that graph, validates every root token, and
@@ -64,7 +67,7 @@ and source location before the public command changes the output tree.
 | REQ-REG-05 | CalcUsage, computed attribute, and aggregation modules SHALL all derive paths from design-scoped qualified names | Path consistency | Same `SysMLQualifiedName` derivation for all three module types |
 | REQ-REG-06 | `CUSTOM_SCHEMA_TYPES` SHALL include the stable, de-duplicated wrapper set derived inside the exported registry seam from every root output in the graph | TEAx integration | `tests/unit/test_registry_generation.py` covers no-root, one, repeated, and multiple root types and proves every alias has the same four-argument surface |
 | REQ-REG-07 | Registry generation SHALL detect and report name collisions before rendering | Fail-fast diagnostics | Warning emitted when two modules produce same class name |
-| REQ-REG-08 | After parent-segment aliasing, registry SHALL re-check class-name uniqueness and fail fast on any residual collision | Fail-fast diagnostics | `_resolve_class_name_collisions()` raises when two modules alias identically (same class + parent, different grandparents); conformance: `test_sc11_recheck` |
+| REQ-REG-08 | After parent-segment aliasing, registry SHALL re-check class-name uniqueness and fail fast on any residual collision | Fail-fast diagnostics | `_residual_collisions()` reports two entries that alias identically (same class + parent, different grandparents), and the generation boundary refuses before writing; conformance: `test_sc11_recheck`, `test_public_authority_switch.py::test_a_registry_class_name_collision_refuses_before_the_writer_runs` |
 | REQ-REG-09 | A root exit whose type token is outside `{float,int,str,bool}` SHALL refuse before output mutation as the graph-derived `CodeGenerationError` code `EXIT_POINT_TYPE_UNSUPPORTED`, naming the token, module identity, output identity, file:line, and public status 1 | Fail-before-mutate diagnostic | `tests/conformance/test_generation_exit_type_preflight.py` proves the complete sentinel tree stays byte-identical, direct generation refuses by the same typed error, and no exported alias accepts a caller type-set parameter |
 
 `_preflight_exit_point_types` and every direct registry entry call the same graph operation,

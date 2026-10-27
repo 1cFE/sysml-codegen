@@ -18,7 +18,7 @@ from typing import Any
 import jinja2
 
 from sysml_codegen.core.errors import CodeGenerationError, GenerationCode
-from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
+from sysml_codegen.generation.module_paths import module_python_path
 from sysml_codegen.resolution.models import ComputationGraph, ModuleOutput, PipelineModule
 
 
@@ -32,33 +32,6 @@ def _output_attr_name(out: ModuleOutput) -> str:
     if out.field_name != "root":
         return out.field_name
     return out.channel_name.split("__")[-1]
-
-
-def _get_module_sysml_qn(module: PipelineModule) -> str:
-    """Get the full SysML qualified name for path/import derivation.
-
-    Module types store calc_def_qualified_name differently:
-    - CalcUsage: full calc def QN (e.g., "Package::CalcDef")
-    - FORMULA: owning part QN only → append "::calc_def_name"
-    - Aggregation: owning part QN with __ separator → use module.name with :: separator
-    """
-    from sysml_codegen.generation.errors import unrenderable_module_kind_error
-    from sysml_codegen.resolution.models import ModuleKind
-
-    if module.module_kind == ModuleKind.FORMULA:
-        return f"{module.calc_def_qualified_name}::{module.calc_def_name}"
-    elif module.module_kind == ModuleKind.AGGREGATION:
-        return module.name.replace("__", "::")
-    elif module.module_kind == ModuleKind.CALCULATION:
-        if module.calc_def_qualified_name is None:
-            raise CodeGenerationError(
-                f"GENERATION_METADATA_MISSING: module {module.name!r} "
-                "lacks calc_def_qualified_name",
-                code=GenerationCode.GENERATION_METADATA_MISSING,
-            )
-        return module.calc_def_qualified_name
-    else:
-        raise unrenderable_module_kind_error(module, "stencil")
 
 
 def _build_stub_docstring_from_graph(module: PipelineModule) -> str:
@@ -127,6 +100,12 @@ def _build_stencil_context_from_graph(
     module: PipelineModule, output_path: Path, package_name: str = "generated_code"
 ) -> dict[str, Any]:
     """Build shared template context from PipelineModule fields."""
+    from sysml_codegen.generation.errors import unrenderable_module_kind_error
+    from sysml_codegen.resolution.models import ModuleKind
+
+    if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
+        # D8: fully generated, no handwritten implementation to stencil.
+        raise unrenderable_module_kind_error(module, "stencil")
     if module.calc_def_name is None:
         raise CodeGenerationError(
             f"GENERATION_METADATA_MISSING: module {module.name!r} lacks calc_def_name",
@@ -150,11 +129,8 @@ def _build_stencil_context_from_graph(
 
     calc_expressions = module.calc_expressions or []
 
-    # Derive path from full SysML QN (module-type-aware)
-    sysml_qn = _get_module_sysml_qn(module)
-    sqn = SysMLQualifiedName(sysml_qn)
-    python_path = PythonModulePath.from_sysml(sqn)
-    module_import_path = python_path.import_path
+    # The class file this stencil implements, from the path the writers and registry share
+    module_import_path = module_python_path(module).import_path
 
     # Class name from module_type (correct PascalCase for all module types)
     class_name = module.module_type.split(".")[-1]

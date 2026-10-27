@@ -21,13 +21,10 @@ from typing import TYPE_CHECKING
 
 import jinja2
 
-from sysml_codegen.core.identifier_types import (
-    PythonModulePath,
-    SysMLQualifiedName,
-)
+from sysml_codegen.generation.module_paths import module_python_path
 
 if TYPE_CHECKING:
-    from sysml_codegen.resolution.models import ComputationGraph
+    from sysml_codegen.resolution.models import ComputationGraph, PipelineModule
     from sysml_codegen.resolution.models import ParameterGroup as ModelParameterGroup
 
 logger = logging.getLogger(__name__)
@@ -69,26 +66,23 @@ def required_exit_point_wrapper_types(
     return tuple(sorted(types))
 
 
-def _resolve_class_name_collisions(
-    all_modules: list[dict],
-    imports: list[str],
-) -> tuple[list[dict], list[str]]:
-    """Detect and resolve class name collisions via aliased imports.
+def _resolve_class_name_collisions(all_modules: list[dict]) -> list[dict]:
+    """Give each entry whose class name another entry shares a disambiguating alias.
 
-    When multiple modules share the same class_name, each is given a unique
-    alias derived from its parent segment in the module_type path. The import
-    statement is updated to use 'import X as Alias' format.
+    The alias is derived from the entry's parent segment in its module_type path, and
+    replaces ``class_name``. Only names change here: each entry's import line is rendered
+    from the entry itself afterwards (``_import_lines``), so the alias always lands on the
+    import of the file that defines that class.
 
     Args:
-        all_modules: List of {"class_name": str, "module_type": str} dicts.
-        imports: List of import statement strings.
+        all_modules: Registry entries (``_registry_class_entries``).
 
     Returns:
-        Updated (all_modules, imports) with aliased class names.
+        The same entries, colliding ones renamed.
     """
     collisions = _colliding_class_names(all_modules)
     if not collisions:
-        return all_modules, imports
+        return all_modules
 
     # Report collisions (REQ-REG-07)
     collision_names = sorted(collisions.keys())
@@ -98,26 +92,12 @@ def _resolve_class_name_collisions(
         sum(len(indices) for indices in collisions.values()),
     )
 
-    # Build alias for each colliding module
     for class_name, indices in collisions.items():
         for idx in indices:
             module = all_modules[idx]
-            module_type = module["module_type"]
-            alias = _parent_segment_alias(module_type, class_name)
-            module["class_name"] = alias
+            module["class_name"] = _parent_segment_alias(module["module_type"], class_name)
 
-            # Update the corresponding import statement
-            import_path_prefix = ".".join(module_type.split(".")[:-1])
-            for j, imp in enumerate(imports):
-                if (
-                    f"import {class_name}" in imp
-                    and import_path_prefix in imp
-                    and " as " not in imp  # Don't re-alias already aliased imports
-                ):
-                    imports[j] = f"{imp} as {alias}"
-                    break
-
-    return all_modules, imports
+    return all_modules
 
 
 def _colliding_class_names(all_modules: list[dict]) -> dict[str, list[int]]:
@@ -152,20 +132,85 @@ def _residual_collisions(all_modules: list[dict]) -> dict[str, list[str]]:
     return {name: mts for name, mts in post_alias.items() if len(mts) > 1}
 
 
+#: The four import groups, in the order the registry renders them. Each group's lines are
+#: sorted on their text before any alias is added, which keeps every package that needs
+#: no alias byte-identical to the per-pass rendering this replaced.
+_IMPORT_GROUPS = ("calculation", "formula", "aggregation", "constraint")
+
+
+def class_owners(modules: list[PipelineModule]) -> list[PipelineModule]:
+    """The modules that own a generated class, in the order given.
+
+    Every module, except that formula and rollup (aggregation) modules are reduced to
+    the first copy, by module name, of each module type. Projection has already given
+    every copy under one module type the same class body (I1), so that one copy's class
+    file, stencil and registry entry serve every copy's pipeline entry. Calc-def modules
+    pass through: their class file is per calc def already, and the registry keys them
+    by simple name (``_registry_class_entries``).
+    """
+    from sysml_codegen.resolution.models import ModuleKind, first_copy
+
+    computed = (ModuleKind.FORMULA, ModuleKind.AGGREGATION)
+    copies: dict[str, list[PipelineModule]] = defaultdict(list)
+    for module in modules:
+        if module.module_kind in computed:
+            copies[module.module_type].append(module)
+    owners = {first_copy(group).name for group in copies.values()}
+    return [
+        module for module in modules if module.module_kind not in computed or module.name in owners
+    ]
+
+
+def require_one_class_per_module_type(modules: list[PipelineModule]) -> None:
+    """Raise if two formula or rollup modules share a module type but not a class body.
+
+    Projection guarantees this (I1); this is the generation side's check that it held,
+    over every module, not only the class owners. A failure is the generator's defect,
+    not the model's, so it raises a plain error that the public route reports as an
+    internal defect rather than as a class-name collision the modeller could rename away.
+    """
+    from sysml_codegen.resolution.models import ModuleKind, class_signature
+
+    shapes: dict[str, dict[str, str]] = defaultdict(dict)
+    for module in modules:
+        if module.module_kind in (ModuleKind.FORMULA, ModuleKind.AGGREGATION):
+            shapes[module.module_type].setdefault(class_signature(module), module.name)
+    for module_type, by_shape in shapes.items():
+        if len(by_shape) > 1:
+            raise AssertionError(
+                f"module type {module_type!r} names {len(by_shape)} different class bodies "
+                f"(first copies {sorted(by_shape.values())}); projection settles one per type"
+            )
+
+
 def _registry_class_entries(graph: ComputationGraph) -> list[dict]:
-    """The ``{class_name, module_type}`` entry each module contributes, in registry order.
+    """The registry entry each generated class contributes, in import-group order.
+
+    Each entry is ``{class_name, module_type, imported_name, import_path, import_group}``:
+    ``imported_name`` is the class's name in its file, ``class_name`` what the registry
+    calls it (an alias when two entries share a name), and ``import_path`` the file's
+    package-relative module path, from the writers' own path function.
 
     One derivation, two consumers: ``generate_registry`` renders these, and
     ``residual_class_name_collisions`` checks them at the generation boundary
-    before anything is written. Order matches the four import passes below,
-    because the rendered registry is sorted from this list.
+    before anything is written.
     """
     from sysml_codegen.resolution.models import ModuleKind
 
+    def entry(module: PipelineModule, class_name: str, import_group: str) -> dict:
+        return {
+            "class_name": class_name,
+            "module_type": module.module_type,
+            "imported_name": class_name,
+            "import_path": module_python_path(module).import_path,
+            "import_group": import_group,
+        }
+
     entries: list[dict] = []
 
-    # Keyed exactly as the import pass keys it, ``None`` included: a calculation
-    # module without a calc_def_name is one entry, not one per occurrence.
+    # Calc-def pass: one entry per calc def *simple name*, keyed exactly as before,
+    # ``None`` included. Deliberately not merged with the module-type pass below
+    # ([REGISTRY-CALC-DEF-SIMPLE-NAME-DEDUP] is a separate backlog row).
     seen_names: set[str | None] = set()
     for module in graph.modules:
         if module.module_kind is not ModuleKind.CALCULATION:
@@ -173,32 +218,59 @@ def _registry_class_entries(graph: ComputationGraph) -> list[dict]:
         if module.calc_def_name in seen_names:
             continue
         seen_names.add(module.calc_def_name)
-        entries.append(
-            {"class_name": f"{module.calc_def_name}Module", "module_type": module.module_type}
-        )
+        entries.append(entry(module, f"{module.calc_def_name}Module", "calculation"))
 
-    for kind in (ModuleKind.FORMULA, ModuleKind.AGGREGATION):
+    # Formula and rollup pass: one entry per module type, from its class owner.
+    owners = class_owners(graph.modules)
+    for kind, group in ((ModuleKind.FORMULA, "formula"), (ModuleKind.AGGREGATION, "aggregation")):
         entries.extend(
-            {"class_name": module.module_type.split(".")[-1], "module_type": module.module_type}
-            for module in graph.modules
+            entry(module, module.module_type.split(".")[-1], group)
+            for module in owners
             if module.module_kind is kind
         )
 
     entries.extend(
-        {"class_name": module.module_type.split(".")[-1], "module_type": module.module_type}
+        entry(module, module.module_type.split(".")[-1], "constraint")
         for module in graph.modules
         if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR)
     )
     return entries
 
 
+def _import_lines(entries: list[dict], package_name: str) -> list[str]:
+    """One import line per registry entry, aliased where the entry was renamed.
+
+    Grouped as ``_IMPORT_GROUPS`` and sorted within a group on the line text before
+    `` as Alias`` is added.
+    """
+    lines: list[str] = []
+    for group in _IMPORT_GROUPS:
+        keyed = [
+            (
+                f"from {package_name}.modules.{item['import_path']} import {item['imported_name']}",
+                item,
+            )
+            for item in entries
+            if item["import_group"] == group
+        ]
+        keyed.sort(key=lambda pair: pair[0])
+        lines.extend(
+            line
+            if item["class_name"] == item["imported_name"]
+            else f"{line} as {item['class_name']}"
+            for line, item in keyed
+        )
+    return lines
+
+
 def residual_class_name_collisions(graph: ComputationGraph) -> dict[str, list[str]]:
     """Registry class names that survive aliasing, by name -> colliding module types.
 
     Pure (raises nothing, logs nothing), so the generation boundary can run it
-    *before* the output tree is cleared. The Item-5 static scan proved no
-    committed model hits this, but the exact route reaches module sets the legacy
-    route never built, and a silent import overwrite is worse than a refusal.
+    *before* the output tree is cleared: a silent import overwrite is worse than a
+    refusal. Two different module types that share a class name and a parent segment
+    reach it (for example two different shapes of one feature whose first copies are
+    both named ``a``, under different parents).
     """
     entries = _registry_class_entries(graph)
     for class_name, indices in _colliding_class_names(entries).items():
@@ -273,85 +345,6 @@ def generate_registry(
     # One derivation of what the registry names each module, shared with the
     # boundary check the CLI runs before it touches the output tree.
     all_modules: list[dict] = _registry_class_entries(graph)
-    imports: list[str] = [
-        "from simkit.core.registry_builder import create_registry",
-        "from simkit.core.pipeline_registry import PipelineModuleRegistry",
-        "",
-    ]
-
-    from sysml_codegen.resolution.models import ModuleKind
-
-    # Split modules by type (same processing order as original)
-    calcusage_modules = [m for m in graph.modules if m.module_kind == ModuleKind.CALCULATION]
-    formula_modules = [m for m in graph.modules if m.module_kind == ModuleKind.FORMULA]
-    aggregation_modules = [m for m in graph.modules if m.module_kind == ModuleKind.AGGREGATION]
-    constraint_modules = [
-        m
-        for m in graph.modules
-        if m.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR)
-    ]
-
-    # 1. CalcUsage modules (sorted imports, deduplicated by calc_def_name)
-    seen_names: set[str] = set()
-    calcusage_imports: list[str] = []
-    for module in calcusage_modules:
-        assert module.calc_def_name is not None
-        assert module.calc_def_qualified_name is not None
-        if module.calc_def_name not in seen_names:
-            class_name = f"{module.calc_def_name}Module"
-            sqn = SysMLQualifiedName(module.calc_def_qualified_name)
-            python_path = PythonModulePath.from_sysml(sqn)
-            import_module = f"{package_name}.modules.{python_path.import_path}"
-            calcusage_imports.append(f"from {import_module} import {class_name}")
-            seen_names.add(module.calc_def_name)
-
-    calcusage_imports.sort()
-    imports.extend(calcusage_imports)
-
-    # 2. FORMULA modules (sorted for deterministic output)
-    formula_imports: list[str] = []
-    for module in formula_modules:
-        sysml_qn = f"{module.calc_def_qualified_name}::{module.calc_def_name}"
-        sqn = SysMLQualifiedName(sysml_qn)
-        python_path = PythonModulePath.from_sysml(sqn)
-        module_type_full = module.module_type
-        class_name = module_type_full.split(".")[-1]
-
-        import_module = f"{package_name}.modules.{python_path.import_path}"
-        formula_imports.append(f"from {import_module} import {class_name}")
-    formula_imports.sort()
-    imports.extend(formula_imports)
-
-    # 3. Aggregation modules (sorted for deterministic output)
-    aggregation_imports: list[str] = []
-    for module in aggregation_modules:
-        sysml_qn = module.name.replace("__", "::")
-        sqn = SysMLQualifiedName(sysml_qn)
-        python_path = PythonModulePath.from_sysml(sqn)
-        module_type_full = module.module_type
-        class_name = module_type_full.split(".")[-1]
-
-        import_module = f"{package_name}.modules.{python_path.import_path}"
-        aggregation_imports.append(f"from {import_module} import {class_name}")
-    aggregation_imports.sort()
-    imports.extend(aggregation_imports)
-
-    # 4. Constraint + report-aggregator modules (Item 7 / D9). module_type is already a
-    # Python-dotted path (not a SysML "::" qualified name) — derive directly, matching
-    # cli._get_python_path's constraint-kind branch. Sorted for deterministic output.
-    constraint_imports: list[str] = []
-    for module in constraint_modules:
-        module_type_full = module.module_type
-        class_name = module_type_full.split(".")[-1]
-        parts = module_type_full.split(".")
-        directory = "/".join(parts[:-1])
-        filename = parts[-1].lower()
-        import_path = f"{directory}.{filename}" if directory else filename
-
-        import_module = f"{package_name}.modules.{import_path}"
-        constraint_imports.append(f"from {import_module} import {class_name}")
-    constraint_imports.sort()
-    imports.extend(constraint_imports)
 
     from sysml_codegen.resolution.models import ships_constraint_machinery
 
@@ -364,8 +357,14 @@ def generate_registry(
         schema_imports.sort()
         group_names = [*group_names, "ConstraintEvaluation", "ConstraintReport"]
 
-    # Resolve class name collisions
-    all_modules, imports = _resolve_class_name_collisions(all_modules, imports)
+    # Resolve class name collisions, then render each entry's own import line
+    all_modules = _resolve_class_name_collisions(all_modules)
+    imports: list[str] = [
+        "from simkit.core.registry_builder import create_registry",
+        "from simkit.core.pipeline_registry import PipelineModuleRegistry",
+        "",
+        *_import_lines(all_modules, package_name),
+    ]
 
     # REQ-REG-08: refuse rather than emit a registry whose imports overwrite each
     # other. The public route already refused at the generation boundary, before

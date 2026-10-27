@@ -300,6 +300,10 @@ class FeatureSlotIndex:
             )
         )
 
+    def redefines(self, declaration: DeclarationId, ancestor: DeclarationId) -> bool:
+        """Whether ``declaration`` redefines ``ancestor``, directly or through a chain."""
+        return self._redefines(declaration, ancestor, ())
+
     def _redefines(
         self,
         declaration: DeclarationId,
@@ -503,11 +507,22 @@ class OccurrenceIndex:
     def occurrences_for_declaration(
         self, declaration: DeclarationId
     ) -> tuple[ExactOccurrence, ...]:
+        """Occurrences whose own effective declaration is ``declaration`` or redefines it.
+
+        Sharing the redefinition-family slot is not enough: in ``part a : Sub;
+        part b : Sub { part :>> leaf; }`` both ``a.leaf`` and ``b.leaf`` sit in the slot
+        of ``Sub::leaf``, but only ``b.leaf`` is governed by ``b``'s redefinition, so
+        anything owned by it must not reach ``a.leaf``.
+        """
         slot = self._slots.slot_of(declaration)
         return tuple(
             occurrence
             for occurrence in self.occurrences()
             if occurrence.occurrence_id.steps[-1].containment_slot == slot
+            and (
+                occurrence.effective_usage_id == declaration
+                or self._slots.redefines(occurrence.effective_usage_id, declaration)
+            )
         )
 
     def occurrences_for_type(self, definition: DeclarationId) -> tuple[ExactOccurrence, ...]:
